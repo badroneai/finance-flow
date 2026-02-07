@@ -1,0 +1,16 @@
+standards/
+├── .
+├── QUICK_REFERENCE.md
+├── README.md
+├── adr
+  ├── 0000-template.md
+  ├── 0001-example.md
+├── project-structure.txt
+├── prompts
+  ├── prompt-library-structure.md
+  ├── system-prompt-template.md
+├── runbooks
+  ├── api-failover-template.md
+  ├── incident-response-template.md
+├── testing
+  ├── test-plan-template.md

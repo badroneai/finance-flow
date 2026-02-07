@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finance Flow | نظام التدفقات المالية</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: { sans: ['"Noto Sans Arabic"', 'sans-serif'] }
+    }
+  }
+}
+</script>
+<style>
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { font-size: 12pt; margin: 0; padding: 0; direction: rtl; }
+  @page { margin: 2cm; size: A4; }
+  table { page-break-inside: avoid; }
+  h1, h2, h3 { font-size: 16pt; }
+  .print-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+}
+* { box-sizing: border-box; }
+:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+</style>
+</head>
+<body class="bg-gray-50 text-gray-900 font-sans">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } = React;
+
+// ============================================
+// TYPES
+// ============================================
+const TRANSACTION_TYPES = { income: 'دخل', expense: 'خرج' };
+const TRANSACTION_CATEGORIES = { commission: 'عمولة', expense: 'مصروفات', deposit: 'إيداع', refund: 'استرجاع', salary: 'راتب', rent: 'إيجار', other: 'أخرى' };
+const PAYMENT_METHODS = { cash: 'نقدي', bank_transfer: 'تحويل بنكي', check: 'شيك', electronic: 'بطاقة إلكترونية' };
+const COMMISSION_STATUSES = { pending: 'معلقة', paid: 'مدفوعة' };
+const LETTER_TYPES = { intro: 'خطاب تعريف', request: 'خطاب مخاطبة', delegation: 'خطاب تفويض' };
+
+// ============================================
+// UTILITY FUNCTIONS
+// ============================================
+const genId = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substr(2);
+const now = () => new Date().toISOString();
+const today = () => new Date().toISOString().split('T')[0];
+const formatNum = (n) => n != null ? Number(n).toLocaleString('ar-SA') : '0';
+const formatCurrency = (n) => `${formatNum(n)} ر.س`;
+
+const getMonthLabel = (dateStr) => {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
+};
+
+const getMonthKey = (dateStr) => {
+  const d = new Date(dateStr);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+};
+
+/** تهريب حقل CSV (RFC 4180) لتصدير العمولات */
+const csvEscape = (v) => {
+  const s = v == null ? '' : String(v);
+  if (/[,\r\n"]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+  return s;
+};
+
+// ============================================
+// SEED DATA
+// ============================================
+const SEED_TRANSACTIONS = [
+  { type:'income', category:'commission', amount:15000, paymentMethod:'bank_transfer', date:'2025-01-15', description:'عمولة بيع فيلا حي الملقا' },
+  { type:'expense', category:'expense', amount:3000, paymentMethod:'cash', date:'2025-01-20', description:'صيانة مكتب' },
+  { type:'income', category:'deposit', amount:25000, paymentMethod:'bank_transfer', date:'2025-01-25', description:'دفعة عميل أحمد' },
+  { type:'expense', category:'salary', amount:8000, paymentMethod:'bank_transfer', date:'2025-01-30', description:'راتب موظف' },
+  { type:'income', category:'commission', amount:12000, paymentMethod:'check', date:'2025-02-01', description:'عمولة تأجير محل تجاري' },
+  { type:'expense', category:'rent', amount:15000, paymentMethod:'bank_transfer', date:'2025-02-05', description:'إيجار مكتب شهر فبراير' },
+  { type:'income', category:'refund', amount:2000, paymentMethod:'cash', date:'2025-02-07', description:'استرجاع مصروفات' },
+  { type:'expense', category:'other', amount:1500, paymentMethod:'cash', date:'2025-02-10', description:'مصروفات متنوعة' },
+  { type:'income', category:'commission', amount:18000, paymentMethod:'bank_transfer', date:'2025-02-12', description:'عمولة بيع أرض' },
+  { type:'expense', category:'expense', amount:2500, paymentMethod:'electronic', date:'2025-02-15', description:'مصروفات تسويق' },
+];
+
+const SEED_COMMISSIONS = [
+  { clientName:'صفقة بيع فيلا - عميل خالد', dealValue:500000, officePercent:3, agentName:'محمد السعيد', agentPercent:97, status:'pending', dueDate:'2025-03-01' },
+  { clientName:'تأجير محل تجاري - شركة النور', dealValue:200000, officePercent:2, agentName:'فهد العتيبي', agentPercent:98, status:'paid', dueDate:'2025-01-20', paidDate:'2025-01-22' },
+  { clientName:'بيع أرض سكنية', dealValue:800000, officePercent:2.5, agentName:'سارة القحطاني', agentPercent:97.5, status:'pending', dueDate:'2025-03-15' },
+  { clientName:'تأجير فيلا - عائلة الأحمد', dealValue:150000, officePercent:3, agentName:'عبدالله المطيري', agentPercent:97, status:'paid', dueDate:'2025-01-15', paidDate:'2025-01-18' },
+  { clientName:'بيع شقة - عميل ناصر', dealValue:350000, officePercent:2, agentName:'نورة الدوسري', agentPercent:98, status:'pending', dueDate:'2025-04-01' },
+  { clientName:'استثمار عقاري - شركة الخليج', dealValue:1200000, officePercent:1.5, agentName:'أحمد الشمري', agentPercent:98.5, status:'paid', dueDate:'2025-02-01', paidDate:'2025-02-03' },
+];
+
+const SEED_DRAFTS = [
+  { templateType:'intro', fields:{ officeName:'مكتب مثال العقاري', recipientName:'السيد أحمد', recipientOrg:'شركة العقار الذهبي', date:'2025-02-15', managerName:'خالد الأحمد' }},
+  { templateType:'request', fields:{ officeName:'مكتب مثال العقاري', recipientOrg:'بلدية بريدة', subject:'طلب تصريح', body:'نرجو التكرم بإصدار تصريح...', date:'2025-02-10', managerName:'خالد الأحمد' }},
+];
+
+const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'0501234567', email:'info@example-realestate.sa', defaultCommissionPercent:50 };
+
+// ============================================
+// DATASTORE (LocalStorage Abstraction)
+// ============================================
+// Replace LocalStorage calls with API in this layer later
+const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', drafts:'ff_drafts', settings:'ff_settings', seeded:'ff_seeded' };
+
+const safeGet = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return fallback;
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+};
+
+const safeSet = (key, val) => {
+  try {
+    localStorage.setItem(key, JSON.stringify(val));
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+const dataStore = {
+  transactions: {
+    list: (filters) => {
+      let items = safeGet(KEYS.transactions, []);
+      if (!filters) return items;
+      if (filters.fromDate) items = items.filter(t => t.date >= filters.fromDate);
+      if (filters.toDate) items = items.filter(t => t.date <= filters.toDate);
+      if (filters.type) items = items.filter(t => t.type === filters.type);
+      if (filters.category) items = items.filter(t => t.category === filters.category);
+      if (filters.paymentMethod) items = items.filter(t => t.paymentMethod === filters.paymentMethod);
+      if (filters.search) {
+        const s = filters.search.toLowerCase();
+        items = items.filter(t => (t.description || '').toLowerCase().includes(s));
+      }
+      return items.sort((a,b) => b.date.localeCompare(a.date));
+    },
+    create: (data) => {
+      const items = safeGet(KEYS.transactions, []);
+      const item = { ...data, id: genId(), createdAt: now(), updatedAt: now() };
+      items.push(item);
+      safeSet(KEYS.transactions, items);
+      return item;
+    },
+    update: (id, data) => {
+      const items = safeGet(KEYS.transactions, []);
+      const idx = items.findIndex(i => i.id === id);
+      if (idx === -1) return null;
+      items[idx] = { ...items[idx], ...data, updatedAt: now() };
+      safeSet(KEYS.transactions, items);
+      return items[idx];
+    },
+    remove: (id) => {
+      const items = safeGet(KEYS.transactions, []).filter(i => i.id !== id);
+      safeSet(KEYS.transactions, items);
+    }
+  },
+  commissions: {
+    list: () => safeGet(KEYS.commissions, []).sort((a,b) => b.dueDate.localeCompare(a.dueDate)),
+    create: (data) => {
+      const items = safeGet(KEYS.commissions, []);
+      const item = { ...data, id: genId(), createdAt: now(), updatedAt: now() };
+      items.push(item);
+      safeSet(KEYS.commissions, items);
+      return item;
+    },
+    update: (id, data) => {
+      const items = safeGet(KEYS.commissions, []);
+      const idx = items.findIndex(i => i.id === id);
+      if (idx === -1) return null;
+      items[idx] = { ...items[idx], ...data, updatedAt: now() };
+      safeSet(KEYS.commissions, items);
+      return items[idx];
+    },
+    remove: (id) => {
+      const items = safeGet(KEYS.commissions, []).filter(i => i.id !== id);
+      safeSet(KEYS.commissions, items);
+    }
+  },
+  letters: {
+    listDrafts: () => safeGet(KEYS.drafts, []).sort((a,b) => b.updatedAt?.localeCompare(a.updatedAt)),
+    saveDraft: (data) => {
+      const items = safeGet(KEYS.drafts, []);
+      const item = { ...data, id: genId(), createdAt: now(), updatedAt: now() };
+      items.push(item);
+      safeSet(KEYS.drafts, items);
+      return item;
+    },
+    updateDraft: (id, data) => {
+      const items = safeGet(KEYS.drafts, []);
+      const idx = items.findIndex(i => i.id === id);
+      if (idx === -1) return null;
+      items[idx] = { ...items[idx], ...data, updatedAt: now() };
+      safeSet(KEYS.drafts, items);
+      return items[idx];
+    },
+    removeDraft: (id) => {
+      const items = safeGet(KEYS.drafts, []).filter(i => i.id !== id);
+      safeSet(KEYS.drafts, items);
+    }
+  },
+  settings: {
+    get: () => safeGet(KEYS.settings, SEED_SETTINGS),
+    update: (data) => {
+      const current = safeGet(KEYS.settings, SEED_SETTINGS);
+      const updated = { ...current, ...data };
+      safeSet(KEYS.settings, updated);
+      return updated;
+    }
+  },
+  seed: {
+    resetDemo: () => {
+      const txs = SEED_TRANSACTIONS.map(t => ({ ...t, id: genId(), createdAt: now(), updatedAt: now() }));
+      const cms = SEED_COMMISSIONS.map(c => ({ ...c, id: genId(), createdAt: now(), updatedAt: now() }));
+      const drs = SEED_DRAFTS.map(d => ({ ...d, id: genId(), createdAt: now(), updatedAt: now() }));
+      safeSet(KEYS.transactions, txs);
+      safeSet(KEYS.commissions, cms);
+      safeSet(KEYS.drafts, drs);
+      safeSet(KEYS.settings, SEED_SETTINGS);
+      safeSet(KEYS.seeded, true);
+    },
+    clearAll: () => {
+      Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+    },
+    ensureSeeded: () => {
+      if (!safeGet(KEYS.seeded, false)) {
+        dataStore.seed.resetDemo();
+      }
+    }
+  }
+};
+
+// ============================================
+// ICONS (SVG Components)
+// ============================================
+const Icon = ({ d, size=20, className='' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d={d}/></svg>
+);
+const Icons = {
+  home: (p) => <Icon {...p} d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z M9 22V12h6v10"/>,
+  dashboard: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="14" y="11" width="7" height="10" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>,
+  list: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="1" fill="currentColor"/><circle cx="4" cy="12" r="1" fill="currentColor"/><circle cx="4" cy="18" r="1" fill="currentColor"/></svg>,
+  percent: (p) => <Icon {...p} d="M19 5L5 19 M9 7a2 2 0 11-4 0 2 2 0 014 0z M19 17a2 2 0 11-4 0 2 2 0 014 0z"/>,
+  mail: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 4L12 13 2 4"/></svg>,
+  fileText: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>,
+  settings: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>,
+  plus: (p) => <Icon {...p} d="M12 5v14 M5 12h14"/>,
+  edit: (p) => <Icon {...p} d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7 M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/>,
+  trash: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>,
+  x: (p) => <Icon {...p} d="M18 6L6 18 M6 6l12 12"/>,
+  check: (p) => <Icon {...p} d="M20 6L9 17l-5-5"/>,
+  download: (p) => <Icon {...p} d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4 M7 10l5 5 5-5 M12 15V3"/>,
+  printer: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>,
+  menu: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
+  chevronDown: (p) => <Icon {...p} d="M6 9l6 6 6-6"/>,
+  search: (p) => <Icon {...p} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>,
+  filter: (p) => <svg {...{width:p?.size||20,height:p?.size||20,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"2",className:p?.className||''}}><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>,
+  arrowUp: (p) => <Icon {...p} d="M12 19V5 M5 12l7-7 7 7"/>,
+  arrowDown: (p) => <Icon {...p} d="M12 5v14 M19 12l-7 7-7-7"/>,
+  empty: (p) => <svg {...{width:p?.size||64,height:p?.size||64,viewBox:"0 0 24 24",fill:"none",stroke:"currentColor",strokeWidth:"1.5",className:p?.className||'text-gray-300'}}><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><line x1="9" y1="13" x2="15" y2="13"/></svg>,
+};
+
+// ============================================
+// TOAST CONTEXT
+// ============================================
+const ToastContext = createContext();
+const useToast = () => useContext(ToastContext);
+
+const ToastProvider = ({ children }) => {
+  const [toasts, setToasts] = useState([]);
+  const addToast = useCallback((message, type='success') => {
+    const id = genId();
+    setToasts(prev => [...prev, { id, message, type }]);
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3000);
+  }, []);
+  return (
+    <ToastContext.Provider value={addToast}>
+      {children}
+      <div className="fixed top-4 left-4 z-50 flex flex-col gap-2 no-print" style={{maxWidth:'360px'}}>
+        {toasts.map(t => (
+          <div key={t.id} className={`px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all animate-slideIn ${
+            t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-gray-900'
+          }`} role="alert">
+            {t.message}
+          </div>
+        ))}
+      </div>
+      <style>{`.animate-slideIn { animation: slideIn .3s ease; } @keyframes slideIn { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); }}`}</style>
+    </ToastContext.Provider>
+  );
+};
+
+// ============================================
+// CONFIRM DIALOG
+// ============================================
+const ConfirmDialog = ({ open, title, message, onConfirm, onCancel, danger=false }) => {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
+      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+        <h3 className="text-lg font-bold mb-2">{title}</h3>
+        <p className="text-gray-600 mb-6 text-sm">{message}</p>
+        <div className="flex gap-3 justify-end">
+          <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+          <button onClick={onConfirm} className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`} aria-label="تأكيد">تأكيد</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// MODAL
+// ============================================
+const Modal = ({ open, onClose, title, children, wide=false }) => {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    if (open) document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
+      <div className={`bg-white rounded-xl shadow-2xl mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+        <div className="flex items-center justify-between p-4 border-b border-gray-100">
+          <h3 className="text-lg font-bold">{title}</h3>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100" aria-label="إغلاق"><Icons.x size={20}/></button>
+        </div>
+        <div className="p-4">{children}</div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// FORM FIELD (مستوى الملف — يمنع remount وفقدان التركيز عند الكتابة)
+// ============================================
+const FormField = ({ label, error, children }) => (
+  <div className="mb-3">
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    {children}
+    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+  </div>
+);
+
+// ============================================
+// COMMON COMPONENTS
+// ============================================
+const SummaryCard = ({ label, value, color='blue', icon }) => (
+  <div className={`bg-white rounded-xl border border-gray-100 p-4 shadow-sm`}>
+    <div className="flex items-center justify-between mb-2">
+      <span className="text-xs font-medium text-gray-500">{label}</span>
+      {icon && <span className={`text-${color}-600`}>{icon}</span>}
+    </div>
+    <div className={`text-xl font-bold text-${color}-600`}>{value}</div>
+  </div>
+);
+
+const EmptyState = ({ message, icon }) => (
+  <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+    {icon || <Icons.empty size={64}/>}
+    <p className="mt-4 text-sm">{message}</p>
+  </div>
+);
+
+const Badge = ({ children, color='blue' }) => {
+  const colors = { blue:'bg-blue-50 text-blue-700', green:'bg-green-50 text-green-700', red:'bg-red-50 text-red-700', yellow:'bg-yellow-50 text-yellow-700', gray:'bg-gray-100 text-gray-600' };
+  return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]||colors.blue}`}>{children}</span>;
+};
+
+// ============================================
+// NAVIGATION
+// ============================================
+const NAV_ITEMS = [
+  { id:'home', label:'الرئيسية', icon:Icons.home },
+  { id:'transactions', label:'الحركات المالية', icon:Icons.list, group:'finance' },
+  { id:'commissions', label:'العمولات', icon:Icons.percent, group:'finance' },
+  { id:'templates', label:'قوالب الخطابات', icon:Icons.mail, group:'letters' },
+  { id:'generator', label:'إنشاء خطاب', icon:Icons.fileText, group:'letters' },
+  { id:'drafts', label:'المسودات', icon:Icons.fileText, group:'letters' },
+  { id:'settings', label:'الإعدادات', icon:Icons.settings },
+];
+
+const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen }) => {
+  const groups = { finance: 'التدفقات المالية', letters: 'الخطابات' };
+  const handleNav = (id) => { setPage(id === 'home' ? 'dashboard' : id); setMobileOpen(false); };
+  
+  const sidebarContent = (
+    <div className="flex flex-col h-full">
+      <div className="p-4 border-b border-gray-700/50">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">FF</div>
+          {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">Finance Flow</h1><p className="text-gray-400 text-xs">نظام التدفقات المالية</p></div>}
+        </div>
+      </div>
+      <nav className="flex-1 overflow-y-auto py-3 px-2">
+        {NAV_ITEMS.filter(i => !i.group && i.id === 'home').map(item => (
+          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
+              (page === item.id || (item.id === 'home' && page === 'dashboard')) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
+            } ${collapsed ? 'justify-center' : ''}`}>
+            <item.icon size={18}/>
+            {!collapsed && <span>{item.label}</span>}
+          </button>
+        ))}
+        {Object.entries(groups).map(([key, label]) => (
+          <div key={key} className="mb-2">
+            {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium uppercase tracking-wider">{label}</p>}
+            {NAV_ITEMS.filter(i => i.group === key).map(item => (
+              <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
+                  page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
+                } ${collapsed ? 'justify-center' : ''}`}>
+                <item.icon size={18}/>
+                {!collapsed && <span>{item.label}</span>}
+              </button>
+            ))}
+          </div>
+        ))}
+        {NAV_ITEMS.filter(i => !i.group && i.id !== 'home').map(item => (
+          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
+            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
+              page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
+            } ${collapsed ? 'justify-center' : ''}`}>
+            <item.icon size={18}/>
+            {!collapsed && <span>{item.label}</span>}
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Desktop/Tablet Sidebar */}
+      <aside className={`hidden md:flex flex-col bg-gray-900 h-screen sticky top-0 transition-all duration-300 no-print ${collapsed ? 'w-16' : 'w-60'}`}>
+        {sidebarContent}
+        <button onClick={() => setCollapsed(!collapsed)} className="p-3 border-t border-gray-700/50 text-gray-400 hover:text-white text-xs" aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}>
+          {collapsed ? '◁' : '▷ طي'}
+        </button>
+      </aside>
+      {/* Mobile Overlay */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)}/>
+          <aside className="fixed right-0 top-0 bottom-0 w-64 bg-gray-900 z-50 overflow-y-auto">{sidebarContent}</aside>
+        </div>
+      )}
+    </>
+  );
+};
+
+const Topbar = ({ page, setMobileOpen }) => {
+  const titles = { home:'الرئيسية', dashboard:'لوحة المعلومات', transactions:'الحركات المالية', commissions:'العمولات', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', settings:'الإعدادات' };
+  return (
+    <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30 no-print">
+      <div className="flex items-center gap-3">
+        <button className="md:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة"><Icons.menu size={22}/></button>
+        <h2 className="text-lg font-bold text-gray-900">{titles[page] || ''}</h2>
+      </div>
+      <div className="text-xs text-gray-400">{new Date().toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}</div>
+    </header>
+  );
+};
+
+// ============================================
+// HOME PAGE
+// ============================================
+const HomePage = ({ setPage }) => (
+  <div className="max-w-4xl mx-auto p-6">
+    <div className="text-center mb-12 mt-8">
+      <div className="w-20 h-20 rounded-2xl bg-blue-600 mx-auto mb-6 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-200">FF</div>
+      <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Finance Flow</h1>
+      <p className="text-gray-500 text-lg">نظام متكامل لإدارة التدفقات المالية والخطابات للمكاتب العقارية</p>
+    </div>
+    <div className="grid sm:grid-cols-2 gap-4 mb-8">
+      {[
+        { id:'dashboard', title:'لوحة المعلومات', desc:'نظرة شاملة على الأرقام والمؤشرات', icon:Icons.dashboard, color:'blue' },
+        { id:'transactions', title:'الحركات المالية', desc:'تتبع الدخل والمصروفات', icon:Icons.list, color:'green' },
+        { id:'commissions', title:'العمولات', desc:'إدارة العمولات وحصص الوكلاء', icon:Icons.percent, color:'yellow' },
+        { id:'templates', title:'الخطابات', desc:'إنشاء وطباعة خطابات رسمية', icon:Icons.mail, color:'purple' },
+      ].map(item => (
+        <button key={item.id} onClick={() => setPage(item.id)} className="bg-white rounded-xl border border-gray-100 p-6 text-right hover:shadow-md hover:border-blue-200 transition-all group" aria-label={item.title}>
+          <div className={`w-10 h-10 rounded-lg bg-${item.color}-50 flex items-center justify-center mb-3 text-${item.color}-600 group-hover:scale-110 transition-transform`}>
+            <item.icon size={20}/>
+          </div>
+          <h3 className="font-bold text-gray-900 mb-1">{item.title}</h3>
+          <p className="text-sm text-gray-500">{item.desc}</p>
+        </button>
+      ))}
+    </div>
+  </div>
+);
+
+// ============================================
+// DASHBOARD PAGE
+// ============================================
+const DashboardPage = () => {
+  const [periodType, setPeriodType] = useState('thisMonth');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
+  const getDateRange = () => {
+    const now = new Date();
+    if (periodType === 'thisMonth') {
+      return { from: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`, to: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-31` };
+    }
+    if (periodType === 'last3') {
+      const d = new Date(now); d.setMonth(d.getMonth()-3);
+      return { from: d.toISOString().split('T')[0], to: now.toISOString().split('T')[0] };
+    }
+    if (periodType === 'last6') {
+      const d = new Date(now); d.setMonth(d.getMonth()-6);
+      return { from: d.toISOString().split('T')[0], to: now.toISOString().split('T')[0] };
+    }
+    if (periodType === 'thisYear') {
+      return { from: `${now.getFullYear()}-01-01`, to: `${now.getFullYear()}-12-31` };
+    }
+    if (periodType === 'custom') {
+      return { from: fromDate, to: toDate };
+    }
+    return { from: '', to: '' };
+  };
+
+  const range = getDateRange();
+  const txs = dataStore.transactions.list({ fromDate: range.from, toDate: range.to });
+  const allCms = dataStore.commissions.list();
+
+  const income = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const net = income - expense;
+  const pendingCms = allCms.filter(c => c.status === 'pending');
+  const paidCms = allCms.filter(c => c.status === 'paid');
+  const pendingTotal = pendingCms.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
+  const paidTotal = paidCms.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
+
+  // Bar chart data: last 6 months
+  const chartData = useMemo(() => {
+    const allTxs = dataStore.transactions.list({});
+    const months = [];
+    const now = new Date();
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const key = getMonthKey(d.toISOString());
+      const label = d.toLocaleDateString('ar-SA', { month:'short' });
+      months.push({ key, label, income: 0, expense: 0 });
+    }
+    allTxs.forEach(t => {
+      const mk = getMonthKey(t.date);
+      const m = months.find(m => m.key === mk);
+      if (m) {
+        if (t.type === 'income') m.income += t.amount;
+        else m.expense += t.amount;
+      }
+    });
+    const maxVal = Math.max(...months.map(m => Math.max(m.income, m.expense)), 1);
+    return { months, maxVal };
+  }, [txs]);
+
+  return (
+    <div className="p-4 md:p-6 max-w-6xl mx-auto print-container">
+      {/* Period Filter */}
+      <div className="flex flex-wrap gap-2 mb-6 no-print">
+        {[
+          { v:'thisMonth', l:'هذا الشهر' }, { v:'last3', l:'آخر 3 أشهر' }, { v:'last6', l:'آخر 6 أشهر' }, { v:'thisYear', l:'هذا العام' }, { v:'custom', l:'مخصص' },
+        ].map(opt => (
+          <button key={opt.v} onClick={() => setPeriodType(opt.v)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${periodType === opt.v ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label={opt.l}>{opt.l}</button>
+        ))}
+        {periodType === 'custom' && (
+          <div className="flex gap-2 items-center">
+            <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="border border-gray-200 rounded-lg px-2 py-1 text-sm" aria-label="من تاريخ"/>
+            <span className="text-gray-400 text-sm">إلى</span>
+            <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="border border-gray-200 rounded-lg px-2 py-1 text-sm" aria-label="إلى تاريخ"/>
+          </div>
+        )}
+      </div>
+
+      {/* Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+        <SummaryCard label="إجمالي الدخل" value={formatCurrency(income)} color="green" icon={<Icons.arrowUp size={16}/>}/>
+        <SummaryCard label="إجمالي الخرج" value={formatCurrency(expense)} color="red" icon={<Icons.arrowDown size={16}/>}/>
+        <SummaryCard label="الصافي" value={formatCurrency(net)} color={net >= 0 ? 'blue' : 'red'}/>
+        <SummaryCard label="عمولات معلقة" value={formatCurrency(pendingTotal)} color="yellow"/>
+        <SummaryCard label="عمولات مدفوعة" value={formatCurrency(paidTotal)} color="green"/>
+      </div>
+
+      {/* Bar Chart */}
+      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="font-bold text-gray-900 mb-6">الدخل والخرج — آخر 6 أشهر</h3>
+        <div className="flex items-end gap-3 h-48">
+          {chartData.months.map((m, i) => (
+            <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              <div className="flex gap-1 items-end w-full justify-center" style={{height:'180px'}}>
+                <div className="bg-green-500 rounded-t w-5 transition-all" style={{height: `${Math.max((m.income / chartData.maxVal) * 160, 2)}px`}} title={`دخل: ${formatNum(m.income)}`}/>
+                <div className="bg-red-400 rounded-t w-5 transition-all" style={{height: `${Math.max((m.expense / chartData.maxVal) * 160, 2)}px`}} title={`خرج: ${formatNum(m.expense)}`}/>
+              </div>
+              <span className="text-xs text-gray-500 mt-1">{m.label}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex gap-4 justify-center mt-4">
+          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-green-500"/><span className="text-xs text-gray-500">دخل</span></div>
+          <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-red-400"/><span className="text-xs text-gray-500">خرج</span></div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// TRANSACTIONS PAGE
+// ============================================
+const TransactionsPage = () => {
+  const toast = useToast();
+  const [txs, setTxs] = useState([]);
+  const [filters, setFilters] = useState({ fromDate:'', toDate:'', type:'', category:'', paymentMethod:'', search:'' });
+  const [modal, setModal] = useState(null); // null | 'add' | {editing tx}
+  const [confirm, setConfirm] = useState(null);
+
+  const refresh = useCallback(() => {
+    setTxs(dataStore.transactions.list(filters));
+  }, [filters]);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const income = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+
+  const handleSave = (data, editId) => {
+    if (editId) { dataStore.transactions.update(editId, data); toast('تم التحديث بنجاح'); }
+    else { dataStore.transactions.create(data); toast('تم الحفظ بنجاح'); }
+    setModal(null); refresh();
+  };
+
+  const handleDelete = (id) => {
+    setConfirm({ title:'حذف الحركة', message:'هل أنت متأكد من حذف هذه الحركة؟', onConfirm: () => { dataStore.transactions.remove(id); toast('تم الحذف'); setConfirm(null); refresh(); }});
+  };
+
+  const exportCSV = () => {
+    const BOM = '\uFEFF';
+    const headers = ['النوع','التصنيف','المبلغ','طريقة الدفع','التاريخ','الوصف'];
+    const rows = txs.map(t => [TRANSACTION_TYPES[t.type], TRANSACTION_CATEGORIES[t.category], t.amount, PAYMENT_METHODS[t.paymentMethod], t.date, t.description || '']);
+    const csv = BOM + [headers, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `transactions_${today()}.csv`;
+    link.click();
+    toast('تم تصدير CSV');
+  };
+
+  const handlePrint = () => window.print();
+
+  const resetFilters = () => setFilters({ fromDate:'', toDate:'', type:'', category:'', paymentMethod:'', search:'' });
+
+  return (
+    <div className="p-4 md:p-6 max-w-6xl mx-auto print-container">
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <SummaryCard label="إجمالي الدخل" value={formatCurrency(income)} color="green" icon={<Icons.arrowUp size={16}/>}/>
+        <SummaryCard label="إجمالي الخرج" value={formatCurrency(expense)} color="red" icon={<Icons.arrowDown size={16}/>}/>
+        <SummaryCard label="الصافي" value={formatCurrency(income - expense)} color={income - expense >= 0 ? 'blue' : 'red'}/>
+      </div>
+
+      {/* Filters + Actions */}
+      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 no-print">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[180px]">
+            <Icons.search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"/>
+            <input type="text" placeholder="بحث في الوصف..." value={filters.search} onChange={e => setFilters(f => ({...f, search:e.target.value}))} className="w-full border border-gray-200 rounded-lg pr-9 pl-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" aria-label="بحث"/>
+          </div>
+          <select value={filters.type} onChange={e => setFilters(f => ({...f, type:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع الحركة">
+            <option value="">كل الأنواع</option>
+            {Object.entries(TRANSACTION_TYPES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          <select value={filters.category} onChange={e => setFilters(f => ({...f, category:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="التصنيف">
+            <option value="">كل التصنيفات</option>
+            {Object.entries(TRANSACTION_CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          <select value={filters.paymentMethod} onChange={e => setFilters(f => ({...f, paymentMethod:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="طريقة الدفع">
+            <option value="">كل طرق الدفع</option>
+            {Object.entries(PAYMENT_METHODS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+          <input type="date" value={filters.fromDate} onChange={e => setFilters(f => ({...f, fromDate:e.target.value}))} className="border border-gray-200 rounded-lg px-2 py-2 text-sm" aria-label="من تاريخ"/>
+          <input type="date" value={filters.toDate} onChange={e => setFilters(f => ({...f, toDate:e.target.value}))} className="border border-gray-200 rounded-lg px-2 py-2 text-sm" aria-label="إلى تاريخ"/>
+          <button onClick={resetFilters} className="px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border border-gray-200" aria-label="إعادة تعيين الفلاتر"><Icons.filter size={14}/></button>
+        </div>
+        <div className="flex gap-2 mt-3 justify-end">
+          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="إضافة حركة"><Icons.plus size={16}/>إضافة حركة</button>
+          <button onClick={exportCSV} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="تصدير CSV"><Icons.download size={14}/>CSV</button>
+          <button onClick={handlePrint} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="طباعة"><Icons.printer size={14}/>طباعة</button>
+        </div>
+      </div>
+
+      {/* Table */}
+      {txs.length === 0 ? (
+        <EmptyState message={Object.values(filters).some(Boolean) ? 'لا توجد نتائج مطابقة للفلاتر' : 'لا توجد حركات مالية. ابدأ بإضافة أول حركة'}/>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-gray-50 border-b border-gray-100">
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">النوع</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">التصنيف</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">المبلغ</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">التاريخ</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600 hidden md:table-cell">الوصف</th>
+              <th className="px-4 py-3 text-center font-semibold text-gray-600 no-print">إجراءات</th>
+            </tr></thead>
+            <tbody>
+              {txs.map(t => (
+                <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                  <td className="px-4 py-3"><Badge color={t.type==='income'?'green':'red'}>{TRANSACTION_TYPES[t.type]}</Badge></td>
+                  <td className="px-4 py-3 text-gray-700">{TRANSACTION_CATEGORIES[t.category]}</td>
+                  <td className={`px-4 py-3 font-semibold ${t.type==='income'?'text-green-600':'text-red-600'}`}>{t.type==='income'?'+':'-'}{formatCurrency(t.amount)}</td>
+                  <td className="px-4 py-3 text-gray-500">{t.date}</td>
+                  <td className="px-4 py-3 text-gray-500 hidden md:table-cell max-w-[200px] truncate">{t.description}</td>
+                  <td className="px-4 py-3 no-print">
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => setModal(t)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" aria-label="تعديل"><Icons.edit size={15}/></button>
+                      <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف"><Icons.trash size={15}/></button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Transaction Form Modal */}
+      <Modal open={modal !== null} onClose={() => setModal(null)} title={modal && modal !== 'add' ? 'تعديل الحركة' : 'إضافة حركة جديدة'}>
+        <TransactionForm initial={modal !== 'add' ? modal : null} onSave={handleSave} onCancel={() => setModal(null)}/>
+      </Modal>
+
+      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger/>
+    </div>
+  );
+};
+
+const TransactionForm = ({ initial, onSave, onCancel }) => {
+  const [form, setForm] = useState(initial ? { type:initial.type, category:initial.category, amount:initial.amount, paymentMethod:initial.paymentMethod, date:initial.date, description:initial.description||'' } : { type:'income', category:'commission', amount:'', paymentMethod:'cash', date:today(), description:'' });
+  const [errors, setErrors] = useState({});
+
+  const validate = () => {
+    const errs = {};
+    if (!form.type) errs.type = 'اختر نوع الحركة';
+    if (!form.category) errs.category = 'اختر تصنيفًا صحيحًا';
+    if (!form.amount || Number(form.amount) <= 0) errs.amount = 'المبلغ مطلوب ويجب أن يكون أكبر من صفر';
+    if (!form.date) errs.date = 'التاريخ مطلوب';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+    onSave({ ...form, amount: Number(form.amount) }, initial?.id);
+  };
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="نوع الحركة" error={errors.type}>
+          <select value={form.type} onChange={e => setForm(f => ({...f, type:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نوع الحركة">
+            {Object.entries(TRANSACTION_TYPES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </FormField>
+        <FormField label="التصنيف" error={errors.category}>
+          <select value={form.category} onChange={e => setForm(f => ({...f, category:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="التصنيف">
+            {Object.entries(TRANSACTION_CATEGORIES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </FormField>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="المبلغ (ر.س)" error={errors.amount}>
+          <input type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm(f => ({...f, amount:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="0.00" aria-label="المبلغ"/>
+        </FormField>
+        <FormField label="طريقة الدفع">
+          <select value={form.paymentMethod} onChange={e => setForm(f => ({...f, paymentMethod:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="طريقة الدفع">
+            {Object.entries(PAYMENT_METHODS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
+          </select>
+        </FormField>
+      </div>
+      <FormField label="التاريخ" error={errors.date}>
+        <input type="date" value={form.date} onChange={e => setForm(f => ({...f, date:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="التاريخ"/>
+      </FormField>
+      <FormField label="الوصف (اختياري)">
+        <input type="text" value={form.description} onChange={e => setForm(f => ({...f, description:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="وصف الحركة..." aria-label="الوصف"/>
+      </FormField>
+      <div className="flex gap-3 justify-end mt-4">
+        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="حفظ">حفظ</button>
+      </div>
+    </form>
+  );
+};
+
+// ============================================
+// COMMISSIONS PAGE
+// ============================================
+const CommissionsPage = () => {
+  const toast = useToast();
+  const [filters, setFilters] = useState({ search:'', status:'', agent:'', fromDate:'', toDate:'' });
+  const [allCms, setAllCms] = useState([]);
+  const [modal, setModal] = useState(null);
+  const [confirm, setConfirm] = useState(null);
+  const settings = dataStore.settings.get();
+
+  const refresh = useCallback(() => setAllCms(dataStore.commissions.list()), []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const applyFilters = useCallback(() => {
+    let list = [...allCms];
+    if (filters.search && filters.search.trim()) {
+      const s = filters.search.trim().toLowerCase();
+      list = list.filter(c => (c.clientName || '').toLowerCase().includes(s) || (c.agentName || '').toLowerCase().includes(s));
+    }
+    if (filters.status) list = list.filter(c => c.status === filters.status);
+    if (filters.agent) list = list.filter(c => (c.agentName || '') === filters.agent);
+    if (filters.fromDate || filters.toDate) {
+      list = list.filter(c => {
+        const dateVal = c.dueDate || c.paidDate || null;
+        if (!dateVal) return false;
+        if (filters.fromDate && dateVal < filters.fromDate) return false;
+        if (filters.toDate && dateVal > filters.toDate) return false;
+        return true;
+      });
+    }
+    return list;
+  }, [allCms, filters]);
+
+  const cms = applyFilters();
+  const pending = cms.filter(c => c.status === 'pending');
+  const paid = cms.filter(c => c.status === 'paid');
+  const pendingOffice = pending.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
+  const paidOffice = paid.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
+  const totalAgent = cms.reduce((s,c) => s + c.dealValue * c.agentPercent / 100, 0);
+
+  const agentNames = useMemo(() => [...new Set(allCms.map(c => c.agentName).filter(Boolean))].sort(), [allCms]);
+
+  const handleSave = (data, editId) => {
+    if (editId) { dataStore.commissions.update(editId, data); toast('تم التحديث بنجاح'); }
+    else { dataStore.commissions.create(data); toast('تم الحفظ بنجاح'); }
+    setModal(null); refresh();
+  };
+
+  const handleDelete = (id) => {
+    setConfirm({ title:'حذف العمولة', message:'هل أنت متأكد من حذف هذه العمولة؟', onConfirm: () => { dataStore.commissions.remove(id); toast('تم الحذف'); setConfirm(null); refresh(); }});
+  };
+
+  const handleMarkPaid = (id) => {
+    setConfirm({ title:'تحديد كمدفوعة', message:'تحديد كمدفوعة؟', onConfirm: () => { dataStore.commissions.update(id, { status:'paid', paidDate: today() }); toast('تم تحديث حالة العمولة إلى مدفوعة'); setConfirm(null); refresh(); }});
+  };
+
+  const resetFilters = () => setFilters({ search:'', status:'', agent:'', fromDate:'', toDate:'' });
+
+  const exportCSV = () => {
+    const BOM = '\uFEFF';
+    const headers = ['العميل/الصفقة','قيمة الصفقة','نسبة المكتب','حصة المكتب','اسم الوكيل','نسبة الوكيل','حصة الوكيل','الحالة','تاريخ الاستحقاق','تاريخ الدفع'];
+    const rows = cms.map(c => {
+      const officeAmt = c.dealValue * c.officePercent / 100;
+      const agentAmt = c.dealValue * c.agentPercent / 100;
+      return [c.clientName || '', c.dealValue, c.officePercent, officeAmt, c.agentName || '', c.agentPercent, agentAmt, COMMISSION_STATUSES[c.status] || c.status, c.dueDate || '', c.paidDate || ''];
+    });
+    const csv = BOM + [headers.map(csvEscape), ...rows.map(r => r.map(csvEscape))].map(r => r.join(',')).join('\r\n');
+    const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `commissions_${today()}.csv`;
+    link.click();
+    toast('تم تصدير CSV');
+  };
+
+  const handlePrint = () => window.print();
+
+  return (
+    <div className="p-4 md:p-6 max-w-6xl mx-auto print-container">
+      {/* Summary */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+        <SummaryCard label="عمولات معلقة" value={formatCurrency(pendingOffice)} color="yellow"/>
+        <SummaryCard label="عمولات مدفوعة" value={formatCurrency(paidOffice)} color="green"/>
+        <SummaryCard label="إجمالي حصة المكتب" value={formatCurrency(pendingOffice + paidOffice)} color="blue"/>
+        <SummaryCard label="إجمالي حصة الوكلاء" value={formatCurrency(totalAgent)} color="gray"/>
+      </div>
+
+      {/* Filters + Actions (parity with Transactions) */}
+      <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 no-print">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="relative flex-1 min-w-[180px]">
+            <Icons.search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"/>
+            <input type="text" placeholder="بحث في العميل/الصفقة..." value={filters.search} onChange={e => setFilters(f => ({...f, search:e.target.value}))} className="w-full border border-gray-200 rounded-lg pr-9 pl-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" aria-label="بحث"/>
+          </div>
+          <select value={filters.status} onChange={e => setFilters(f => ({...f, status:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="الحالة">
+            <option value="">كل الحالات</option>
+            <option value="pending">معلقة</option>
+            <option value="paid">مدفوعة</option>
+          </select>
+          <select value={filters.agent} onChange={e => setFilters(f => ({...f, agent:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="الوكيل">
+            <option value="">كل الوكلاء</option>
+            {agentNames.map(name => <option key={name} value={name}>{name}</option>)}
+          </select>
+          <input type="date" value={filters.fromDate} onChange={e => setFilters(f => ({...f, fromDate:e.target.value}))} className="border border-gray-200 rounded-lg px-2 py-2 text-sm" aria-label="من تاريخ"/>
+          <input type="date" value={filters.toDate} onChange={e => setFilters(f => ({...f, toDate:e.target.value}))} className="border border-gray-200 rounded-lg px-2 py-2 text-sm" aria-label="إلى تاريخ"/>
+          <button onClick={resetFilters} className="px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border border-gray-200" aria-label="إعادة تعيين الفلاتر"><Icons.filter size={14}/></button>
+        </div>
+        <div className="flex gap-2 mt-3 justify-end">
+          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="إضافة عمولة"><Icons.plus size={16}/>إضافة عمولة</button>
+          <button onClick={exportCSV} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="تصدير CSV"><Icons.download size={14}/>CSV</button>
+          <button onClick={handlePrint} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="طباعة"><Icons.printer size={14}/>طباعة</button>
+        </div>
+      </div>
+
+      {/* Table or Empty */}
+      {allCms.length === 0 ? (
+        <EmptyState message="لا توجد عمولات مسجلة"/>
+      ) : cms.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+          <Icons.empty size={64}/>
+          <p className="mt-4 text-sm font-medium text-gray-600">لا توجد نتائج مطابقة</p>
+          <p className="mt-1 text-sm">جرّب تعديل الفلاتر أو إعادة تعيينها.</p>
+          <button onClick={resetFilters} className="mt-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium border border-gray-200" aria-label="إعادة تعيين الفلاتر">إعادة تعيين الفلاتر</button>
+        </div>
+      ) : (
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead><tr className="bg-gray-50 border-b border-gray-100">
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">العميل/الصفقة</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">قيمة الصفقة</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">النسب</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">الحصص</th>
+              <th className="px-4 py-3 text-right font-semibold text-gray-600">الحالة</th>
+              <th className="px-4 py-3 text-center font-semibold text-gray-600 no-print">إجراءات</th>
+            </tr></thead>
+            <tbody>
+              {cms.map(c => {
+                const officeAmt = c.dealValue * c.officePercent / 100;
+                const agentAmt = c.dealValue * c.agentPercent / 100;
+                return (
+                  <tr key={c.id} className="border-b border-gray-50 hover:bg-gray-50/50">
+                    <td className="px-4 py-3">
+                      <div className="font-medium text-gray-900">{c.clientName}</div>
+                      <div className="text-xs text-gray-400">{c.agentName}</div>
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(c.dealValue)}</td>
+                    <td className="px-4 py-3">
+                      <div className="text-xs">مكتب: {c.officePercent}%</div>
+                      <div className="text-xs">وكيل: {c.agentPercent}%</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-xs text-blue-600 font-medium">{formatCurrency(officeAmt)}</div>
+                      <div className="text-xs text-gray-500">{formatCurrency(agentAmt)}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge color={c.status==='paid'?'green':'yellow'}>{COMMISSION_STATUSES[c.status]}</Badge>
+                      {c.paidDate && <div className="text-xs text-gray-400 mt-0.5">{c.paidDate}</div>}
+                    </td>
+                    <td className="px-4 py-3 no-print">
+                      <div className="flex gap-1 justify-center flex-wrap">
+                        {c.status === 'pending' && (
+                          <button onClick={() => handleMarkPaid(c.id)} className="px-2 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-medium hover:bg-green-100" aria-label="تحديد كمدفوعة"><Icons.check size={12}/> دفع</button>
+                        )}
+                        <button onClick={() => setModal(c)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" aria-label="تعديل"><Icons.edit size={15}/></button>
+                        <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف"><Icons.trash size={15}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Modal open={modal !== null} onClose={() => setModal(null)} title={modal && modal !== 'add' ? 'تعديل العمولة' : 'إضافة عمولة جديدة'}>
+        <CommissionForm initial={modal !== 'add' ? modal : null} onSave={handleSave} onCancel={() => setModal(null)} defaultPercent={settings.defaultCommissionPercent}/>
+      </Modal>
+
+      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger={confirm?.title?.includes('حذف')}/>
+    </div>
+  );
+};
+
+const CommissionForm = ({ initial, onSave, onCancel, defaultPercent }) => {
+  const [form, setForm] = useState(initial ? {
+    clientName:initial.clientName, dealValue:initial.dealValue, officePercent:initial.officePercent,
+    agentName:initial.agentName, agentPercent:initial.agentPercent, status:initial.status, dueDate:initial.dueDate
+  } : {
+    clientName:'', dealValue:'', officePercent:defaultPercent || 50, agentName:'', agentPercent: 100 - (defaultPercent || 50), status:'pending', dueDate:today()
+  });
+  const [errors, setErrors] = useState({});
+
+  const handleOfficeChange = (val) => {
+    const v = Number(val);
+    setForm(f => ({ ...f, officePercent: val, agentPercent: 100 - v }));
+  };
+
+  const validate = () => {
+    const errs = {};
+    if (!form.clientName?.trim()) errs.clientName = 'اسم العميل/الصفقة مطلوب';
+    if (!form.dealValue || Number(form.dealValue) <= 0) errs.dealValue = 'قيمة الصفقة مطلوبة ويجب أن تكون أكبر من صفر';
+    if (Number(form.officePercent) < 0 || Number(form.officePercent) > 100) errs.officePercent = 'نسبة المكتب يجب أن تكون بين 0 و100';
+    if (Number(form.agentPercent) < 0 || Number(form.agentPercent) > 100) errs.agentPercent = 'نسبة الوكيل يجب أن تكون بين 0 و100';
+    if (Math.abs(Number(form.officePercent) + Number(form.agentPercent) - 100) > 0.01) errs.total = 'يجب أن يكون مجموع نسبة المكتب والوكيل = 100%';
+    if (!form.agentName?.trim()) errs.agentName = 'اسم الوكيل مطلوب';
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!validate()) return;
+    onSave({ ...form, dealValue: Number(form.dealValue), officePercent: Number(form.officePercent), agentPercent: Number(form.agentPercent) }, initial?.id);
+  };
+
+  const officeAmt = Number(form.dealValue) * Number(form.officePercent) / 100 || 0;
+  const agentAmt = Number(form.dealValue) * Number(form.agentPercent) / 100 || 0;
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <FormField label="العميل/الصفقة" error={errors.clientName}>
+        <input type="text" value={form.clientName} onChange={e => setForm(f => ({...f, clientName:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="العميل"/>
+      </FormField>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="قيمة الصفقة (ر.س)" error={errors.dealValue}>
+          <input type="number" min="0" value={form.dealValue} onChange={e => setForm(f => ({...f, dealValue:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="قيمة الصفقة"/>
+        </FormField>
+        <FormField label="اسم الوكيل" error={errors.agentName}>
+          <input type="text" value={form.agentName} onChange={e => setForm(f => ({...f, agentName:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الوكيل"/>
+        </FormField>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="نسبة المكتب (%)" error={errors.officePercent || errors.total}>
+          <input type="number" step="0.1" min="0" max="100" value={form.officePercent} onChange={e => handleOfficeChange(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نسبة المكتب"/>
+        </FormField>
+        <FormField label="نسبة الوكيل (%)" error={errors.agentPercent}>
+          <input type="number" step="0.1" min="0" max="100" value={form.agentPercent} onChange={e => setForm(f => ({...f, agentPercent:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نسبة الوكيل"/>
+        </FormField>
+      </div>
+      {/* Calculated preview */}
+      <div className="bg-blue-50 rounded-lg p-3 mb-3 text-sm">
+        <div className="flex justify-between"><span>حصة المكتب:</span><span className="font-bold text-blue-700">{formatCurrency(officeAmt)}</span></div>
+        <div className="flex justify-between mt-1"><span>حصة الوكيل:</span><span className="font-bold text-gray-700">{formatCurrency(agentAmt)}</span></div>
+      </div>
+      <FormField label="تاريخ الاستحقاق">
+        <input type="date" value={form.dueDate} onChange={e => setForm(f => ({...f, dueDate:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق"/>
+      </FormField>
+      <div className="flex gap-3 justify-end mt-4">
+        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="حفظ">حفظ</button>
+      </div>
+    </form>
+  );
+};
+
+// ============================================
+// LETTERS TEMPLATES PAGE
+// ============================================
+/** نصوص خطاب كاملة افتراضية لكل قالب (مثل قالب مخاطبة جهة) */
+const DEFAULT_BODIES = {
+  intro: 'يسعدنا أن نعرّف بأنفسنا كمكتب عقاري معتمد، ونقدّم خدماتنا في مجال التسويق وإدارة العقارات والاستشارات. نتطلع إلى التعاون معكم وخدمتكم بأفضل ما لدينا، مع ضمان الجدية والسرية في التعامل.',
+  request: '',
+  delegation: 'نفيدكم بأنه قد تم تفويض السيد/ة ________ صاحب/ة الهوية رقم ________ للقيام بـ ________ نيابة عن هذا المكتب. وهذا التفويض ساري المفعول من تاريخه حتى إشعار آخر.',
+};
+
+const TEMPLATES = [
+  { type:'intro', title:'خطاب تعريف بالمكتب', desc:'تعريف رسمي بالمكتب العقاري وخدماته', fields:['officeName','recipientName','recipientOrg','body','date','managerName'] },
+  { type:'request', title:'خطاب مخاطبة جهة', desc:'مخاطبة رسمية لجهة حكومية أو خاصة', fields:['officeName','recipientOrg','subject','body','date','managerName'] },
+  { type:'delegation', title:'خطاب تفويض', desc:'تفويض مندوب لتمثيل المكتب', fields:['officeName','delegateName','delegateId','purpose','body','date','managerName'] },
+];
+
+const FIELD_LABELS = {
+  officeName:'اسم المكتب', recipientName:'اسم المستلم', recipientOrg:'الجهة المستلمة', date:'التاريخ',
+  managerName:'اسم المدير', subject:'الموضوع', body:'نص الخطاب', delegateName:'اسم المفوَّض', delegateId:'رقم الهوية', purpose:'الغرض من التفويض'
+};
+
+/** تنسيق التاريخ بالعربية للمسودات (مثل: السبت، ٧ فبراير ٢٠٢٦) */
+const formatDateArabic = (dateStr) => {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+const TemplatesPage = ({ setPage, setLetterType }) => (
+  <div className="p-4 md:p-6 max-w-4xl mx-auto">
+    <div className="grid sm:grid-cols-3 gap-4">
+      {TEMPLATES.map(t => (
+        <div key={t.type} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-4 text-blue-600"><Icons.fileText size={20}/></div>
+          <h3 className="font-bold text-gray-900 mb-1">{t.title}</h3>
+          <p className="text-sm text-gray-500 mb-4">{t.desc}</p>
+          <button onClick={() => { setLetterType(t.type); setPage('generator'); }} className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label={`استخدام ${t.title}`}>استخدام القالب</button>
+        </div>
+      ))}
+    </div>
+  </div>
+);
+
+// ============================================
+// LETTER GENERATOR PAGE
+// ============================================
+const GeneratorPage = ({ letterType, setLetterType }) => {
+  const toast = useToast();
+  const template = TEMPLATES.find(t => t.type === letterType) || TEMPLATES[0];
+  const settings = dataStore.settings.get();
+  const [fields, setFields] = useState(() => {
+    const f = {};
+    template.fields.forEach(k => {
+      if (k === 'officeName') f[k] = settings.officeName;
+      else if (k === 'date') f[k] = today();
+      else if (k === 'body') f[k] = DEFAULT_BODIES[template.type] ?? '';
+      else f[k] = '';
+    });
+    return f;
+  });
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const f = {};
+    template.fields.forEach(k => {
+      if (k === 'officeName') f[k] = settings.officeName;
+      else if (k === 'date') f[k] = today();
+      else if (k === 'body') f[k] = DEFAULT_BODIES[template.type] ?? '';
+      else f[k] = '';
+    });
+    setFields(f);
+  }, [letterType]);
+
+  const validate = () => {
+    const errs = {};
+    template.fields.forEach(k => {
+      if (!fields[k]?.trim()) errs[k] = `${FIELD_LABELS[k]} مطلوب`;
+    });
+    setErrors(errs);
+    return Object.keys(errs).length === 0;
+  };
+
+  const handleSaveDraft = () => {
+    if (!validate()) return;
+    dataStore.letters.saveDraft({ templateType: template.type, fields: { ...fields } });
+    toast('تم الحفظ بنجاح');
+  };
+
+  const renderPreview = () => {
+    const f = fields;
+    if (template.type === 'intro') return (
+      <div className="space-y-4 text-gray-900 leading-relaxed">
+        <div className="text-center mb-6"><h2 className="text-xl font-bold">{f.officeName || '___'}</h2></div>
+        <p>التاريخ: {f.date || '___'}</p>
+        <p>إلى السيد/ة: {f.recipientName || '___'}</p>
+        <p>الجهة: {f.recipientOrg || '___'}</p>
+        <p className="mt-4">السلام عليكم ورحمة الله وبركاته،</p>
+        <p>{f.body || '___'}</p>
+        <p>وتفضلوا بقبول فائق الاحترام والتقدير،</p>
+        <p className="mt-4 font-bold">{f.managerName || '___'}</p>
+        <p>المدير العام</p>
+      </div>
+    );
+    if (template.type === 'request') return (
+      <div className="space-y-4 text-gray-900 leading-relaxed">
+        <div className="text-center mb-6"><h2 className="text-xl font-bold">{f.officeName || '___'}</h2></div>
+        <p>التاريخ: {f.date || '___'}</p>
+        <p>إلى: {f.recipientOrg || '___'}</p>
+        <p className="font-bold">الموضوع: {f.subject || '___'}</p>
+        <p className="mt-4">السلام عليكم ورحمة الله وبركاته،</p>
+        <p>{f.body || '___'}</p>
+        <p>وتفضلوا بقبول فائق الاحترام والتقدير،</p>
+        <p className="mt-4 font-bold">{f.managerName || '___'}</p>
+        <p>المدير العام</p>
+      </div>
+    );
+    return (
+      <div className="space-y-4 text-gray-900 leading-relaxed">
+        <div className="text-center mb-6"><h2 className="text-xl font-bold">{f.officeName || '___'}</h2></div>
+        <p>التاريخ: {f.date || '___'}</p>
+        <h3 className="font-bold text-center text-lg mt-4">خطاب تفويض</h3>
+        <p className="mt-4">نحن {f.officeName || '___'} نفوّض السيد/ة <strong>{f.delegateName || '___'}</strong> صاحب/ة الهوية رقم <strong>{f.delegateId || '___'}</strong> بـ {f.purpose || '___'}. وهذا التفويض ساري المفعول من تاريخه حتى إشعار آخر.</p>
+        {f.body?.trim() ? <p>{f.body}</p> : null}
+        <p>وتفضلوا بقبول فائق الاحترام والتقدير،</p>
+        <p className="mt-4 font-bold">{f.managerName || '___'}</p>
+        <p>المدير العام</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="p-4 md:p-6 max-w-5xl mx-auto">
+      {/* Template selector */}
+      <div className="flex gap-2 mb-4 no-print">
+        {TEMPLATES.map(t => (
+          <button key={t.type} onClick={() => setLetterType(t.type)} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${letterType === t.type ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label={t.title}>{t.title}</button>
+        ))}
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        {/* Form */}
+        <div className="bg-white rounded-xl border border-gray-100 p-5 no-print">
+          <h3 className="font-bold mb-4">تعبئة البيانات</h3>
+          {template.fields.map(k => (
+            <div key={k} className="mb-3">
+              <label className="block text-sm font-medium text-gray-700 mb-1">{FIELD_LABELS[k]}</label>
+              {k === 'body' ? (
+                <textarea value={fields[k]||''} onChange={e => setFields(f => ({...f, [k]:e.target.value}))} rows={4} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label={FIELD_LABELS[k]}/>
+              ) : k === 'date' ? (
+                <input type="date" value={fields[k]||''} onChange={e => setFields(f => ({...f, [k]:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label={FIELD_LABELS[k]}/>
+              ) : (
+                <input type="text" value={fields[k]||''} onChange={e => setFields(f => ({...f, [k]:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label={FIELD_LABELS[k]}/>
+              )}
+              {errors[k] && <p className="text-red-500 text-xs mt-1">{errors[k]}</p>}
+            </div>
+          ))}
+          <div className="flex gap-2 mt-4">
+            <button onClick={handleSaveDraft} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ كمسودة">حفظ كمسودة</button>
+            <button onClick={() => { if (validate()) window.print(); }} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="طباعة"><Icons.printer size={14}/>طباعة</button>
+          </div>
+        </div>
+
+        {/* Preview */}
+        <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-8 print-container" style={{minHeight:'400px'}}>
+          <div className="border border-gray-200 rounded-lg p-8" style={{fontFamily:'"Noto Sans Arabic", sans-serif'}}>
+            {renderPreview()}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
+// DRAFTS PAGE
+// ============================================
+const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
+  const toast = useToast();
+  const [drafts, setDrafts] = useState([]);
+  const [confirm, setConfirm] = useState(null);
+
+  const refresh = useCallback(() => setDrafts(dataStore.letters.listDrafts()), []);
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const handleDelete = (id) => {
+    setConfirm({ title:'حذف المسودة', message:'هل أنت متأكد من حذف هذه المسودة؟', onConfirm: () => { dataStore.letters.removeDraft(id); toast('تم الحذف'); setConfirm(null); refresh(); }});
+  };
+
+  const handleEdit = (draft) => {
+    setLetterType(draft.templateType);
+    setEditDraft(draft);
+    setPage('generator');
+  };
+
+  return (
+    <div className="p-4 md:p-6 max-w-4xl mx-auto">
+      {drafts.length === 0 ? (
+        <EmptyState message="لا توجد مسودات محفوظة"/>
+      ) : (
+        <div className="grid sm:grid-cols-3 gap-4">
+          {drafts.map(d => (
+            <div key={d.id} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow relative">
+              <button onClick={() => handleDelete(d.id)} className="absolute top-2 left-2 p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" aria-label="حذف"><Icons.trash size={16}/></button>
+              <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-4 text-blue-600"><Icons.fileText size={20}/></div>
+              <h3 className="font-bold text-gray-900 mb-1">{LETTER_TYPES[d.templateType]}</h3>
+              <p className="text-sm text-gray-500 mb-2">{d.fields?.officeName || ''} — {d.fields?.recipientOrg || d.fields?.recipientName || d.fields?.delegateName || ''}</p>
+              <p className="text-sm text-gray-500 mb-4">{formatDateArabic(d.updatedAt)}</p>
+              <button onClick={() => handleEdit(d)} className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="فتح المسودة">فتح المسودة</button>
+            </div>
+          ))}
+        </div>
+      )}
+      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger/>
+    </div>
+  );
+};
+
+// ============================================
+// SETTINGS PAGE
+// ============================================
+const SettingsPage = () => {
+  const toast = useToast();
+  const [settings, setSettings] = useState(dataStore.settings.get());
+  const [confirm, setConfirm] = useState(null);
+
+  const handleSave = () => {
+    dataStore.settings.update(settings);
+    toast('تم الحفظ بنجاح');
+  };
+
+  const handleResetDemo = () => {
+    setConfirm({ title:'إعادة بيانات الديمو', message:'سيتم استبدال جميع البيانات ببيانات الديمو. هل أنت متأكد؟', onConfirm: () => {
+      dataStore.seed.resetDemo();
+      setSettings(dataStore.settings.get());
+      toast('تمت إعادة بيانات الديمو');
+      setConfirm(null);
+    }});
+  };
+
+  const handleClearAll = () => {
+    setConfirm({ title:'حذف جميع البيانات', message:'⚠️ تحذير: سيتم حذف جميع البيانات نهائيًا. هل أنت متأكد؟', danger:true, onConfirm: () => {
+      dataStore.seed.clearAll();
+      setSettings(SEED_SETTINGS);
+      toast('تم حذف جميع البيانات');
+      setConfirm(null);
+    }});
+  };
+
+  const Field = ({ label, children }) => (
+    <div className="mb-4">
+      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      {children}
+    </div>
+  );
+
+  return (
+    <div className="p-4 md:p-6 max-w-2xl mx-auto">
+      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
+        <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
+        <Field label="اسم المكتب">
+          <input type="text" value={settings.officeName} onChange={e => setSettings(s => ({...s, officeName:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم المكتب"/>
+        </Field>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="رقم الهاتف">
+            <input type="tel" value={settings.phone||''} onChange={e => setSettings(s => ({...s, phone:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="رقم الهاتف"/>
+          </Field>
+          <Field label="البريد الإلكتروني">
+            <input type="email" value={settings.email||''} onChange={e => setSettings(s => ({...s, email:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="البريد الإلكتروني"/>
+          </Field>
+        </div>
+        <Field label="نسبة العمولة الافتراضية للمكتب (%)">
+          <input type="number" min="0" max="100" step="0.5" value={settings.defaultCommissionPercent} onChange={e => setSettings(s => ({...s, defaultCommissionPercent:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نسبة العمولة الافتراضية"/>
+          <p className="text-xs text-gray-400 mt-1">تؤثر على العمولات الجديدة فقط</p>
+        </Field>
+        <button onClick={handleSave} className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ الإعدادات">حفظ الإعدادات</button>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+        <h3 className="font-bold text-gray-900 mb-4">إدارة البيانات</h3>
+        <div className="flex flex-wrap gap-3">
+          <button onClick={handleResetDemo} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50" aria-label="إعادة بيانات الديمو">إعادة بيانات الديمو</button>
+          <button onClick={handleClearAll} className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50" aria-label="حذف جميع البيانات">حذف جميع البيانات</button>
+        </div>
+      </div>
+
+      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger={confirm?.danger}/>
+    </div>
+  );
+};
+
+// ============================================
+// APP (Main Router)
+// ============================================
+const App = () => {
+  const [page, setPage] = useState('home');
+  const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [letterType, setLetterType] = useState('intro');
+  const [editDraft, setEditDraft] = useState(null);
+
+  // Ensure seed data on first load
+  useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
+
+  const renderPage = () => {
+    switch (page) {
+      case 'home': return <HomePage setPage={setPage}/>;
+      case 'dashboard': return <DashboardPage/>;
+      case 'transactions': return <TransactionsPage/>;
+      case 'commissions': return <CommissionsPage/>;
+      case 'templates': return <TemplatesPage setPage={setPage} setLetterType={setLetterType}/>;
+      case 'generator': return <GeneratorPage letterType={letterType} setLetterType={setLetterType}/>;
+      case 'drafts': return <DraftsPage setPage={setPage} setLetterType={setLetterType} setEditDraft={setEditDraft}/>;
+      case 'settings': return <SettingsPage/>;
+      default: return <HomePage setPage={setPage}/>;
+    }
+  };
+
+  return (
+    <ToastProvider>
+      <div className="flex min-h-screen">
+        <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
+        <main className="flex-1 min-w-0">
+          <Topbar page={page} setMobileOpen={setMobileOpen}/>
+          <div className="print-container">{renderPage()}</div>
+        </main>
+      </div>
+    </ToastProvider>
+  );
+};
+
+// ============================================
+// MOUNT
+// ============================================
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<App/>);
+</script>
+</body>
+</html>
