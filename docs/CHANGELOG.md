@@ -1,5 +1,69 @@
 # سجل التغييرات — Finance Flow
 
+## v0.5.4 – Phase 7.3 Hijri+Gregorian dates
+
+- **الهدف**: عرض التاريخ بصيغة موحدة تجمع يوم الأسبوع + التاريخ الميلادي + التاريخ الهجري، مع احترام إعداد «عرض الأرقام» (Phase 7.2).
+- **formatDateHeader(date)**: دالة مركزية تعرض النمط «السبت، ٧ فبراير ٢٠٢٦ — ١٨ شعبان ١٤٤٧هـ». تستخدم `Intl.DateTimeFormat`: للميلادي `ar-SA` (أو `ar-SA-u-nu-latn` عند الأرقام الإنجليزية) مع weekday, day, month, year؛ للهجري `ar-SA-u-ca-islamic` (أو `ar-SA-u-ca-islamic-nu-latn`) مع day, month, year. أرقام التاريخ تتبع إعداد `numerals` عبر نفس آلية الـ locale.
+- **التطبيق**: (1) الهيدر/الـ Topbar: استبدال `toLocaleDateString` بـ `formatDateHeader(new Date())`. (2) القوالب/المسودات: `formatDateArabic` أصبحت تستدعي `formatDateHeader`؛ معاينة الخطابات (إنشاء خطاب) تعرض «التاريخ:» باستخدام `formatDateHeader(f.date)` عند وجود تاريخ؛ قائمة المسودات تعرض تاريخ التحديث عبر `formatDateArabic(d.updatedAt)`.
+- **Fix: Hijri suffix duplicated (هـهـ → هـ)**: إضافة `normalizeHijriSuffix(str)` لإزالة تكرار لاحقة الهجري وضمان ظهور «هـ» مرة واحدة في نهاية الجزء الهجري فقط؛ استخدامها داخل `formatDateHeader` و`formatDateHijriNumeric`.
+- **Topbar: Added numeric Gregorian/Hijri sublines under date header**: تحت السطر الرئيسي للتاريخ في الهيدر تمت إضافة سطرين صغيرين (خط ~11px، لون muted): ميلادي رقمي عبر `formatDateGregorianNumeric(date)` (مثال: 08/02/2026)، وهجري رقمي عبر `formatDateHijriNumeric(date)` (مثال: 21/08/1447 هـ). الدالتان الجديدتان تستخدمان `Intl.DateTimeFormat` مع day/month 2-digit وyear numeric وتتبعان إعداد `numerals`.
+- الملفات المُعدّلة: `finance-flow.html`، `docs/CHANGELOG.md`.
+
+---
+
+## v0.5.3 – Phase 7.2 Numerals formatting (Arabic/English digits)
+
+- **الهدف**: إضافة خيار «عرض الأرقام» (عربي / إنجليزي) في الإعدادات، وإنشاء Formatter مركزي يعتمد على إعداد المستخدم لعرض كل الأرقام في التطبيق بأرقام عربية (ar-SA) أو إنجليزية (en-US) دون تغيير الحسابات أو المنطق.
+- **Formatter مركزي**: بعد تعريف `dataStore` تمت إضافة دوال `formatNumber(value, options)`، `formatCurrency(value)` للمبالغ (ر.س)، و`formatPercent(value)` للنسب. تستخدم `Intl.NumberFormat` مع `locale`: عند «عربي» = `ar-SA`، عند «إنجليزي» = `en-US`. النص والواجهة تبقى بالعربية.
+- **التطبيق**: كل الأرقام الظاهرة تمر عبر الـ Formatter: بطاقات الملخص (Summary cards)، الجداول (الحركات، العمولات)، النوافذ المنبثقة، المجاميع، مبالغ العمولات، النسب المئوية (مكتب/وكيل). تم استبدال `formatNum` و`formatCurrency` القديمتين بالمركزيتين، وإضافة `formatPercent` لعرض النسب في جدول العمولات.
+- **الإعدادات**: إضافة حقل «عرض الأرقام» في صفحة الإعدادات (قسم وضع العرض) مع خيارين: عربي، إنجليزي. الحفظ ضمن `settings.numerals` في localStorage (بدون تغيير schema جذري).
+- **الافتراضي والترحيل**: `numerals` الافتراضي `'ar'`؛ عند عدم وجوده أو قيمة غير صالحة يُعاد `'ar'`. لا تغييرات على الحسابات، فقط العرض.
+- الملفات المُعدّلة: `finance-flow.html`، `docs/CHANGELOG.md`.
+
+---
+
+## v0.5.2.1 – Phase 6.1.1 Dim theme darker
+
+- تعديل قيم متغيرات الثيم **الخافت (Dim)** فقط لجعله أغمق بوضوح من النهاري مع بقائه بين النهاري والليلي. لم يُغيّر الوضع النهاري أو الليلي، ولا أي JS أو markup. المتغيرات المُعدَّلة: `--ff-bg`, `--ff-surface`, `--ff-surface-2`, `--ff-border`, `--ff-text`, `--ff-muted`, `--ff-primary`, `--ff-primary-600`, `--ff-ring`, `--ff-shadow`, `--ff-shadow-2`, `--ff-row-hover`. الملف المُعدّل: `finance-flow.html`.
+
+---
+
+## v0.5.2 – Phase 7.1 Themes (light/dim/dark)
+
+- **الهدف**: إضافة ثلاثة أوضاع عرض (نهاري / خافت / ليلي) مع خيار في صفحة الإعدادات وحفظ الاختيار في localStorage وتطبيقه على كامل الواجهة عبر CSS Variables. **بدون أي تغيير في منطق البيانات أو CRUD أو الحسابات أو التقارير؛ لا إضافة مكتبات؛ لا تغيير في طريقة عرض الأرقام أو الهجري/الميلادي.**
+- **نقطة تطبيق الثيم**: استخدام `data-theme` على `<body>` (القيمة الافتراضية في الـ HTML: `light`). عند تحميل التطبيق يُطبَّق الثيم المحفوظ من الإعدادات.
+- **Design Tokens**: تعريف ثلاث مجموعات CSS Variables تحت `[data-theme="light"]`, `[data-theme="dim"]`, `[data-theme="dark"]` تشمل: الخلفية العامة، خلفيات البطاقات/الجداول، النص الأساسي والثانوي، الحدود، لون primary والأزرار، الظلال، حلقة الـ focus، ولون hover صفوف الجدول. تطبيق المتغيرات على body و .app-shell والبطاقات والجداول والمدخلات والـ sidebar والـ topbar؛ إضافة قواعد لربط ألوان Tailwind (مثل text-gray-900) بالمتغيرات حتى يظهر الفرق في كل الثيمات.
+- **صفحة الإعدادات**: قسم جديد «وضع العرض» مع قائمة منسدلة (Select) بثلاث خيارات: نهاري (light)، خافت (dim)، ليلي (dark). عند التغيير: تحديث `settings.theme`، تطبيق فوري عبر `document.body.dataset.theme`، وحفظ في التخزين ضمن كائن الإعدادات الحالي (`dataStore.settings.update({ theme })`).
+- **الافتراضي والترحيل**: إذا لم يوجد `theme` في الإعدادات المخزنة يُعامل كـ `light`. إرجاع `settings.get()` يدمج دائماً مع القيم الافتراضية ويضمن وجود `theme` صالح حتى لا تُكسَر البيانات القديمة.
+- الملفات المُعدّلة: `finance-flow.html`، `docs/CHANGELOG.md`.
+
+---
+
+## v0.5.1 – Phase 6B Visible UI Upgrade (Tokens + stronger surfaces/sidebar/topbar/tables/forms)
+
+- **الهدف**: تحسينات بصرية **واضحة من أول نظرة** بعد أن لم يلاحظ المستخدم فرق Phase 6. استخدام Design Tokens و specificity أعلى حتى تُطبَّق الأنمطة فعليًا (بدون أي تغيير منطق/بيانات/LocalStorage).
+- **تشخيص Phase 6**: أنمطة Phase 6 كانت في `<head>` وقد تُغلَّب من أنمطة Tailwind المحقونة لاحقًا. في Phase 6B تمت إضافة كتلة CSS منفصلة بعد `#root` (في `body`) مع استخدام `.app-shell` كـ scope وتفعيل الأنمطة بعناصر أساسية بـ `!important` حيث لزم.
+- **Design Tokens** (`:root`): `--ff-bg`, `--ff-surface`, `--ff-surface-2`, `--ff-border`, `--ff-text`, `--ff-muted`, `--ff-primary`, `--ff-primary-600`, `--ff-ring`, `--ff-shadow`, `--ff-shadow-2`, `--ff-radius`. تطبيقها على الخلفية، البطاقات، الشريط العلوي، القائمة الجانبية، الجداول، النماذج، الأزرار.
+- **ما سيلاحظه المستخدم فورًا**: (1) خلفية التطبيق بلون أزرق-رمادي فاتح واضح `#f6f7fb`. (2) القائمة الجانبية أصبحت فاتحة (surface) مع حدود وتمييز واضح للعنصر النشط ولون أزرق عند hover. (3) الشريط العلوي بخلفية بيضاء وظل خفيف. (4) البطاقات بظل أوضح وحواف أنعم. (5) الجداول: رأس بخلفية surface-2، صفوف zebra، hover أزرق خفيف. (6) الحقول: خلفية surface-2 وحلقة focus واضحة. (7) أزرار primary/secondary أوضح.
+- **Markup**: إضافة `class="app-shell"` على الحاوية الجذرية للتطبيق فقط (بدون تغيير منطق).
+- **القيود**: لا تغيير في أي منطق JS أو حسابات أو LocalStorage؛ لا إضافة صفحات أو ميزات. التعديلات CSS + صنف واحد في الـ markup.
+- الملفات المُعدّلة: `finance-flow.html`، `docs/CHANGELOG.md`.
+
+---
+
+## v0.5.0 – Phase 6 Visual Enhancement (Sales-grade UI polish)
+
+- **الهدف**: رفع جودة التصميم ليبدو كنظام SaaS مدفوع وجذاب بصريًا، مع الحفاظ على البساطة والاستقرار الوظيفي. التعديلات **واجهة فقط (UI)**، بدون تغيير منطق أو حسابات أو LocalStorage أو ميزات.
+- **Layout & Spacing**: زيادة padding العام لجميع الصفحات (dashboard / transactions / commissions / letters / settings)، توحيد المسافات الرأسية بين العناوين والبطاقات والجداول عبر قواعد CSS داخل `#root .print-container`.
+- **Cards**: توحيد شكل البطاقات (Summary، قوالب، مسودات، شريط الفلاتر): border-radius أنعم، ظل أقوى (shadow-md)، تأثير hover خفيف (ظل فقط). بدون تغيير محتوى أو منطق البطاقات.
+- **Tables**: صفوف zebra خفيفة جدًا، hover واضح على الصف، thead بخلفية أنظف وحد أوضح، تباعد أفضل داخل الخلايا (padding). بدون تغيير أعمدة أو بيانات.
+- **Forms & Modals**: توحيد ارتفاع الحقول (min-height)، تحسين focus ring (ناعم وواضح)، تحسين شكل labels، زيادة padding داخل النوافذ المنبثقة. بدون تغيير validation أو منطق الحقول.
+- **Buttons**: تحسين انتقالات hover/focus، توحيد ارتفاع الأزرار داخل الصف الواحد. بدون تغيير نظام أو أنواع الأزرار.
+- **Micro-polish**: توحيد حجم أيقونات الـ sidebar، تحسين محاذاة Sidebar والعناوين، تقليل الازدحام البصري.
+- الملفات المُعدّلة: `finance-flow.html` (كتلة `<style>` فقط)، `docs/CHANGELOG.md`.
+
+---
+
 ## v0.4.2 – Phase 4.1.6 Input Focus Bug Fix (Critical)
 
 - **الخلل**: عند الكتابة في حقول نماذج الحركات المالية أو العمولات (مثل المبلغ، الوصف، اسم العميل)، كان المؤشر يفقد التركيز (blur) بعد حرف أو رقم واحد.

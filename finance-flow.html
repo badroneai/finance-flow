@@ -33,10 +33,165 @@ tailwind.config = {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+
+/* ========== Phase 6 — Visual Enhancement (Sales-grade UI) ========== */
+#root .print-container > div { padding: 1.25rem 1rem; }
+@media (min-width: 768px) { #root .print-container > div { padding: 2rem 1.5rem; } }
+#root .print-container > div > div:first-child { margin-bottom: 1.5rem; }
+#root .print-container .grid { gap: 0.875rem; }
+#root .print-container .mb-4 { margin-bottom: 1.25rem; }
+#root .print-container .mb-6 { margin-bottom: 1.75rem; }
+#root .print-container .mb-8 { margin-bottom: 2rem; }
+
+/* Cards: softer radius, shadow-md, subtle hover */
+#root .bg-white.rounded-xl { border-radius: 0.875rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05); transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+#root .bg-white.rounded-xl:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05); }
+#root .bg-white.rounded-xl.border-gray-100 { border-color: #f3f4f6; }
+
+/* Tables: zebra, hover, thead, cell spacing */
+#root table { border-collapse: collapse; }
+#root table thead tr { background: #f8fafc !important; border-bottom: 1px solid #e2e8f0; }
+#root table thead th { padding: 0.75rem 1rem !important; font-weight: 600; color: #475569; }
+#root table tbody tr { transition: background 0.15s ease; }
+#root table tbody tr:nth-child(even) { background: #fafafa; }
+#root table tbody tr:hover { background: #f4f4f5 !important; }
+#root table tbody td { padding: 0.75rem 1rem !important; }
+
+/* Forms & inputs: min-height, focus ring, labels */
+#root input[type="text"], #root input[type="number"], #root input[type="date"], #root input[type="email"], #root input[type="tel"],
+#root select, #root textarea { min-height: 2.5rem; padding: 0.5rem 0.75rem !important; border-radius: 0.5rem; transition: border-color 0.2s, box-shadow 0.2s; }
+#root input:focus, #root select:focus, #root textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15); }
+#root .mb-3 label { font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+
+/* Modals: more padding */
+#root [role="dialog"] > .border-b { padding: 1.25rem 1.25rem !important; }
+#root [role="dialog"] .border-b + * { padding: 1.25rem !important; }
+
+/* Buttons: transitions, consistent height in toolbars */
+#root button { transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
+#root .flex.gap-2 button, #root .flex.gap-3 button { min-height: 2.25rem; }
+#root button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+/* Sidebar & topbar alignment, icon size */
+#root aside nav button { min-height: 2.5rem; }
+#root aside nav svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+#root header h2 { letter-spacing: -0.01em; }
 </style>
 </head>
-<body class="bg-gray-50 text-gray-900 font-sans">
+<body class="bg-gray-50 text-gray-900 font-sans" data-theme="light">
 <div id="root"></div>
+<style id="phase-6b-tokens">
+/* ========== Phase 6B — Visible UI Upgrade (Design Tokens) ========== */
+/* ========== Phase 7.1 — Themes (light/dim/dark) ========== */
+[data-theme="light"] {
+  --ff-bg: #f6f7fb;
+  --ff-surface: #ffffff;
+  --ff-surface-2: #fbfcfe;
+  --ff-border: #e6e8ef;
+  --ff-text: #0f172a;
+  --ff-muted: #64748b;
+  --ff-primary: #2563eb;
+  --ff-primary-600: #1d4ed8;
+  --ff-ring: rgba(37, 99, 235, .25);
+  --ff-shadow: 0 10px 25px rgba(15, 23, 42, .06);
+  --ff-shadow-2: 0 14px 35px rgba(15, 23, 42, .10);
+  --ff-radius: 14px;
+  --ff-row-hover: rgba(37, 99, 235, .06);
+}
+[data-theme="dim"] {
+  --ff-bg: #64748b;
+  --ff-surface: #94a3b8;
+  --ff-surface-2: #cbd5e1;
+  --ff-border: #475569;
+  --ff-text: #0f172a;
+  --ff-muted: #475569;
+  --ff-primary: #2563eb;
+  --ff-primary-600: #1d4ed8;
+  --ff-ring: rgba(37, 99, 235, .28);
+  --ff-shadow: 0 10px 25px rgba(0, 0, 0, .18);
+  --ff-shadow-2: 0 14px 35px rgba(0, 0, 0, .22);
+  --ff-radius: 14px;
+  --ff-row-hover: rgba(37, 99, 235, .08);
+}
+[data-theme="dark"] {
+  --ff-bg: #0f172a;
+  --ff-surface: #1e293b;
+  --ff-surface-2: #334155;
+  --ff-border: #475569;
+  --ff-text: #f1f5f9;
+  --ff-muted: #94a3b8;
+  --ff-primary: #3b82f6;
+  --ff-primary-600: #60a5fa;
+  --ff-ring: rgba(59, 130, 246, .35);
+  --ff-shadow: 0 10px 25px rgba(0, 0, 0, .3);
+  --ff-shadow-2: 0 14px 35px rgba(0, 0, 0, .4);
+  --ff-radius: 14px;
+  --ff-row-hover: rgba(59, 130, 246, .15);
+}
+
+body { background: var(--ff-bg) !important; color: var(--ff-text); }
+
+/* App background — واضح من أول نظرة */
+.app-shell { background: var(--ff-bg) !important; min-height: 100vh; }
+.app-shell main { background: var(--ff-bg) !important; }
+
+/* Topbar: surface + border + sticky */
+.app-shell header { background: var(--ff-surface) !important; border-bottom: 1px solid var(--ff-border) !important; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+.app-shell header h2 { color: var(--ff-text) !important; }
+
+/* Sidebar: surface + border + active/hover واضح */
+.app-shell aside { background: var(--ff-surface) !important; border-left: 1px solid var(--ff-border) !important; }
+.app-shell aside [class*="border-b"], .app-shell aside [class*="border-t"] { border-color: var(--ff-border) !important; }
+.app-shell aside nav button { color: var(--ff-muted) !important; }
+.app-shell aside nav button:hover { background: var(--ff-surface-2) !important; color: var(--ff-primary) !important; }
+.app-shell aside nav button.bg-blue-600 { background: var(--ff-primary) !important; color: white !important; }
+.app-shell aside .text-gray-300 { color: var(--ff-muted) !important; }
+.app-shell aside .text-gray-400 { color: var(--ff-muted) !important; }
+.app-shell aside .text-gray-500 { color: var(--ff-muted) !important; }
+.app-shell aside h1 { color: var(--ff-text) !important; }
+.app-shell aside .bg-blue-600 { background: var(--ff-primary) !important; }
+
+/* Cards: surface + border + shadow واضح */
+.app-shell .bg-white.rounded-xl { background: var(--ff-surface) !important; border: 1px solid var(--ff-border) !important; border-radius: var(--ff-radius) !important; box-shadow: var(--ff-shadow) !important; transition: box-shadow .2s, border-color .2s; }
+.app-shell .bg-white.rounded-xl:hover { box-shadow: var(--ff-shadow-2) !important; border-color: var(--ff-border) !important; }
+
+/* Tables: header surface-2, zebra, hover, padding */
+.app-shell table thead tr { background: var(--ff-surface-2) !important; border-bottom: 1px solid var(--ff-border) !important; }
+.app-shell table thead th { padding: 0.875rem 1rem !important; color: var(--ff-text) !important; font-weight: 600; }
+.app-shell table tbody tr:nth-child(even) { background: var(--ff-surface-2) !important; }
+.app-shell table tbody tr:hover { background: var(--ff-row-hover) !important; }
+.app-shell table tbody td { padding: 0.875rem 1rem !important; color: var(--ff-text); }
+.app-shell table { border-collapse: collapse; }
+
+/* Inputs: surface-2, border, focus ring */
+.app-shell input[type="text"], .app-shell input[type="number"], .app-shell input[type="date"], .app-shell input[type="email"], .app-shell input[type="tel"],
+.app-shell select, .app-shell textarea { background: var(--ff-surface-2) !important; border: 1px solid var(--ff-border) !important; border-radius: 10px; min-height: 2.5rem; padding: 0.5rem 0.75rem !important; transition: border-color .2s, box-shadow .2s; }
+.app-shell input:focus, .app-shell select:focus, .app-shell textarea:focus { outline: none !important; border-color: var(--ff-primary) !important; box-shadow: 0 0 0 3px var(--ff-ring) !important; }
+
+/* Buttons: primary واضح + secondary أنظف */
+.app-shell button.bg-blue-600 { background: var(--ff-primary) !important; color: white !important; transition: background .2s, box-shadow .2s; }
+.app-shell button.bg-blue-600:hover { background: var(--ff-primary-600) !important; }
+.app-shell button.bg-blue-600:focus-visible { box-shadow: 0 0 0 3px var(--ff-ring) !important; outline: none !important; }
+.app-shell button.border.border-gray-200 { border-color: var(--ff-border) !important; background: var(--ff-surface) !important; color: var(--ff-text) !important; }
+.app-shell button.border.border-gray-200:hover { background: var(--ff-surface-2) !important; }
+.app-shell button:focus-visible { outline: 2px solid var(--ff-primary) !important; outline-offset: 2px !important; }
+
+/* Modals */
+.app-shell [role="dialog"] { background: var(--ff-surface) !important; border: 1px solid var(--ff-border) !important; border-radius: var(--ff-radius) !important; box-shadow: var(--ff-shadow-2) !important; }
+.app-shell [role="dialog"] .border-b { border-color: var(--ff-border) !important; padding: 1.25rem !important; }
+
+/* Page padding */
+.app-shell .print-container > div { padding: 1.25rem 1rem !important; }
+
+/* Phase 7.1: theme-aware text so Tailwind grays follow theme */
+.app-shell .text-gray-900 { color: var(--ff-text) !important; }
+.app-shell .text-gray-700 { color: var(--ff-text) !important; }
+.app-shell .text-gray-600 { color: var(--ff-muted) !important; }
+.app-shell .text-gray-500 { color: var(--ff-muted) !important; }
+.app-shell .text-gray-400 { color: var(--ff-muted) !important; }
+.app-shell input, .app-shell select, .app-shell textarea { color: var(--ff-text) !important; }
+.app-shell [role="dialog"] h3 { color: var(--ff-text) !important; }
+</style>
 <script type="text/babel">
 const { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } = React;
 
@@ -55,8 +210,7 @@ const LETTER_TYPES = { intro: 'خطاب تعريف', request: 'خطاب مخاط
 const genId = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substr(2);
 const now = () => new Date().toISOString();
 const today = () => new Date().toISOString().split('T')[0];
-const formatNum = (n) => n != null ? Number(n).toLocaleString('ar-SA') : '0';
-const formatCurrency = (n) => `${formatNum(n)} ر.س`;
+/* Phase 7.2: Central Formatter (depends on dataStore — defined below) */
 
 const getMonthLabel = (dateStr) => {
   const d = new Date(dateStr);
@@ -105,7 +259,7 @@ const SEED_DRAFTS = [
   { templateType:'request', fields:{ officeName:'مكتب مثال العقاري', recipientOrg:'بلدية بريدة', subject:'طلب تصريح', body:'نرجو التكرم بإصدار تصريح...', date:'2025-02-10', managerName:'خالد الأحمد' }},
 ];
 
-const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'0501234567', email:'info@example-realestate.sa', defaultCommissionPercent:50 };
+const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'0501234567', email:'info@example-realestate.sa', defaultCommissionPercent:50, theme:'light', numerals:'ar' };
 
 // ============================================
 // DATASTORE (LocalStorage Abstraction)
@@ -213,7 +367,12 @@ const dataStore = {
     }
   },
   settings: {
-    get: () => safeGet(KEYS.settings, SEED_SETTINGS),
+    get: () => {
+      const current = safeGet(KEYS.settings, SEED_SETTINGS);
+      const theme = (current && (current.theme === 'light' || current.theme === 'dim' || current.theme === 'dark')) ? current.theme : 'light';
+      const numerals = (current && (current.numerals === 'ar' || current.numerals === 'en')) ? current.numerals : 'ar';
+      return { ...SEED_SETTINGS, ...current, theme, numerals };
+    },
     update: (data) => {
       const current = safeGet(KEYS.settings, SEED_SETTINGS);
       const updated = { ...current, ...data };
@@ -241,6 +400,68 @@ const dataStore = {
       }
     }
   }
+};
+
+// ============================================
+// FORMATTER (Phase 7.2 — Numerals: ar / en)
+// ============================================
+const getNumeralLocale = () => (dataStore.settings.get().numerals === 'en' ? 'en-US' : 'ar-SA');
+
+const formatNumber = (value, options = {}) => {
+  const n = value != null ? Number(value) : 0;
+  if (Number.isNaN(n)) return '0';
+  const locale = getNumeralLocale();
+  const opts = { minimumFractionDigits: options.minimumFractionDigits ?? 0, maximumFractionDigits: options.maximumFractionDigits ?? 2, ...options };
+  return new Intl.NumberFormat(locale, opts).format(n);
+};
+
+const formatCurrency = (value) => `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
+
+const formatPercent = (value) => `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+
+// Backward alias for chart/tooltip where raw number string is needed
+const formatNum = (n) => formatNumber(n, { maximumFractionDigits: 2 });
+
+// ============================================
+// DATE FORMATTER (Phase 7.3 — Gregorian + Hijri, respects numerals)
+// ============================================
+/** تطبيع لاحقة الهجري: إزالة تكرار هـ وضمان وجودها مرة واحدة في النهاية فقط */
+const normalizeHijriSuffix = (str) => {
+  if (!str || typeof str !== 'string') return str;
+  let s = str.trim().replace(/\s*هـ+\s*$/g, '').replace(/هـ\s*هـ/g, 'هـ').trim();
+  return s ? `${s} هـ` : '';
+};
+
+/** يعرض: "السبت، ٧ فبراير ٢٠٢٦ — ١٨ شعبان ١٤٤٧ هـ" (أرقام تتبع إعداد numerals، لاحقة هـ مرة واحدة) */
+const formatDateHeader = (date) => {
+  const d = date instanceof Date ? date : (date ? new Date(date) : null);
+  if (!d || Number.isNaN(d.getTime())) return '';
+  const numerals = dataStore.settings.get().numerals;
+  const localeBase = numerals === 'en' ? 'ar-SA-u-nu-latn' : 'ar-SA';
+  const localeHijri = numerals === 'en' ? 'ar-SA-u-ca-islamic-nu-latn' : 'ar-SA-u-ca-islamic';
+  const greg = new Intl.DateTimeFormat(localeBase, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  const hijriRaw = new Intl.DateTimeFormat(localeHijri, { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  const hijri = normalizeHijriSuffix(hijriRaw) || (hijriRaw.trim() + ' هـ');
+  return `${greg} — ${hijri}`;
+};
+
+/** ميلادي رقمي فقط (مثال: 08/02/2026) — يتبع numerals */
+const formatDateGregorianNumeric = (date) => {
+  const d = date instanceof Date ? date : (date ? new Date(date) : null);
+  if (!d || Number.isNaN(d.getTime())) return '';
+  const numerals = dataStore.settings.get().numerals;
+  const localeBase = numerals === 'en' ? 'ar-SA-u-nu-latn' : 'ar-SA';
+  return new Intl.DateTimeFormat(localeBase, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+};
+
+/** هجري رقمي فقط (مثال: 21/08/1447 هـ) — يتبع numerals، لاحقة هـ مرة واحدة */
+const formatDateHijriNumeric = (date) => {
+  const d = date instanceof Date ? date : (date ? new Date(date) : null);
+  if (!d || Number.isNaN(d.getTime())) return '';
+  const numerals = dataStore.settings.get().numerals;
+  const localeHijri = numerals === 'en' ? 'ar-SA-u-ca-islamic-nu-latn' : 'ar-SA-u-ca-islamic';
+  const raw = new Intl.DateTimeFormat(localeHijri, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  return normalizeHijriSuffix(raw) || (raw.trim() + ' هـ');
 };
 
 // ============================================
@@ -471,7 +692,10 @@ const Topbar = ({ page, setMobileOpen }) => {
         <button className="md:hidden p-2 rounded-lg hover:bg-gray-100" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة"><Icons.menu size={22}/></button>
         <h2 className="text-lg font-bold text-gray-900">{titles[page] || ''}</h2>
       </div>
-      <div className="text-xs text-gray-400">{new Date().toLocaleDateString('ar-SA', { weekday:'long', year:'numeric', month:'long', day:'numeric' })}</div>
+      <div className="text-sm text-gray-400 text-left">
+        <div>{formatDateHeader(new Date())}</div>
+        <div className="mt-0.5">{formatDateGregorianNumeric(new Date())} — {formatDateHijriNumeric(new Date())}</div>
+      </div>
     </header>
   );
 };
@@ -957,8 +1181,8 @@ const CommissionsPage = () => {
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-900">{formatCurrency(c.dealValue)}</td>
                     <td className="px-4 py-3">
-                      <div className="text-xs">مكتب: {c.officePercent}%</div>
-                      <div className="text-xs">وكيل: {c.agentPercent}%</div>
+                      <div className="text-xs">مكتب: {formatPercent(c.officePercent)}</div>
+                      <div className="text-xs">وكيل: {formatPercent(c.agentPercent)}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-xs text-blue-600 font-medium">{formatCurrency(officeAmt)}</div>
@@ -1087,12 +1311,8 @@ const FIELD_LABELS = {
   managerName:'اسم المدير', subject:'الموضوع', body:'نص الخطاب', delegateName:'اسم المفوَّض', delegateId:'رقم الهوية', purpose:'الغرض من التفويض'
 };
 
-/** تنسيق التاريخ بالعربية للمسودات (مثل: السبت، ٧ فبراير ٢٠٢٦) */
-const formatDateArabic = (dateStr) => {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ar-SA', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-};
+/** تنسيق التاريخ للمسودات والقوالب: ميلادي + هجري (يتبع إعداد numerals) */
+const formatDateArabic = (dateStr) => (dateStr ? formatDateHeader(dateStr) : '');
 
 const TemplatesPage = ({ setPage, setLetterType }) => (
   <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -1159,7 +1379,7 @@ const GeneratorPage = ({ letterType, setLetterType }) => {
     if (template.type === 'intro') return (
       <div className="space-y-4 text-gray-900 leading-relaxed">
         <div className="text-center mb-6"><h2 className="text-xl font-bold">{f.officeName || '___'}</h2></div>
-        <p>التاريخ: {f.date || '___'}</p>
+        <p>التاريخ: {f.date ? formatDateHeader(f.date) : '___'}</p>
         <p>إلى السيد/ة: {f.recipientName || '___'}</p>
         <p>الجهة: {f.recipientOrg || '___'}</p>
         <p className="mt-4">السلام عليكم ورحمة الله وبركاته،</p>
@@ -1172,7 +1392,7 @@ const GeneratorPage = ({ letterType, setLetterType }) => {
     if (template.type === 'request') return (
       <div className="space-y-4 text-gray-900 leading-relaxed">
         <div className="text-center mb-6"><h2 className="text-xl font-bold">{f.officeName || '___'}</h2></div>
-        <p>التاريخ: {f.date || '___'}</p>
+        <p>التاريخ: {f.date ? formatDateHeader(f.date) : '___'}</p>
         <p>إلى: {f.recipientOrg || '___'}</p>
         <p className="font-bold">الموضوع: {f.subject || '___'}</p>
         <p className="mt-4">السلام عليكم ورحمة الله وبركاته،</p>
@@ -1185,7 +1405,7 @@ const GeneratorPage = ({ letterType, setLetterType }) => {
     return (
       <div className="space-y-4 text-gray-900 leading-relaxed">
         <div className="text-center mb-6"><h2 className="text-xl font-bold">{f.officeName || '___'}</h2></div>
-        <p>التاريخ: {f.date || '___'}</p>
+        <p>التاريخ: {f.date ? formatDateHeader(f.date) : '___'}</p>
         <h3 className="font-bold text-center text-lg mt-4">خطاب تفويض</h3>
         <p className="mt-4">نحن {f.officeName || '___'} نفوّض السيد/ة <strong>{f.delegateName || '___'}</strong> صاحب/ة الهوية رقم <strong>{f.delegateId || '___'}</strong> بـ {f.purpose || '___'}. وهذا التفويض ساري المفعول من تاريخه حتى إشعار آخر.</p>
         {f.body?.trim() ? <p>{f.body}</p> : null}
@@ -1300,6 +1520,7 @@ const SettingsPage = () => {
     setConfirm({ title:'إعادة بيانات الديمو', message:'سيتم استبدال جميع البيانات ببيانات الديمو. هل أنت متأكد؟', onConfirm: () => {
       dataStore.seed.resetDemo();
       setSettings(dataStore.settings.get());
+      document.body.dataset.theme = dataStore.settings.get().theme || 'light';
       toast('تمت إعادة بيانات الديمو');
       setConfirm(null);
     }});
@@ -1309,6 +1530,7 @@ const SettingsPage = () => {
     setConfirm({ title:'حذف جميع البيانات', message:'⚠️ تحذير: سيتم حذف جميع البيانات نهائيًا. هل أنت متأكد؟', danger:true, onConfirm: () => {
       dataStore.seed.clearAll();
       setSettings(SEED_SETTINGS);
+      document.body.dataset.theme = 'light';
       toast('تم حذف جميع البيانات');
       setConfirm(null);
     }});
@@ -1323,6 +1545,22 @@ const SettingsPage = () => {
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
+      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
+        <h3 className="font-bold text-gray-900 mb-4">وضع العرض</h3>
+        <Field label="المظهر">
+          <select value={settings.theme || 'light'} onChange={e => { const v = e.target.value; setSettings(s => ({ ...s, theme: v })); document.body.dataset.theme = v; dataStore.settings.update({ theme: v }); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="وضع العرض">
+            <option value="light">نهاري</option>
+            <option value="dim">خافت</option>
+            <option value="dark">ليلي</option>
+          </select>
+        </Field>
+        <Field label="عرض الأرقام">
+          <select value={settings.numerals || 'ar'} onChange={e => { const v = e.target.value; setSettings(s => ({ ...s, numerals: v })); dataStore.settings.update({ numerals: v }); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض الأرقام">
+            <option value="ar">عربي</option>
+            <option value="en">إنجليزي</option>
+          </select>
+        </Field>
+      </div>
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
         <Field label="اسم المكتب">
@@ -1368,6 +1606,8 @@ const App = () => {
 
   // Ensure seed data on first load
   useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
+  // Phase 7.1: apply saved theme on load
+  useEffect(() => { const t = dataStore.settings.get().theme; document.body.dataset.theme = (t === 'light' || t === 'dim' || t === 'dark') ? t : 'light'; }, []);
 
   const renderPage = () => {
     switch (page) {
@@ -1385,7 +1625,7 @@ const App = () => {
 
   return (
     <ToastProvider>
-      <div className="flex min-h-screen">
+      <div className="app-shell flex min-h-screen">
         <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
         <main className="flex-1 min-w-0">
           <Topbar page={page} setMobileOpen={setMobileOpen}/>
