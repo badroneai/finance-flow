@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Finance Flow — إدارة مالية سهلة للمكتب العقاري</title>
+  <style>
+    :root {
+      --lp-bg: #f6f7fb;
+      --lp-surface: #ffffff;
+      --lp-primary: #2563eb;
+      --lp-primary-dark: #1d4ed8;
+      --lp-text: #0f172a;
+      --lp-muted: #64748b;
+      --lp-border: #e6e8ef;
+      --lp-radius: 12px;
+      --lp-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+      background: var(--lp-bg);
+      color: var(--lp-text);
+      line-height: 1.6;
+    }
+    .container { max-width: 960px; margin: 0 auto; padding: 0 1rem; }
+    section { padding: 3rem 0; }
+    h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
+    h2 { font-size: 1.35rem; margin: 0 0 1.5rem; color: var(--lp-text); }
+    .btn {
+      display: inline-block;
+      padding: 0.65rem 1.25rem;
+      border-radius: var(--lp-radius);
+      font-weight: 600;
+      text-decoration: none;
+      transition: background .2s, color .2s;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+    .btn-primary {
+      background: var(--lp-primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--lp-primary-dark); color: #fff; }
+    .btn-outline {
+      background: transparent;
+      color: var(--lp-primary);
+      border: 2px solid var(--lp-primary);
+    }
+    .btn-outline:hover { background: var(--lp-primary); color: #fff; }
+    /* (A) Hero */
+    .hero {
+      text-align: center;
+      padding: 4rem 0;
+      background: var(--lp-surface);
+      border-bottom: 1px solid var(--lp-border);
+    }
+    .hero .tagline { font-size: 1.1rem; color: var(--lp-muted); margin-bottom: 1.5rem; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .hero .values {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1.5rem 0 2rem;
+    }
+    .hero .values span {
+      background: var(--lp-bg);
+      padding: 0.4rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      color: var(--lp-text);
+    }
+    .hero .cta { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+    .hero .cta-note { font-size: 0.85rem; color: var(--lp-muted); margin-top: 1rem; }
+    .hero .cta-note a { color: var(--lp-primary); text-decoration: none; }
+    .hero .cta-note a:hover { text-decoration: underline; }
+    /* (B) لمن المنتج */
+    .audience { background: var(--lp-bg); }
+    .audience-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 600px) { .audience-grid { grid-template-columns: 1fr; } }
+    .audience-card {
+      background: var(--lp-surface);
+      padding: 1.25rem;
+      border-radius: var(--lp-radius);
+      border: 1px solid var(--lp-border);
+      box-shadow: var(--lp-shadow);
+    }
+    .audience-card h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+    .audience-card ul { margin: 0; padding-right: 1.2rem; color: var(--lp-muted); font-size: 0.95rem; }
+    /* (C) ماذا يقدم */
+    .features { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .feature-card {
+      background: var(--lp-bg);
+      padding: 1.25rem;
+      border-radius: var(--lp-radius);
+      border: 1px solid var(--lp-border);
+    }
+    .feature-card h3 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+    .feature-card p { margin: 0; font-size: 0.9rem; color: var(--lp-muted); }
+    /* (D) Screenshots placeholders */
+    .screenshots { background: var(--lp-bg); }
+    .screenshots-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 700px) { .screenshots-grid { grid-template-columns: repeat(2, 1fr); } }
+    .screenshot-placeholder {
+      aspect-ratio: 4/3;
+      background: var(--lp-surface);
+      border: 2px dashed var(--lp-border);
+      border-radius: var(--lp-radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--lp-muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 0.5rem;
+    }
+    /* (E) الباقات */
+    .pricing { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 700px) { .pricing-grid { grid-template-columns: 1fr; } }
+    .pricing-card {
+      background: var(--lp-bg);
+      padding: 1.5rem;
+      border-radius: var(--lp-radius);
+      border: 2px solid var(--lp-border);
+      position: relative;
+    }
+    .pricing-card.recommended { border-color: var(--lp-primary); box-shadow: 0 0 0 1px var(--lp-primary); }
+    .pricing-card.recommended .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--lp-primary); color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; }
+    .pricing-card h3 { margin: 0 0 0.25rem; font-size: 1.2rem; }
+    .pricing-card .price { font-size: 1.5rem; font-weight: 700; color: var(--lp-primary); margin: 0.5rem 0 1rem; }
+    .pricing-card ul { margin: 0; padding-right: 1.2rem; font-size: 0.9rem; color: var(--lp-muted); }
+    .pricing-table { overflow-x: auto; margin-top: 2rem; }
+    .pricing-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .pricing-table th, .pricing-table td { padding: 0.6rem 0.75rem; text-align: right; border: 1px solid var(--lp-border); }
+    .pricing-table th { background: var(--lp-bg); font-weight: 600; }
+    .pricing-note { margin-top: 1rem; font-size: 0.85rem; color: var(--lp-muted); }
+    /* (F) FAQ */
+    .faq { background: var(--lp-bg); }
+    .faq-item { margin-bottom: 1rem; }
+    .faq-item h4 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .faq-item p { margin: 0; font-size: 0.9rem; color: var(--lp-muted); }
+    /* (G) Contact */
+    .contact { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
+    .contact-form { max-width: 420px; }
+    .contact-form label { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; font-weight: 500; }
+    .contact-form input, .contact-form select {
+      width: 100%;
+      padding: 0.6rem 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid var(--lp-border);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+    .contact-channels { margin-top: 1.5rem; font-size: 0.95rem; color: var(--lp-muted); }
+    .contact-channels a { color: var(--lp-primary); }
+    /* (H) Footer */
+    footer {
+      padding: 1.5rem 0;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--lp-muted);
+      border-top: 1px solid var(--lp-border);
+    }
+    footer .disclaimer { margin-top: 0.5rem; }
+  </style>
+</head>
+<body>
+  <!-- (A) Hero -->
+  <section class="hero">
+    <div class="container">
+      <h1>Finance Flow — إدارة مالية سهلة للمكتب العقاري</h1>
+      <p class="tagline">أداة واحدة لتتبع الحركات المالية والعمولات والخطابات. عربي بالكامل، يفتح من المتصفح، والبيانات تبقى عندك.</p>
+      <div class="values">
+        <span>⏱ وفّر وقتك</span>
+        <span>✓ قلّل الأخطاء</span>
+        <span>🔒 بياناتك عندك</span>
+      </div>
+      <div class="cta">
+        <a href="./finance-flow.html" class="btn btn-outline" target="_blank">شاهد الديمو</a>
+        <a href="#contact" class="btn btn-primary">اطلب النسخة</a>
+      </div>
+      <p class="cta-note">ملاحظة: الديمو يعمل محليًا داخل المتصفح، والبيانات تُحفظ على جهازك.</p>
+      <p class="cta-note"><a href="#demo">شاهد لقطات الشاشة</a></p>
+    </div>
+  </section>
+
+  <!-- (B) لمن المنتج -->
+  <section class="audience">
+    <div class="container">
+      <h2>لمن المنتج؟</h2>
+      <div class="audience-grid">
+        <div class="audience-card">
+          <h3>✅ مناسب لـ</h3>
+          <ul>
+            <li>مكاتب عقارية صغيرة (1–5 موظفين)</li>
+            <li>تتبع دخل وخرج وعمولات صفقات</li>
+            <li>إصدار خطابات رسمية سريعة</li>
+            <li>جهاز واحد أو اثنين في المكتب</li>
+          </ul>
+        </div>
+        <div class="audience-card">
+          <h3>❌ غير مناسب لـ</h3>
+          <ul>
+            <li>شركات كبيرة بعدة فروع</li>
+            <li>محاسبة معقدة أو تكامل مع البنوك</li>
+            <li>تعدد مستخدمين مع صلاحيات متعددة</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- (C) ماذا يقدم -->
+  <section class="features">
+    <div class="container">
+      <h2>ماذا يقدم؟</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>الحركات المالية</h3>
+          <p>إضافة وتصفية وبحث وتصدير CSV وطباعة.</p>
+        </div>
+        <div class="feature-card">
+          <h3>العمولات</h3>
+          <p>نسب المكتب والوكيل، حالة معلقة/مدفوعة، فلاتر وتصدير وطباعة.</p>
+        </div>
+        <div class="feature-card">
+          <h3>الخطابات</h3>
+          <p>قوالب جاهزة، مسودات، معاينة وطباعة.</p>
+        </div>
+        <div class="feature-card">
+          <h3>لوحة المعلومات</h3>
+          <p>ملخص الدخل والخرج والعمولات ورسم بياني.</p>
+        </div>
+        <div class="feature-card">
+          <h3>الإعدادات</h3>
+          <p>ثيم (نهاري/خافت/ليلي)، أرقام عربي/إنجليزي، تواريخ ميلادي وهجري.</p>
+        </div>
+        <div class="feature-card">
+          <h3>النسخ الاحتياطي</h3>
+          <p>تصدير واستيراد JSON لاستعادة البيانات.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- (D) Screenshots placeholders -->
+  <section class="screenshots" id="demo">
+    <div class="container">
+      <h2>لقطات من التطبيق</h2>
+      <div class="screenshots-grid">
+        <div class="screenshot-placeholder">Dashboard</div>
+        <div class="screenshot-placeholder">Transactions</div>
+        <div class="screenshot-placeholder">Commissions</div>
+        <div class="screenshot-placeholder">Letters</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- (E) الباقات والأسعار -->
+  <section class="pricing">
+    <div class="container">
+      <h2>الباقات والأسعار</h2>
+      <div class="pricing-grid">
+        <div class="pricing-card">
+          <h3>🟢 Basic</h3>
+          <div class="price">399 ر.س</div>
+          <ul>
+            <li>ملف التطبيق + التوثيق</li>
+            <li>دليل التثبيت</li>
+            <li>مرة واحدة</li>
+          </ul>
+        </div>
+        <div class="pricing-card recommended">
+          <span class="badge">موصى به ⭐</span>
+          <h3>🔵 Pro</h3>
+          <div class="price">899 ر.س</div>
+          <ul>
+            <li>كل ما في Basic</li>
+            <li>دعم بريد 12 شهراً</li>
+            <li>تحديثات سنة</li>
+          </ul>
+        </div>
+        <div class="pricing-card">
+          <h3>🟣 Office</h3>
+          <div class="price">1,499 ر.س</div>
+          <ul>
+            <li>كل ما في Pro</li>
+            <li>دعم واتساب + جلسة إعداد</li>
+            <li>تخصيص بسيط + تحديثات سنتين</li>
+          </ul>
+        </div>
+      </div>
+      <div class="pricing-table">
+        <table>
+          <thead>
+            <tr>
+              <th>الميزة</th>
+              <th>Basic</th>
+              <th>Pro ⭐</th>
+              <th>Office</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>ملف التطبيق + التوثيق</td><td>✅</td><td>✅</td><td>✅</td></tr>
+            <tr><td>دعم بريد</td><td>—</td><td>12 شهراً</td><td>✅</td></tr>
+            <tr><td>دعم واتساب</td><td>—</td><td>—</td><td>✅</td></tr>
+            <tr><td>تحديثات</td><td>—</td><td>سنة</td><td>سنتان</td></tr>
+            <tr><td>مساعدة إعداد / تخصيص</td><td>—</td><td>—</td><td>✅</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="pricing-note">الترخيص: استخدام المكتب — جهاز واحد أو اثنين ضمن نفس المكتب. دفعة مرة واحدة.</p>
+    </div>
+  </section>
+
+  <!-- (F) FAQ -->
+  <section class="faq">
+    <div class="container">
+      <h2>أسئلة شائعة</h2>
+      <div class="faq-item">
+        <h4>لماذا ليس Excel؟</h4>
+        <p>Excel ممتاز للأرقام لكنه لا يربط العمولات بالصفقات ولا يقدّم قوالب خطابات جاهزة. Finance Flow يجمع الحركات والعمولات والخطابات في واجهة واحدة مع تصدير CSV إن أردت.</p>
+      </div>
+      <div class="faq-item">
+        <h4>أين تُحفظ البيانات؟</h4>
+        <p>على جهازك فقط داخل المتصفح. لا إرسال لخادم ولا سحابة — أنت تتحكم بالملف والنسخة الاحتياطية.</p>
+      </div>
+      <div class="faq-item">
+        <h4>ماذا لو غيّرت الجهاز؟</h4>
+        <p>صدّر نسخة احتياطية من الإعدادات قبل تغيير الجهاز، ثم استورد نفس الملف على الجهاز الجديد لاستعادة كل البيانات.</p>
+      </div>
+      <div class="faq-item">
+        <h4>هل يعمل بدون إنترنت؟</h4>
+        <p>بعد فتح التطبيق أول مرة (يحتاج إنترنت للتحميل)، يمكنك العمل على البيانات بدون اتصال. إعادة فتح الصفحة بدون إنترنت قد لا تعمل.</p>
+      </div>
+      <div class="faq-item">
+        <h4>هل يوجد اشتراك؟</h4>
+        <p>لا. الدفع مرة واحدة حسب الباقة. لا اشتراك شهري ولا التزام متكرر.</p>
+      </div>
+      <div class="faq-item">
+        <h4>كيف أسوي نسخة احتياطية؟</h4>
+        <p>من الإعدادات → النسخ الاحتياطي → «تصدير نسخة احتياطية». يُحمّل ملف JSON. احفظه في مكان آمن؛ عند الحاجة استورد نفس الملف لاستعادة كل شيء.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- (G) التواصل والطلب -->
+  <section class="contact" id="contact">
+    <div class="container">
+      <h2>التواصل والطلب</h2>
+      <form class="contact-form" id="landing-form">
+        <label for="name">الاسم</label>
+        <input type="text" id="name" name="name" placeholder="الاسم الكامل" required/>
+        <label for="office">اسم المكتب</label>
+        <input type="text" id="office" name="office" placeholder="اسم المكتب العقاري"/>
+        <label for="phone">رقم الجوال</label>
+        <input type="tel" id="phone" name="phone" placeholder="05xxxxxxxx" required/>
+        <label for="package">الباقة المطلوبة</label>
+        <select id="package" name="package">
+          <option value="Basic">Basic — 399 ر.س</option>
+          <option value="Pro">Pro — 899 ر.س ⭐</option>
+          <option value="Office">Office — 1,499 ر.س</option>
+        </select>
+        <button type="submit" class="btn btn-primary">إرسال الطلب</button>
+      </form>
+      <div class="contact-channels">
+        <p>WhatsApp: <a href="https://wa.me/966500000000" title="ضع رقمك هنا (966XXXXXXXXX)">ضع رقمك هنا</a></p>
+        <p>Email: <a href="mailto:info@example.com?subject=طلب%20Finance%20Flow" title="ضع إيميلك هنا">ضع إيميلك هنا</a></p>
+        <p>Telegram: <a href="https://t.me/username" title="ضع معرفك هنا">ضع معرفك هنا</a></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- (H) Footer -->
+  <footer>
+    <div class="container">
+      <p>© Finance Flow. جميع الحقوق محفوظة.</p>
+      <p class="disclaimer">البيانات محفوظة محلياً على جهاز المستخدم.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('landing-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      alert('تم استلام طلبك (تجريبي)');
+    });
+  </script>
+</body>
+</html>
