@@ -3,7 +3,33 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Finance Flow | نظام التدفقات المالية</title>
+<!-- Phase 10: SEO & Meta -->
+<title>Finance Flow – نظام إدارة التدفق المالي للعقارات</title>
+<meta name="description" content="أداة بسيطة وفعالة لإدارة دخل ومصروف العقارات، تعمل محليًا على جهازك بدون اشتراك أو تعقيد. مثالية للمكاتب العقارية والمستثمرين الأفراد."/>
+<meta name="keywords" content="إدارة العقارات، التدفق المالي، برنامج عقاري، إدارة دخل العقارات، مصروفات العقارات، محاسبة عقارية، نظام عقاري"/>
+<meta name="author" content="Bader - Finance Flow"/>
+<link rel="canonical" href="https://YOUR-USERNAME.github.io/finance-flow/finance-flow.html"/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://YOUR-USERNAME.github.io/finance-flow/finance-flow.html"/>
+<meta property="og:title" content="Finance Flow – نظام إدارة التدفق المالي للعقارات"/>
+<meta property="og:description" content="أداة بسيطة لإدارة دخل ومصروف العقارات، تعمل محليًا بدون اشتراك."/>
+<meta property="og:image" content="https://YOUR-USERNAME.github.io/finance-flow/og-image.jpg"/>
+<meta property="og:locale" content="ar_SA"/>
+<meta property="twitter:card" content="summary_large_image"/>
+<meta property="twitter:url" content="https://YOUR-USERNAME.github.io/finance-flow/finance-flow.html"/>
+<meta property="twitter:title" content="Finance Flow – نظام إدارة التدفق المالي للعقارات"/>
+<meta property="twitter:description" content="أداة بسيطة لإدارة دخل ومصروف العقارات"/>
+<meta property="twitter:image" content="https://YOUR-USERNAME.github.io/finance-flow/twitter-image.jpg"/>
+<meta name="robots" content="index, follow"/>
+<meta name="theme-color" content="#2563eb"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Finance Flow"/>
+<link rel="icon" type="image/png" href="favicon.png"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"Finance Flow","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"SAR"},"operatingSystem":"Any","description":"نظام بسيط لإدارة التدفق المالي للعقارات يعمل محليًا بدون اشتراك","inLanguage":"ar","author":{"@type":"Person","name":"Bader"}}
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -76,6 +102,241 @@ tailwind.config = {
 #root aside nav button { min-height: 2.5rem; }
 #root aside nav svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
 #root header h2 { letter-spacing: -0.01em; }
+
+/* ========== Phase 1 — Value Proposition & Hero ========== */
+.value-proposition {
+  text-align: center;
+  margin: 2rem auto;
+  max-width: 800px;
+  padding: 0 1rem;
+}
+.value-proposition .main-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ff-primary);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+.value-proposition .sub-value {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--ff-muted);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+@media (max-width: 768px) {
+  .value-proposition .main-value {
+    font-size: 1.4rem;
+  }
+  .value-proposition .sub-value {
+    font-size: 1rem;
+  }
+}
+
+/* ========== Phase 3 — Welcome Banner (User Onboarding) ========== */
+.welcome-banner {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  margin: 1rem 0 2rem 0;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.welcome-banner .banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.welcome-banner .banner-text strong {
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-banner .banner-text p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.95;
+  margin: 0;
+}
+
+.welcome-banner .banner-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.welcome-banner .banner-close:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* ========== Phase 4 — Empty States Enhancement ========== */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--ff-surface);
+  border-radius: 12px;
+  border: 2px dashed var(--ff-border);
+  margin: 1rem 0;
+}
+
+.empty-state .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-state h3 {
+  font-size: 1.4rem;
+  color: var(--ff-text);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: var(--ff-muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.empty-state .empty-cta {
+  background: var(--ff-primary);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.empty-state .empty-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: var(--ff-primary-600);
+}
+
+/* ========== Phase 6 — Typography & Visual Polish ========== */
+/* 6.3 متغيرات الظلال */
+:root {
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+/* 6.1 التسلسل الهرمي للنصوص */
+#root h1, .app-shell h1 {
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
+}
+#root h2, .app-shell h2 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.8rem;
+}
+#root h3, .app-shell h3 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.6rem;
+}
+.app-shell .text-xl.font-bold,
+.app-shell .stat-number, .app-shell .total-amount, .app-shell .balance {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+}
+.app-shell .label, .app-shell .caption {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--ff-muted);
+}
+.app-shell .text-xs.font-medium {
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* 6.2 توحيد المسافات */
+.app-shell .section {
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+}
+.app-shell .card {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+}
+.app-shell .content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+@media (min-width: 768px) {
+  .app-shell .content-wrapper {
+    padding: 0 2rem;
+  }
+}
+
+/* 6.3 ظل موحد للبطاقات والمودال */
+.app-shell .card, .app-shell .section,
+.app-shell [role="dialog"] {
+  box-shadow: var(--shadow-sm);
+}
+.app-shell .card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ========== Phase 8 — Accessibility ========== */
+/* 8.4 مؤشرات التركيز: واضحة عند التنقل بالكيبورد فقط */
+*:focus { outline: 3px solid var(--ff-primary); outline-offset: 2px; }
+button:focus, a:focus, input:focus, select:focus, textarea:focus {
+  outline: 3px solid var(--ff-primary); outline-offset: 2px;
+}
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--ff-primary); outline-offset: 2px;
+}
+
+/* 8.3 تباين النصوص الهامة (WCAG AA) */
+.text-critical {
+  color: var(--ff-text);
+  background: var(--ff-surface);
+}
+[data-theme="dark"] .text-critical {
+  color: #ffffff;
+  background: #000000;
+}
+
+/* 8.5 دعم RTL */
+[dir="rtl"] {
+  text-align: right;
+}
+[dir="rtl"] .icon-before {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+[dir="rtl"] .icon-after {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
 </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans" data-theme="light">
@@ -97,39 +358,62 @@ tailwind.config = {
   --ff-shadow-2: 0 14px 35px rgba(15, 23, 42, .10);
   --ff-radius: 14px;
   --ff-row-hover: rgba(37, 99, 235, .06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
 }
+/* Phase 5 — Dim: أوضح تمييز عن النهاري (خلفيات أغمق، نصوص فاتحة) */
 [data-theme="dim"] {
-  --ff-bg: #64748b;
-  --ff-surface: #94a3b8;
-  --ff-surface-2: #cbd5e1;
-  --ff-border: #475569;
-  --ff-text: #0f172a;
-  --ff-muted: #475569;
-  --ff-primary: #2563eb;
-  --ff-primary-600: #1d4ed8;
-  --ff-ring: rgba(37, 99, 235, .28);
-  --ff-shadow: 0 10px 25px rgba(0, 0, 0, .18);
-  --ff-shadow-2: 0 14px 35px rgba(0, 0, 0, .22);
+  --ff-bg: #15202b;
+  --ff-surface: #192734;
+  --ff-surface-2: #1e2732;
+  --ff-border: #2f3336;
+  --ff-text: #e7e9ea;
+  --ff-muted: #8b98a5;
+  --ff-primary: #1d9bf0;
+  --ff-primary-600: #1a8cd8;
+  --ff-ring: rgba(29, 155, 240, .35);
+  --ff-shadow: 0 2px 12px rgba(0, 0, 0, .3);
+  --ff-shadow-2: 0 4px 20px rgba(0, 0, 0, .4);
   --ff-radius: 14px;
-  --ff-row-hover: rgba(37, 99, 235, .08);
+  --ff-row-hover: rgba(29, 155, 240, .1);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.45);
 }
+/* Phase 5 — Dark: أغمق من Dim (خلفية سوداء تقريباً) */
 [data-theme="dark"] {
-  --ff-bg: #0f172a;
-  --ff-surface: #1e293b;
-  --ff-surface-2: #334155;
-  --ff-border: #475569;
-  --ff-text: #f1f5f9;
-  --ff-muted: #94a3b8;
-  --ff-primary: #3b82f6;
-  --ff-primary-600: #60a5fa;
-  --ff-ring: rgba(59, 130, 246, .35);
-  --ff-shadow: 0 10px 25px rgba(0, 0, 0, .3);
-  --ff-shadow-2: 0 14px 35px rgba(0, 0, 0, .4);
+  --ff-bg: #000000;
+  --ff-surface: #16181c;
+  --ff-surface-2: #2f3336;
+  --ff-border: #2f3336;
+  --ff-text: #ffffff;
+  --ff-muted: #8899a6;
+  --ff-primary: #1d9bf0;
+  --ff-primary-600: #1a8cd8;
+  --ff-ring: rgba(29, 155, 240, .4);
+  --ff-shadow: 0 2px 12px rgba(0, 0, 0, .5);
+  --ff-shadow-2: 0 4px 20px rgba(0, 0, 0, .6);
   --ff-radius: 14px;
-  --ff-row-hover: rgba(59, 130, 246, .15);
+  --ff-row-hover: rgba(29, 155, 240, .15);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.6);
 }
 
-body { background: var(--ff-bg) !important; color: var(--ff-text); }
+body { background: var(--ff-bg) !important; color: var(--ff-text); transition: background-color 0.3s ease, color 0.3s ease; }
+
+/* Phase 5.3 — انتقال سلس عند تغيير الثيم */
+.app-shell,
+.app-shell main,
+.app-shell header,
+.app-shell aside,
+.app-shell .bg-white.rounded-xl,
+.app-shell input, .app-shell select, .app-shell textarea,
+.app-shell table thead tr, .app-shell table tbody tr,
+.app-shell aside nav button {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
 
 /* App background — واضح من أول نظرة */
 .app-shell { background: var(--ff-bg) !important; min-height: 100vh; }
@@ -172,6 +456,18 @@ body { background: var(--ff-bg) !important; color: var(--ff-text); }
 .app-shell button.bg-blue-600 { background: var(--ff-primary) !important; color: white !important; transition: background .2s, box-shadow .2s; }
 .app-shell button.bg-blue-600:hover { background: var(--ff-primary-600) !important; }
 .app-shell button.bg-blue-600:focus-visible { box-shadow: 0 0 0 3px var(--ff-ring) !important; outline: none !important; }
+
+/* Phase 5.2 — تباين أوضح للـ inputs في Dim/Dark */
+[data-theme="dim"] .app-shell input, [data-theme="dim"] .app-shell select, [data-theme="dim"] .app-shell textarea,
+[data-theme="dark"] .app-shell input, [data-theme="dark"] .app-shell select, [data-theme="dark"] .app-shell textarea {
+  background: var(--ff-surface-2) !important;
+  border-color: var(--ff-border) !important;
+  color: var(--ff-text) !important;
+}
+[data-theme="dim"] .app-shell input::placeholder, [data-theme="dark"] .app-shell input::placeholder,
+[data-theme="dim"] .app-shell textarea::placeholder, [data-theme="dark"] .app-shell textarea::placeholder {
+  color: var(--ff-muted);
+}
 .app-shell button.border.border-gray-200 { border-color: var(--ff-border) !important; background: var(--ff-surface) !important; color: var(--ff-text) !important; }
 .app-shell button.border.border-gray-200:hover { background: var(--ff-surface-2) !important; }
 .app-shell button:focus-visible { outline: 2px solid var(--ff-primary) !important; outline-offset: 2px !important; }
@@ -191,6 +487,49 @@ body { background: var(--ff-bg) !important; color: var(--ff-text); }
 .app-shell .text-gray-400 { color: var(--ff-muted) !important; }
 .app-shell input, .app-shell select, .app-shell textarea { color: var(--ff-text) !important; }
 .app-shell [role="dialog"] h3 { color: var(--ff-text) !important; }
+
+/* Phase 9.6: Trust & Edge Cases — تأكيد خطر، إشعارات */
+.confirm-modal.danger {
+  border: 3px solid #dc3545;
+}
+.confirm-modal .danger-text {
+  color: #dc3545;
+  font-weight: 600;
+}
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+.btn-danger:hover {
+  background: #bb2d3b;
+}
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  min-width: 300px;
+  max-width: 500px;
+  background: var(--ff-surface, white);
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+  padding: 1rem;
+  opacity: 0;
+  transform: translateX(400px);
+  transition: all 0.3s ease;
+  z-index: 10000;
+}
+.notification.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+.notification-info { border-left: 4px solid #0dcaf0; }
+.notification-success { border-left: 4px solid #198754; }
+.notification-warning { border-left: 4px solid #ffc107; }
+.notification-error { border-left: 4px solid #dc3545; }
+.notification-content { display: flex; gap: 1rem; align-items: flex-start; }
+.notification-icon { font-size: 1.5rem; flex-shrink: 0; }
+.notification-text strong { display: block; margin-bottom: 0.25rem; }
+.notification-text p { font-size: 0.9rem; margin: 0; }
 </style>
 <script type="text/babel">
 const { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } = React;
@@ -266,11 +605,43 @@ const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'05
 // ============================================
 // Replace LocalStorage calls with API in this layer later
 const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', drafts:'ff_drafts', settings:'ff_settings', seeded:'ff_seeded' };
+
+/** Phase 7 — رسائل النجاح والخطأ والتسميات الموحدة */
+const MSG = {
+  success: { saved: '✓ تم التسجيل بنجاح', updated: '✓ تم تحديث البيانات', deleted: '✓ تم الحذف بنجاح', transaction: '✓ تم تسجيل العملية المالية', commission: '✓ تم تسجيل العمولة بنجاح' },
+  error: { required: '⚠ هذا الحقل مطلوب', invalidAmount: '⚠ المبلغ المدخل غير صحيح', duplicate: '⚠ هذا العنصر موجود بالفعل', deleteFailed: '⚠ فشل الحذف، حاول مرة أخرى' },
+  confirm: { deleteAction: 'هل أنت متأكد من هذا الإجراء؟' },
+  buttons: { save: 'تسجيل البيانات', cancel: 'تراجع', delete: 'حذف نهائي' }
+};
 /** Phase 9.4: رقم إصدار تنسيق النسخة الاحتياطية (JSON) */
 const BACKUP_VERSION = 1;
 
 /** Phase 9.2: رسالة موحدة عند فشل الحفظ (مساحة تخزين ممتلئة أو خطأ آخر) */
 const STORAGE_ERROR_MESSAGE = 'فشل الحفظ: مساحة التخزين ممتلئة. صدّر نسخة احتياطية ثم احذف بعض البيانات.';
+
+/** Phase 9.1: كشف التصفح الخاص */
+const detectPrivateBrowsing = () => {
+  try {
+    localStorage.setItem('_ff_private_test', '1');
+    localStorage.removeItem('_ff_private_test');
+    return false;
+  } catch (e) {
+    return true;
+  }
+};
+
+/** Phase 9.3: فحص امتلاء التخزين (يُرجع true إذا كان هناك مساحة) */
+const checkStorageQuota = () => {
+  try {
+    const test = new Array(1024 * 512).join('a');
+    localStorage.setItem('_ff_quota_test', test);
+    localStorage.removeItem('_ff_quota_test');
+    return true;
+  } catch (e) {
+    if (e && (e.name === 'QuotaExceededError' || e.code === 22)) return false;
+    return true;
+  }
+};
 
 /** للاختبار فقط: ضع true لتمثيل فشل الكتابة ثم أعد false قبل التسليم */
 const SIMULATE_STORAGE_FAILURE = false;
@@ -554,19 +925,49 @@ const ToastProvider = ({ children }) => {
   );
 };
 
+/** Phase 9.4: تتبع وجود تغييرات غير محفوظة في النماذج لتحذير قبل المغادرة */
+const UnsavedContext = createContext(() => {});
+
+/** Phase 9.1 + 9.3: تنبيه التصفح الخاص وامتلاء التخزين عند بدء التطبيق */
+const TrustChecks = () => {
+  const toast = useToast();
+  useEffect(() => {
+    if (detectPrivateBrowsing()) {
+      toast('تنبيه: التصفح الخاص. قد تُفقد بياناتك عند إغلاق المتصفح. للحفاظ على البيانات استخدم التصفح العادي.', 'warning');
+    }
+    if (!checkStorageQuota()) {
+      toast('تحذير: مساحة التخزين قريبة من الامتلاء. قد تحتاج لحذف بعض البيانات أو تصدير نسخة احتياطية.', 'warning');
+    }
+  }, [toast]);
+  return null;
+};
+
 // ============================================
 // CONFIRM DIALOG
 // ============================================
-const ConfirmDialog = ({ open, title, message, onConfirm, onCancel, danger=false }) => {
+const ConfirmDialog = ({ open, title, message, messageList, dangerText, confirmLabel, onConfirm, onCancel, danger=false }) => {
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
+    if (open) document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onCancel]);
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
-      <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
-        <h3 className="text-lg font-bold mb-2">{title}</h3>
-        <p className="text-gray-600 mb-6 text-sm">{message}</p>
-        <div className="flex gap-3 justify-end">
-          <button onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-          <button onClick={onConfirm} className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${danger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`} aria-label="تأكيد">تأكيد</button>
+      <div className={`confirm-modal bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full ${danger ? 'confirm-modal danger' : ''}`} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogDesc">
+        <h3 id="confirmDialogTitle" className="text-lg font-bold mb-2">{title}</h3>
+        <div id="confirmDialogDesc" className="text-gray-600 mb-6 text-sm">
+          {message && <p className="mb-2">{message}</p>}
+          {messageList && messageList.length > 0 && (
+            <ul className="list-disc list-inside mb-2 space-y-0.5">
+              {messageList.map((item, i) => <li key={i}>{item}</li>)}
+            </ul>
+          )}
+          {dangerText && <p className="danger-text text-red-600 font-semibold mt-2">{dangerText}</p>}
+        </div>
+        <div className="confirm-actions flex gap-3 justify-end">
+          <button onClick={onCancel} className="btn-secondary px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="تراجع">{MSG.buttons.cancel}</button>
+          <button onClick={onConfirm} className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${danger ? 'btn-danger bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`} aria-label="تأكيد">{confirmLabel || 'تأكيد'}</button>
         </div>
       </div>
     </div>
@@ -585,9 +986,9 @@ const Modal = ({ open, onClose, title, children, wide=false }) => {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
-      <div className={`bg-white rounded-xl shadow-2xl mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div className={`bg-white rounded-xl shadow-2xl mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modalTitle">
         <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 className="text-lg font-bold">{title}</h3>
+          <h3 id="modalTitle" className="text-lg font-bold">{title}</h3>
           <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100" aria-label="إغلاق"><Icons.x size={20}/></button>
         </div>
         <div className="p-4">{children}</div>
@@ -627,6 +1028,19 @@ const EmptyState = ({ message, icon }) => (
   </div>
 );
 
+const EnhancedEmptyState = ({ icon, title, description, ctaText, onCtaClick }) => (
+  <div className="empty-state">
+    <div className="empty-icon">{icon}</div>
+    <h3>{title}</h3>
+    <p>{description}</p>
+    {ctaText && onCtaClick && (
+      <button type="button" onClick={onCtaClick} className="empty-cta">
+        {ctaText}
+      </button>
+    )}
+  </div>
+);
+
 const Badge = ({ children, color='blue' }) => {
   const colors = { blue:'bg-blue-50 text-blue-700', green:'bg-green-50 text-green-700', red:'bg-red-50 text-red-700', yellow:'bg-yellow-50 text-yellow-700', gray:'bg-gray-100 text-gray-600' };
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]||colors.blue}`}>{children}</span>;
@@ -659,7 +1073,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
           {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">Finance Flow</h1><p className="text-gray-400 text-xs">نظام التدفقات المالية</p></div>}
         </div>
       </div>
-      <nav className="flex-1 overflow-y-auto py-3 px-2">
+      <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="القائمة الرئيسية">
         {NAV_ITEMS.filter(i => !i.group && i.id === 'home').map(item => (
           <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
@@ -717,7 +1131,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
 };
 
 const Topbar = ({ page, setMobileOpen }) => {
-  const titles = { home:'الرئيسية', dashboard:'لوحة المعلومات', transactions:'الحركات المالية', commissions:'العمولات', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
+  const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
   return (
     <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center justify-between sticky top-0 z-30 no-print">
       <div className="flex items-center gap-3">
@@ -737,6 +1151,14 @@ const Topbar = ({ page, setMobileOpen }) => {
 // ============================================
 const HomePage = ({ setPage }) => (
   <div className="max-w-4xl mx-auto p-6">
+    <div className="value-proposition">
+      <h1 className="main-value">
+        نظام بسيط لإدارة التدفق المالي للعقارات — بدون تعقيد، بدون اشتراك، يعمل محليًا على جهازك
+      </h1>
+      <p className="sub-value">
+        صُمم لمكاتب العقار والمستثمرين الأفراد لإدارة الدخل والمصروفات ومتابعة الأداء المالي بسهولة تامة
+      </p>
+    </div>
     <div className="text-center mb-12 mt-8">
       <div className="w-20 h-20 rounded-2xl bg-blue-600 mx-auto mb-6 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-200">FF</div>
       <h1 className="text-3xl font-extrabold text-gray-900 mb-3">Finance Flow</h1>
@@ -881,6 +1303,7 @@ const DashboardPage = () => {
 // ============================================
 const TransactionsPage = () => {
   const toast = useToast();
+  const setDirty = useContext(UnsavedContext);
   const [txs, setTxs] = useState([]);
   const [filters, setFilters] = useState({ fromDate:'', toDate:'', type:'', category:'', paymentMethod:'', search:'' });
   const [modal, setModal] = useState(null); // null | 'add' | {editing tx}
@@ -898,15 +1321,15 @@ const TransactionsPage = () => {
   const handleSave = (data, editId) => {
     const res = editId ? dataStore.transactions.update(editId, data) : dataStore.transactions.create(data);
     if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
-    toast(editId ? 'تم التحديث بنجاح' : 'تم الحفظ بنجاح');
-    setModal(null); refresh();
+    toast(editId ? MSG.success.updated : MSG.success.transaction);
+    setDirty(false); setModal(null); refresh();
   };
 
   const handleDelete = (id) => {
-    setConfirm({ title:'حذف الحركة', message:'هل أنت متأكد من حذف هذه الحركة؟', onConfirm: () => {
+    setConfirm({ title:'حذف الحركة', message: MSG.confirm.deleteAction + ' سيتم حذف هذه الحركة نهائياً.', onConfirm: () => {
       const res = dataStore.transactions.remove(id);
       if (!res.ok) { toast(res.message, 'error'); setConfirm(null); return; }
-      toast('تم الحذف'); setConfirm(null); refresh();
+      toast(MSG.success.deleted); setConfirm(null); refresh();
     }});
   };
 
@@ -960,7 +1383,7 @@ const TransactionsPage = () => {
           <button onClick={resetFilters} className="px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border border-gray-200" aria-label="إعادة تعيين الفلاتر"><Icons.filter size={14}/></button>
         </div>
         <div className="flex gap-2 mt-3 justify-end">
-          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="إضافة حركة"><Icons.plus size={16}/>إضافة حركة</button>
+          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="تسجيل عملية جديدة" title="سجّل عملية دخل أو مصروف جديدة"><Icons.plus size={16}/>إضافة حركة</button>
           <button onClick={exportCSV} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="تصدير CSV"><Icons.download size={14}/>CSV</button>
           <button onClick={handlePrint} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="طباعة"><Icons.printer size={14}/>طباعة</button>
         </div>
@@ -968,7 +1391,22 @@ const TransactionsPage = () => {
 
       {/* Table */}
       {txs.length === 0 ? (
-        <EmptyState message={Object.values(filters).some(Boolean) ? 'لا توجد نتائج مطابقة للفلاتر' : 'لا توجد حركات مالية. ابدأ بإضافة أول حركة'}/>
+        Object.values(filters).some(Boolean) ? (
+          <div className="flex flex-col items-center justify-center py-16 text-gray-400">
+            <Icons.empty size={64}/>
+            <p className="mt-4 text-sm font-medium text-gray-600">لا توجد نتائج مطابقة للفلاتر</p>
+            <p className="mt-1 text-sm">جرّب تعديل الفلاتر أو إعادة تعيينها.</p>
+            <button onClick={resetFilters} className="mt-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium border border-gray-200" aria-label="إعادة تعيين الفلاتر">إعادة تعيين الفلاتر</button>
+          </div>
+        ) : (
+          <EnhancedEmptyState
+            icon="💰"
+            title="لا توجد معاملات مسجلة"
+            description="سجّل أول عملية دخل أو مصروف لبدء تتبع التدفق المالي"
+            ctaText="➕ سجّل أول معاملة"
+            onCtaClick={() => setModal('add')}
+          />
+        )
       ) : (
         <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
@@ -991,7 +1429,7 @@ const TransactionsPage = () => {
                   <td className="px-4 py-3 no-print">
                     <div className="flex gap-1 justify-center">
                       <button onClick={() => setModal(t)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" aria-label="تعديل"><Icons.edit size={15}/></button>
-                      <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف"><Icons.trash size={15}/></button>
+                      <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف نهائي"><Icons.trash size={15}/></button>
                     </div>
                   </td>
                 </tr>
@@ -1002,8 +1440,8 @@ const TransactionsPage = () => {
       )}
 
       {/* Transaction Form Modal */}
-      <Modal open={modal !== null} onClose={() => setModal(null)} title={modal && modal !== 'add' ? 'تعديل الحركة' : 'إضافة حركة جديدة'}>
-        <TransactionForm initial={modal !== 'add' ? modal : null} onSave={handleSave} onCancel={() => setModal(null)}/>
+      <Modal open={modal !== null} onClose={() => { setDirty(false); setModal(null); }} title={modal && modal !== 'add' ? 'تعديل العملية' : 'تسجيل عملية جديدة'}>
+        <TransactionForm initial={modal !== 'add' ? modal : null} onSave={handleSave} onCancel={() => { setDirty(false); setModal(null); }}/>
       </Modal>
 
       <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger/>
@@ -1012,6 +1450,7 @@ const TransactionsPage = () => {
 };
 
 const TransactionForm = ({ initial, onSave, onCancel }) => {
+  const setDirty = useContext(UnsavedContext);
   const [form, setForm] = useState(initial ? { type:initial.type, category:initial.category, amount:initial.amount, paymentMethod:initial.paymentMethod, date:initial.date, description:initial.description||'' } : { type:'income', category:'commission', amount:'', paymentMethod:'cash', date:today(), description:'' });
   const [errors, setErrors] = useState({});
 
@@ -1032,10 +1471,11 @@ const TransactionForm = ({ initial, onSave, onCancel }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} onInput={() => setDirty && setDirty(true)}>
       <div className="grid grid-cols-2 gap-3">
         <FormField label="نوع الحركة" error={errors.type}>
-          <select value={form.type} onChange={e => setForm(f => ({...f, type:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نوع الحركة">
+          <select value={form.type} onChange={e => setForm(f => ({...f, type:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اختر نوع العملية" aria-required="true" aria-invalid={!!errors.type}>
+            <option value="">-- اختر نوع العملية --</option>
             {Object.entries(TRANSACTION_TYPES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
           </select>
         </FormField>
@@ -1047,7 +1487,7 @@ const TransactionForm = ({ initial, onSave, onCancel }) => {
       </div>
       <div className="grid grid-cols-2 gap-3">
         <FormField label="المبلغ (ر.س)" error={errors.amount}>
-          <input type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm(f => ({...f, amount:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="0.00" aria-label="المبلغ"/>
+          <input type="number" step="0.01" min="0" value={form.amount} onChange={e => setForm(f => ({...f, amount:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="أدخل المبلغ بالريال" aria-label="المبلغ بالريال" aria-required="true" aria-invalid={!!errors.amount}/>
         </FormField>
         <FormField label="طريقة الدفع">
           <select value={form.paymentMethod} onChange={e => setForm(f => ({...f, paymentMethod:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="طريقة الدفع">
@@ -1059,11 +1499,11 @@ const TransactionForm = ({ initial, onSave, onCancel }) => {
         <input type="date" value={form.date} onChange={e => setForm(f => ({...f, date:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="التاريخ"/>
       </FormField>
       <FormField label="الوصف (اختياري)">
-        <input type="text" value={form.description} onChange={e => setForm(f => ({...f, description:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="وصف الحركة..." aria-label="الوصف"/>
+        <input type="text" value={form.description} onChange={e => setForm(f => ({...f, description:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" placeholder="وصف العملية (اختياري)..." aria-label="وصف العملية"/>
       </FormField>
       <div className="flex gap-3 justify-end mt-4">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="حفظ">حفظ</button>
+        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="تراجع">{MSG.buttons.cancel}</button>
+        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل البيانات">{MSG.buttons.save}</button>
       </div>
     </form>
   );
@@ -1074,6 +1514,7 @@ const TransactionForm = ({ initial, onSave, onCancel }) => {
 // ============================================
 const CommissionsPage = () => {
   const toast = useToast();
+  const setDirty = useContext(UnsavedContext);
   const [filters, setFilters] = useState({ search:'', status:'', agent:'', fromDate:'', toDate:'' });
   const [allCms, setAllCms] = useState([]);
   const [modal, setModal] = useState(null);
@@ -1116,15 +1557,15 @@ const CommissionsPage = () => {
   const handleSave = (data, editId) => {
     const res = editId ? dataStore.commissions.update(editId, data) : dataStore.commissions.create(data);
     if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
-    toast(editId ? 'تم التحديث بنجاح' : 'تم الحفظ بنجاح');
-    setModal(null); refresh();
+    toast(editId ? MSG.success.updated : MSG.success.commission);
+    setDirty(false); setModal(null); refresh();
   };
 
   const handleDelete = (id) => {
-    setConfirm({ title:'حذف العمولة', message:'هل أنت متأكد من حذف هذه العمولة؟', onConfirm: () => {
+    setConfirm({ title:'حذف العمولة', message: MSG.confirm.deleteAction + ' سيتم حذف هذه العمولة نهائياً.', onConfirm: () => {
       const res = dataStore.commissions.remove(id);
       if (!res.ok) { toast(res.message, 'error'); setConfirm(null); return; }
-      toast('تم الحذف'); setConfirm(null); refresh();
+      toast(MSG.success.deleted); setConfirm(null); refresh();
     }});
   };
 
@@ -1188,7 +1629,7 @@ const CommissionsPage = () => {
           <button onClick={resetFilters} className="px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 border border-gray-200" aria-label="إعادة تعيين الفلاتر"><Icons.filter size={14}/></button>
         </div>
         <div className="flex gap-2 mt-3 justify-end">
-          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="إضافة عمولة"><Icons.plus size={16}/>إضافة عمولة</button>
+          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="تسجيل عمولة جديدة" title="سجّل عمولة جديدة"><Icons.plus size={16}/>إضافة عمولة</button>
           <button onClick={exportCSV} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="تصدير CSV"><Icons.download size={14}/>CSV</button>
           <button onClick={handlePrint} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-1.5" aria-label="طباعة"><Icons.printer size={14}/>طباعة</button>
         </div>
@@ -1196,7 +1637,13 @@ const CommissionsPage = () => {
 
       {/* Table or Empty */}
       {allCms.length === 0 ? (
-        <EmptyState message="لا توجد عمولات مسجلة"/>
+        <EnhancedEmptyState
+          icon="💼"
+          title="لا توجد عمولات مسجلة"
+          description="ابدأ بإضافة أول عمولة لتتبع حصص المكتب والوكلاء"
+          ctaText="➕ أضف أول عمولة"
+          onCtaClick={() => setModal('add')}
+        />
       ) : cms.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-gray-400">
           <Icons.empty size={64}/>
@@ -1244,7 +1691,7 @@ const CommissionsPage = () => {
                           <button onClick={() => handleMarkPaid(c.id)} className="px-2 py-1 rounded-lg bg-green-50 text-green-700 text-xs font-medium hover:bg-green-100" aria-label="تحديد كمدفوعة"><Icons.check size={12}/> دفع</button>
                         )}
                         <button onClick={() => setModal(c)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" aria-label="تعديل"><Icons.edit size={15}/></button>
-                        <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف"><Icons.trash size={15}/></button>
+                        <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف نهائي"><Icons.trash size={15}/></button>
                       </div>
                     </td>
                   </tr>
@@ -1255,8 +1702,8 @@ const CommissionsPage = () => {
         </div>
       )}
 
-      <Modal open={modal !== null} onClose={() => setModal(null)} title={modal && modal !== 'add' ? 'تعديل العمولة' : 'إضافة عمولة جديدة'}>
-        <CommissionForm initial={modal !== 'add' ? modal : null} onSave={handleSave} onCancel={() => setModal(null)} defaultPercent={settings.defaultCommissionPercent}/>
+      <Modal open={modal !== null} onClose={() => { setDirty(false); setModal(null); }} title={modal && modal !== 'add' ? 'تعديل العمولة' : 'تسجيل عمولة جديدة'}>
+        <CommissionForm initial={modal !== 'add' ? modal : null} onSave={handleSave} onCancel={() => { setDirty(false); setModal(null); }} defaultPercent={settings.defaultCommissionPercent}/>
       </Modal>
 
       <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger={confirm?.title?.includes('حذف')}/>
@@ -1265,6 +1712,7 @@ const CommissionsPage = () => {
 };
 
 const CommissionForm = ({ initial, onSave, onCancel, defaultPercent }) => {
+  const setDirty = useContext(UnsavedContext);
   const [form, setForm] = useState(initial ? {
     clientName:initial.clientName, dealValue:initial.dealValue, officePercent:initial.officePercent,
     agentName:initial.agentName, agentPercent:initial.agentPercent, status:initial.status, dueDate:initial.dueDate
@@ -1300,7 +1748,7 @@ const CommissionForm = ({ initial, onSave, onCancel, defaultPercent }) => {
   const agentAmt = Number(form.dealValue) * Number(form.agentPercent) / 100 || 0;
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} onInput={() => setDirty && setDirty(true)}>
       <FormField label="العميل/الصفقة" error={errors.clientName}>
         <input type="text" value={form.clientName} onChange={e => setForm(f => ({...f, clientName:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="العميل"/>
       </FormField>
@@ -1329,8 +1777,8 @@ const CommissionForm = ({ initial, onSave, onCancel, defaultPercent }) => {
         <input type="date" value={form.dueDate} onChange={e => setForm(f => ({...f, dueDate:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق"/>
       </FormField>
       <div className="flex gap-3 justify-end mt-4">
-        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="حفظ">حفظ</button>
+        <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="تراجع">{MSG.buttons.cancel}</button>
+        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل البيانات">{MSG.buttons.save}</button>
       </div>
     </form>
   );
@@ -1418,7 +1866,7 @@ const GeneratorPage = ({ letterType, setLetterType }) => {
     if (!validate()) return;
     const res = dataStore.letters.saveDraft({ templateType: template.type, fields: { ...fields } });
     if (!res.ok) { toast(res.message, 'error'); return; }
-    toast('تم الحفظ بنجاح');
+    toast(MSG.success.saved);
   };
 
   const renderPreview = () => {
@@ -1518,10 +1966,10 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
   useEffect(() => { refresh(); }, [refresh]);
 
   const handleDelete = (id) => {
-    setConfirm({ title:'حذف المسودة', message:'هل أنت متأكد من حذف هذه المسودة؟', onConfirm: () => {
+    setConfirm({ title:'حذف المسودة', message: MSG.confirm.deleteAction + ' سيتم حذف هذه المسودة نهائياً.', onConfirm: () => {
       const res = dataStore.letters.removeDraft(id);
       if (!res.ok) { toast(res.message, 'error'); setConfirm(null); return; }
-      toast('تم الحذف'); setConfirm(null); refresh();
+      toast(MSG.success.deleted); setConfirm(null); refresh();
     }});
   };
 
@@ -1539,7 +1987,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
         <div className="grid sm:grid-cols-3 gap-4">
           {drafts.map(d => (
             <div key={d.id} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow relative">
-              <button onClick={() => handleDelete(d.id)} className="absolute top-2 left-2 p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" aria-label="حذف"><Icons.trash size={16}/></button>
+              <button onClick={() => handleDelete(d.id)} className="absolute top-2 left-2 p-2 rounded-lg hover:bg-red-50 text-gray-400 hover:text-red-600 transition-colors" aria-label="حذف المسودة نهائياً"><Icons.trash size={16}/></button>
               <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-4 text-blue-600"><Icons.fileText size={20}/></div>
               <h3 className="font-bold text-gray-900 mb-1">{LETTER_TYPES[d.templateType]}</h3>
               <p className="text-sm text-gray-500 mb-2">{d.fields?.officeName || ''} — {d.fields?.recipientOrg || d.fields?.recipientName || d.fields?.delegateName || ''}</p>
@@ -1567,7 +2015,7 @@ const SettingsPage = () => {
   const handleSave = () => {
     const res = dataStore.settings.update(settings);
     if (!res.ok) { toast(res.message, 'error'); return; }
-    toast('تم الحفظ بنجاح');
+    toast(MSG.success.saved);
   };
 
   const handleResetDemo = () => {
@@ -1582,13 +2030,29 @@ const SettingsPage = () => {
   };
 
   const handleClearAll = () => {
-    setConfirm({ title:'حذف جميع البيانات', message:'⚠️ تحذير: سيتم حذف جميع البيانات نهائيًا. هل أنت متأكد؟', danger:true, onConfirm: () => {
-      dataStore.seed.clearAll();
-      setSettings(SEED_SETTINGS);
-      document.body.dataset.theme = 'light';
-      toast('تم حذف جميع البيانات');
-      setConfirm(null);
-    }});
+    const txCount = dataStore.transactions.list().length;
+    const cmCount = dataStore.commissions.list().length;
+    const draftCount = (safeGet(KEYS.drafts, [])).length;
+    setConfirm({
+      title: '⚠ تحذير: حذف جميع البيانات',
+      message: 'هذا الإجراء سيحذف جميع البيانات المحفوظة:',
+      messageList: [
+        `جميع الحركات المالية (${txCount})`,
+        `جميع العمولات (${cmCount})`,
+        `جميع المسودات (${draftCount})`,
+        'جميع الإعدادات'
+      ],
+      dangerText: 'لا يمكن التراجع عن هذا الإجراء!',
+      confirmLabel: 'نعم، احذف كل شيء',
+      danger: true,
+      onConfirm: () => {
+        dataStore.seed.clearAll();
+        setSettings(SEED_SETTINGS);
+        document.body.dataset.theme = 'light';
+        toast('تم حذف جميع البيانات');
+        setConfirm(null);
+      }
+    });
   };
 
   const handleExportBackup = () => {
@@ -1724,7 +2188,7 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger={confirm?.danger}/>
+      <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} messageList={confirm?.messageList} dangerText={confirm?.dangerText} confirmLabel={confirm?.confirmLabel} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger={confirm?.danger}/>
     </div>
   );
 };
@@ -2234,6 +2698,39 @@ function NotesCalendar({ mode = 'calendar' }) {
 }
 
 // ============================================
+// Phase 3 — Welcome Banner (User Onboarding)
+// ============================================
+const WelcomeBanner = () => {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const hasSeenBanner = localStorage.getItem('hasSeenWelcomeBanner');
+    const tx = safeGet(KEYS.transactions, []);
+    const comm = safeGet(KEYS.commissions, []);
+    const hasData = tx.length > 0 || comm.length > 0;
+    if (!hasSeenBanner && !hasData) setShow(true);
+  }, []);
+
+  const dismiss = () => {
+    setShow(false);
+    localStorage.setItem('hasSeenWelcomeBanner', 'true');
+  };
+
+  if (!show) return null;
+  return (
+    <div className="welcome-banner no-print" role="region" aria-label="ترحيب">
+      <div className="banner-content">
+        <div className="banner-text">
+          <strong>مرحبًا بك في Finance Flow!</strong>
+          <p>ابدأ بإضافة عقار، ثم سجّل الدخل والمصروفات، وسيتم احتساب التحليل المالي تلقائيًا.</p>
+        </div>
+        <button type="button" onClick={dismiss} className="banner-close" aria-label="إغلاق">✕</button>
+      </div>
+    </div>
+  );
+};
+
+// ============================================
 // APP (Main Router)
 // ============================================
 const App = () => {
@@ -2242,11 +2739,18 @@ const App = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [letterType, setLetterType] = useState('intro');
   const [editDraft, setEditDraft] = useState(null);
+  const [dirty, setDirty] = useState(false);
 
   // Ensure seed data on first load
   useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
   // Phase 7.1: apply saved theme on load
   useEffect(() => { const t = dataStore.settings.get().theme; document.body.dataset.theme = (t === 'light' || t === 'dim' || t === 'dark') ? t : 'light'; }, []);
+  // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
+  useEffect(() => {
+    const handler = (e) => { if (dirty) { e.preventDefault(); e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟'; return e.returnValue; } };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [dirty]);
 
   if (SIMULATE_RENDER_ERROR) throw new Error('Phase 9.3 test error');
 
@@ -2268,13 +2772,22 @@ const App = () => {
 
   return (
     <ToastProvider>
-      <div className="app-shell flex min-h-screen">
-        <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
-        <main className="flex-1 min-w-0">
-          <Topbar page={page} setMobileOpen={setMobileOpen}/>
-          <div className="print-container">{renderPage()}</div>
-        </main>
-      </div>
+      <UnsavedContext.Provider value={setDirty}>
+        <TrustChecks/>
+        <div className="app-shell flex min-h-screen">
+          <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
+          <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
+            <Topbar page={page} setMobileOpen={setMobileOpen}/>
+            <div className="px-4 md:px-6 max-w-4xl mx-auto">
+              <WelcomeBanner/>
+            </div>
+            <div className="print-container">{renderPage()}</div>
+          <footer className="no-print border-t border-gray-100 py-3 px-4 text-center text-sm text-gray-500" role="contentinfo">
+            <p>&copy; {new Date().getFullYear()} Finance Flow. جميع الحقوق محفوظة.</p>
+          </footer>
+          </main>
+        </div>
+      </UnsavedContext.Provider>
     </ToastProvider>
   );
 };

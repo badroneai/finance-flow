@@ -3,7 +3,33 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Finance Flow — إدارة مالية سهلة للمكتب العقاري</title>
+  <!-- Phase 10: SEO & Meta -->
+  <title>Finance Flow – نظام إدارة التدفق المالي للعقارات</title>
+  <meta name="description" content="أداة بسيطة وفعالة لإدارة دخل ومصروف العقارات، تعمل محليًا على جهازك بدون اشتراك أو تعقيد. مثالية للمكاتب العقارية والمستثمرين الأفراد."/>
+  <meta name="keywords" content="إدارة العقارات، التدفق المالي، برنامج عقاري، إدارة دخل العقارات، مصروفات العقارات، محاسبة عقارية، نظام عقاري"/>
+  <meta name="author" content="Bader - Finance Flow"/>
+  <link rel="canonical" href="https://YOUR-USERNAME.github.io/finance-flow/landing.html"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="https://YOUR-USERNAME.github.io/finance-flow/landing.html"/>
+  <meta property="og:title" content="Finance Flow – نظام إدارة التدفق المالي للعقارات"/>
+  <meta property="og:description" content="أداة بسيطة لإدارة دخل ومصروف العقارات، تعمل محليًا بدون اشتراك."/>
+  <meta property="og:image" content="https://YOUR-USERNAME.github.io/finance-flow/og-image.jpg"/>
+  <meta property="og:locale" content="ar_SA"/>
+  <meta property="twitter:card" content="summary_large_image"/>
+  <meta property="twitter:url" content="https://YOUR-USERNAME.github.io/finance-flow/landing.html"/>
+  <meta property="twitter:title" content="Finance Flow – نظام إدارة التدفق المالي للعقارات"/>
+  <meta property="twitter:description" content="أداة بسيطة لإدارة دخل ومصروف العقارات"/>
+  <meta property="twitter:image" content="https://YOUR-USERNAME.github.io/finance-flow/twitter-image.jpg"/>
+  <meta name="robots" content="index, follow"/>
+  <meta name="theme-color" content="#2563eb"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Finance Flow"/>
+  <link rel="icon" type="image/png" href="favicon.png"/>
+  <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"SoftwareApplication","name":"Finance Flow","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"SAR"},"operatingSystem":"Any","description":"نظام بسيط لإدارة التدفق المالي للعقارات يعمل محليًا بدون اشتراك","inLanguage":"ar","author":{"@type":"Person","name":"Bader"}}
+  </script>
   <style>
     :root {
       --lp-bg: #f6f7fb;
@@ -72,7 +98,37 @@
       font-size: 0.9rem;
       color: var(--lp-text);
     }
-    .hero .cta { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; }
+    .hero .cta { display: flex; flex-wrap: wrap; gap: 0.75rem; justify-content: center; align-items: center; }
+    .cta-button-primary {
+      display: inline-block;
+      background: var(--lp-primary);
+      color: white;
+      padding: 1rem 2.5rem;
+      border-radius: 8px;
+      font-size: 1.2rem;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .cta-button-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      color: white;
+    }
+    .trust-note {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--lp-muted);
+    }
+    .trust-note svg {
+      color: #10b981;
+      flex-shrink: 0;
+    }
     .hero .cta-note { font-size: 0.85rem; color: var(--lp-muted); margin-top: 1rem; }
     .hero .cta-note a { color: var(--lp-primary); text-decoration: none; }
     .hero .cta-note a:hover { text-decoration: underline; }
@@ -196,8 +252,14 @@
         <span>🔒 بياناتك عندك</span>
       </div>
       <div class="cta">
-        <a href="./finance-flow.html" class="btn btn-outline" target="_blank">شاهد الديمو</a>
+        <a href="./finance-flow.html" class="cta-button-primary" target="_blank">جرّب النظام الآن (بدون تسجيل)</a>
         <a href="#contact" class="btn btn-primary">اطلب النسخة</a>
+      </div>
+      <div class="trust-note">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
+        </svg>
+        <span>جميع بياناتك محفوظة محليًا على جهازك ولا تُرفع لأي خادم خارجي</span>
       </div>
       <p class="cta-note">ملاحظة: الديمو يعمل محليًا داخل المتصفح، والبيانات تُحفظ على جهازك.</p>
       <p class="cta-note"><a href="#demo">شاهد لقطات الشاشة</a></p>
