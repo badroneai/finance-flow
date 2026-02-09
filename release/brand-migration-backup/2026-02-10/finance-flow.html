@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"/>
@@ -21,11 +21,10 @@
 <meta property="twitter:description" content="أداة بسيطة لإدارة دخل ومصروف العقارات"/>
 <meta property="twitter:image" content="https://YOUR-USERNAME.github.io/finance-flow/twitter-image.jpg"/>
 <meta name="robots" content="index, follow"/>
-<meta name="theme-color" content="#0F1C2E"/>
+<meta name="theme-color" content="#2563eb"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="قيد العقار"/>
-<link rel="icon" href="assets/logo-icon.svg" type="image/svg+xml"/>
 <link rel="icon" type="image/png" href="favicon.png"/>
 <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
 <script type="application/ld+json">
@@ -35,13 +34,12 @@
 <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
-<link rel="stylesheet" href="assets/qaydalaqar-theme.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
 <script>
 tailwind.config = {
   theme: {
     extend: {
-      fontFamily: { sans: ['"IBM Plex Sans Arabic"', 'sans-serif'] }
+      fontFamily: { sans: ['"Noto Sans Arabic"', 'sans-serif'] }
     }
   }
 }
@@ -57,7 +55,7 @@ tailwind.config = {
   .print-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
 }
 * { box-sizing: border-box; }
-:focus-visible { outline: 2px solid var(--qa-gold); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; border-radius: 4px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
@@ -88,7 +86,7 @@ tailwind.config = {
 /* Forms & inputs: min-height, focus ring, labels */
 #root input[type="text"], #root input[type="number"], #root input[type="date"], #root input[type="email"], #root input[type="tel"],
 #root select, #root textarea { min-height: 2.5rem; padding: 0.5rem 0.75rem !important; border-radius: 0.5rem; transition: border-color 0.2s, box-shadow 0.2s; }
-#root input:focus, #root select:focus, #root textarea:focus { outline: none; border-color: var(--qa-gold); box-shadow: 0 0 0 3px var(--qa-gold-light); }
+#root input:focus, #root select:focus, #root textarea:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgb(59 130 246 / 0.15); }
 #root .mb-3 label { font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
 
 /* Modals: more padding */
@@ -98,7 +96,7 @@ tailwind.config = {
 /* Buttons: transitions, consistent height in toolbars */
 #root button { transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
 #root .flex.gap-2 button, #root .flex.gap-3 button { min-height: 2.25rem; }
-#root button:focus-visible { outline: 2px solid var(--qa-gold); outline-offset: 2px; }
+#root button:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
 
 /* Sidebar & topbar alignment, icon size */
 #root aside nav button { min-height: 2.5rem; }
@@ -137,12 +135,12 @@ tailwind.config = {
 
 /* ========== Phase 3 — Welcome Banner (User Onboarding) ========== */
 .welcome-banner {
-  background: var(--qa-navy);
-  color: var(--qa-white);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
   padding: 1.5rem;
-  border-radius: var(--qa-radius);
+  border-radius: 12px;
   margin: 1rem 0 2rem 0;
-  box-shadow: var(--qa-shadow-md);
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .welcome-banner .banner-content {
@@ -238,50 +236,38 @@ tailwind.config = {
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
 }
 
-/* 6.1 التسلسل الهرمي للنصوص — ٠٣ الخطوط (IBM Plex Arabic) */
+/* 6.1 التسلسل الهرمي للنصوص */
 #root h1, .app-shell h1 {
-  font-family: var(--qa-font-arabic);
-  font-size: var(--qa-font-size-h1);
-  font-weight: var(--qa-font-weight-h1-h2);
-  line-height: var(--qa-line-height-h1);
-  margin: 0 0 0.5em;
+  font-size: 2.2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin-bottom: 1rem;
 }
 #root h2, .app-shell h2 {
-  font-family: var(--qa-font-arabic);
-  font-size: var(--qa-font-size-h2);
-  font-weight: var(--qa-font-weight-h1-h2);
-  line-height: var(--qa-line-height-h2);
-  margin: 0 0 0.5em;
+  font-size: 1.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  margin-bottom: 0.8rem;
 }
 #root h3, .app-shell h3 {
-  font-family: var(--qa-font-arabic);
-  font-size: var(--qa-font-size-h3);
-  font-weight: var(--qa-font-weight-h3);
-  line-height: var(--qa-line-height-h3);
-  margin: 0 0 0.4em;
-}
-.app-shell, .app-shell main {
-  font-size: var(--qa-font-size-body);
-  font-weight: var(--qa-font-weight-body);
-  line-height: var(--qa-line-height-body);
+  font-size: 1.4rem;
+  font-weight: 600;
+  line-height: 1.4;
+  margin-bottom: 0.6rem;
 }
 .app-shell .text-xl.font-bold,
 .app-shell .stat-number, .app-shell .total-amount, .app-shell .balance {
-  font-family: var(--qa-font-arabic);
   font-size: 2rem;
-  font-weight: 600;
-  line-height: 1.2;
+  font-weight: 700;
+  line-height: 1;
 }
 .app-shell .label, .app-shell .caption {
-  font-family: var(--qa-font-arabic);
-  font-size: var(--qa-font-size-caption);
-  font-weight: var(--qa-font-weight-caption);
-  line-height: var(--qa-line-height-caption);
+  font-size: 0.875rem;
+  font-weight: 500;
   color: var(--ff-muted);
 }
 .app-shell .text-xs.font-medium {
-  font-family: var(--qa-font-arabic);
-  font-size: var(--qa-font-size-caption);
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
@@ -358,60 +344,61 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 <style id="phase-6b-tokens">
 /* ========== Phase 6B — Visible UI Upgrade (Design Tokens) ========== */
 /* ========== Phase 7.1 — Themes (light/dim/dark) ========== */
-/* قيد العقار — ربط tokens التطبيق بهوية البراند (Step 5) */
 [data-theme="light"] {
-  --ff-bg: var(--qa-page-bg);
-  --ff-surface: var(--qa-surface);
-  --ff-surface-2: var(--qa-off-white);
-  --ff-border: var(--qa-border-color);
-  --ff-text: var(--qa-text-primary);
-  --ff-muted: var(--qa-text-muted);
-  --ff-primary: var(--qa-navy);
-  --ff-primary-600: #1a2d45;
-  --ff-ring: var(--qa-gold-light);
-  --ff-shadow: var(--qa-shadow-md);
-  --ff-shadow-2: var(--qa-shadow-lg);
-  --ff-radius: var(--qa-radius);
-  --ff-row-hover: var(--qa-navy-05);
-  --shadow-sm: var(--qa-shadow-sm);
-  --shadow-md: var(--qa-shadow-md);
-  --shadow-lg: var(--qa-shadow-lg);
+  --ff-bg: #f6f7fb;
+  --ff-surface: #ffffff;
+  --ff-surface-2: #fbfcfe;
+  --ff-border: #e6e8ef;
+  --ff-text: #0f172a;
+  --ff-muted: #64748b;
+  --ff-primary: #2563eb;
+  --ff-primary-600: #1d4ed8;
+  --ff-ring: rgba(37, 99, 235, .25);
+  --ff-shadow: 0 10px 25px rgba(15, 23, 42, .06);
+  --ff-shadow-2: 0 14px 35px rgba(15, 23, 42, .10);
+  --ff-radius: 14px;
+  --ff-row-hover: rgba(37, 99, 235, .06);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
 }
+/* Phase 5 — Dim: أوضح تمييز عن النهاري (خلفيات أغمق، نصوص فاتحة) */
 [data-theme="dim"] {
-  --ff-bg: var(--qa-page-bg);
-  --ff-surface: var(--qa-surface);
-  --ff-surface-2: var(--qa-gray-bg);
-  --ff-border: var(--qa-border-color);
-  --ff-text: var(--qa-text-primary);
-  --ff-muted: var(--qa-text-muted);
-  --ff-primary: var(--qa-navy);
-  --ff-primary-600: #1a2d45;
-  --ff-ring: var(--qa-gold-light);
-  --ff-shadow: var(--qa-shadow-md);
-  --ff-shadow-2: var(--qa-shadow-lg);
-  --ff-radius: var(--qa-radius);
-  --ff-row-hover: var(--qa-navy-05);
-  --shadow-sm: var(--qa-shadow-sm);
-  --shadow-md: var(--qa-shadow-md);
-  --shadow-lg: var(--qa-shadow-lg);
+  --ff-bg: #15202b;
+  --ff-surface: #192734;
+  --ff-surface-2: #1e2732;
+  --ff-border: #2f3336;
+  --ff-text: #e7e9ea;
+  --ff-muted: #8b98a5;
+  --ff-primary: #1d9bf0;
+  --ff-primary-600: #1a8cd8;
+  --ff-ring: rgba(29, 155, 240, .35);
+  --ff-shadow: 0 2px 12px rgba(0, 0, 0, .3);
+  --ff-shadow-2: 0 4px 20px rgba(0, 0, 0, .4);
+  --ff-radius: 14px;
+  --ff-row-hover: rgba(29, 155, 240, .1);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.25);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.45);
 }
+/* Phase 5 — Dark: أغمق من Dim (خلفية سوداء تقريباً) */
 [data-theme="dark"] {
-  --ff-bg: var(--qa-page-bg);
-  --ff-surface: var(--qa-surface);
-  --ff-surface-2: var(--qa-navy-10);
-  --ff-border: var(--qa-border-color);
-  --ff-text: var(--qa-text-primary);
-  --ff-muted: var(--qa-text-muted);
-  --ff-primary: var(--qa-gold);
-  --ff-primary-600: #a89555;
-  --ff-ring: var(--qa-gold-light);
-  --ff-shadow: var(--qa-shadow-md);
-  --ff-shadow-2: var(--qa-shadow-lg);
-  --ff-radius: var(--qa-radius);
-  --ff-row-hover: var(--qa-navy-05);
-  --shadow-sm: var(--qa-shadow-sm);
-  --shadow-md: var(--qa-shadow-md);
-  --shadow-lg: var(--qa-shadow-lg);
+  --ff-bg: #000000;
+  --ff-surface: #16181c;
+  --ff-surface-2: #2f3336;
+  --ff-border: #2f3336;
+  --ff-text: #ffffff;
+  --ff-muted: #8899a6;
+  --ff-primary: #1d9bf0;
+  --ff-primary-600: #1a8cd8;
+  --ff-ring: rgba(29, 155, 240, .4);
+  --ff-shadow: 0 2px 12px rgba(0, 0, 0, .5);
+  --ff-shadow-2: 0 4px 20px rgba(0, 0, 0, .6);
+  --ff-radius: 14px;
+  --ff-row-hover: rgba(29, 155, 240, .15);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.4);
+  --shadow-md: 0 4px 16px rgba(0,0,0,0.5);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,0.6);
 }
 
 body { background: var(--ff-bg) !important; color: var(--ff-text); transition: background-color 0.3s ease, color 0.3s ease; }
@@ -436,22 +423,17 @@ body { background: var(--ff-bg) !important; color: var(--ff-text); transition: b
 .app-shell header { background: var(--ff-surface) !important; border-bottom: 1px solid var(--ff-border) !important; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
 .app-shell header h2 { color: var(--ff-text) !important; }
 
-/* Sidebar: خلفية كحلي (Navy) — اللون الأساسي للخلفيات الداكنة */
-.app-shell aside { border-left: 1px solid rgba(255,255,255,0.08) !important; }
-.app-shell aside.bg-gray-900 { background: #0F1C2E !important; }
-.app-shell aside.bg-gray-900 [class*="border-b"], .app-shell aside.bg-gray-900 [class*="border-t"] { border-color: rgba(255,255,255,0.08) !important; }
-.app-shell aside.bg-gray-900 h1, .app-shell aside.bg-gray-900 p { color: rgba(255,255,255,0.95) !important; }
-.app-shell aside.bg-gray-900 nav button { color: rgba(255,255,255,0.75) !important; }
-.app-shell aside.bg-gray-900 nav button:hover { background: rgba(255,255,255,0.1) !important; color: #fff !important; }
-.app-shell aside.bg-gray-900 nav button.bg-blue-600 { background: var(--qa-gold) !important; color: #0F1C2E !important; border: 1px solid rgba(184,167,106,0.4); }
-.app-shell aside.bg-gray-900 .text-gray-300, .app-shell aside.bg-gray-900 .text-gray-400, .app-shell aside.bg-gray-900 .text-gray-500 { color: rgba(255,255,255,0.7) !important; }
-.app-shell aside.bg-gray-900 .bg-blue-600 { background: var(--qa-gold) !important; color: #0F1C2E !important; }
-.app-shell aside .bg-blue-600 { background: var(--ff-primary) !important; color: white !important; }
-.app-shell aside:not(.bg-gray-900) { background: var(--ff-surface) !important; border-left-color: var(--ff-border) !important; }
-.app-shell aside:not(.bg-gray-900) nav button { color: var(--ff-muted) !important; }
-.app-shell aside:not(.bg-gray-900) nav button:hover { background: var(--ff-surface-2) !important; color: var(--ff-primary) !important; }
-.app-shell aside:not(.bg-gray-900) .text-gray-300, .app-shell aside:not(.bg-gray-900) .text-gray-400, .app-shell aside:not(.bg-gray-900) .text-gray-500 { color: var(--ff-muted) !important; }
-.app-shell aside:not(.bg-gray-900) h1 { color: var(--ff-text) !important; }
+/* Sidebar: surface + border + active/hover واضح */
+.app-shell aside { background: var(--ff-surface) !important; border-left: 1px solid var(--ff-border) !important; }
+.app-shell aside [class*="border-b"], .app-shell aside [class*="border-t"] { border-color: var(--ff-border) !important; }
+.app-shell aside nav button { color: var(--ff-muted) !important; }
+.app-shell aside nav button:hover { background: var(--ff-surface-2) !important; color: var(--ff-primary) !important; }
+.app-shell aside nav button.bg-blue-600 { background: var(--ff-primary) !important; color: white !important; }
+.app-shell aside .text-gray-300 { color: var(--ff-muted) !important; }
+.app-shell aside .text-gray-400 { color: var(--ff-muted) !important; }
+.app-shell aside .text-gray-500 { color: var(--ff-muted) !important; }
+.app-shell aside h1 { color: var(--ff-text) !important; }
+.app-shell aside .bg-blue-600 { background: var(--ff-primary) !important; }
 
 /* Cards: surface + border + shadow واضح */
 .app-shell .bg-white.rounded-xl { background: var(--ff-surface) !important; border: 1px solid var(--ff-border) !important; border-radius: var(--ff-radius) !important; box-shadow: var(--ff-shadow) !important; transition: box-shadow .2s, border-color .2s; }
@@ -497,51 +479,29 @@ body { background: var(--ff-bg) !important; color: var(--ff-text); transition: b
 /* Page padding */
 .app-shell .print-container > div { padding: 1.25rem 1rem !important; }
 
-/* Phase 7.1: تطبيق الهوية — لا أسود، أزرق كحلي للعناوين والرئيسي ورمادي دافئ للثانوي */
-.app-shell { color: #0F1C2E !important; }
-.app-shell .text-gray-900, .app-shell .text-gray-800, .app-shell .text-gray-700, .app-shell .text-black { color: #0F1C2E !important; }
-.app-shell .text-gray-600, .app-shell .text-gray-500, .app-shell .text-gray-400 { color: #8A8F98 !important; }
-.app-shell h1, .app-shell h2, .app-shell h3, .app-shell h4 { color: #0F1C2E !important; }
-.app-shell input, .app-shell select, .app-shell textarea { color: #0F1C2E !important; }
-.app-shell [role="dialog"] h3 { color: #0F1C2E !important; }
-.app-shell main, .app-shell .print-container { color: #0F1C2E !important; }
-.app-shell main .text-gray-500, .app-shell main .text-gray-600 { color: #8A8F98 !important; }
-.app-shell label { color: #0F1C2E !important; }
-#root { color: #0F1C2E; }
-
-/* لوحة الألوان — إجبار الأزرق الكحلي (#0F1C2E) والرمادي الدافئ (#8A8F98)، بدون أزرق Tailwind */
-.app-shell .bg-blue-600 { background: #0F1C2E !important; }
-.app-shell .hover\:bg-blue-700:hover { background: var(--ff-primary-600) !important; }
-.app-shell .text-blue-600, .app-shell .text-blue-700 { color: var(--ff-primary) !important; }
-.app-shell .bg-blue-50 { background: var(--qa-navy-10) !important; }
-.app-shell .border-blue-200 { border-color: var(--qa-navy-30) !important; }
-.app-shell .hover\:border-blue-200:hover { border-color: var(--qa-navy-30) !important; }
-.app-shell .hover\:bg-blue-50:hover { background: var(--qa-navy-05) !important; }
-.app-shell .shadow-blue-200 { box-shadow: var(--qa-shadow-md) !important; }
-/* بطاقات الصفحة الرئيسية: أيقونات بلون أساسي (كحلي) */
-.app-shell button.bg-white.rounded-xl .bg-blue-50 { background: var(--qa-navy-10) !important; }
-.app-shell button.bg-white.rounded-xl .text-blue-600 { color: var(--qa-navy) !important; }
-.app-shell button.bg-white.rounded-xl .bg-green-50 { background: var(--qa-navy-10) !important; }
-.app-shell button.bg-white.rounded-xl .text-green-600 { color: var(--qa-navy) !important; }
-.app-shell button.bg-white.rounded-xl .bg-yellow-50 { background: var(--qa-navy-10) !important; }
-.app-shell button.bg-white.rounded-xl .text-yellow-600 { color: var(--qa-navy) !important; }
-.app-shell button.bg-white.rounded-xl .bg-purple-50 { background: var(--qa-navy-10) !important; }
-.app-shell button.bg-white.rounded-xl .text-purple-600 { color: var(--qa-navy) !important; }
+/* Phase 7.1: theme-aware text so Tailwind grays follow theme */
+.app-shell .text-gray-900 { color: var(--ff-text) !important; }
+.app-shell .text-gray-700 { color: var(--ff-text) !important; }
+.app-shell .text-gray-600 { color: var(--ff-muted) !important; }
+.app-shell .text-gray-500 { color: var(--ff-muted) !important; }
+.app-shell .text-gray-400 { color: var(--ff-muted) !important; }
+.app-shell input, .app-shell select, .app-shell textarea { color: var(--ff-text) !important; }
+.app-shell [role="dialog"] h3 { color: var(--ff-text) !important; }
 
 /* Phase 9.6: Trust & Edge Cases — تأكيد خطر، إشعارات */
 .confirm-modal.danger {
-  border: 3px solid var(--qa-danger);
+  border: 3px solid #dc3545;
 }
 .confirm-modal .danger-text {
-  color: var(--qa-danger);
+  color: #dc3545;
   font-weight: 600;
 }
 .btn-danger {
-  background: var(--qa-danger);
+  background: #dc3545;
   color: white;
 }
 .btn-danger:hover {
-  background: #a31f28;
+  background: #bb2d3b;
 }
 .notification {
   position: fixed;
@@ -646,18 +606,18 @@ const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'05
 // Replace LocalStorage calls with API in this layer later
 const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', drafts:'ff_drafts', settings:'ff_settings', seeded:'ff_seeded' };
 
-/** Phase 7 — رسائل النجاح والخطأ (٠٦ النبرة: احترافية، هادئة، مباشرة) */
+/** Phase 7 — رسائل النجاح والخطأ والتسميات الموحدة */
 const MSG = {
-  success: { saved: 'تم التسجيل بنجاح', updated: 'تم تحديث البيانات', deleted: 'تم الحذف بنجاح', transaction: 'تم تسجيل العملية المالية', commission: 'تم تسجيل العمولة بنجاح' },
-  error: { required: 'هذا الحقل مطلوب', invalidAmount: 'المبلغ المدخل غير صحيح', duplicate: 'هذا العنصر موجود بالفعل', deleteFailed: 'لم يتم الحذف. يُنصح بالمحاولة مرة أخرى' },
+  success: { saved: '✓ تم التسجيل بنجاح', updated: '✓ تم تحديث البيانات', deleted: '✓ تم الحذف بنجاح', transaction: '✓ تم تسجيل العملية المالية', commission: '✓ تم تسجيل العمولة بنجاح' },
+  error: { required: '⚠ هذا الحقل مطلوب', invalidAmount: '⚠ المبلغ المدخل غير صحيح', duplicate: '⚠ هذا العنصر موجود بالفعل', deleteFailed: '⚠ فشل الحذف، حاول مرة أخرى' },
   confirm: { deleteAction: 'هل أنت متأكد من هذا الإجراء؟' },
   buttons: { save: 'تسجيل البيانات', cancel: 'تراجع', delete: 'حذف نهائي' }
 };
 /** Phase 9.4: رقم إصدار تنسيق النسخة الاحتياطية (JSON) */
 const BACKUP_VERSION = 1;
 
-/** Phase 9.2: رسالة موحدة عند فشل الحفظ (٠٦ نبرة مباشرة) */
-const STORAGE_ERROR_MESSAGE = 'لم يتم الحفظ. مساحة التخزين ممتلئة. يُنصح بتصدير نسخة احتياطية ثم حذف بعض البيانات.';
+/** Phase 9.2: رسالة موحدة عند فشل الحفظ (مساحة تخزين ممتلئة أو خطأ آخر) */
+const STORAGE_ERROR_MESSAGE = 'فشل الحفظ: مساحة التخزين ممتلئة. صدّر نسخة احتياطية ثم احذف بعض البيانات.';
 
 /** Phase 9.1: كشف التصفح الخاص */
 const detectPrivateBrowsing = () => {
@@ -1001,10 +961,10 @@ const TrustChecks = () => {
   const toast = useToast();
   useEffect(() => {
     if (detectPrivateBrowsing()) {
-      toast('البيانات تُحفظ على هذا الجهاز فقط. في وضع التصفح الخاص قد تُفقد عند إغلاق المتصفح. للحفاظ عليها استخدم التصفح العادي.', 'warning');
+      toast('تنبيه: التصفح الخاص. قد تُفقد بياناتك عند إغلاق المتصفح. للحفاظ على البيانات استخدم التصفح العادي.', 'warning');
     }
     if (!checkStorageQuota()) {
-      toast('مساحة التخزين قريبة من الامتلاء. يُنصح بتصدير نسخة احتياطية أو حذف بعض البيانات.', 'warning');
+      toast('تحذير: مساحة التخزين قريبة من الامتلاء. قد تحتاج لحذف بعض البيانات أو تصدير نسخة احتياطية.', 'warning');
     }
   }, [toast]);
   return null;
@@ -1098,7 +1058,7 @@ const EmptyState = ({ message, icon }) => (
 
 const EnhancedEmptyState = ({ icon, title, description, ctaText, onCtaClick }) => (
   <div className="empty-state">
-    {icon ? <div className="empty-icon">{icon}</div> : null}
+    <div className="empty-icon">{icon}</div>
     <h3>{title}</h3>
     <p>{description}</p>
     {ctaText && onCtaClick && (
@@ -1137,14 +1097,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-gray-700/50">
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 flex items-center justify-center flex-shrink-0 text-white" aria-hidden="true">
-            <svg viewBox="0 0 100 100" fill="none" width="36" height="36" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-              <path d="M50 20L24 44V76H38V60H62V76H76V44L50 20Z"/>
-              <path d="M62 30V24H68V36"/>
-              <path d="M20 80H80" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5"/>
-            </svg>
-          </div>
+          <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">FF</div>
           {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1><p className="text-gray-400 text-xs">نظام التدفقات المالية</p></div>}
         </div>
       </div>
@@ -1215,6 +1168,7 @@ const Topbar = ({ page, setMobileOpen }) => {
       </div>
       <div className="text-sm text-gray-400 text-left">
         <div>{formatDateHeader(new Date())}</div>
+        <div className="mt-0.5">{formatDateGregorianNumeric(new Date())} — {formatDateHijriNumeric(new Date())}</div>
       </div>
     </header>
   );
@@ -1234,14 +1188,7 @@ const HomePage = ({ setPage }) => (
       </p>
     </div>
     <div className="text-center mb-12 mt-8">
-      <div className="w-20 h-20 rounded-2xl bg-[#0F1C2E] mx-auto mb-6 flex items-center justify-center text-white shadow-md" aria-hidden="true">
-        <svg viewBox="0 0 100 100" fill="none" width="48" height="48" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-          <path d="M50 20L24 44V76H38V60H62V76H76V44L50 20Z"/>
-          <path d="M62 30V24H68V36"/>
-          <path d="M20 80H80" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round"/>
-          <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5"/>
-        </svg>
-      </div>
+      <div className="w-20 h-20 rounded-2xl bg-blue-600 mx-auto mb-6 flex items-center justify-center text-white font-bold text-2xl shadow-lg shadow-blue-200">FF</div>
       <h1 className="text-3xl font-extrabold text-gray-900 mb-3">قيد العقار</h1>
       <p className="text-gray-500 text-lg">نظام متكامل لإدارة التدفقات المالية والخطابات للمكاتب العقارية</p>
     </div>
@@ -1481,10 +1428,10 @@ const TransactionsPage = () => {
           </div>
         ) : (
           <EnhancedEmptyState
-            icon=""
+            icon="💰"
             title="لا توجد معاملات مسجلة"
             description="سجّل أول عملية دخل أو مصروف لبدء تتبع التدفق المالي"
-            ctaText="سجّل أول معاملة"
+            ctaText="➕ سجّل أول معاملة"
             onCtaClick={() => setModal('add')}
           />
         )
@@ -1719,10 +1666,10 @@ const CommissionsPage = () => {
       {/* Table or Empty */}
       {allCms.length === 0 ? (
         <EnhancedEmptyState
-          icon=""
+          icon="💼"
           title="لا توجد عمولات مسجلة"
           description="ابدأ بإضافة أول عمولة لتتبع حصص المكتب والوكلاء"
-          ctaText="أضف أول عمولة"
+          ctaText="➕ أضف أول عمولة"
           onCtaClick={() => setModal('add')}
         />
       ) : cms.length === 0 ? (
@@ -2115,15 +2062,15 @@ const SettingsPage = () => {
     const cmCount = dataStore.commissions.list().length;
     const draftCount = (safeGet(KEYS.drafts, [])).length;
     setConfirm({
-      title: 'حذف جميع البيانات',
-      message: 'سيتم حذف جميع البيانات المحفوظة:',
+      title: '⚠ تحذير: حذف جميع البيانات',
+      message: 'هذا الإجراء سيحذف جميع البيانات المحفوظة:',
       messageList: [
         `جميع الحركات المالية (${txCount})`,
         `جميع العمولات (${cmCount})`,
         `جميع المسودات (${draftCount})`,
         'جميع الإعدادات'
       ],
-      dangerText: 'لا يمكن التراجع عن هذا الإجراء.',
+      dangerText: 'لا يمكن التراجع عن هذا الإجراء!',
       confirmLabel: 'نعم، احذف كل شيء',
       danger: true,
       onConfirm: () => {
@@ -2199,8 +2146,9 @@ const SettingsPage = () => {
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
       {/* Phase 9.1 — Data Warning Notice (LocalStorage) */}
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm mb-6 no-print" role="alert" aria-labelledby="data-warning-title">
-        <h3 id="data-warning-title" className="font-bold text-amber-800 mb-3">
-          ملاحظة مهمة
+        <h3 id="data-warning-title" className="font-bold text-amber-800 mb-3 flex items-center gap-2">
+          <span className="text-amber-600" aria-hidden="true">⚠</span>
+          تنبيه مهم
         </h3>
         <ul className="text-sm text-amber-900 space-y-1.5 list-disc list-inside">
           <li>البيانات محفوظة على هذا الجهاز فقط (LocalStorage)</li>
@@ -2294,12 +2242,12 @@ const GREG_MONTHS_NC = ["يناير","فبراير","مارس","أبريل","م�
 const DAY_NAMES_NC = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 const DAY_NAMES_SHORT_NC = ["أحد","إثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"];
 const EVENT_CATEGORIES_NC = [
-  { id: "holiday", label: "إجازة رسمية", color: "#0F1C2E", bg: "rgba(15,28,46,0.08)", icon: "" },
-  { id: "school", label: "تقويم دراسي", color: "#8A8F98", bg: "rgba(138,143,152,0.12)", icon: "" },
-  { id: "personal", label: "شخصي", color: "#B8A76A", bg: "rgba(184,167,106,0.15)", icon: "" },
-  { id: "work", label: "عمل", color: "#1a2d45", bg: "rgba(15,28,46,0.06)", icon: "" },
-  { id: "rental", label: "تأجير/حجوزات", color: "#6b7a4a", bg: "rgba(184,167,106,0.12)", icon: "" },
-  { id: "religious", label: "مناسبة دينية", color: "#5c6b7a", bg: "rgba(138,143,152,0.1)", icon: "" },
+  { id: "holiday", label: "إجازة رسمية", color: "#ef4444", bg: "#fef2f2", icon: "🏖️" },
+  { id: "school", label: "تقويم دراسي", color: "#3b82f6", bg: "#eff6ff", icon: "🎓" },
+  { id: "personal", label: "شخصي", color: "#8b5cf6", bg: "#f5f3ff", icon: "👤" },
+  { id: "work", label: "عمل", color: "#f59e0b", bg: "#fffbeb", icon: "💼" },
+  { id: "rental", label: "تأجير/حجوزات", color: "#10b981", bg: "#ecfdf5", icon: "🏠" },
+  { id: "religious", label: "مناسبة دينية", color: "#06b6d4", bg: "#ecfeff", icon: "🕌" },
 ];
 const DEFAULT_EVENTS_NC = [
   { id: "e1", title: "عيد الفطر", category: "holiday", dateType: "hijri", hMonth: 10, hDay: 1, duration: 3, recurring: true },
@@ -2314,18 +2262,14 @@ function toArabicNumNC(n) { return String(n).replace(/\d/g, d => "٠١٢٣٤٥٦
 
 function NotesCalendarAddInput({ placeholder, onAdd, colors }) {
   const [text, setText] = useState("");
-  const handleAdd = () => {
-    const t = text.trim();
-    if (t) { onAdd(t); setText(""); }
-  };
   return (
     <div style={{ display: "flex", gap: 8 }}>
       <input value={text} onChange={e => setText(e.target.value)}
-        onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); handleAdd(); } }}
+        onKeyDown={e => { if (e.key === "Enter" && text.trim()) { onAdd(text); setText(""); } }}
         placeholder={placeholder}
         style={{ flex: 1, padding: "10px 14px", borderRadius: 10, border: `1px solid ${colors.border}`, fontSize: 13, fontFamily: "inherit", outline: "none", direction: "rtl", background: "#f8fafc" }}
       />
-      <button type="button" onClick={handleAdd}
+      <button onClick={() => { if (text.trim()) { onAdd(text); setText(""); } }}
         style={{ padding: "10px 16px", borderRadius: 10, border: "none", background: colors.primary, color: "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700, whiteSpace: "nowrap" }}>
         + إضافة
       </button>
@@ -2337,7 +2281,7 @@ function NotesCalendarPinnedCard({ note, colors, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [text, setText] = useState(note.text);
   return (
-    <div style={{ background: note.color || "rgba(15,28,46,0.06)", borderRadius: 12, padding: "12px 16px", marginBottom: 8, border: "1px solid rgba(15,28,46,0.08)" }}>
+    <div style={{ background: note.color || "#fef3c7", borderRadius: 12, padding: "12px 16px", marginBottom: 8, border: "1px solid rgba(0,0,0,0.06)" }}>
       {editing ? (
         <div>
           <textarea value={text} onChange={e => setText(e.target.value)} autoFocus
@@ -2355,9 +2299,9 @@ function NotesCalendarPinnedCard({ note, colors, onDelete, onUpdate }) {
           <div style={{ fontSize: 14, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{note.text}</div>
           <div style={{ display: "flex", gap: 6, marginTop: 8, justifyContent: "flex-end" }}>
             <button onClick={() => setEditing(true)}
-              style={{ background: "rgba(15,28,46,0.08)", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: colors.text }}>تعديل</button>
+              style={{ background: "rgba(0,0,0,0.05)", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: colors.textLight }}>✏️ تعديل</button>
             <button onClick={onDelete}
-              style={{ background: "rgba(198,40,40,0.1)", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: colors.danger }}>حذف</button>
+              style={{ background: "rgba(239,68,68,0.1)", border: "none", borderRadius: 6, padding: "4px 10px", cursor: "pointer", fontSize: 11, color: colors.danger }}>🗑 حذف</button>
           </div>
         </div>
       )}
@@ -2367,9 +2311,9 @@ function NotesCalendarPinnedCard({ note, colors, onDelete, onUpdate }) {
 
 function NotesCalendarAddPinnedInput({ onAdd, colors }) {
   const [text, setText] = useState("");
-  const [color, setColor] = useState("rgba(15,28,46,0.06)");
+  const [color, setColor] = useState("#fef3c7");
   const [open, setOpen] = useState(false);
-  const COLORS = ["rgba(15,28,46,0.06)", "rgba(184,167,106,0.2)", "rgba(138,143,152,0.12)", "rgba(15,28,46,0.1)", "rgba(184,167,106,0.12)", "rgba(138,143,152,0.08)"];
+  const COLORS = ["#fef3c7", "#dbeafe", "#dcfce7", "#fce7f3", "#f3e8ff", "#ffedd5"];
   if (!open) return (
     <button onClick={() => setOpen(true)}
       style={{ width: "100%", padding: "10px", borderRadius: 10, border: `2px dashed ${colors.border}`, background: "transparent", cursor: "pointer", fontSize: 13, fontWeight: 600, color: colors.primary, marginTop: 4 }}>
@@ -2377,7 +2321,7 @@ function NotesCalendarAddPinnedInput({ onAdd, colors }) {
     </button>
   );
   return (
-    <div style={{ background: color, borderRadius: 12, padding: 16, marginTop: 8, border: "1px solid rgba(15,28,46,0.08)" }}>
+    <div style={{ background: color, borderRadius: 12, padding: 16, marginTop: 8, border: "1px solid rgba(0,0,0,0.08)" }}>
       <textarea value={text} onChange={e => setText(e.target.value)} autoFocus
         placeholder="اكتب ملاحظتك الثابتة هنا..."
         style={{ width: "100%", padding: 10, borderRadius: 8, border: `1px solid ${colors.border}`, fontSize: 14, fontFamily: "inherit", direction: "rtl", resize: "vertical", minHeight: 60, background: "rgba(255,255,255,0.7)" }}
@@ -2419,8 +2363,8 @@ function NotesCalendarAddEventModal({ colors, onClose, onAdd }) {
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: 16, backdropFilter: "blur(4px)" }}>
       <div dir="rtl" style={{ background: "#fff", borderRadius: 20, width: "100%", maxWidth: 480, maxHeight: "90vh", overflow: "auto", boxShadow: "0 20px 60px rgba(0,0,0,0.3)" }}>
         <div style={{ padding: "20px 24px 16px", borderBottom: `1px solid ${colors.border}`, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <span style={{ fontSize: 18, fontWeight: 800, color: colors.primaryDark }}>إضافة مناسبة جديدة</span>
-          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 18, color: colors.textMuted, padding: 4 }} aria-label="إغلاق">×</button>
+          <span style={{ fontSize: 18, fontWeight: 800, color: colors.primaryDark }}>📅 إضافة مناسبة جديدة</span>
+          <button onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 20, color: colors.textMuted, padding: 4 }}>✕</button>
         </div>
         <div style={{ padding: "16px 24px 24px" }}>
           <label style={{ fontSize: 13, fontWeight: 700, color: colors.text, display: "block", marginBottom: 6 }}>اسم المناسبة</label>
@@ -2442,7 +2386,7 @@ function NotesCalendarAddEventModal({ colors, onClose, onAdd }) {
           </div>
           <label style={{ fontSize: 13, fontWeight: 700, color: colors.text, display: "block", marginBottom: 6 }}>نوع التاريخ</label>
           <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
-            {[{k:"hijri",l:"هجري"},{k:"gregorian",l:"ميلادي"}].map(t => (
+            {[{k:"hijri",l:"هجري 🌙"},{k:"gregorian",l:"ميلادي 📅"}].map(t => (
               <button key={t.k} onClick={() => setDateType(t.k)}
                 style={{ flex: 1, padding: "10px", borderRadius: 10, border: dateType === t.k ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`, background: dateType === t.k ? colors.primaryLight : "#fff", cursor: "pointer", fontSize: 13, fontWeight: 700, color: dateType === t.k ? colors.primary : colors.textLight }}>
                 {t.l}
@@ -2498,8 +2442,8 @@ function NotesCalendarAddEventModal({ colors, onClose, onAdd }) {
           </div>
           <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
             <button onClick={submit}
-              style={{ flex: 1, padding: "12px 20px", borderRadius: 12, border: "none", background: "#0F1C2E", color: "#fff", cursor: "pointer", fontSize: 15, fontWeight: 800, boxShadow: "0 4px 12px rgba(15,28,46,0.25)" }}>
-              حفظ المناسبة
+              style={{ flex: 1, padding: "12px 20px", borderRadius: 12, border: "none", background: "linear-gradient(135deg, #1e40af, #0ea5e9)", color: "#fff", cursor: "pointer", fontSize: 15, fontWeight: 800, boxShadow: "0 4px 12px rgba(30,64,175,0.3)" }}>
+              ✅ حفظ المناسبة
             </button>
             <button onClick={onClose}
               style={{ padding: "12px 20px", borderRadius: 12, border: `1px solid ${colors.border}`, background: "#fff", cursor: "pointer", fontSize: 14, fontWeight: 600, color: colors.textLight }}>
@@ -2517,7 +2461,7 @@ function NotesCalendar({ mode = 'calendar' }) {
   const [currentMonth, setCurrentMonth] = useState(today.getMonth());
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState(getKeyNC(today.getFullYear(), today.getMonth() + 1, today.getDate()));
-  const [pinnedNotes, setPinnedNotes] = useState([{ id: "p1", text: "أرقام الحسابات البنكية المهمة", color: "rgba(15,28,46,0.06)", createdAt: Date.now() }]);
+  const [pinnedNotes, setPinnedNotes] = useState([{ id: "p1", text: "أرقام الحسابات البنكية المهمة", color: "#fef3c7", createdAt: Date.now() }]);
   const [dailyNotes, setDailyNotes] = useState({});
   const [events, setEvents] = useState(DEFAULT_EVENTS_NC);
   const [showAddEvent, setShowAddEvent] = useState(false);
@@ -2568,18 +2512,14 @@ function NotesCalendar({ mode = 'calendar' }) {
   const currentDailyNotes = dailyNotes[selectedDate] || [];
   const setCurrentDailyNotes = (notes) => { setDailyNotes(prev => ({ ...prev, [selectedDate]: notes })); };
   const addDailyNote = (text) => {
-    const t = (text || "").trim();
-    if (!t) return;
-    setDailyNotes(prev => ({
-      ...prev,
-      [selectedDate]: [...(prev[selectedDate] || []), { id: `d${Date.now()}`, text: t, done: false, createdAt: Date.now() }]
-    }));
+    if (!text.trim()) return;
+    setCurrentDailyNotes([...currentDailyNotes, { id: `d${Date.now()}`, text, done: false, createdAt: Date.now() }]);
   };
   const toggleDailyNote = (id) => { setCurrentDailyNotes(currentDailyNotes.map(n => n.id === id ? { ...n, done: !n.done } : n)); };
   const deleteDailyNote = (id) => { setCurrentDailyNotes(currentDailyNotes.filter(n => n.id !== id)); };
   const addPinnedNote = (text, color) => {
     if (!text.trim()) return;
-    setPinnedNotes(prev => [...prev, { id: `p${Date.now()}`, text, color: color || "rgba(15,28,46,0.06)", createdAt: Date.now() }]);
+    setPinnedNotes(prev => [...prev, { id: `p${Date.now()}`, text, color: color || "#fef3c7", createdAt: Date.now() }]);
   };
   const deletePinnedNote = (id) => { setPinnedNotes(prev => prev.filter(n => n.id !== id)); };
   const updatePinnedNote = (id, text) => { setPinnedNotes(prev => prev.map(n => n.id === id ? { ...n, text } : n)); };
@@ -2595,18 +2535,18 @@ function NotesCalendar({ mode = 'calendar' }) {
   const todayKey = getKeyNC(today.getFullYear(), today.getMonth() + 1, today.getDate());
   const hijriCurrent = gregorianToHijri(currentYear, currentMonth + 1, 15);
   const pendingTasks = currentDailyNotes.filter(n => !n.done).length;
-  const colors = { bg: "#FAFBFC", card: "#ffffff", primary: "#0F1C2E", primaryLight: "rgba(15,28,46,0.08)", primaryDark: "#0F1C2E", accent: "#B8A76A", text: "#0F1C2E", textLight: "#8A8F98", textMuted: "#8A8F98", border: "rgba(15,28,46,0.08)", success: "#2E7D32", danger: "#C62828", warning: "#E65100", holidayBg: "rgba(198,40,40,0.06)", todayBorder: "#B8A76A" };
+  const colors = { bg: "#f8fafc", card: "#ffffff", primary: "#1e40af", primaryLight: "#dbeafe", primaryDark: "#1e3a5f", accent: "#0ea5e9", text: "#1e293b", textLight: "#64748b", textMuted: "#94a3b8", border: "#e2e8f0", success: "#10b981", danger: "#ef4444", warning: "#f59e0b", holidayBg: "#fef2f2", todayBorder: "#0ea5e9" };
 
   const showCal = mode === 'calendar';
   const showNotes = mode === 'notes';
 
   return (
-    <div dir="rtl" className="p-4 max-w-6xl mx-auto" style={{ fontFamily: "var(--qa-font, 'IBM Plex Sans Arabic', 'Noto Sans Arabic', Tahoma, sans-serif)", minHeight: '100%' }}>
+    <div dir="rtl" className="p-4 max-w-6xl mx-auto" style={{ fontFamily: "'Noto Sans Arabic', Tahoma, sans-serif", minHeight: '100%' }}>
       <div style={{ display: "flex", flexDirection: "row", gap: 16, flexWrap: "wrap" }}>
         {showCal && (
           <div style={{ flex: "1 1 520px", minWidth: 320 }}>
           <div style={{ background: colors.card, borderRadius: 16, boxShadow: "0 2px 12px rgba(0,0,0,0.06)", overflow: "hidden", border: `1px solid ${colors.border}` }}>
-            <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "rgba(15,28,46,0.06)", borderBottom: `1px solid ${colors.border}` }}>
+            <div style={{ padding: "16px 20px", display: "flex", alignItems: "center", justifyContent: "space-between", background: "linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%)", borderBottom: `1px solid ${colors.border}` }}>
               <button onClick={nextMonth} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${colors.border}`, background: "#fff", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", color: colors.primary, fontWeight: 700 }}>→</button>
               <div style={{ textAlign: "center" }}>
                 <div style={{ fontSize: 17, fontWeight: 700, color: colors.primaryDark }}>{GREG_MONTHS_NC[currentMonth]} {toArabicNumNC(currentYear)}</div>
@@ -2614,9 +2554,9 @@ function NotesCalendar({ mode = 'calendar' }) {
               </div>
               <button onClick={prevMonth} style={{ width: 36, height: 36, borderRadius: 10, border: `1px solid ${colors.border}`, background: "#fff", cursor: "pointer", fontSize: 16, display: "flex", alignItems: "center", justifyContent: "center", color: colors.primary, fontWeight: 700 }}>←</button>
             </div>
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", padding: "8px 12px", background: "rgba(15,28,46,0.04)" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", padding: "8px 12px", background: "#f8fafc" }}>
               {DAY_NAMES_SHORT_NC.map(d => (
-                <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, color: colors.textLight, padding: 4 }}>{d}</div>
+                <div key={d} style={{ textAlign: "center", fontSize: 11, fontWeight: 700, color: d === "جمعة" || d === "سبت" ? colors.danger : colors.textLight, padding: 4 }}>{d}</div>
               ))}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)", padding: "4px 12px 12px", gap: 3 }}>
@@ -2636,7 +2576,7 @@ function NotesCalendar({ mode = 'calendar' }) {
                     style={{
                       position: "relative", padding: "6px 2px", border: isToday ? `2px solid ${colors.todayBorder}` : isSelected ? `2px solid ${colors.primary}` : "2px solid transparent",
                       borderRadius: 10, cursor: "pointer", transition: "all 0.15s", minHeight: 56,
-                      background: isToday ? "rgba(184,167,106,0.15)" : isSelected ? colors.primaryLight : holiday ? colors.holidayBg : isWeekend && item.current ? "rgba(15,28,46,0.04)" : "transparent",
+                      background: isSelected ? colors.primaryLight : holiday ? colors.holidayBg : isWeekend && item.current ? "#f8fafc" : "transparent",
                       opacity: item.current ? 1 : 0.35,
                       display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1,
                     }}>
@@ -2670,17 +2610,17 @@ function NotesCalendar({ mode = 'calendar' }) {
             if (evs.length === 0) return null;
             return (
               <div style={{ marginTop: 12, background: colors.card, borderRadius: 14, border: `1px solid ${colors.border}`, padding: 16 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: colors.primaryDark, marginBottom: 10 }}>مناسبات هذا اليوم</div>
+                <div style={{ fontSize: 14, fontWeight: 700, color: colors.primaryDark, marginBottom: 10 }}>📌 مناسبات هذا اليوم</div>
                 {evs.map(ev => {
                   const cat = EVENT_CATEGORIES_NC.find(c => c.id === ev.category);
                   return (
                     <div key={ev.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 12px", borderRadius: 10, background: cat?.bg || "#f5f5f5", marginBottom: 6, border: `1px solid ${cat?.color}22` }}>
-                      {cat?.icon ? <span style={{ fontSize: 18 }}>{cat.icon}</span> : null}
+                      <span style={{ fontSize: 18 }}>{cat?.icon}</span>
                       <div style={{ flex: 1 }}>
                         <div style={{ fontSize: 14, fontWeight: 700, color: cat?.color }}>{ev.title}</div>
                         <div style={{ fontSize: 11, color: colors.textLight }}>{cat?.label}{ev.duration > 1 ? ` — ${toArabicNumNC(ev.duration)} أيام` : ""}</div>
                       </div>
-                      <button onClick={() => setEvents(prev => prev.filter(e => e.id !== ev.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: colors.textMuted, padding: 4 }} aria-label="حذف">×</button>
+                      <button onClick={() => setEvents(prev => prev.filter(e => e.id !== ev.id))} style={{ background: "none", border: "none", cursor: "pointer", fontSize: 14, color: colors.textMuted, padding: 4 }}>✕</button>
                     </div>
                   );
                 })}
@@ -2692,8 +2632,8 @@ function NotesCalendar({ mode = 'calendar' }) {
             <span style={{ fontSize: 18 }}>+</span> إضافة مناسبة / إجازة
           </button>
           <div style={{ marginTop: 12, background: colors.card, borderRadius: 14, border: `1px solid ${colors.border}`, overflow: "hidden" }}>
-            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${colors.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "rgba(15,28,46,0.06)" }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: colors.primaryDark }}>جميع المناسبات المسجلة</span>
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${colors.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", background: "#f8fafc" }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: colors.primaryDark }}>📋 جميع المناسبات المسجلة</span>
               <span style={{ fontSize: 11, color: colors.textMuted, background: colors.primaryLight, padding: "2px 10px", borderRadius: 20, fontWeight: 600 }}>{toArabicNumNC(events.length)}</span>
             </div>
             <div style={{ maxHeight: 240, overflowY: "auto" }}>
@@ -2701,15 +2641,15 @@ function NotesCalendar({ mode = 'calendar' }) {
                 const cat = EVENT_CATEGORIES_NC.find(c => c.id === ev.category);
                 return (
                   <div key={ev.id} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 16px", borderBottom: `1px solid ${colors.border}08` }}>
-                    {cat?.icon ? <span style={{ fontSize: 16 }}>{cat.icon}</span> : null}
+                    <span style={{ fontSize: 16 }}>{cat?.icon}</span>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: 600 }}>{ev.title}</div>
                       <div style={{ fontSize: 10, color: colors.textMuted }}>
                         {ev.dateType === "hijri" ? `${toArabicNumNC(ev.hDay)} ${HIJRI_MONTHS_NC[ev.hMonth-1]} (هجري)` : `${toArabicNumNC(ev.gDay)} ${GREG_MONTHS_NC[ev.gMonth-1]} (ميلادي)`}
-                        {ev.duration > 1 && ` — ${toArabicNumNC(ev.duration)} أيام`}{ev.recurring && " (متكرر)"}
+                        {ev.duration > 1 && ` — ${toArabicNumNC(ev.duration)} أيام`}{ev.recurring && " 🔄"}
                       </div>
                     </div>
-                    <button onClick={() => setEvents(prev => prev.filter(e => e.id !== ev.id))} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textMuted, fontSize: 12, padding: 4 }} aria-label="حذف">حذف</button>
+                    <button onClick={() => setEvents(prev => prev.filter(e => e.id !== ev.id))} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textMuted, fontSize: 12, padding: 4 }}>🗑</button>
                   </div>
                 );
               })}
@@ -2721,27 +2661,28 @@ function NotesCalendar({ mode = 'calendar' }) {
 
         {showNotes && (
           <div style={{ flex: "1 1 420px", minWidth: 300 }}>
-          <div style={{ background: "rgba(15,28,46,0.06)", borderRadius: 14, padding: "16px 20px", marginBottom: 12, border: `1px solid ${colors.border}`, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
+          <div style={{ background: "linear-gradient(135deg, #1e3a5f 0%, #1e40af 100%)", borderRadius: 14, padding: "16px 20px", marginBottom: 12, color: "#fff", boxShadow: "0 4px 16px rgba(30,64,175,0.25)" }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div>
-                <div style={{ fontSize: 13, color: colors.textMuted, marginBottom: 4 }}>{selDayName}</div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: colors.primary }}>{toArabicNumNC(selParts[2])} {GREG_MONTHS_NC[selParts[1]-1]} {toArabicNumNC(selParts[0])}</div>
-                <div style={{ fontSize: 14, marginTop: 4, color: colors.textMuted }}>{toArabicNumNC(selHijri.day)} {HIJRI_MONTHS_NC[selHijri.month-1]} {toArabicNumNC(selHijri.year)} هـ</div>
+                <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 4 }}>{selDayName}</div>
+                <div style={{ fontSize: 22, fontWeight: 800 }}>{toArabicNumNC(selParts[2])} {GREG_MONTHS_NC[selParts[1]-1]} {toArabicNumNC(selParts[0])}</div>
+                <div style={{ fontSize: 14, opacity: 0.8, marginTop: 4, color: "#7dd3fc" }}>{toArabicNumNC(selHijri.day)} {HIJRI_MONTHS_NC[selHijri.month-1]} {toArabicNumNC(selHijri.year)} هـ</div>
               </div>
-              <button onClick={goToday} style={{ background: colors.primary, border: "none", color: "#fff", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>اليوم</button>
+              <button onClick={goToday} style={{ background: "rgba(255,255,255,0.2)", border: "1px solid rgba(255,255,255,0.3)", color: "#fff", borderRadius: 8, padding: "6px 14px", cursor: "pointer", fontSize: 13, fontWeight: 600 }}>اليوم</button>
             </div>
           </div>
           <div style={{ background: colors.card, borderRadius: 14, border: `1px solid ${colors.border}`, overflow: "hidden", marginBottom: 12, boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${colors.border}`, background: "rgba(15,28,46,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${colors.border}`, background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
               <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: "#0F1C2E" }}>مهام وملاحظات اليوم</span>
+                <span style={{ fontSize: 18 }}>✅</span>
+                <span style={{ fontSize: 15, fontWeight: 700, color: colors.primaryDark }}>مهام وملاحظات اليوم</span>
               </div>
               {currentDailyNotes.length > 0 && <div style={{ fontSize: 11, color: colors.textMuted }}>{toArabicNumNC(currentDailyNotes.filter(n => n.done).length)}/{toArabicNumNC(currentDailyNotes.length)} مكتملة</div>}
             </div>
             {currentDailyNotes.length > 0 && (
-              <div style={{ padding: "8px 16px 4px", background: "rgba(15,28,46,0.03)" }}>
-                <div style={{ height: 6, borderRadius: 3, background: "rgba(15,28,46,0.08)", overflow: "hidden" }}>
-                  <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${(currentDailyNotes.filter(n => n.done).length / currentDailyNotes.length) * 100}%`, background: currentDailyNotes.every(n => n.done) ? colors.success : colors.accent }} />
+              <div style={{ padding: "8px 16px 4px", background: "#fffdf7" }}>
+                <div style={{ height: 6, borderRadius: 3, background: "#e5e7eb", overflow: "hidden" }}>
+                  <div style={{ height: "100%", borderRadius: 3, transition: "width 0.4s ease", width: `${(currentDailyNotes.filter(n => n.done).length / currentDailyNotes.length) * 100}%`, background: currentDailyNotes.every(n => n.done) ? "linear-gradient(90deg, #10b981, #34d399)" : "linear-gradient(90deg, #f59e0b, #fbbf24)" }} />
                 </div>
               </div>
             )}
@@ -2750,27 +2691,27 @@ function NotesCalendar({ mode = 'calendar' }) {
                 <div key={note.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${colors.border}33` }}>
                   <button onClick={() => toggleDailyNote(note.id)} style={{ width: 24, height: 24, borderRadius: 7, border: `2px solid ${note.done ? colors.success : colors.border}`, background: note.done ? colors.success : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", marginTop: 2 }}>{note.done && "✓"}</button>
                   <span style={{ flex: 1, fontSize: 14, lineHeight: 1.6, textDecoration: note.done ? "line-through" : "none", color: note.done ? colors.textMuted : colors.text }}>{note.text}</span>
-                  <button onClick={() => deleteDailyNote(note.id)} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textMuted, fontSize: 14, padding: "2px 4px", opacity: 0.5 }} aria-label="حذف">×</button>
+                  <button onClick={() => deleteDailyNote(note.id)} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textMuted, fontSize: 14, padding: "2px 4px", opacity: 0.5 }}>✕</button>
                 </div>
               ))}
               {currentDailyNotes.length === 0 && (
                 <div style={{ padding: "24px 0", textAlign: "center", color: colors.textMuted, fontSize: 13 }}>
-                  لا توجد مهام لهذا اليوم
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>لا توجد مهام لهذا اليوم
                 </div>
               )}
               <div style={{ marginTop: 8 }}><NotesCalendarAddInput placeholder="أضف مهمة أو ملاحظة لهذا اليوم..." onAdd={addDailyNote} colors={colors} /></div>
             </div>
           </div>
           <div style={{ background: colors.card, borderRadius: 14, border: `1px solid ${colors.border}`, overflow: "hidden", boxShadow: "0 2px 8px rgba(0,0,0,0.04)" }}>
-            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${colors.border}`, background: "rgba(15,28,46,0.06)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 15, fontWeight: 700, color: "#0F1C2E" }}>ملاحظات ثابتة</span></div>
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${colors.border}`, background: "linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%)", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}><span style={{ fontSize: 18 }}>📌</span><span style={{ fontSize: 15, fontWeight: 700, color: colors.primaryDark }}>ملاحظات ثابتة</span></div>
               <span style={{ fontSize: 11, color: colors.textMuted }}>(تظهر دائماً)</span>
             </div>
             <div style={{ padding: "12px 16px" }}>
               {pinnedNotes.map(note => (
                 <NotesCalendarPinnedCard key={note.id} note={note} colors={colors} onDelete={() => deletePinnedNote(note.id)} onUpdate={(text) => updatePinnedNote(note.id, text)} />
               ))}
-              {pinnedNotes.length === 0 && <div style={{ padding: "20px 0", textAlign: "center", color: colors.textMuted, fontSize: 13 }}>لا توجد ملاحظات ثابتة</div>}
+              {pinnedNotes.length === 0 && <div style={{ padding: "20px 0", textAlign: "center", color: colors.textMuted, fontSize: 13 }}><div style={{ fontSize: 28, marginBottom: 6 }}>📌</div>لا توجد ملاحظات ثابتة</div>}
               <NotesCalendarAddPinnedInput onAdd={addPinnedNote} colors={colors} />
             </div>
           </div>
@@ -2811,7 +2752,7 @@ const WelcomeBanner = () => {
           <strong>مرحبًا بك في قيد العقار!</strong>
           <p>ابدأ بإضافة عقار، ثم سجّل الدخل والمصروفات، وسيتم احتساب التحليل المالي تلقائيًا.</p>
         </div>
-        <button type="button" onClick={dismiss} className="banner-close" aria-label="إغلاق">×</button>
+        <button type="button" onClick={dismiss} className="banner-close" aria-label="إغلاق">✕</button>
       </div>
     </div>
   );

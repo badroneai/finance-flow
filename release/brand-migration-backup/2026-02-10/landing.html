@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8"/>
@@ -21,73 +21,39 @@
   <meta property="twitter:description" content="أداة بسيطة لإدارة دخل ومصروف العقارات"/>
   <meta property="twitter:image" content="https://YOUR-USERNAME.github.io/finance-flow/twitter-image.jpg"/>
   <meta name="robots" content="index, follow"/>
-  <meta name="theme-color" content="#0F1C2E"/>
+  <meta name="theme-color" content="#2563eb"/>
   <meta name="apple-mobile-web-app-capable" content="yes"/>
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
   <meta name="apple-mobile-web-app-title" content="قيد العقار"/>
-  <link rel="icon" href="assets/logo-icon.svg" type="image/svg+xml"/>
   <link rel="icon" type="image/png" href="favicon.png"/>
   <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"SoftwareApplication","name":"قيد العقار","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"SAR"},"operatingSystem":"Any","description":"نظام بسيط لإدارة التدفق المالي للعقارات يعمل محليًا بدون اشتراك","inLanguage":"ar","author":{"@type":"Person","name":"Bader"}}
   </script>
-  <link rel="stylesheet" href="assets/qaydalaqar-theme.css"/>
   <style>
     :root {
-      --lp-bg: var(--qa-off-white);
-      --lp-surface: var(--qa-white);
-      --lp-primary: var(--qa-navy);
-      --lp-primary-dark: #1a2d45;
-      --lp-text: var(--qa-text-primary);
-      --lp-muted: var(--qa-gray);
-      --lp-border: var(--qa-border-color);
-      --lp-radius: var(--qa-radius);
-      --lp-shadow: var(--qa-shadow-md);
+      --lp-bg: #f6f7fb;
+      --lp-surface: #ffffff;
+      --lp-primary: #2563eb;
+      --lp-primary-dark: #1d4ed8;
+      --lp-text: #0f172a;
+      --lp-muted: #64748b;
+      --lp-border: #e6e8ef;
+      --lp-radius: 12px;
+      --lp-shadow: 0 4px 14px rgba(15, 23, 42, .08);
     }
     * { box-sizing: border-box; }
-    /* ٠٣ — الخطوط (IBM Plex Arabic) */
     body {
       margin: 0;
-      font-family: var(--qa-font-arabic);
-      font-size: var(--qa-font-size-body);
-      font-weight: var(--qa-font-weight-body);
-      line-height: var(--qa-line-height-body);
+      font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
       background: var(--lp-bg);
       color: var(--lp-text);
+      line-height: 1.6;
     }
     .container { max-width: 960px; margin: 0 auto; padding: 0 1rem; }
     section { padding: 3rem 0; }
-    h1 {
-      font-family: var(--qa-font-arabic);
-      font-size: var(--qa-font-size-h1);
-      font-weight: var(--qa-font-weight-h1-h2);
-      line-height: var(--qa-line-height-h1);
-      margin: 0 0 0.5rem;
-      color: var(--lp-text);
-    }
-    h2 {
-      font-family: var(--qa-font-arabic);
-      font-size: var(--qa-font-size-h2);
-      font-weight: var(--qa-font-weight-h1-h2);
-      line-height: var(--qa-line-height-h2);
-      margin: 0 0 1rem;
-      color: var(--lp-text);
-    }
-    h3 {
-      font-family: var(--qa-font-arabic);
-      font-size: var(--qa-font-size-h3);
-      font-weight: var(--qa-font-weight-h3);
-      line-height: var(--qa-line-height-h3);
-      margin: 0 0 0.4em;
-      color: var(--lp-text);
-    }
-    .qa-caption, .caption {
-      font-family: var(--qa-font-arabic);
-      font-size: var(--qa-font-size-caption);
-      font-weight: var(--qa-font-weight-caption);
-      line-height: var(--qa-line-height-caption);
-      color: var(--lp-muted);
-    }
+    h1 { font-size: 1.75rem; margin: 0 0 0.5rem; }
+    h2 { font-size: 1.35rem; margin: 0 0 1.5rem; color: var(--lp-text); }
     .btn {
       display: inline-block;
       padding: 0.65rem 1.25rem;
@@ -117,15 +83,7 @@
       background: var(--lp-surface);
       border-bottom: 1px solid var(--lp-border);
     }
-    .hero-logo {
-      display: flex;
-      justify-content: center;
-      margin-bottom: 1.25rem;
-    }
-    .hero-logo svg {
-      display: block;
-    }
-    .hero .tagline { font-size: var(--qa-font-size-h2); font-weight: var(--qa-font-weight-h1-h2); line-height: var(--qa-line-height-h2); color: var(--lp-muted); margin-bottom: 1.5rem; max-width: 520px; margin-left: auto; margin-right: auto; }
+    .hero .tagline { font-size: 1.1rem; color: var(--lp-muted); margin-bottom: 1.5rem; max-width: 520px; margin-left: auto; margin-right: auto; }
     .hero .values {
       display: flex;
       flex-wrap: wrap;
@@ -144,19 +102,19 @@
     .cta-button-primary {
       display: inline-block;
       background: var(--lp-primary);
-      color: var(--qa-white);
+      color: white;
       padding: 1rem 2.5rem;
-      border-radius: var(--qa-radius-sm);
+      border-radius: 8px;
       font-size: 1.2rem;
       font-weight: 600;
       text-decoration: none;
-      transition: background 0.2s ease, box-shadow 0.2s ease;
-      box-shadow: var(--qa-shadow-md);
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     .cta-button-primary:hover {
-      background: var(--lp-primary-dark);
-      box-shadow: var(--qa-shadow-lg);
-      color: var(--qa-white);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      color: white;
     }
     .trust-note {
       display: flex;
@@ -164,16 +122,14 @@
       justify-content: center;
       gap: 0.5rem;
       margin-top: 1rem;
-      font-size: var(--qa-font-size-caption);
-      font-weight: var(--qa-font-weight-caption);
-      line-height: var(--qa-line-height-caption);
+      font-size: 0.9rem;
       color: var(--lp-muted);
     }
     .trust-note svg {
-      color: var(--qa-success);
+      color: #10b981;
       flex-shrink: 0;
     }
-    .hero .cta-note { font-size: var(--qa-font-size-caption); line-height: var(--qa-line-height-caption); color: var(--lp-muted); margin-top: 1rem; }
+    .hero .cta-note { font-size: 0.85rem; color: var(--lp-muted); margin-top: 1rem; }
     .hero .cta-note a { color: var(--lp-primary); text-decoration: none; }
     .hero .cta-note a:hover { text-decoration: underline; }
     /* (B) لمن المنتج */
@@ -191,8 +147,8 @@
       border: 1px solid var(--lp-border);
       box-shadow: var(--lp-shadow);
     }
-    .audience-card h3 { margin: 0 0 0.5rem; }
-    .audience-card ul { margin: 0; padding-right: 1.2rem; color: var(--lp-muted); font-size: var(--qa-font-size-body); line-height: var(--qa-line-height-body); }
+    .audience-card h3 { margin: 0 0 0.5rem; font-size: 1.1rem; }
+    .audience-card ul { margin: 0; padding-right: 1.2rem; color: var(--lp-muted); font-size: 0.95rem; }
     /* (C) ماذا يقدم */
     .features { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
     .features-grid {
@@ -206,8 +162,8 @@
       border-radius: var(--lp-radius);
       border: 1px solid var(--lp-border);
     }
-.feature-card h3 { margin: 0 0 0.35rem; }
-.feature-card p { margin: 0; font-size: var(--qa-font-size-body); line-height: var(--qa-line-height-body); color: var(--lp-muted); }
+    .feature-card h3 { margin: 0 0 0.35rem; font-size: 1.05rem; }
+    .feature-card p { margin: 0; font-size: 0.9rem; color: var(--lp-muted); }
     /* (D) Screenshots placeholders */
     .screenshots { background: var(--lp-bg); }
     .screenshots-grid {
@@ -245,43 +201,39 @@
       position: relative;
     }
     .pricing-card.recommended { border-color: var(--lp-primary); box-shadow: 0 0 0 1px var(--lp-primary); }
-    .pricing-card.recommended .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--qa-gold); color: var(--qa-white); padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; }
-    .pricing-card h3 { margin: 0 0 0.25rem; }
+    .pricing-card.recommended .badge { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); background: var(--lp-primary); color: #fff; padding: 0.2rem 0.6rem; border-radius: 999px; font-size: 0.75rem; }
+    .pricing-card h3 { margin: 0 0 0.25rem; font-size: 1.2rem; }
     .pricing-card .price { font-size: 1.5rem; font-weight: 700; color: var(--lp-primary); margin: 0.5rem 0 1rem; }
-    .pricing-card ul { margin: 0; padding-right: 1.2rem; font-size: var(--qa-font-size-body); line-height: var(--qa-line-height-body); color: var(--lp-muted); }
+    .pricing-card ul { margin: 0; padding-right: 1.2rem; font-size: 0.9rem; color: var(--lp-muted); }
     .pricing-table { overflow-x: auto; margin-top: 2rem; }
-    .pricing-table table { width: 100%; border-collapse: collapse; font-size: var(--qa-font-size-body); }
+    .pricing-table table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
     .pricing-table th, .pricing-table td { padding: 0.6rem 0.75rem; text-align: right; border: 1px solid var(--lp-border); }
     .pricing-table th { background: var(--lp-bg); font-weight: 600; }
-    .pricing-note { margin-top: 1rem; font-size: var(--qa-font-size-caption); line-height: var(--qa-line-height-caption); color: var(--lp-muted); }
+    .pricing-note { margin-top: 1rem; font-size: 0.85rem; color: var(--lp-muted); }
     /* (F) FAQ */
     .faq { background: var(--lp-bg); }
     .faq-item { margin-bottom: 1rem; }
-    .faq-item h4 { margin: 0 0 0.35rem; font-size: var(--qa-font-size-body); font-weight: 500; }
-    .faq-item p { margin: 0; font-size: var(--qa-font-size-body); line-height: var(--qa-line-height-body); color: var(--lp-muted); }
+    .faq-item h4 { margin: 0 0 0.35rem; font-size: 1rem; }
+    .faq-item p { margin: 0; font-size: 0.9rem; color: var(--lp-muted); }
     /* (G) Contact */
     .contact { background: var(--lp-surface); border-bottom: 1px solid var(--lp-border); }
     .contact-form { max-width: 420px; }
-    .contact-form label { display: block; margin-bottom: 0.25rem; font-size: var(--qa-font-size-caption); font-weight: 500; line-height: var(--qa-line-height-caption); }
+    .contact-form label { display: block; margin-bottom: 0.25rem; font-size: 0.9rem; font-weight: 500; }
     .contact-form input, .contact-form select {
       width: 100%;
       padding: 0.6rem 0.75rem;
       margin-bottom: 1rem;
       border: 1px solid var(--lp-border);
-      border-radius: var(--qa-radius-sm);
-      font-size: var(--qa-font-size-body);
-      font-family: var(--qa-font-arabic);
-      line-height: var(--qa-line-height-body);
+      border-radius: 8px;
+      font-size: 1rem;
     }
-    .contact-channels { margin-top: 1.5rem; font-size: var(--qa-font-size-body); line-height: var(--qa-line-height-body); color: var(--lp-muted); }
+    .contact-channels { margin-top: 1.5rem; font-size: 0.95rem; color: var(--lp-muted); }
     .contact-channels a { color: var(--lp-primary); }
     /* (H) Footer */
     footer {
       padding: 1.5rem 0;
       text-align: center;
-      font-size: var(--qa-font-size-caption);
-      font-weight: var(--qa-font-weight-caption);
-      line-height: var(--qa-line-height-caption);
+      font-size: 0.85rem;
       color: var(--lp-muted);
       border-top: 1px solid var(--lp-border);
     }
@@ -292,14 +244,6 @@
   <!-- (A) Hero -->
   <section class="hero">
     <div class="container">
-      <div class="hero-logo" aria-hidden="true">
-        <svg viewBox="0 0 100 100" fill="none" width="56" height="56">
-          <path d="M50 20L24 44V76H38V60H62V76H76V44L50 20Z" stroke="var(--qa-navy)" stroke-width="2" fill="none" stroke-linejoin="round"/>
-          <path d="M62 30V24H68V36" stroke="var(--qa-navy)" stroke-width="2" fill="none" stroke-linejoin="round"/>
-          <path d="M20 80H80" stroke="var(--qa-navy)" stroke-opacity="0.4" stroke-width="1.5" stroke-linecap="round"/>
-          <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" stroke="var(--qa-navy)" stroke-opacity="0.3" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
-        </svg>
-      </div>
       <h1>قيد العقار — إدارة مالية سهلة للمكتب العقاري</h1>
       <p class="tagline">أداة واحدة لتتبع الحركات المالية والعمولات والخطابات. عربي بالكامل، يفتح من المتصفح، والبيانات تبقى عندك.</p>
       <div class="values">

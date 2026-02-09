@@ -1,0 +1,301 @@
+/**
+ * قيد العقار — Theme Tokens (Brand Identity)
+ * SOURCE OF TRUTH: brand-identity-system.md
+ * Step 2: CSS variables only. No removal of existing styles elsewhere.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+/* ─────────────────────────────────────────────────────────────────────────
+   ٠٢ — الألوان | لوحة الألوان
+   ثلاثة ألوان رئيسية تعكس الثقة والاحترافية والهدوء.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* أزرق كحلي — Navy Blue — Primary
+   HEX: #0F1C2E | RGB: 15, 28, 46
+   اللون الأساسي للعناوين والعناصر الرئيسية والخلفيات الداكنة. */
+:root,
+[data-theme="light"] {
+  --qa-navy: #0F1C2E;
+  --qa-navy-rgb: 15, 28, 46;
+  --qa-navy-90: rgba(15, 28, 46, 0.9);
+  --qa-navy-60: rgba(15, 28, 46, 0.6);
+  --qa-navy-30: rgba(15, 28, 46, 0.3);
+  --qa-navy-10: rgba(15, 28, 46, 0.1);
+  --qa-navy-05: rgba(15, 28, 46, 0.05);
+
+  /* رمادي دافئ — Warm Gray — Secondary
+     HEX: #8A8F98 | RGB: 138, 143, 152
+     للنصوص الثانوية والتسميات والحدود والأيقونات المساعدة. */
+  --qa-gray: #8A8F98;
+  --qa-gray-rgb: 138, 143, 152;
+  --qa-gray-light: #C8CBD0;
+  --qa-gray-bg: #F4F5F6;
+
+  /* ذهبي زيتوني — Soft Olive Gold — Accent
+     HEX: #B8A76A | RGB: 184, 167, 106
+     يُستخدم باعتدال شديد للتمييز والعناصر التفاعلية المهمة فقط. */
+  --qa-gold: #B8A76A;
+  --qa-gold-rgb: 184, 167, 106;
+  --qa-gold-light: rgba(184, 167, 106, 0.15);
+  --qa-gold-subtle: rgba(184, 167, 106, 0.08);
+
+  --qa-white: #FFFFFF;
+  --qa-off-white: #FAFBFC;
+  /* Borders & shadows (مشتقة من Primary) */
+  --qa-border: rgba(15, 28, 46, 0.08);
+  --qa-shadow-sm: 0 1px 3px rgba(15, 28, 46, 0.04);
+  --qa-shadow-md: 0 4px 16px rgba(15, 28, 46, 0.06);
+  --qa-shadow-lg: 0 8px 32px rgba(15, 28, 46, 0.08);
+  /* Radius */
+  --qa-radius: 12px;
+  --qa-radius-sm: 8px;
+  --qa-radius-lg: 16px;
+  /* Spacing */
+  --qa-space-xs: 8px;
+  --qa-space-sm: 12px;
+  --qa-space-md: 16px;
+  --qa-space-lg: 24px;
+  --qa-space-xl: 32px;
+  --qa-space-2xl: 40px;
+  --qa-space-3xl: 64px;
+  /* Semantic (for theme switching) */
+  --qa-page-bg: #FAFBFC;
+  --qa-surface: #FFFFFF;
+  --qa-text-primary: #0F1C2E;
+  --qa-text-muted: #8A8F98;
+  --qa-border-color: rgba(15, 28, 46, 0.08);
+  /* Typography — ٠٣ نظام الخطوط | IBM Plex Arabic */
+  --qa-font-arabic: 'IBM Plex Sans Arabic', sans-serif;
+  --qa-font: var(--qa-font-arabic);
+  --qa-font-size-caption: 13px;
+  --qa-font-size-body: 16px;
+  --qa-font-size-h3: 24px;
+  --qa-font-size-h2: 36px;
+  --qa-font-size-h1: 48px;
+  --qa-line-height-caption: 1.6;
+  --qa-line-height-body: 1.8;
+  --qa-line-height-h3: 1.4;
+  --qa-line-height-h2: 1.3;
+  --qa-line-height-h1: 1.2;
+  --qa-font-weight-body: 400;
+  --qa-font-weight-caption: 400;
+  --qa-font-weight-h3: 500;
+  --qa-font-weight-h1-h2: 600;
+  /* Semantic colors (quiet) */
+  --qa-success: #2E7D32;
+  --qa-danger: #C62828;
+  --qa-warning: #E65100;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dim — أخف من dark، أوضح فرقًا من light (خلفية رمادية متوسطة)
+   ───────────────────────────────────────────────────────────────────────── */
+[data-theme="dim"] {
+  --qa-page-bg: #E8EAED;
+  --qa-surface: #F0F1F3;
+  --qa-text-primary: #0F1C2E;
+  --qa-text-muted: #5F6368;
+  --qa-border-color: rgba(15, 28, 46, 0.12);
+  --qa-shadow-sm: 0 1px 3px rgba(15, 28, 46, 0.06);
+  --qa-shadow-md: 0 4px 16px rgba(15, 28, 46, 0.08);
+  --qa-shadow-lg: 0 8px 32px rgba(15, 28, 46, 0.1);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Dark — خلفية navy، نصوص فاتحة
+   ───────────────────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --qa-page-bg: #0F1C2E;
+  --qa-surface: #1A2A42;
+  --qa-text-primary: #FFFFFF;
+  --qa-text-muted: #8A8F98;
+  --qa-border-color: rgba(255, 255, 255, 0.08);
+  --qa-shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.2);
+  --qa-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.25);
+  --qa-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.3);
+  --qa-navy-10: rgba(255, 255, 255, 0.06);
+  --qa-navy-05: rgba(255, 255, 255, 0.04);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Step 3 — Global Base Styles (تطبيق هادئ)
+   حدود رفيعة، shadow خفيف جداً، بدون gradients قوية، white space واسع.
+   RTL معزّز. مكونات عبر classes فقط حتى لا نكسر التصميم الحالي.
+   ───────────────────────────────────────────────────────────────────────── */
+
+/* Base: تعزيز RTL والجسم والنصوص والروابط */
+html[lang="ar"] {
+  direction: rtl;
+}
+
+body {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-body);
+  font-weight: var(--qa-font-weight-body);
+  line-height: var(--qa-line-height-body);
+  background: var(--qa-page-bg);
+  color: var(--qa-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ٠٣ — الخطوط | عناوين ونص أساسي وتوضيحي (تُطبق على كل الصفحات) */
+h1, .qa-h1 {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-h1);
+  font-weight: var(--qa-font-weight-h1-h2);
+  line-height: var(--qa-line-height-h1);
+  margin: 0 0 0.5em;
+}
+h2, .qa-h2 {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-h2);
+  font-weight: var(--qa-font-weight-h1-h2);
+  line-height: var(--qa-line-height-h2);
+  margin: 0 0 0.5em;
+}
+h3, .qa-h3 {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-h3);
+  font-weight: var(--qa-font-weight-h3);
+  line-height: var(--qa-line-height-h3);
+  margin: 0 0 0.4em;
+}
+.qa-body, .qa-body p {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-body);
+  font-weight: var(--qa-font-weight-body);
+  line-height: var(--qa-line-height-body);
+}
+.qa-caption {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-caption);
+  font-weight: var(--qa-font-weight-caption);
+  line-height: var(--qa-line-height-caption);
+  color: var(--qa-text-muted);
+}
+
+a {
+  color: var(--qa-navy);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* مكونات — تُستخدم عند إضافة class فقط (لا تكسر التصميم الحالي) */
+.qa-card {
+  background: var(--qa-surface);
+  border: 1px solid var(--qa-border-color);
+  border-radius: var(--qa-radius);
+  padding: var(--qa-space-lg);
+  transition: box-shadow 0.2s ease;
+}
+
+.qa-card:hover {
+  box-shadow: var(--qa-shadow-md);
+}
+
+.qa-card-lg {
+  border-radius: var(--qa-radius-lg);
+  padding: var(--qa-space-2xl);
+}
+
+.qa-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--qa-space-xs);
+  padding: var(--qa-space-sm) var(--qa-space-xl);
+  border-radius: var(--qa-radius-sm);
+  font-family: var(--qa-font-arabic);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+}
+
+.qa-btn-primary {
+  background: var(--qa-navy);
+  color: var(--qa-white);
+}
+
+.qa-btn-primary:hover {
+  background: #1a2d45;
+}
+
+.qa-btn-secondary {
+  background: transparent;
+  color: var(--qa-navy);
+  border: 1px solid var(--qa-navy-30);
+}
+
+.qa-btn-secondary:hover {
+  border-color: var(--qa-navy);
+}
+
+.qa-btn-ghost {
+  background: transparent;
+  color: var(--qa-navy);
+}
+
+.qa-btn-ghost:hover {
+  background: var(--qa-navy-05);
+}
+
+.qa-input {
+  width: 100%;
+  padding: var(--qa-space-sm) var(--qa-space-md);
+  border: 1px solid var(--qa-border-color);
+  border-radius: var(--qa-radius-sm);
+  font-family: var(--qa-font-arabic);
+  font-size: 14px;
+  color: var(--qa-text-primary);
+  background: var(--qa-off-white);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  direction: rtl;
+}
+
+.qa-input:focus {
+  border-color: var(--qa-gold);
+  box-shadow: 0 0 0 3px var(--qa-gold-light);
+  background: var(--qa-surface);
+}
+
+.qa-input::placeholder {
+  color: var(--qa-gray-light);
+}
+
+.qa-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--qa-font-size-caption);
+}
+
+.qa-table th {
+  text-align: right;
+  font-weight: 500;
+  color: var(--qa-text-muted);
+  padding: var(--qa-space-sm) var(--qa-space-md);
+  border-bottom: 1px solid var(--qa-border-color);
+  font-size: 12px;
+}
+
+.qa-table td {
+  padding: var(--qa-space-md);
+  border-bottom: 1px solid var(--qa-border-color);
+  color: var(--qa-text-primary);
+}
+
+.qa-table tr:last-child td {
+  border-bottom: none;
+}
+
+.qa-table .amount {
+  direction: ltr;
+  text-align: right;
+  font-weight: 500;
+}
