@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, viewport-fit=cover"/>
 <!-- Phase 10: SEO & Meta -->
 <title>قيد العقار – نظام إدارة التدفق المالي للعقارات</title>
 <meta name="description" content="أداة بسيطة وفعالة لإدارة دخل ومصروف العقارات، تعمل محليًا على جهازك بدون اشتراك أو تعقيد. مثالية للمكاتب العقارية والمستثمرين الأفراد."/>
@@ -61,6 +61,69 @@ tailwind.config = {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #f1f5f9; }
 ::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+
+/* ========== Mobile Batch 1 — Safe-area + iOS input zoom + touch polish ========== */
+@supports (padding: env(safe-area-inset-top)) {
+  header,
+  .app-header {
+    padding-top: env(safe-area-inset-top);
+  }
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+@media (max-width: 768px) {
+  #root input[type="text"],
+  #root input[type="search"],
+  #root input[type="email"],
+  #root input[type="number"],
+  #root input[type="tel"],
+  #root input[type="password"],
+  #root select,
+  #root textarea {
+    font-size: 16px !important;
+  }
+}
+#root button:active,
+#root a:active,
+#root [role="button"]:active {
+  opacity: 0.9;
+}
+
+/* ========== Mobile Batch 4 — Touch targets 48px + عنوان clamp + تحسينات ========== */
+@media (max-width: 768px) {
+  #root button { min-height: 48px; }
+  #root aside nav button { min-height: 48px; padding-top: 12px; padding-bottom: 12px; }
+  #root table td button { min-height: 48px; min-width: 48px; padding: 12px; }
+  #root header h2 { font-size: clamp(0.95rem, 2.5vw, 1.125rem) !important; }
+  .value-proposition .main-value { font-size: clamp(1.15rem, 4vw, 1.8rem) !important; }
+  #root .text-center.mb-12.mt-8 h1 { font-size: clamp(1.25rem, 5vw, 1.875rem) !important; }
+}
+@media print {
+  #root button { min-height: auto; }
+  #root table td button { min-height: auto; min-width: auto; padding: 0.25rem; }
+}
+
+/* ========== Mobile Batch 5 — Scrollbar + Print ========== */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { border-radius: 4px; background: #94a3b8; }
+  ::-webkit-scrollbar-thumb:active { background: #64748b; }
+}
+@media print {
+  body { padding-left: 0 !important; padding-right: 0 !important; padding-top: 0 !important; }
+  #root .print-container { padding-left: 0; padding-right: 0; }
+}
+
+/* ========== Mobile Batch 6 — Animations + تقليل الحركة ========== */
+@media (prefers-reduced-motion: no-preference) {
+  .filters-panel.flex { animation: batch6-fadeIn 0.2s ease; }
+  @keyframes batch6-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
 
 /* ========== Phase 6 — Visual Enhancement (Sales-grade UI) ========== */
 #root .print-container > div { padding: 1.25rem 1rem; }
@@ -1347,13 +1410,15 @@ const DashboardPage = () => {
         )}
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards — موبايل: البطاقة الأخيرة بعرض كامل (الدفعة 3) */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
         <SummaryCard label="إجمالي الدخل" value={<Currency value={income} />} color="green" icon={<Icons.arrowUp size={16}/>}/>
         <SummaryCard label="إجمالي الخرج" value={<Currency value={expense} />} color="red" icon={<Icons.arrowDown size={16}/>}/>
         <SummaryCard label="الصافي" value={<Currency value={net} />} color={net >= 0 ? 'blue' : 'red'}/>
         <SummaryCard label="عمولات معلقة" value={<Currency value={pendingTotal} />} color="yellow"/>
-        <SummaryCard label="عمولات مدفوعة" value={<Currency value={paidTotal} />} color="green"/>
+        <div className="col-span-2 md:col-span-1">
+          <SummaryCard label="عمولات مدفوعة" value={<Currency value={paidTotal} />} color="green"/>
+        </div>
       </div>
 
       {/* Bar Chart */}
@@ -1387,6 +1452,7 @@ const TransactionsPage = () => {
   const setDirty = useContext(UnsavedContext);
   const [txs, setTxs] = useState([]);
   const [filters, setFilters] = useState({ fromDate:'', toDate:'', type:'', category:'', paymentMethod:'', search:'' });
+  const [showFilters, setShowFilters] = useState(false); // موبايل: فلاتر قابلة للطي (الدفعة 3)
   const [modal, setModal] = useState(null); // null | 'add' | {editing tx}
   const [confirm, setConfirm] = useState(null);
 
@@ -1433,20 +1499,29 @@ const TransactionsPage = () => {
 
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto print-container">
-      {/* Summary Cards */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      {/* Summary Cards — موبايل: 2+1 (الدليل implementation-guide) */}
+      <div className="grid grid-cols-2 gap-3 mb-6">
         <SummaryCard label="إجمالي الدخل" value={<Currency value={income} />} color="green" icon={<Icons.arrowUp size={16}/>}/>
         <SummaryCard label="إجمالي الخرج" value={<Currency value={expense} />} color="red" icon={<Icons.arrowDown size={16}/>}/>
-        <SummaryCard label="الصافي" value={<Currency value={income - expense} />} color={income - expense >= 0 ? 'blue' : 'red'}/>
+        <div className="col-span-2">
+          <SummaryCard label="الصافي" value={<Currency value={income - expense} />} color={income - expense >= 0 ? 'blue' : 'red'}/>
+        </div>
       </div>
 
-      {/* Filters + Actions */}
+      {/* Filters + Actions — موبايل: فلاتر قابلة للطي (الدفعة 3) */}
       <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 no-print">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[180px]">
             <Icons.search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"/>
             <input type="text" placeholder="بحث في الوصف..." value={filters.search} onChange={e => setFilters(f => ({...f, search:e.target.value}))} className="w-full border border-gray-200 rounded-lg pr-9 pl-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" aria-label="بحث"/>
           </div>
+        </div>
+        <button type="button" onClick={() => setShowFilters(s => !s)} className="flex items-center gap-2 text-sm text-gray-500 mt-2 md:hidden" aria-expanded={showFilters} aria-label="فلاتر متقدمة">
+          <Icons.filter size={14}/>
+          فلاتر متقدمة
+          <Icons.chevronDown size={16} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}/>
+        </button>
+        <div className={`filters-panel flex flex-wrap gap-2 items-center mt-2 ${showFilters ? 'flex' : 'hidden'} md:flex`}>
           <select value={filters.type} onChange={e => setFilters(f => ({...f, type:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع الحركة">
             <option value="">كل الأنواع</option>
             {Object.entries(TRANSACTION_TYPES).map(([k,v]) => <option key={k} value={k}>{v}</option>)}
@@ -1489,18 +1564,19 @@ const TransactionsPage = () => {
           />
         )
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">النوع</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">التصنيف</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">المبلغ</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">التاريخ</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600 hidden md:table-cell">الوصف</th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-600 no-print">إجراءات</th>
-            </tr></thead>
-            <tbody>
-              {txs.map(t => (
+        <div className="relative overflow-hidden rounded-xl border border-gray-100 shadow-sm">
+          <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead><tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">النوع</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">التصنيف</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">المبلغ</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">التاريخ</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600 hidden md:table-cell">الوصف</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-600 no-print">إجراءات</th>
+              </tr></thead>
+              <tbody>
+                {txs.map(t => (
                 <tr key={t.id} className="border-b border-gray-50 hover:bg-gray-50/50">
                   <td className="px-4 py-3"><Badge color={t.type==='income'?'green':'red'}>{TRANSACTION_TYPES[t.type]}</Badge></td>
                   <td className="px-4 py-3 text-gray-700">{TRANSACTION_CATEGORIES[t.category]}</td>
@@ -1514,9 +1590,11 @@ const TransactionsPage = () => {
                     </div>
                   </td>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400 text-center py-2 md:hidden no-print" aria-hidden="true">← اسحب لعرض المزيد →</p>
         </div>
       )}
 
@@ -1597,6 +1675,7 @@ const CommissionsPage = () => {
   const toast = useToast();
   const setDirty = useContext(UnsavedContext);
   const [filters, setFilters] = useState({ search:'', status:'', agent:'', fromDate:'', toDate:'' });
+  const [showFilters, setShowFilters] = useState(false); // موبايل: فلاتر قابلة للطي (الدفعة 3)
   const [allCms, setAllCms] = useState([]);
   const [modal, setModal] = useState(null);
   const [confirm, setConfirm] = useState(null);
@@ -1689,13 +1768,20 @@ const CommissionsPage = () => {
         <SummaryCard label="إجمالي حصة الوكلاء" value={<Currency value={totalAgent} />} color="gray"/>
       </div>
 
-      {/* Filters + Actions (parity with Transactions) */}
+      {/* Filters + Actions — موبايل: فلاتر قابلة للطي (الدفعة 3) */}
       <div className="bg-white rounded-xl border border-gray-100 p-4 mb-4 no-print">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[180px]">
             <Icons.search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"/>
             <input type="text" placeholder="بحث في العميل/الصفقة..." value={filters.search} onChange={e => setFilters(f => ({...f, search:e.target.value}))} className="w-full border border-gray-200 rounded-lg pr-9 pl-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" aria-label="بحث"/>
           </div>
+        </div>
+        <button type="button" onClick={() => setShowFilters(s => !s)} className="flex items-center gap-2 text-sm text-gray-500 mt-2 md:hidden" aria-expanded={showFilters} aria-label="فلاتر متقدمة">
+          <Icons.filter size={14}/>
+          فلاتر متقدمة
+          <Icons.chevronDown size={16} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}/>
+        </button>
+        <div className={`filters-panel flex flex-wrap gap-2 items-center mt-2 ${showFilters ? 'flex' : 'hidden'} md:flex`}>
           <select value={filters.status} onChange={e => setFilters(f => ({...f, status:e.target.value}))} className="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="الحالة">
             <option value="">كل الحالات</option>
             <option value="pending">معلقة</option>
@@ -1733,18 +1819,19 @@ const CommissionsPage = () => {
           <button onClick={resetFilters} className="mt-4 px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium border border-gray-200" aria-label="إعادة تعيين الفلاتر">إعادة تعيين الفلاتر</button>
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead><tr className="bg-gray-50 border-b border-gray-100">
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">العميل/الصفقة</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">قيمة الصفقة</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">النسب</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">الحصص</th>
-              <th className="px-4 py-3 text-right font-semibold text-gray-600">الحالة</th>
-              <th className="px-4 py-3 text-center font-semibold text-gray-600 no-print">إجراءات</th>
-            </tr></thead>
-            <tbody>
-              {cms.map(c => {
+        <div className="relative overflow-hidden rounded-xl border border-gray-100 shadow-sm bg-white">
+          <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
+            <table className="w-full text-sm min-w-[600px]">
+              <thead><tr className="bg-gray-50 border-b border-gray-100">
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">العميل/الصفقة</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">قيمة الصفقة</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">النسب</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">الحصص</th>
+                <th className="px-4 py-3 text-right font-semibold text-gray-600">الحالة</th>
+                <th className="px-4 py-3 text-center font-semibold text-gray-600 no-print">إجراءات</th>
+              </tr></thead>
+              <tbody>
+                {cms.map(c => {
                 const officeAmt = c.dealValue * c.officePercent / 100;
                 const agentAmt = c.dealValue * c.agentPercent / 100;
                 return (
@@ -1778,8 +1865,10 @@ const CommissionsPage = () => {
                   </tr>
                 );
               })}
-            </tbody>
-          </table>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-xs text-gray-400 text-center py-2 md:hidden no-print" aria-hidden="true">← اسحب لعرض المزيد →</p>
         </div>
       )}
 
@@ -1891,13 +1980,15 @@ const formatDateArabic = (dateStr) => (dateStr ? formatDateHeader(dateStr) : '')
 
 const TemplatesPage = ({ setPage, setLetterType }) => (
   <div className="p-4 md:p-6 max-w-4xl mx-auto">
-    <div className="grid sm:grid-cols-3 gap-4">
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
       {TEMPLATES.map(t => (
-        <div key={t.type} className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-4 text-blue-600"><Icons.fileText size={20}/></div>
-          <h3 className="font-bold text-gray-900 mb-1">{t.title}</h3>
-          <p className="text-sm text-gray-500 mb-4">{t.desc}</p>
-          <button onClick={() => { setLetterType(t.type); setPage('generator'); }} className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label={`استخدام ${t.title}`}>استخدام القالب</button>
+        <div key={t.type} className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 flex items-start gap-3 md:gap-4 shadow-sm hover:shadow-md transition-shadow">
+          <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center shrink-0 text-blue-600"><Icons.fileText size={20}/></div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-bold text-gray-900 mb-0.5">{t.title}</h3>
+            <p className="text-sm text-gray-500 mb-3">{t.desc}</p>
+            <button onClick={() => { setLetterType(t.type); setPage('generator'); }} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label={`استخدام ${t.title}`}>استخدام القالب</button>
+          </div>
         </div>
       ))}
     </div>
