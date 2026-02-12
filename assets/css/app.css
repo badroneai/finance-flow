@@ -1,0 +1,369 @@
+﻿
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  body { font-size: 12pt; margin: 0; padding: 0; direction: rtl; }
+  @page { margin: 2cm; size: A4; }
+  table { page-break-inside: avoid; }
+  h1, h2, h3 { font-size: 16pt; }
+  .print-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
+}
+* { box-sizing: border-box; }
+:focus-visible { outline: 2px solid var(--qa-gold); outline-offset: 2px; border-radius: 4px; }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+
+/* ========== Mobile Batch 1 — Safe-area + iOS input zoom + touch polish ========== */
+@supports (padding: env(safe-area-inset-top)) {
+  header,
+  .app-header {
+    padding-top: env(safe-area-inset-top);
+  }
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+@media (max-width: 768px) {
+  #root input[type="text"],
+  #root input[type="search"],
+  #root input[type="email"],
+  #root input[type="number"],
+  #root input[type="tel"],
+  #root input[type="password"],
+  #root select,
+  #root textarea {
+    font-size: 16px !important;
+  }
+}
+#root button:active,
+#root a:active,
+#root [role="button"]:active {
+  opacity: 0.9;
+}
+
+/* ========== Mobile Batch 4 — Touch targets 48px + عنوان clamp + تحسينات ========== */
+@media (max-width: 768px) {
+  #root button { min-height: 48px; }
+  #root aside nav button { min-height: 48px; padding-top: 12px; padding-bottom: 12px; }
+  #root table td button { min-height: 48px; min-width: 48px; padding: 12px; }
+  #root header h2 { font-size: clamp(0.95rem, 2.5vw, 1.125rem) !important; }
+  .value-proposition .main-value { font-size: clamp(1.15rem, 4vw, 1.8rem) !important; }
+  #root .text-center.mb-12.mt-8 h1 { font-size: clamp(1.25rem, 5vw, 1.875rem) !important; }
+}
+@media print {
+  #root button { min-height: auto; }
+  #root table td button { min-height: auto; min-width: auto; padding: 0.25rem; }
+}
+
+/* ========== Mobile Batch 5 — Scrollbar + Print ========== */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { border-radius: 4px; background: #94a3b8; }
+  ::-webkit-scrollbar-thumb:active { background: #64748b; }
+}
+@media print {
+  body { padding-left: 0 !important; padding-right: 0 !important; padding-top: 0 !important; }
+  #root .print-container { padding-left: 0; padding-right: 0; }
+}
+
+/* ========== Mobile Batch 6 — Animations + تقليل الحركة ========== */
+@media (prefers-reduced-motion: no-preference) {
+  .filters-panel.flex { animation: batch6-fadeIn 0.2s ease; }
+  @keyframes batch6-fadeIn { from { opacity: 0; } to { opacity: 1; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+/* ========== Phase 6 — Visual Enhancement (Sales-grade UI) ========== */
+#root .print-container > div { padding: 1.25rem 1rem; }
+@media (min-width: 768px) { #root .print-container > div { padding: 2rem 1.5rem; } }
+#root .print-container > div > div:first-child { margin-bottom: 1.5rem; }
+#root .print-container .grid { gap: 0.875rem; }
+#root .print-container .mb-4 { margin-bottom: 1.25rem; }
+#root .print-container .mb-6 { margin-bottom: 1.75rem; }
+#root .print-container .mb-8 { margin-bottom: 2rem; }
+
+/* Cards: softer radius, shadow-md, subtle hover */
+#root .bg-white.rounded-xl { border-radius: 0.875rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05); transition: box-shadow 0.2s ease, border-color 0.2s ease; }
+#root .bg-white.rounded-xl:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05); }
+#root .bg-white.rounded-xl.border-gray-100 { border-color: #f3f4f6; }
+
+/* Tables: zebra, hover, thead, cell spacing */
+#root table { border-collapse: collapse; }
+#root table thead tr { background: #f8fafc !important; border-bottom: 1px solid #e2e8f0; }
+#root table thead th { padding: 0.75rem 1rem !important; font-weight: 600; color: #475569; }
+#root table tbody tr { transition: background 0.15s ease; }
+#root table tbody tr:nth-child(even) { background: #fafafa; }
+#root table tbody tr:hover { background: #f4f4f5 !important; }
+#root table tbody td { padding: 0.75rem 1rem !important; }
+
+/* Forms & inputs: min-height, focus ring, labels */
+#root input[type="text"], #root input[type="number"], #root input[type="date"], #root input[type="email"], #root input[type="tel"],
+#root select, #root textarea { min-height: 2.5rem; padding: 0.5rem 0.75rem !important; border-radius: 0.5rem; transition: border-color 0.2s, box-shadow 0.2s; }
+#root input:focus, #root select:focus, #root textarea:focus { outline: none; border-color: var(--qa-gold); box-shadow: 0 0 0 3px var(--qa-gold-light); }
+#root .mb-3 label { font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+
+/* Modals: more padding */
+#root [role="dialog"] > .border-b { padding: 1.25rem 1.25rem !important; }
+#root [role="dialog"] .border-b + * { padding: 1.25rem !important; }
+
+/* Buttons: transitions, consistent height in toolbars */
+#root button { transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
+#root .flex.gap-2 button, #root .flex.gap-3 button { min-height: 2.25rem; }
+#root button:focus-visible { outline: 2px solid var(--qa-gold); outline-offset: 2px; }
+
+/* Sidebar & topbar alignment, icon size */
+#root aside nav button { min-height: 2.5rem; }
+#root aside nav svg { width: 1.25rem; height: 1.25rem; flex-shrink: 0; }
+#root header h2 { letter-spacing: -0.01em; }
+
+/* ========== Phase 1 — Value Proposition & Hero ========== */
+.value-proposition {
+  text-align: center;
+  margin: 2rem auto;
+  max-width: 800px;
+  padding: 0 1rem;
+}
+.value-proposition .main-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--ff-primary);
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+.value-proposition .sub-value {
+  font-size: 1.1rem;
+  font-weight: 400;
+  color: var(--ff-muted);
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+@media (max-width: 768px) {
+  .value-proposition .main-value {
+    font-size: 1.4rem;
+  }
+  .value-proposition .sub-value {
+    font-size: 1rem;
+  }
+}
+
+/* ========== Phase 3 — Welcome Banner (User Onboarding) ========== */
+.welcome-banner {
+  background: var(--qa-navy);
+  color: var(--qa-white);
+  padding: 1.5rem;
+  border-radius: var(--qa-radius);
+  margin: 1rem 0 2rem 0;
+  box-shadow: var(--qa-shadow-md);
+}
+
+.welcome-banner .banner-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.welcome-banner .banner-text strong {
+  font-size: 1.1rem;
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.welcome-banner .banner-text p {
+  font-size: 0.95rem;
+  line-height: 1.6;
+  opacity: 0.95;
+  margin: 0;
+}
+
+.welcome-banner .banner-close {
+  background: rgba(255,255,255,0.2);
+  border: none;
+  color: white;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.welcome-banner .banner-close:hover {
+  background: rgba(255,255,255,0.3);
+}
+
+/* ========== Phase 4 — Empty States Enhancement ========== */
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--ff-surface);
+  border-radius: 12px;
+  border: 2px dashed var(--ff-border);
+  margin: 1rem 0;
+}
+
+.empty-state .empty-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.7;
+}
+
+.empty-state h3 {
+  font-size: 1.4rem;
+  color: var(--ff-text);
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.empty-state p {
+  color: var(--ff-muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  line-height: 1.6;
+}
+
+.empty-state .empty-cta {
+  background: var(--ff-primary);
+  color: white;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.empty-state .empty-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  background: var(--ff-primary-600);
+}
+
+/* ========== Phase 6 — Typography & Visual Polish ========== */
+/* 6.3 متغيرات الظلال */
+:root {
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+  --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+  --shadow-lg: 0 8px 24px rgba(0,0,0,0.2);
+}
+
+/* 6.1 التسلسل الهرمي للنصوص — ٠٣ الخطوط (IBM Plex Arabic) */
+#root h1, .app-shell h1 {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-h1);
+  font-weight: var(--qa-font-weight-h1-h2);
+  line-height: var(--qa-line-height-h1);
+  margin: 0 0 0.5em;
+}
+#root h2, .app-shell h2 {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-h2);
+  font-weight: var(--qa-font-weight-h1-h2);
+  line-height: var(--qa-line-height-h2);
+  margin: 0 0 0.5em;
+}
+#root h3, .app-shell h3 {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-h3);
+  font-weight: var(--qa-font-weight-h3);
+  line-height: var(--qa-line-height-h3);
+  margin: 0 0 0.4em;
+}
+.app-shell, .app-shell main {
+  font-size: var(--qa-font-size-body);
+  font-weight: var(--qa-font-weight-body);
+  line-height: var(--qa-line-height-body);
+}
+.app-shell .text-xl.font-bold,
+.app-shell .stat-number, .app-shell .total-amount, .app-shell .balance {
+  font-family: var(--qa-font-arabic);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+.app-shell .label, .app-shell .caption {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-caption);
+  font-weight: var(--qa-font-weight-caption);
+  line-height: var(--qa-line-height-caption);
+  color: var(--ff-muted);
+}
+.app-shell .text-xs.font-medium {
+  font-family: var(--qa-font-arabic);
+  font-size: var(--qa-font-size-caption);
+  font-weight: 500;
+}
+
+/* 6.2 توحيد المسافات */
+.app-shell .section {
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-radius: 12px;
+}
+.app-shell .card {
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  border-radius: 10px;
+}
+.app-shell .content-wrapper {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+@media (min-width: 768px) {
+  .app-shell .content-wrapper {
+    padding: 0 2rem;
+  }
+}
+
+/* 6.3 ظل موحد للبطاقات والمودال */
+.app-shell .card, .app-shell .section,
+.app-shell [role="dialog"] {
+  box-shadow: var(--shadow-sm);
+}
+.app-shell .card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+/* ========== Phase 8 — Accessibility ========== */
+/* 8.4 مؤشرات التركيز: واضحة عند التنقل بالكيبورد فقط */
+*:focus { outline: 3px solid var(--ff-primary); outline-offset: 2px; }
+button:focus, a:focus, input:focus, select:focus, textarea:focus {
+  outline: 3px solid var(--ff-primary); outline-offset: 2px;
+}
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--ff-primary); outline-offset: 2px;
+}
+
+/* 8.3 تباين النصوص الهامة (WCAG AA) */
+.text-critical {
+  color: var(--ff-text);
+  background: var(--ff-surface);
+}
+[data-theme="dark"] .text-critical {
+  color: #ffffff;
+  background: #000000;
+}
+
+/* 8.5 دعم RTL */
+[dir="rtl"] {
+  text-align: right;
+}
+[dir="rtl"] .icon-before {
+  margin-right: 0;
+  margin-left: 0.5rem;
+}
+[dir="rtl"] .icon-after {
+  margin-left: 0;
+  margin-right: 0.5rem;
+}
+
