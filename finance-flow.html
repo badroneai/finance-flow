@@ -2735,7 +2735,6 @@ const App = () => {
       cancelMidnight && cancelMidnight();
     };
   }, [updateHeaderDate, scheduleHeaderDateMidnightRefresh]);
-  }, [updateHeaderDate, scheduleHeaderDateMidnightRefresh]);
   // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
   useEffect(() => {
     const handler = (e) => { if (dirty) { e.preventDefault(); e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟'; return e.returnValue; } };
