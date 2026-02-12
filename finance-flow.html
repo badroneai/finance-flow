@@ -2894,6 +2894,14 @@ const App = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
 
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 'Escape' && showHelp) setShowHelp(false);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [showHelp]);
+
   const updateHeaderDate = useCallback(() => {
     setHeaderDateText(formatDateHeader(new Date()));
   }, []);
@@ -3026,7 +3034,7 @@ const App = () => {
             {showHelp && (
               <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="دليل سريع">
                 <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setShowHelp(false)} />
-                <div className="relative w-full max-w-lg rounded-2xl border p-5 shadow-lg" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
+                <div className="relative w-full max-w-lg rounded-2xl border p-5 shadow-lg" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)', maxHeight: '80vh', overflow: 'auto' }}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <h3 className="text-lg font-bold" style={{ margin: 0 }}>دليل قيد العقار — سريعًا</h3>
@@ -3080,6 +3088,16 @@ const App = () => {
                     }}>
                       فتح ملف النسخ الاحتياطي
                     </button>
+
+                    <div className="mt-4 rounded-xl border p-3" style={{ borderColor: 'var(--color-border)', background: 'rgba(0,0,0,0.03)' }}>
+                      <div className="font-semibold text-sm">تحتاج مساعدة؟</div>
+                      <a className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium" style={{ background: 'var(--color-primary)', color: '#fff', textDecoration: 'none' }} href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener" aria-label="تواصل واتساب">
+                        تواصل واتساب
+                      </a>
+                      <div className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
+                        TODO: ضع رقم واتساب بصيغة 966XXXXXXXXX
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
