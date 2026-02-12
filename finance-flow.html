@@ -2081,23 +2081,60 @@ const SettingsPage = ({ onShowOnboarding }) => {
     });
   };
 
+  const getBackupAppKeys = () => ([
+    // Financial/local data keys
+    KEYS.transactions,
+    KEYS.commissions,
+    KEYS.drafts,
+    KEYS.settings,
+    KEYS.seeded,
+    // UI keys
+    UI_THEME_KEY,
+    UI_NUMERALS_KEY,
+    UI_DATE_HEADER_KEY,
+    UI_ONBOARDING_SEEN_KEY,
+    // Optional UI state
+    'hasSeenWelcomeBanner'
+  ]);
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const formatBackupFilename = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = pad2(d.getMonth() + 1);
+    const dd = pad2(d.getDate());
+    const hh = pad2(d.getHours());
+    const min = pad2(d.getMinutes());
+    return `qaydalaqar-backup-${yyyy}${mm}${dd}-${hh}${min}.json`;
+  };
+
   const handleExportBackup = () => {
-    const data = {
-      version: BACKUP_VERSION,
-      createdAt: new Date().toISOString(),
-      transactions: safeGet(KEYS.transactions, []),
-      commissions: safeGet(KEYS.commissions, []),
-      drafts: safeGet(KEYS.drafts, []),
-      settings: safeGet(KEYS.settings, SEED_SETTINGS)
+    const now = new Date();
+    const keys = getBackupAppKeys();
+    const data = {};
+    keys.forEach((k) => {
+      try {
+        const v = localStorage.getItem(k);
+        if (v != null) data[k] = v;
+      } catch {
+        // ignore
+      }
+    });
+
+    const envelope = {
+      app: 'qaydalaqar-finance-flow',
+      schema: 1,
+      exported_at: new Date().toISOString(),
+      data
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+    const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `finance-flow-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = formatBackupFilename(now);
     a.click();
     URL.revokeObjectURL(url);
-    toast('تم تصدير النسخة الاحتياطية');
+    toast('تم تنزيل النسخة الاحتياطية');
   };
 
   const handleImportBackupClick = () => { fileInputRef.current && fileInputRef.current.click(); };
@@ -2108,27 +2145,57 @@ const SettingsPage = ({ onShowOnboarding }) => {
     e.target.value = '';
     const reader = new FileReader();
     reader.onload = () => {
-      let data;
-      try { data = JSON.parse(reader.result); } catch {
+      let envelope;
+      try { envelope = JSON.parse(reader.result); } catch {
         toast('ملف غير صالح (ليس JSON)', 'error');
         return;
       }
-      if (!data || typeof data.version !== 'number' || !Array.isArray(data.transactions) || !Array.isArray(data.commissions) || !Array.isArray(data.drafts) || !data.settings || typeof data.settings !== 'object') {
-        toast('تنسيق النسخة الاحتياطية غير صحيح أو قديم', 'error');
+
+      const ok = envelope && envelope.app === 'qaydalaqar-finance-flow' && envelope.schema === 1 && envelope.data && typeof envelope.data === 'object';
+      if (!ok) {
+        toast('تنسيق النسخة الاحتياطية غير صحيح (app/schema)', 'error');
         return;
       }
-      importDataRef.current = data;
-      setConfirm({ title: 'استيراد نسخة احتياطية', message: 'سيتم استبدال جميع البيانات الحالية. هل أنت متأكد؟', danger: true, onConfirm: () => {
-        const d = importDataRef.current;
-        if (!d) { setConfirm(null); return; }
-        let r = safeSet(KEYS.transactions, d.transactions); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        r = safeSet(KEYS.commissions, d.commissions); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        r = safeSet(KEYS.drafts, d.drafts); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        r = safeSet(KEYS.settings, d.settings); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        safeSet(KEYS.seeded, true);
-        setConfirm(null);
-        window.location.reload();
-      }});
+
+      importDataRef.current = envelope.data;
+      const keys = getBackupAppKeys();
+      const current = {};
+      keys.forEach((k) => {
+        try { current[k] = localStorage.getItem(k); } catch { current[k] = null; }
+      });
+
+      let changeCount = 0;
+      keys.forEach((k) => {
+        const cur = current[k];
+        const next = Object.prototype.hasOwnProperty.call(envelope.data, k) ? String(envelope.data[k]) : null;
+        if ((cur ?? null) !== (next ?? null)) changeCount++;
+      });
+
+      setConfirm({
+        title: 'استعادة نسخة احتياطية',
+        message: `سيتم استبدال البيانات الحالية (${formatNumber(changeCount, { maximumFractionDigits: 0 })} مفاتيح). هل أنت متأكد؟`,
+        danger: true,
+        confirmLabel: 'نعم، استبدل البيانات',
+        onConfirm: () => {
+          const d = importDataRef.current;
+          if (!d) { setConfirm(null); return; }
+
+          // Replace app keys only
+          keys.forEach((k) => {
+            try { localStorage.removeItem(k); } catch {}
+          });
+          keys.forEach((k) => {
+            try {
+              if (Object.prototype.hasOwnProperty.call(d, k)) localStorage.setItem(k, String(d[k]));
+            } catch {
+              // ignore individual key failures
+            }
+          });
+
+          setConfirm(null);
+          window.location.reload();
+        }
+      });
     };
     reader.readAsText(file, 'UTF-8');
   };
@@ -2220,15 +2287,16 @@ const SettingsPage = ({ onShowOnboarding }) => {
 
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">النسخ الاحتياطي</h3>
-        <p className="text-sm text-gray-600 mb-4">صدّر كل البيانات إلى ملف JSON أو استورد نسخة احتياطية سابقة (استبدال كامل للبيانات الحالية).</p>
+        <p className="text-sm text-gray-600 mb-4">صدّر نسخة احتياطية إلى ملف JSON أو استعد نسخة سابقة (استبدال كامل للبيانات الحالية).</p>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={handleExportBackup} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50 flex items-center gap-2" aria-label="تصدير نسخة احتياطية">
-            <Icons.download size={16}/> تصدير نسخة احتياطية
+          <button type="button" onClick={handleExportBackup} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50 flex items-center gap-2" aria-label="تنزيل نسخة احتياطية JSON">
+            <Icons.download size={16}/> تنزيل نسخة احتياطية (JSON)
           </button>
-          <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center gap-2" aria-label="استيراد نسخة احتياطية">
-            <Icons.fileText size={16}/> استيراد نسخة احتياطية
+          <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center gap-2" aria-label="استعادة نسخة احتياطية">
+            <Icons.fileText size={16}/> استعادة من نسخة احتياطية
           </button>
         </div>
+        <p className="text-xs text-gray-400 mt-2">النسخ الاحتياطي لا يرسل بيانات للسحابة.</p>
         <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleImportFileChange} className="hidden" aria-hidden="true"/>
       </div>
 
