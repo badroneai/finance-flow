@@ -697,6 +697,25 @@ const getLocaleForNumerals = () => {
   return mode === 'en' ? buildLocale({ base: 'ar-SA', nu: 'latn' }) : 'ar-SA';
 };
 
+/** Force Gregorian calendar for the "ميلادي" view (some environments default ar-SA to Hijri). */
+const getGregorianLocale = (mode) => {
+  const nu = mode === 'en' ? 'latn' : null;
+  const candidates = [
+    buildLocale({ base: 'ar-SA', ca: 'gregory', nu }),
+    buildLocale({ base: 'ar-SA', ca: 'gregorian', nu })
+  ];
+  for (const loc of candidates) {
+    try {
+      // eslint-disable-next-line no-new
+      new Intl.DateTimeFormat(loc, { year: 'numeric' });
+      return loc;
+    } catch {
+      // try next
+    }
+  }
+  return buildLocale({ base: 'ar-SA', ca: 'gregory', nu });
+};
+
 /** Prefer umalqura if supported; fallback to islamic */
 const getHijriLocale = (mode) => {
   const nu = mode === 'en' ? 'latn' : null;
@@ -725,9 +744,9 @@ const formatDateHeader = (date, modeOverride = null) => {
   if (headerMode === 'off') return '';
 
   const numeralsMode = __uiNumeralsMode || getSavedNumerals() || 'ar';
-  const localeBase = getLocaleForNumerals();
+  const localeGreg = getGregorianLocale(numeralsMode);
 
-  const greg = new Intl.DateTimeFormat(localeBase, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  const greg = new Intl.DateTimeFormat(localeGreg, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
 
   const localeHijri = getHijriLocale(numeralsMode);
   const hijriRaw = new Intl.DateTimeFormat(localeHijri, { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
@@ -742,8 +761,9 @@ const formatDateHeader = (date, modeOverride = null) => {
 const formatDateGregorianNumeric = (date) => {
   const d = date instanceof Date ? date : (date ? new Date(date) : null);
   if (!d || Number.isNaN(d.getTime())) return '';
-  const localeBase = getLocaleForNumerals();
-  return new Intl.DateTimeFormat(localeBase, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  const numeralsMode = __uiNumeralsMode || getSavedNumerals() || 'ar';
+  const localeGreg = getGregorianLocale(numeralsMode);
+  return new Intl.DateTimeFormat(localeGreg, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
 };
 
 /** هجري رقمي فقط (مثال: 21/08/1447 هـ) — يحترم ui_numerals، لاحقة هـ مرة واحدة */
