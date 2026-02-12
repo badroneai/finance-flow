@@ -9,10 +9,10 @@
   .print-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
 }
 * { box-sizing: border-box; }
-:focus-visible { outline: 2px solid var(--qa-gold); outline-offset: 2px; border-radius: 4px; }
+:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: 4px; }
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f1f5f9; }
-::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 3px; }
 
 /* ========== Mobile Batch 1 — Safe-area + iOS input zoom + touch polish ========== */
 @supports (padding: env(safe-area-inset-top)) {
@@ -60,8 +60,8 @@
 /* ========== Mobile Batch 5 — Scrollbar + Print ========== */
 @media (max-width: 768px) {
   ::-webkit-scrollbar { width: 8px; height: 8px; }
-  ::-webkit-scrollbar-thumb { border-radius: 4px; background: #94a3b8; }
-  ::-webkit-scrollbar-thumb:active { background: #64748b; }
+  ::-webkit-scrollbar-thumb { border-radius: 4px; background: var(--color-muted); }
+  ::-webkit-scrollbar-thumb:active { background: var(--color-text); }
 }
 @media print {
   body { padding-left: 0 !important; padding-right: 0 !important; padding-top: 0 !important; }
@@ -89,22 +89,22 @@
 /* Cards: softer radius, shadow-md, subtle hover */
 #root .bg-white.rounded-xl { border-radius: 0.875rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.05); transition: box-shadow 0.2s ease, border-color 0.2s ease; }
 #root .bg-white.rounded-xl:hover { box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05); }
-#root .bg-white.rounded-xl.border-gray-100 { border-color: #f3f4f6; }
+#root .bg-white.rounded-xl.border-gray-100 { border-color: var(--color-border); }
 
 /* Tables: zebra, hover, thead, cell spacing */
 #root table { border-collapse: collapse; }
-#root table thead tr { background: #f8fafc !important; border-bottom: 1px solid #e2e8f0; }
-#root table thead th { padding: 0.75rem 1rem !important; font-weight: 600; color: #475569; }
+#root table thead tr { background: var(--color-bg) !important; border-bottom: 1px solid var(--color-border); }
+#root table thead th { padding: 0.75rem 1rem !important; font-weight: 600; color: var(--color-muted); }
 #root table tbody tr { transition: background 0.15s ease; }
-#root table tbody tr:nth-child(even) { background: #fafafa; }
-#root table tbody tr:hover { background: #f4f4f5 !important; }
+#root table tbody tr:nth-child(even) { background: var(--color-surface); }
+#root table tbody tr:hover { background: var(--color-bg) !important; }
 #root table tbody td { padding: 0.75rem 1rem !important; }
 
 /* Forms & inputs: min-height, focus ring, labels */
 #root input[type="text"], #root input[type="number"], #root input[type="date"], #root input[type="email"], #root input[type="tel"],
 #root select, #root textarea { min-height: 2.5rem; padding: 0.5rem 0.75rem !important; border-radius: 0.5rem; transition: border-color 0.2s, box-shadow 0.2s; }
-#root input:focus, #root select:focus, #root textarea:focus { outline: none; border-color: var(--qa-gold); box-shadow: 0 0 0 3px var(--qa-gold-light); }
-#root .mb-3 label { font-weight: 500; color: #374151; margin-bottom: 0.25rem; }
+#root input:focus, #root select:focus, #root textarea:focus { outline: none; border-color: var(--color-focus); box-shadow: 0 0 0 3px var(--color-focus-soft); }
+#root .mb-3 label { font-weight: 500; color: var(--color-text); margin-bottom: 0.25rem; }
 
 /* Modals: more padding */
 #root [role="dialog"] > .border-b { padding: 1.25rem 1.25rem !important; }
@@ -113,7 +113,7 @@
 /* Buttons: transitions, consistent height in toolbars */
 #root button { transition: background-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
 #root .flex.gap-2 button, #root .flex.gap-3 button { min-height: 2.25rem; }
-#root button:focus-visible { outline: 2px solid var(--qa-gold); outline-offset: 2px; }
+#root button:focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; }
 
 /* Sidebar & topbar alignment, icon size */
 #root aside nav button { min-height: 2.5rem; }
@@ -152,8 +152,8 @@
 
 /* ========== Phase 3 — Welcome Banner (User Onboarding) ========== */
 .welcome-banner {
-  background: var(--qa-navy);
-  color: var(--qa-white);
+  background: var(--color-primary);
+  color: var(--color-surface);
   padding: 1.5rem;
   border-radius: var(--qa-radius);
   margin: 1rem 0 2rem 0;
@@ -350,7 +350,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   background: var(--ff-surface);
 }
 [data-theme="dark"] .text-critical {
-  color: #ffffff;
+  color: var(--color-surface);
   background: #000000;
 }
 
@@ -366,4 +366,5 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   margin-left: 0;
   margin-right: 0.5rem;
 }
+
 
