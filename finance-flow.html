@@ -397,14 +397,17 @@ const getSavedNumerals = () => {
 const getSavedDateHeader = () => {
   try {
     const v = localStorage.getItem(UI_DATE_HEADER_KEY);
-    return (v === 'on' || v === 'off') ? v : null;
+    // Legacy migration: on/off → both/off
+    if (v === 'on') return 'both';
+    if (v === 'off') return 'off';
+    return (v === 'off' || v === 'greg' || v === 'hijri' || v === 'both') ? v : null;
   } catch {
     return null;
   }
 };
 
 const setDateHeaderPref = (value) => {
-  const v = (value === 'on' || value === 'off') ? value : 'on';
+  const v = (value === 'off' || value === 'greg' || value === 'hijri' || value === 'both') ? value : 'both';
   try { localStorage.setItem(UI_DATE_HEADER_KEY, v); } catch {}
   try { window.dispatchEvent(new CustomEvent('ui:dateHeader')); } catch {}
 };
@@ -694,6 +697,25 @@ const getLocaleForNumerals = () => {
   return mode === 'en' ? buildLocale({ base: 'ar-SA', nu: 'latn' }) : 'ar-SA';
 };
 
+/** Force Gregorian calendar for the "ميلادي" view (some environments default ar-SA to Hijri). */
+const getGregorianLocale = (mode) => {
+  const nu = mode === 'en' ? 'latn' : null;
+  const candidates = [
+    buildLocale({ base: 'ar-SA', ca: 'gregory', nu }),
+    buildLocale({ base: 'ar-SA', ca: 'gregorian', nu })
+  ];
+  for (const loc of candidates) {
+    try {
+      // eslint-disable-next-line no-new
+      new Intl.DateTimeFormat(loc, { year: 'numeric' });
+      return loc;
+    } catch {
+      // try next
+    }
+  }
+  return buildLocale({ base: 'ar-SA', ca: 'gregory', nu });
+};
+
 /** Prefer umalqura if supported; fallback to islamic */
 const getHijriLocale = (mode) => {
   const nu = mode === 'en' ? 'latn' : null;
@@ -713,16 +735,25 @@ const getHijriLocale = (mode) => {
   return buildLocale({ base: 'ar-SA', ca: 'islamic', nu });
 };
 
-/** يعرض: "السبت، ٧ فبراير ٢٠٢٦ — ١٨ شعبان ١٤٤٧ هـ" (يحترم ui_numerals، لاحقة هـ مرة واحدة) */
-const formatDateHeader = (date) => {
+/** يعرض التاريخ للهيدر حسب الوضع: off|greg|hijri|both (يحترم ui_numerals، لاحقة هـ مرة واحدة) */
+const formatDateHeader = (date, modeOverride = null) => {
   const d = date instanceof Date ? date : (date ? new Date(date) : null);
   if (!d || Number.isNaN(d.getTime())) return '';
-  const mode = __uiNumeralsMode || getSavedNumerals() || 'ar';
-  const localeBase = getLocaleForNumerals();
-  const localeHijri = getHijriLocale(mode);
-  const greg = new Intl.DateTimeFormat(localeBase, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+
+  const headerMode = modeOverride || getSavedDateHeader() || 'both';
+  if (headerMode === 'off') return '';
+
+  const numeralsMode = __uiNumeralsMode || getSavedNumerals() || 'ar';
+  const localeGreg = getGregorianLocale(numeralsMode);
+
+  const greg = new Intl.DateTimeFormat(localeGreg, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+
+  const localeHijri = getHijriLocale(numeralsMode);
   const hijriRaw = new Intl.DateTimeFormat(localeHijri, { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
   const hijri = normalizeHijriSuffix(hijriRaw) || (hijriRaw.trim() + ' هـ');
+
+  if (headerMode === 'greg') return greg;
+  if (headerMode === 'hijri') return hijri;
   return `${greg} — ${hijri}`;
 };
 
@@ -730,8 +761,9 @@ const formatDateHeader = (date) => {
 const formatDateGregorianNumeric = (date) => {
   const d = date instanceof Date ? date : (date ? new Date(date) : null);
   if (!d || Number.isNaN(d.getTime())) return '';
-  const localeBase = getLocaleForNumerals();
-  return new Intl.DateTimeFormat(localeBase, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  const numeralsMode = __uiNumeralsMode || getSavedNumerals() || 'ar';
+  const localeGreg = getGregorianLocale(numeralsMode);
+  return new Intl.DateTimeFormat(localeGreg, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
 };
 
 /** هجري رقمي فقط (مثال: 21/08/1447 هـ) — يحترم ui_numerals، لاحقة هـ مرة واحدة */
@@ -2070,10 +2102,12 @@ const SettingsPage = () => {
             <option value="en">إنجليزي</option>
           </select>
         </Field>
-        <Field label="عرض التاريخ (ميلادي+هجري)">
-          <select value={(getSavedDateHeader() || 'on')} onChange={e => { const v = e.target.value; setDateHeaderPref(v); toast('تم تحديث إعداد التاريخ'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض التاريخ">
-            <option value="on">تشغيل</option>
-            <option value="off">إيقاف</option>
+        <Field label="عرض التاريخ">
+          <select value={(getSavedDateHeader() || 'both')} onChange={e => { const v = e.target.value; setDateHeaderPref(v); toast('تم تحديث إعداد التاريخ'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض التاريخ">
+            <option value="off">بدون</option>
+            <option value="greg">ميلادي</option>
+            <option value="hijri">هجري</option>
+            <option value="both">ميلادي + هجري</option>
           </select>
         </Field>
       </div>
@@ -2686,7 +2720,7 @@ const App = () => {
 
   // Ensure seed data on first load
   useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
-  const [headerDateEnabled, setHeaderDateEnabled] = useState((getSavedDateHeader() || 'on') === 'on');
+  const [headerDateMode, setHeaderDateMode] = useState(getSavedDateHeader() || 'both');
   const [headerDateText, setHeaderDateText] = useState('');
 
   const updateHeaderDate = useCallback(() => {
@@ -2711,19 +2745,19 @@ const App = () => {
     initTheme();
     initNumerals();
 
-    const datePref = (getSavedDateHeader() || 'on');
-    setHeaderDateEnabled(datePref === 'on');
+    const datePref = (getSavedDateHeader() || 'both');
+    setHeaderDateMode(datePref);
 
-    if (datePref === 'on') {
+    if (datePref !== 'off') {
       updateHeaderDate();
     }
 
     const cancelMidnight = scheduleHeaderDateMidnightRefresh();
-    const onNumerals = () => { if ((getSavedDateHeader() || 'on') === 'on') updateHeaderDate(); };
+    const onNumerals = () => { if ((getSavedDateHeader() || 'both') !== 'off') updateHeaderDate(); };
     const onDateHeader = () => {
-      const pref = (getSavedDateHeader() || 'on');
-      setHeaderDateEnabled(pref === 'on');
-      if (pref === 'on') updateHeaderDate();
+      const pref = (getSavedDateHeader() || 'both');
+      setHeaderDateMode(pref);
+      if (pref !== 'off') updateHeaderDate();
     };
 
     window.addEventListener('ui:numerals', onNumerals);
@@ -2767,7 +2801,7 @@ const App = () => {
         <div className="app-shell flex min-h-screen">
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
           <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
-            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateEnabled ? headerDateText : ''}/>
+            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
               <WelcomeBanner/>
             </div>
