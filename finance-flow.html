@@ -1911,9 +1911,9 @@ const SettingsPage = () => {
       title: 'حذف جميع البيانات',
       message: 'سيتم حذف جميع البيانات المحفوظة:',
       messageList: [
-        `جميع الحركات المالية (${txCount})`,
-        `جميع العمولات (${cmCount})`,
-        `جميع المسودات (${draftCount})`,
+        `جميع الحركات المالية (${formatNumber(txCount, { maximumFractionDigits: 0 })})`,
+        `جميع العمولات (${formatNumber(cmCount, { maximumFractionDigits: 0 })})`,
+        `جميع المسودات (${formatNumber(draftCount, { maximumFractionDigits: 0 })})`,
         'جميع الإعدادات'
       ],
       dangerText: 'لا يمكن التراجع عن هذا الإجراء.',
@@ -2103,7 +2103,12 @@ const DEFAULT_EVENTS_NC = [
 ];
 function getKeyNC(y, m, d) { return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
 function getDaysInMonthNC(year, month) { return new Date(year, month, 0).getDate(); }
-function toArabicNumNC(n) { return String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]); }
+function toArabicNumNC(n) {
+  const s = String(n);
+  // Numerals 2/3: Respect UI numerals setting for Notes/Calendar display.
+  if ((__uiNumeralsMode || 'ar') === 'en') return s;
+  return s.replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+}
 
 function NotesCalendarAddInput({ placeholder, onAdd, colors }) {
   const [text, setText] = useState("");
