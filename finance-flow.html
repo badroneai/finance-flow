@@ -349,6 +349,7 @@ const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', dra
 // Strict rule: only UI theme key allowed outside financial/local data is: ui_theme
 const UI_THEME_KEY = 'ui_theme';
 const UI_NUMERALS_KEY = 'ui_numerals';
+const UI_DATE_HEADER_KEY = 'ui_date_header';
 
 // In-memory source of truth for display-only numerals (ar/en)
 let __uiNumeralsMode = null;
@@ -391,6 +392,21 @@ const getSavedNumerals = () => {
   } catch {
     return null;
   }
+};
+
+const getSavedDateHeader = () => {
+  try {
+    const v = localStorage.getItem(UI_DATE_HEADER_KEY);
+    return (v === 'on' || v === 'off') ? v : null;
+  } catch {
+    return null;
+  }
+};
+
+const setDateHeaderPref = (value) => {
+  const v = (value === 'on' || value === 'off') ? value : 'on';
+  try { localStorage.setItem(UI_DATE_HEADER_KEY, v); } catch {}
+  try { window.dispatchEvent(new CustomEvent('ui:dateHeader')); } catch {}
 };
 
 const applyNumerals = (mode) => {
@@ -2054,6 +2070,12 @@ const SettingsPage = () => {
             <option value="en">إنجليزي</option>
           </select>
         </Field>
+        <Field label="عرض التاريخ (ميلادي+هجري)">
+          <select value={(getSavedDateHeader() || 'on')} onChange={e => { const v = e.target.value; setDateHeaderPref(v); toast('تم تحديث إعداد التاريخ'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض التاريخ">
+            <option value="on">تشغيل</option>
+            <option value="off">إيقاف</option>
+          </select>
+        </Field>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
@@ -2664,6 +2686,7 @@ const App = () => {
 
   // Ensure seed data on first load
   useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
+  const [headerDateEnabled, setHeaderDateEnabled] = useState((getSavedDateHeader() || 'on') === 'on');
   const [headerDateText, setHeaderDateText] = useState('');
 
   const updateHeaderDate = useCallback(() => {
@@ -2675,7 +2698,7 @@ const App = () => {
     const now = new Date();
     const next = new Date(now);
     next.setHours(24, 0, 5, 0); // 00:00:05 next day
-    const ms = Math.max(5_000, next.getTime() - now.getTime());
+    const ms = Math.max(5000, next.getTime() - now.getTime());
     const id = setTimeout(() => {
       updateHeaderDate();
       scheduleHeaderDateMidnightRefresh();
@@ -2687,14 +2710,31 @@ const App = () => {
   useEffect(() => {
     initTheme();
     initNumerals();
-    updateHeaderDate();
+
+    const datePref = (getSavedDateHeader() || 'on');
+    setHeaderDateEnabled(datePref === 'on');
+
+    if (datePref === 'on') {
+      updateHeaderDate();
+    }
+
     const cancelMidnight = scheduleHeaderDateMidnightRefresh();
-    const onNumerals = () => updateHeaderDate();
+    const onNumerals = () => { if ((getSavedDateHeader() || 'on') === 'on') updateHeaderDate(); };
+    const onDateHeader = () => {
+      const pref = (getSavedDateHeader() || 'on');
+      setHeaderDateEnabled(pref === 'on');
+      if (pref === 'on') updateHeaderDate();
+    };
+
     window.addEventListener('ui:numerals', onNumerals);
+    window.addEventListener('ui:dateHeader', onDateHeader);
+
     return () => {
       window.removeEventListener('ui:numerals', onNumerals);
+      window.removeEventListener('ui:dateHeader', onDateHeader);
       cancelMidnight && cancelMidnight();
     };
+  }, [updateHeaderDate, scheduleHeaderDateMidnightRefresh]);
   }, [updateHeaderDate, scheduleHeaderDateMidnightRefresh]);
   // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
   useEffect(() => {
@@ -2728,7 +2768,7 @@ const App = () => {
         <div className="app-shell flex min-h-screen">
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
           <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
-            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateText}/>
+            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateEnabled ? headerDateText : ''}/>
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
               <WelcomeBanner/>
             </div>
