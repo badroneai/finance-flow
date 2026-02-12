@@ -53,28 +53,30 @@
 
 /* Dim (darker than light, lighter than dark) */
 :root[data-theme="dim"] {
-  --color-bg: #0b1220;
-  --color-surface: #0f1a2b;
-  --color-text: #e5e7eb;
-  --color-muted: #a3aab6;
-  --color-border: rgba(226,232,240,0.18);
+  /* Navy-dim: noticeably darker than light, but still comfortable */
+  --color-bg: #0b1626;
+  --color-surface: #0f2238;
+  --color-text: #e6edf6;
+  --color-muted: #b6c2d1;
+  --color-border: rgba(230, 237, 246, 0.16);
 
   --color-primary: #0b2d4a;
   --color-accent: #d6b14a;
   --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(214, 177, 74, 0.28);
+  --color-focus-soft: rgba(214, 177, 74, 0.26);
 }
 
 /* Dark */
 :root[data-theme="dark"] {
-  --color-bg: #070b12;
-  --color-surface: #0b1220;
-  --color-text: #f1f5f9;
-  --color-muted: #b6bcc8;
-  --color-border: rgba(226,232,240,0.14);
+  /* Navy-dark: true dark mode with clear surface separation */
+  --color-bg: #050b14;
+  --color-surface: #0a1627;
+  --color-text: #eef3f9;
+  --color-muted: #aab7c8;
+  --color-border: rgba(238, 243, 249, 0.14);
 
   --color-primary: #0b2d4a;
   --color-accent: #e0c05a;
   --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(224, 192, 90, 0.30);
+  --color-focus-soft: rgba(224, 192, 90, 0.28);
 }
