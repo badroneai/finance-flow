@@ -363,6 +363,9 @@ const getSavedTheme = () => {
   }
 };
 
+let __themeSystemMql = null;
+let __themeSystemListener = null;
+
 const getEffectiveSystemTheme = () => {
   try {
     const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -372,8 +375,43 @@ const getEffectiveSystemTheme = () => {
   }
 };
 
+const startSystemThemeListener = () => {
+  try {
+    if (!window.matchMedia) return;
+    if (__themeSystemMql) return;
+
+    __themeSystemMql = window.matchMedia('(prefers-color-scheme: dark)');
+    __themeSystemListener = () => {
+      // When in system mode, update effective theme without changing ui_theme.
+      document.documentElement.dataset.theme = getEffectiveSystemTheme();
+    };
+
+    if (__themeSystemMql.addEventListener) __themeSystemMql.addEventListener('change', __themeSystemListener);
+    else if (__themeSystemMql.addListener) __themeSystemMql.addListener(__themeSystemListener);
+  } catch {
+    // noop
+  }
+};
+
+const stopSystemThemeListener = () => {
+  try {
+    if (!__themeSystemMql || !__themeSystemListener) return;
+    if (__themeSystemMql.removeEventListener) __themeSystemMql.removeEventListener('change', __themeSystemListener);
+    else if (__themeSystemMql.removeListener) __themeSystemMql.removeListener(__themeSystemListener);
+  } catch {
+    // noop
+  } finally {
+    __themeSystemMql = null;
+    __themeSystemListener = null;
+  }
+};
+
 const applyTheme = (theme) => {
   const t = (theme === 'system' || theme === 'light' || theme === 'dim' || theme === 'dark') ? theme : 'system';
+
+  if (t === 'system') startSystemThemeListener();
+  else stopSystemThemeListener();
+
   const effective = (t === 'system') ? getEffectiveSystemTheme() : t;
   document.documentElement.dataset.theme = effective;
   try { localStorage.setItem(UI_THEME_KEY, t); } catch {}
