@@ -347,6 +347,18 @@ const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', dra
 // UI THEME (Phase B+3)
 // ============================================
 // Strict rule: only UI theme key allowed outside financial/local data is: ui_theme
+//
+// THEME AUDIT (Issue #6 / 3A — audit + guard only)
+// Source of truth:
+// - localStorage.ui_theme
+// - document.documentElement.dataset.theme (effective)
+//
+// Legacy theme-ish sources found (ignored by design):
+// - ff_settings (KEYS.settings='ff_settings') contains settings.theme (SEED_SETTINGS.theme, dataStore.settings.get reads current.theme)
+//   - SEED_SETTINGS includes theme (around line ~338)
+//   - dataStore.settings.get reads current.theme (around lines ~632-635)
+// - No document.body.dataset.theme usage found (we will still guard against it in initTheme)
+// - No localStorage key named "theme" or "darkMode" found
 const UI_THEME_KEY = 'ui_theme';
 const UI_NUMERALS_KEY = 'ui_numerals';
 const UI_DATE_HEADER_KEY = 'ui_date_header';
@@ -418,6 +430,9 @@ const applyTheme = (theme) => {
 };
 
 const initTheme = () => {
+  // Ignore legacy theme sources by design. Do NOT read ff_settings.theme or body.dataset.theme.
+  try { if (document.body && document.body.dataset && document.body.dataset.theme) delete document.body.dataset.theme; } catch {}
+
   const saved = getSavedTheme();
   // Default behavior: System when not set
   const t = saved || 'system';
