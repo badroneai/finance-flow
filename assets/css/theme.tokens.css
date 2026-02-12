@@ -1,1 +1,37 @@
-﻿/* Qaydalaqar theme tokens (placeholder) */
+/* Qaydalaqar Design Tokens
+   Phase B+1: tokens only (no UI change)
+   Notes:
+   - Do NOT reference these tokens from app.css in this commit.
+   - No external font loads are added here; HTML already loads IBM Plex Sans Arabic.
+*/
+
+:root {
+  /* Color system (semantic) */
+  --color-bg: #f8fafc;          /* page background */
+  --color-surface: #ffffff;     /* cards / panels */
+  --color-text: #0f172a;        /* main text */
+  --color-muted: #475569;       /* secondary text */
+  --color-border: #e2e8f0;      /* borders / dividers */
+
+  /* Brand */
+  --color-primary: #0b2d4a;     /* Qaydalaqar navy (approx) */
+  --color-accent: #c9a227;      /* Qaydalaqar gold (approx) */
+
+  /* Focus ring (kept separate for accessibility tuning) */
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(201, 162, 39, 0.25);
+
+  /* Radius + shadow */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.10);
+
+  /* Typography */
+  --font-ar: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-en: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+
+  /* Numerals / locale formatting (hooks for later JS) */
+  --numerals: "ar"; /* ar | en */
+  --calendar: "gregorian"; /* gregorian | hijri */
+}
