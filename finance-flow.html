@@ -357,32 +357,72 @@ let __uiNumeralsMode = null;
 const getSavedTheme = () => {
   try {
     const t = localStorage.getItem(UI_THEME_KEY);
-    return (t === 'light' || t === 'dim' || t === 'dark') ? t : null;
+    return (t === 'system' || t === 'light' || t === 'dim' || t === 'dark') ? t : null;
   } catch {
     return null;
   }
 };
 
+let __themeSystemMql = null;
+let __themeSystemListener = null;
+
+const getEffectiveSystemTheme = () => {
+  try {
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return prefersDark ? 'dark' : 'light';
+  } catch {
+    return 'light';
+  }
+};
+
+const startSystemThemeListener = () => {
+  try {
+    if (!window.matchMedia) return;
+    if (__themeSystemMql) return;
+
+    __themeSystemMql = window.matchMedia('(prefers-color-scheme: dark)');
+    __themeSystemListener = () => {
+      // When in system mode, update effective theme without changing ui_theme.
+      document.documentElement.dataset.theme = getEffectiveSystemTheme();
+    };
+
+    if (__themeSystemMql.addEventListener) __themeSystemMql.addEventListener('change', __themeSystemListener);
+    else if (__themeSystemMql.addListener) __themeSystemMql.addListener(__themeSystemListener);
+  } catch {
+    // noop
+  }
+};
+
+const stopSystemThemeListener = () => {
+  try {
+    if (!__themeSystemMql || !__themeSystemListener) return;
+    if (__themeSystemMql.removeEventListener) __themeSystemMql.removeEventListener('change', __themeSystemListener);
+    else if (__themeSystemMql.removeListener) __themeSystemMql.removeListener(__themeSystemListener);
+  } catch {
+    // noop
+  } finally {
+    __themeSystemMql = null;
+    __themeSystemListener = null;
+  }
+};
+
 const applyTheme = (theme) => {
-  const t = (theme === 'light' || theme === 'dim' || theme === 'dark') ? theme : 'light';
-  document.documentElement.dataset.theme = t;
+  const t = (theme === 'system' || theme === 'light' || theme === 'dim' || theme === 'dark') ? theme : 'system';
+
+  if (t === 'system') startSystemThemeListener();
+  else stopSystemThemeListener();
+
+  const effective = (t === 'system') ? getEffectiveSystemTheme() : t;
+  document.documentElement.dataset.theme = effective;
   try { localStorage.setItem(UI_THEME_KEY, t); } catch {}
 };
 
 const initTheme = () => {
   const saved = getSavedTheme();
-  if (saved) { applyTheme(saved); return saved; }
-
-  // Prefer system theme when no saved preference
-  try {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const t = prefersDark ? 'dark' : 'light';
-    document.documentElement.dataset.theme = t;
-    return t;
-  } catch {
-    document.documentElement.dataset.theme = 'light';
-    return 'light';
-  }
+  // Default behavior: System when not set
+  const t = saved || 'system';
+  applyTheme(t);
+  return t;
 };
 
 const getSavedNumerals = () => {
@@ -1964,7 +2004,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 const SettingsPage = () => {
   const toast = useToast();
   const [settings, setSettings] = useState(dataStore.settings.get());
-  const [uiTheme, setUiTheme] = useState(getSavedTheme() || document.documentElement.dataset.theme || 'light');
+  const [uiTheme, setUiTheme] = useState(getSavedTheme() || 'system');
   const [uiNumerals, setUiNumerals] = useState(getSavedNumerals() || document.documentElement.dataset.numerals || 'ar');
   const [confirm, setConfirm] = useState(null);
   const fileInputRef = useRef(null);
@@ -2091,6 +2131,7 @@ const SettingsPage = () => {
         <h3 className="font-bold text-gray-900 mb-4">وضع العرض</h3>
         <Field label="المظهر">
           <select value={uiTheme} onChange={e => { const v = e.target.value; setUiTheme(v); applyTheme(v); toast('تم تحديث المظهر'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="وضع العرض">
+            <option value="system">النظام</option>
             <option value="light">نهاري</option>
             <option value="dim">خافت</option>
             <option value="dark">ليلي</option>
@@ -2110,6 +2151,15 @@ const SettingsPage = () => {
             <option value="both">ميلادي + هجري</option>
           </select>
         </Field>
+
+        <button type="button" onClick={() => {
+          try { localStorage.removeItem(UI_THEME_KEY); } catch {}
+          setUiTheme('system');
+          applyTheme('system');
+          toast('تمت إعادة ضبط المظهر');
+        }} className="mt-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة ضبط المظهر">
+          إعادة ضبط المظهر
+        </button>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
