@@ -27,7 +27,7 @@
   <meta name="apple-mobile-web-app-title" content="قيد العقار"/>
   <link rel="icon" href="assets/logo-icon.svg" type="image/svg+xml"/>
   <link rel="icon" type="image/png" href="favicon.png"/>
-  <link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+  <link rel="apple-touch-icon" href="favicon.png"/>
   <script type="application/ld+json">
   {"@context":"https://schema.org","@type":"SoftwareApplication","name":"قيد العقار","applicationCategory":"FinanceApplication","offers":{"@type":"Offer","price":"0","priceCurrency":"SAR"},"operatingSystem":"Any","description":"بساطة في الإدارة، وخصوصية في البيانات. نظام مالي عقاري يعمل لأجلك.","inLanguage":"ar","author":{"@type":"Person","name":"Bader"}}
   </script>
@@ -185,6 +185,8 @@
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
     }
+    .audience-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    @media (max-width: 900px) { .audience-grid-3 { grid-template-columns: 1fr; } }
     @media (max-width: 600px) { .audience-grid { grid-template-columns: 1fr; } }
     .audience-card {
       background: var(--lp-surface);
@@ -302,276 +304,77 @@
           <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" stroke="var(--qa-navy)" stroke-opacity="0.3" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
         </svg>
       </div>
-      <h1>قيد العقار — إدارة مالية سهلة للمكتب العقاري</h1>
-      <p class="tagline">أداة واحدة لتتبع الحركات المالية والعمولات والخطابات. عربي بالكامل، يفتح من المتصفح، والبيانات تبقى عندك.</p>
-      <div class="values">
-        <span>⏱ وفّر وقتك</span>
-        <span>✓ قلّل الأخطاء</span>
-        <span>🔒 بياناتك عندك</span>
-      </div>
+      <h1>نظام بسيط لإدارة التدفق المالي للعقارات</h1>
+      <p class="tagline">بدون اشتراك. يعمل محليًا. بياناتك على جهازك.</p>
       <div class="cta">
-        <a href="./finance-flow.html" class="cta-button-primary" target="_blank">جرّب النظام الآن (بدون تسجيل)</a>
-        <a href="#contact" class="btn btn-primary">اطلب النسخة</a>
+        <a href="./finance-flow.html" class="cta-button-primary">ابدأ الآن</a>
+        <a href="./finance-flow.html" target="_blank" rel="noopener" class="btn btn-outline">شاهد الديمو</a>
       </div>
-      <div class="trust-note">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4z"/>
-        </svg>
-        <span>جميع بياناتك محفوظة محليًا على جهازك ولا تُرفع لأي خادم خارجي</span>
+      <div class="trust-note" style="margin-top: 0.75rem;">
+        بياناتك تُحفظ محليًا داخل المتصفح — لا نرفع شيئًا للسحابة.
       </div>
-      <p class="cta-note">ملاحظة: الديمو يعمل محليًا داخل المتصفح، والبيانات تُحفظ على جهازك.</p>
-      <p class="cta-note"><a href="#demo">شاهد لقطات الشاشة</a></p>
+      <p class="cta-note" style="margin-top: 0.75rem;"><a href="#trust">تعرّف على المزايا</a></p>
     </div>
   </section>
 
-  <!-- (B) لمن المنتج -->
-  <section class="audience">
+  <!-- (B) لمن هذا النظام؟ -->
+  <section class="audience" id="demo">
     <div class="container">
-      <h2>لمن المنتج؟</h2>
-      <div class="audience-grid">
+      <h2>لمن هذا النظام؟</h2>
+      <div class="audience-grid audience-grid-3">
         <div class="audience-card">
-          <h3>✅ مناسب لـ</h3>
-          <ul>
-            <li>مكاتب عقارية صغيرة (<span data-numerals-text>1–5</span> موظفين)</li>
-            <li>تتبع دخل وخرج وعمولات صفقات</li>
-            <li>إصدار خطابات رسمية سريعة</li>
-            <li>جهاز واحد أو اثنين في المكتب</li>
-          </ul>
+          <h3>ملاك شقق / وحدة واحدة</h3>
+          <p class="caption">تتبع الدخل والخرج بسرعة بدون تعقيد.</p>
         </div>
         <div class="audience-card">
-          <h3>❌ غير مناسب لـ</h3>
-          <ul>
-            <li>شركات كبيرة بعدة فروع</li>
-            <li>محاسبة معقدة أو تكامل مع البنوك</li>
-            <li>تعدد مستخدمين مع صلاحيات متعددة</li>
-          </ul>
+          <h3>مكاتب عقارية صغيرة</h3>
+          <p class="caption">إدارة التدفق المالي والعمولات من نفس الصفحة.</p>
+        </div>
+        <div class="audience-card">
+          <h3>مدراء شاليهات</h3>
+          <p class="caption">تسجيل المصروفات والإيرادات وقراءة الصورة العامة.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- (C) ماذا يقدم -->
-  <section class="features">
+  <!-- (C) لماذا يثق المستخدم؟ -->
+  <section class="features" id="trust">
     <div class="container">
-      <h2>ماذا يقدم؟</h2>
+      <h2>لماذا يثق المستخدم؟</h2>
       <div class="features-grid">
         <div class="feature-card">
-          <h3>الحركات المالية</h3>
-          <p>إضافة وتصفية وبحث وتصدير CSV وطباعة.</p>
+          <h3>خصوصية كاملة</h3>
+          <p>لا سحابة — بياناتك تبقى عندك.</p>
         </div>
         <div class="feature-card">
-          <h3>العمولات</h3>
-          <p>نسب المكتب والوكيل، حالة معلقة/مدفوعة، فلاتر وتصدير وطباعة.</p>
+          <h3>تصدير سريع</h3>
+          <p>CSV بنقرة واحدة.</p>
         </div>
         <div class="feature-card">
-          <h3>الخطابات</h3>
-          <p>قوالب جاهزة، مسودات، معاينة وطباعة.</p>
-        </div>
-        <div class="feature-card">
-          <h3>لوحة المعلومات</h3>
-          <p>ملخص الدخل والخرج والعمولات ورسم بياني.</p>
-        </div>
-        <div class="feature-card">
-          <h3>الإعدادات</h3>
-          <p>ثيم (نهاري/خافت/ليلي)، أرقام عربي/إنجليزي، تواريخ ميلادي وهجري.</p>
-        </div>
-        <div class="feature-card">
-          <h3>النسخ الاحتياطي</h3>
-          <p>تصدير واستيراد JSON لاستعادة البيانات.</p>
+          <h3>نسخ احتياطي</h3>
+          <p>قريبًا — استعادة سهلة عند تغيير الجهاز.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- (D) Screenshots placeholders -->
-  <section class="screenshots" id="demo">
-    <div class="container">
-      <h2>لقطات من التطبيق</h2>
-      <div class="screenshots-grid">
-        <div class="screenshot-placeholder">Dashboard</div>
-        <div class="screenshot-placeholder">Transactions</div>
-        <div class="screenshot-placeholder">Commissions</div>
-        <div class="screenshot-placeholder">Letters</div>
-      </div>
-    </div>
-  </section>
-
-  <!-- (E) الباقات والأسعار -->
+  <!-- (D) CTA أخير -->
   <section class="pricing">
-    <div class="container">
-      <h2>الباقات والأسعار</h2>
-      <div class="pricing-grid">
-        <div class="pricing-card">
-          <h3>🟢 Basic</h3>
-          <div class="price"><span data-numerals-text>399</span> ر.س</div>
-          <ul>
-            <li>ملف التطبيق + التوثيق</li>
-            <li>دليل التثبيت</li>
-            <li>مرة واحدة</li>
-          </ul>
-        </div>
-        <div class="pricing-card recommended">
-          <span class="badge">موصى به ⭐</span>
-          <h3>🔵 Pro</h3>
-          <div class="price"><span data-numerals-text>899</span> ر.س</div>
-          <ul>
-            <li>كل ما في Basic</li>
-            <li>دعم بريد <span data-numerals-text>12</span> شهراً</li>
-            <li>تحديثات سنة</li>
-          </ul>
-        </div>
-        <div class="pricing-card">
-          <h3>🟣 Office</h3>
-          <div class="price"><span data-numerals-text>1,499</span> ر.س</div>
-          <ul>
-            <li>كل ما في Pro</li>
-            <li>دعم واتساب + جلسة إعداد</li>
-            <li>تخصيص بسيط + تحديثات سنتين</li>
-          </ul>
-        </div>
-      </div>
-      <div class="pricing-table">
-        <table>
-          <thead>
-            <tr>
-              <th>الميزة</th>
-              <th>Basic</th>
-              <th>Pro ⭐</th>
-              <th>Office</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr><td>ملف التطبيق + التوثيق</td><td>✅</td><td>✅</td><td>✅</td></tr>
-            <tr><td>دعم بريد</td><td>—</td><td><span data-numerals-text>12</span> شهراً</td><td>✅</td></tr>
-            <tr><td>دعم واتساب</td><td>—</td><td>—</td><td>✅</td></tr>
-            <tr><td>تحديثات</td><td>—</td><td>سنة</td><td>سنتان</td></tr>
-            <tr><td>مساعدة إعداد / تخصيص</td><td>—</td><td>—</td><td>✅</td></tr>
-          </tbody>
-        </table>
-      </div>
-      <p class="pricing-note">الترخيص: استخدام المكتب — جهاز واحد أو اثنين ضمن نفس المكتب. دفعة مرة واحدة.</p>
+    <div class="container" style="text-align:center;">
+      <h2>جاهز تبدأ؟</h2>
+      <p class="caption" style="max-width:520px;margin:0.75rem auto 1.5rem;">ابدأ خلال دقيقة — افتح النظام ودوّن أول حركة مالية.</p>
+      <a href="./finance-flow.html" class="cta-button-primary">ابدأ خلال دقيقة</a>
     </div>
   </section>
 
-  <!-- (F) FAQ -->
-  <section class="faq">
-    <div class="container">
-      <h2>أسئلة شائعة</h2>
-      <div class="faq-item">
-        <h4>لماذا ليس Excel؟</h4>
-        <p>Excel ممتاز للأرقام لكنه لا يربط العمولات بالصفقات ولا يقدّم قوالب خطابات جاهزة. قيد العقار يجمع الحركات والعمولات والخطابات في واجهة واحدة مع تصدير CSV إن أردت.</p>
-      </div>
-      <div class="faq-item">
-        <h4>أين تُحفظ البيانات؟</h4>
-        <p>على جهازك فقط داخل المتصفح. لا إرسال لخادم ولا سحابة — أنت تتحكم بالملف والنسخة الاحتياطية.</p>
-      </div>
-      <div class="faq-item">
-        <h4>ماذا لو غيّرت الجهاز؟</h4>
-        <p>صدّر نسخة احتياطية من الإعدادات قبل تغيير الجهاز، ثم استورد نفس الملف على الجهاز الجديد لاستعادة كل البيانات.</p>
-      </div>
-      <div class="faq-item">
-        <h4>هل يعمل بدون إنترنت؟</h4>
-        <p>بعد فتح التطبيق أول مرة (يحتاج إنترنت للتحميل)، يمكنك العمل على البيانات بدون اتصال. إعادة فتح الصفحة بدون إنترنت قد لا تعمل.</p>
-      </div>
-      <div class="faq-item">
-        <h4>هل يوجد اشتراك؟</h4>
-        <p>لا. الدفع مرة واحدة حسب الباقة. لا اشتراك شهري ولا التزام متكرر.</p>
-      </div>
-      <div class="faq-item">
-        <h4>كيف أسوي نسخة احتياطية؟</h4>
-        <p>من الإعدادات → النسخ الاحتياطي → «تصدير نسخة احتياطية». يُحمّل ملف JSON. احفظه في مكان آمن؛ عند الحاجة استورد نفس الملف لاستعادة كل شيء.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- (G) التواصل والطلب -->
-  <section class="contact" id="contact">
-    <div class="container">
-      <h2>التواصل والطلب</h2>
-      <form class="contact-form" id="landing-form">
-        <label for="name">الاسم</label>
-        <input type="text" id="name" name="name" placeholder="الاسم الكامل" required/>
-        <label for="office">اسم المكتب</label>
-        <input type="text" id="office" name="office" placeholder="اسم المكتب العقاري"/>
-        <label for="phone">رقم الجوال</label>
-        <input type="tel" id="phone" name="phone" placeholder="05xxxxxxxx" required/>
-        <label for="package">الباقة المطلوبة</label>
-        <select id="package" name="package">
-          <option value="Basic" data-price="399">Basic — 399 ر.س</option>
-          <option value="Pro" data-price="899">Pro — 899 ر.س ⭐</option>
-          <option value="Office" data-price="1,499">Office — 1,499 ر.س</option>
-        </select>
-        <button type="submit" class="btn btn-primary">إرسال الطلب</button>
-      </form>
-      <div class="contact-channels">
-        <p>WhatsApp: <a href="https://wa.me/966500000000" title="ضع رقمك هنا (966XXXXXXXXX)">ضع رقمك هنا</a></p>
-        <p>Email: <a href="mailto:info@example.com?subject=طلب%20Finance%20Flow" title="ضع إيميلك هنا">ضع إيميلك هنا</a></p>
-        <p>Telegram: <a href="https://t.me/username" title="ضع معرفك هنا">ضع معرفك هنا</a></p>
-      </div>
-    </div>
-  </section>
-
-  <!-- (H) Footer -->
+  <!-- (E) Footer -->
   <footer>
     <div class="container">
       <p>© قيد العقار. جميع الحقوق محفوظة.</p>
       <p class="disclaimer">البيانات محفوظة محلياً على جهاز المستخدم.</p>
     </div>
   </footer>
-
-  <script>
-    // Numerals support (display-only) — uses existing LocalStorage key: ui_numerals
-    (function initLandingNumerals(){
-      var key = 'ui_numerals';
-      var mode = null;
-      try {
-        var v = localStorage.getItem(key);
-        mode = (v === 'ar' || v === 'en') ? v : 'ar';
-      } catch (e) {
-        mode = 'ar';
-      }
-      document.documentElement.dataset.numerals = mode;
-
-      function toArabicDigits(s){
-        return String(s).replace(/\d/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; });
-      }
-      function toEnglishDigits(s){
-        // Normalize Arabic-Indic digits to ASCII
-        var map = { '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9' };
-        return String(s).replace(/[٠-٩]/g, function(ch){ return map[ch] || ch; });
-      }
-      function convertNumerals(s){
-        return (mode === 'en') ? toEnglishDigits(s) : toArabicDigits(s);
-      }
-
-      // Apply only to explicitly-marked nodes (no DOM walker)
-      var nodes = document.querySelectorAll('[data-numerals-text]');
-      for (var i=0; i<nodes.length; i++){
-        var el = nodes[i];
-        if (!el || el.hasAttribute('data-no-numerals')) continue;
-        el.textContent = convertNumerals(el.textContent);
-      }
-
-      // Update package option labels (numbers inside <option>)
-      var pkg = document.getElementById('package');
-      if (pkg && pkg.options){
-        for (var j=0; j<pkg.options.length; j++){
-          var opt = pkg.options[j];
-          var price = opt.getAttribute('data-price');
-          if (!price) continue;
-          var safePrice = convertNumerals(price);
-          if (opt.value === 'Basic') opt.text = 'Basic — ' + safePrice + ' ر.س';
-          if (opt.value === 'Pro') opt.text = 'Pro — ' + safePrice + ' ر.س ⭐';
-          if (opt.value === 'Office') opt.text = 'Office — ' + safePrice + ' ر.س';
-        }
-      }
-    })();
-
-    document.getElementById('landing-form').addEventListener('submit', function(e) {
-      e.preventDefault();
-      alert('تم استلام طلبك (تجريبي)');
-    });
-  </script>
 </body>
 </html>
 
