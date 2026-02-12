@@ -1183,7 +1183,7 @@ const TransactionsPage = () => {
   const exportCSV = () => {
     const BOM = '\uFEFF';
     const headers = ['النوع','التصنيف','المبلغ','طريقة الدفع','التاريخ','الوصف'];
-    const rows = txs.map(t => [TRANSACTION_TYPES[t.type], TRANSACTION_CATEGORIES[t.category], t.amount, PAYMENT_METHODS[t.paymentMethod], t.date, t.description || '']);
+    const rows = txs.map(t => [TRANSACTION_TYPES[t.type], TRANSACTION_CATEGORIES[t.category], String(t.amount), PAYMENT_METHODS[t.paymentMethod], t.date, t.description || '']);
     const csv = BOM + [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -1445,7 +1445,8 @@ const CommissionsPage = () => {
     const rows = cms.map(c => {
       const officeAmt = c.dealValue * c.officePercent / 100;
       const agentAmt = c.dealValue * c.agentPercent / 100;
-      return [c.clientName || '', c.dealValue, c.officePercent, officeAmt, c.agentName || '', c.agentPercent, agentAmt, COMMISSION_STATUSES[c.status] || c.status, c.dueDate || '', c.paidDate || ''];
+      // Keep CSV raw (no locale formatting / no numerals conversion)
+      return [c.clientName || '', String(c.dealValue), String(c.officePercent), String(officeAmt), c.agentName || '', String(c.agentPercent), String(agentAmt), COMMISSION_STATUSES[c.status] || c.status, c.dueDate || '', c.paidDate || ''];
     });
     const csv = BOM + [headers.map(csvEscape), ...rows.map(r => r.map(csvEscape))].map(r => r.join(',')).join('\r\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
