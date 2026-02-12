@@ -60,10 +60,17 @@
   --color-muted: #c0cad8;
   --color-border: rgba(234, 240, 248, 0.20);
 
+  /* Accent slightly warmer, to keep identity without feeling "bright" */
   --color-primary: #0b2d4a;
   --color-accent: #d2ad43;
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(210, 173, 67, 0.26);
+
+  /* Polish via tokens only (no app.css changes) */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
 /* Dark */
