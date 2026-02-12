@@ -343,6 +343,43 @@ const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'05
 // Replace LocalStorage calls with API in this layer later
 const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', drafts:'ff_drafts', settings:'ff_settings', seeded:'ff_seeded' };
 
+// ============================================
+// UI THEME (Phase B+3)
+// ============================================
+// Strict rule: only UI theme key allowed outside financial/local data is: ui_theme
+const UI_THEME_KEY = 'ui_theme';
+
+const getSavedTheme = () => {
+  try {
+    const t = localStorage.getItem(UI_THEME_KEY);
+    return (t === 'light' || t === 'dim' || t === 'dark') ? t : null;
+  } catch {
+    return null;
+  }
+};
+
+const applyTheme = (theme) => {
+  const t = (theme === 'light' || theme === 'dim' || theme === 'dark') ? theme : 'light';
+  document.documentElement.dataset.theme = t;
+  try { localStorage.setItem(UI_THEME_KEY, t); } catch {}
+};
+
+const initTheme = () => {
+  const saved = getSavedTheme();
+  if (saved) { applyTheme(saved); return saved; }
+
+  // Prefer system theme when no saved preference
+  try {
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const t = prefersDark ? 'dark' : 'light';
+    document.documentElement.dataset.theme = t;
+    return t;
+  } catch {
+    document.documentElement.dataset.theme = 'light';
+    return 'light';
+  }
+};
+
 /** Phase 7 — رسائل النجاح والخطأ (٠٦ النبرة: احترافية، هادئة، مباشرة) */
 const MSG = {
   success: { saved: 'تم التسجيل بنجاح', updated: 'تم تحديث البيانات', deleted: 'تم الحذف بنجاح', transaction: 'تم تسجيل العملية المالية', commission: 'تم تسجيل العمولة بنجاح' },
@@ -1814,6 +1851,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 const SettingsPage = () => {
   const toast = useToast();
   const [settings, setSettings] = useState(dataStore.settings.get());
+  const [uiTheme, setUiTheme] = useState(getSavedTheme() || document.documentElement.dataset.theme || 'light');
   const [confirm, setConfirm] = useState(null);
   const fileInputRef = useRef(null);
   const importDataRef = useRef(null);
@@ -1829,7 +1867,7 @@ const SettingsPage = () => {
       const res = dataStore.seed.resetDemo();
       if (!res.ok) { toast(res.message, 'error'); setConfirm(null); return; }
       setSettings(dataStore.settings.get());
-      document.body.dataset.theme = dataStore.settings.get().theme || 'light';
+      initTheme();
       toast('تمت إعادة بيانات الديمو');
       setConfirm(null);
     }});
@@ -1854,7 +1892,7 @@ const SettingsPage = () => {
       onConfirm: () => {
         dataStore.seed.clearAll();
         setSettings(SEED_SETTINGS);
-        document.body.dataset.theme = 'light';
+        initTheme();
         toast('تم حذف جميع البيانات');
         setConfirm(null);
       }
@@ -1938,7 +1976,7 @@ const SettingsPage = () => {
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">وضع العرض</h3>
         <Field label="المظهر">
-          <select value={settings.theme || 'light'} onChange={e => { const v = e.target.value; setSettings(s => ({ ...s, theme: v })); document.body.dataset.theme = v; const res = dataStore.settings.update({ theme: v }); if (!res.ok) toast(res.message, 'error'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="وضع العرض">
+          <select value={uiTheme} onChange={e => { const v = e.target.value; setUiTheme(v); applyTheme(v); toast('تم تحديث المظهر'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="وضع العرض">
             <option value="light">نهاري</option>
             <option value="dim">خافت</option>
             <option value="dark">ليلي</option>
@@ -2556,7 +2594,7 @@ const App = () => {
   // Ensure seed data on first load
   useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
   // Phase 7.1: apply saved theme on load
-  useEffect(() => { const t = dataStore.settings.get().theme; document.body.dataset.theme = (t === 'light' || t === 'dim' || t === 'dark') ? t : 'light'; }, []);
+  useEffect(() => { initTheme(); }, []);
   // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
   useEffect(() => {
     const handler = (e) => { if (dirty) { e.preventDefault(); e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟'; return e.returnValue; } };

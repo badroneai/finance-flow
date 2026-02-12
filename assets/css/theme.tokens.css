@@ -1,10 +1,11 @@
 /* Qaydalaqar Design Tokens
-   Phase B+1: tokens only (no UI change)
+   Phase B+3: themes via :root[data-theme]
    Notes:
-   - Do NOT reference these tokens from app.css in this commit.
+   - Theme is applied on <html> via: document.documentElement.dataset.theme
    - No external font loads are added here; HTML already loads IBM Plex Sans Arabic.
 */
 
+/* Base (fallback) tokens */
 :root {
   /* Color system (semantic) */
   --color-bg: #f8fafc;          /* page background */
@@ -14,10 +15,10 @@
   --color-border: #e2e8f0;      /* borders / dividers */
 
   /* Brand */
-  --color-primary: #0b2d4a;     /* Qaydalaqar navy (approx) */
-  --color-accent: #c9a227;      /* Qaydalaqar gold (approx) */
+  --color-primary: #0b2d4a;     /* Qaydalaqar navy */
+  --color-accent: #c9a227;      /* Qaydalaqar gold */
 
-  /* Focus ring (kept separate for accessibility tuning) */
+  /* Focus ring */
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(201, 162, 39, 0.25);
 
@@ -34,4 +35,46 @@
   /* Numerals / locale formatting (hooks for later JS) */
   --numerals: "ar"; /* ar | en */
   --calendar: "gregorian"; /* gregorian | hijri */
+}
+
+/* Light (default) */
+:root[data-theme="light"] {
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-muted: #475569;
+  --color-border: #e2e8f0;
+
+  --color-primary: #0b2d4a;
+  --color-accent: #c9a227;
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(201, 162, 39, 0.25);
+}
+
+/* Dim (darker than light, lighter than dark) */
+:root[data-theme="dim"] {
+  --color-bg: #0b1220;
+  --color-surface: #0f1a2b;
+  --color-text: #e5e7eb;
+  --color-muted: #a3aab6;
+  --color-border: rgba(226,232,240,0.18);
+
+  --color-primary: #0b2d4a;
+  --color-accent: #d6b14a;
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(214, 177, 74, 0.28);
+}
+
+/* Dark */
+:root[data-theme="dark"] {
+  --color-bg: #070b12;
+  --color-surface: #0b1220;
+  --color-text: #f1f5f9;
+  --color-muted: #b6bcc8;
+  --color-border: rgba(226,232,240,0.14);
+
+  --color-primary: #0b2d4a;
+  --color-accent: #e0c05a;
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(224, 192, 90, 0.30);
 }
