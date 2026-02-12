@@ -332,7 +332,7 @@
         <div class="audience-card">
           <h3>✅ مناسب لـ</h3>
           <ul>
-            <li>مكاتب عقارية صغيرة (1–5 موظفين)</li>
+            <li>مكاتب عقارية صغيرة (<span data-numerals-text>1–5</span> موظفين)</li>
             <li>تتبع دخل وخرج وعمولات صفقات</li>
             <li>إصدار خطابات رسمية سريعة</li>
             <li>جهاز واحد أو اثنين في المكتب</li>
@@ -403,7 +403,7 @@
       <div class="pricing-grid">
         <div class="pricing-card">
           <h3>🟢 Basic</h3>
-          <div class="price">399 ر.س</div>
+          <div class="price"><span data-numerals-text>399</span> ر.س</div>
           <ul>
             <li>ملف التطبيق + التوثيق</li>
             <li>دليل التثبيت</li>
@@ -413,16 +413,16 @@
         <div class="pricing-card recommended">
           <span class="badge">موصى به ⭐</span>
           <h3>🔵 Pro</h3>
-          <div class="price">899 ر.س</div>
+          <div class="price"><span data-numerals-text>899</span> ر.س</div>
           <ul>
             <li>كل ما في Basic</li>
-            <li>دعم بريد 12 شهراً</li>
+            <li>دعم بريد <span data-numerals-text>12</span> شهراً</li>
             <li>تحديثات سنة</li>
           </ul>
         </div>
         <div class="pricing-card">
           <h3>🟣 Office</h3>
-          <div class="price">1,499 ر.س</div>
+          <div class="price"><span data-numerals-text>1,499</span> ر.س</div>
           <ul>
             <li>كل ما في Pro</li>
             <li>دعم واتساب + جلسة إعداد</li>
@@ -442,7 +442,7 @@
           </thead>
           <tbody>
             <tr><td>ملف التطبيق + التوثيق</td><td>✅</td><td>✅</td><td>✅</td></tr>
-            <tr><td>دعم بريد</td><td>—</td><td>12 شهراً</td><td>✅</td></tr>
+            <tr><td>دعم بريد</td><td>—</td><td><span data-numerals-text>12</span> شهراً</td><td>✅</td></tr>
             <tr><td>دعم واتساب</td><td>—</td><td>—</td><td>✅</td></tr>
             <tr><td>تحديثات</td><td>—</td><td>سنة</td><td>سنتان</td></tr>
             <tr><td>مساعدة إعداد / تخصيص</td><td>—</td><td>—</td><td>✅</td></tr>
@@ -497,9 +497,9 @@
         <input type="tel" id="phone" name="phone" placeholder="05xxxxxxxx" required/>
         <label for="package">الباقة المطلوبة</label>
         <select id="package" name="package">
-          <option value="Basic">Basic — 399 ر.س</option>
-          <option value="Pro">Pro — 899 ر.س ⭐</option>
-          <option value="Office">Office — 1,499 ر.س</option>
+          <option value="Basic" data-price="399">Basic — 399 ر.س</option>
+          <option value="Pro" data-price="899">Pro — 899 ر.س ⭐</option>
+          <option value="Office" data-price="1,499">Office — 1,499 ر.س</option>
         </select>
         <button type="submit" class="btn btn-primary">إرسال الطلب</button>
       </form>
@@ -520,6 +520,53 @@
   </footer>
 
   <script>
+    // Numerals support (display-only) — uses existing LocalStorage key: ui_numerals
+    (function initLandingNumerals(){
+      var key = 'ui_numerals';
+      var mode = null;
+      try {
+        var v = localStorage.getItem(key);
+        mode = (v === 'ar' || v === 'en') ? v : 'ar';
+      } catch (e) {
+        mode = 'ar';
+      }
+      document.documentElement.dataset.numerals = mode;
+
+      function toArabicDigits(s){
+        return String(s).replace(/\d/g, function(d){ return '٠١٢٣٤٥٦٧٨٩'[d]; });
+      }
+      function toEnglishDigits(s){
+        // Normalize Arabic-Indic digits to ASCII
+        var map = { '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9' };
+        return String(s).replace(/[٠-٩]/g, function(ch){ return map[ch] || ch; });
+      }
+      function convertNumerals(s){
+        return (mode === 'en') ? toEnglishDigits(s) : toArabicDigits(s);
+      }
+
+      // Apply only to explicitly-marked nodes (no DOM walker)
+      var nodes = document.querySelectorAll('[data-numerals-text]');
+      for (var i=0; i<nodes.length; i++){
+        var el = nodes[i];
+        if (!el || el.hasAttribute('data-no-numerals')) continue;
+        el.textContent = convertNumerals(el.textContent);
+      }
+
+      // Update package option labels (numbers inside <option>)
+      var pkg = document.getElementById('package');
+      if (pkg && pkg.options){
+        for (var j=0; j<pkg.options.length; j++){
+          var opt = pkg.options[j];
+          var price = opt.getAttribute('data-price');
+          if (!price) continue;
+          var safePrice = convertNumerals(price);
+          if (opt.value === 'Basic') opt.text = 'Basic — ' + safePrice + ' ر.س';
+          if (opt.value === 'Pro') opt.text = 'Pro — ' + safePrice + ' ر.س ⭐';
+          if (opt.value === 'Office') opt.text = 'Office — ' + safePrice + ' ر.س';
+        }
+      }
+    })();
+
     document.getElementById('landing-form').addEventListener('submit', function(e) {
       e.preventDefault();
       alert('تم استلام طلبك (تجريبي)');

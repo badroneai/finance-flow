@@ -348,6 +348,10 @@ const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', dra
 // ============================================
 // Strict rule: only UI theme key allowed outside financial/local data is: ui_theme
 const UI_THEME_KEY = 'ui_theme';
+const UI_NUMERALS_KEY = 'ui_numerals';
+
+// In-memory source of truth for display-only numerals (ar/en)
+let __uiNumeralsMode = null;
 
 const getSavedTheme = () => {
   try {
@@ -378,6 +382,31 @@ const initTheme = () => {
     document.documentElement.dataset.theme = 'light';
     return 'light';
   }
+};
+
+const getSavedNumerals = () => {
+  try {
+    const n = localStorage.getItem(UI_NUMERALS_KEY);
+    return (n === 'ar' || n === 'en') ? n : null;
+  } catch {
+    return null;
+  }
+};
+
+const applyNumerals = (mode) => {
+  const m = (mode === 'ar' || mode === 'en') ? mode : 'ar';
+  __uiNumeralsMode = m;
+  document.documentElement.dataset.numerals = m;
+  try { localStorage.setItem(UI_NUMERALS_KEY, m); } catch {}
+};
+
+const initNumerals = () => {
+  const saved = getSavedNumerals();
+  if (saved) { applyNumerals(saved); return saved; }
+  // Default: Arabic numerals (current product default)
+  __uiNumeralsMode = 'ar';
+  document.documentElement.dataset.numerals = 'ar';
+  return 'ar';
 };
 
 /** Phase 7 — رسائل النجاح والخطأ (٠٦ النبرة: احترافية، هادئة، مباشرة) */
@@ -578,7 +607,7 @@ const dataStore = {
 // ============================================
 // FORMATTER (Phase 7.2 — Numerals: ar / en)
 // ============================================
-const getNumeralLocale = () => (dataStore.settings.get().numerals === 'en' ? 'en-US' : 'ar-SA');
+const getNumeralLocale = () => ((__uiNumeralsMode || 'ar') === 'en' ? 'en-US' : 'ar-SA');
 
 const formatNumber = (value, options = {}) => {
   const n = value != null ? Number(value) : 0;
@@ -1154,7 +1183,7 @@ const TransactionsPage = () => {
   const exportCSV = () => {
     const BOM = '\uFEFF';
     const headers = ['النوع','التصنيف','المبلغ','طريقة الدفع','التاريخ','الوصف'];
-    const rows = txs.map(t => [TRANSACTION_TYPES[t.type], TRANSACTION_CATEGORIES[t.category], t.amount, PAYMENT_METHODS[t.paymentMethod], t.date, t.description || '']);
+    const rows = txs.map(t => [TRANSACTION_TYPES[t.type], TRANSACTION_CATEGORIES[t.category], String(t.amount), PAYMENT_METHODS[t.paymentMethod], t.date, t.description || '']);
     const csv = BOM + [headers, ...rows].map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -1416,7 +1445,8 @@ const CommissionsPage = () => {
     const rows = cms.map(c => {
       const officeAmt = c.dealValue * c.officePercent / 100;
       const agentAmt = c.dealValue * c.agentPercent / 100;
-      return [c.clientName || '', c.dealValue, c.officePercent, officeAmt, c.agentName || '', c.agentPercent, agentAmt, COMMISSION_STATUSES[c.status] || c.status, c.dueDate || '', c.paidDate || ''];
+      // Keep CSV raw (no locale formatting / no numerals conversion)
+      return [c.clientName || '', String(c.dealValue), String(c.officePercent), String(officeAmt), c.agentName || '', String(c.agentPercent), String(agentAmt), COMMISSION_STATUSES[c.status] || c.status, c.dueDate || '', c.paidDate || ''];
     });
     const csv = BOM + [headers.map(csvEscape), ...rows.map(r => r.map(csvEscape))].map(r => r.join(',')).join('\r\n');
     const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
@@ -1852,6 +1882,7 @@ const SettingsPage = () => {
   const toast = useToast();
   const [settings, setSettings] = useState(dataStore.settings.get());
   const [uiTheme, setUiTheme] = useState(getSavedTheme() || document.documentElement.dataset.theme || 'light');
+  const [uiNumerals, setUiNumerals] = useState(getSavedNumerals() || document.documentElement.dataset.numerals || 'ar');
   const [confirm, setConfirm] = useState(null);
   const fileInputRef = useRef(null);
   const importDataRef = useRef(null);
@@ -1881,9 +1912,9 @@ const SettingsPage = () => {
       title: 'حذف جميع البيانات',
       message: 'سيتم حذف جميع البيانات المحفوظة:',
       messageList: [
-        `جميع الحركات المالية (${txCount})`,
-        `جميع العمولات (${cmCount})`,
-        `جميع المسودات (${draftCount})`,
+        `جميع الحركات المالية (${formatNumber(txCount, { maximumFractionDigits: 0 })})`,
+        `جميع العمولات (${formatNumber(cmCount, { maximumFractionDigits: 0 })})`,
+        `جميع المسودات (${formatNumber(draftCount, { maximumFractionDigits: 0 })})`,
         'جميع الإعدادات'
       ],
       dangerText: 'لا يمكن التراجع عن هذا الإجراء.',
@@ -1983,7 +2014,7 @@ const SettingsPage = () => {
           </select>
         </Field>
         <Field label="عرض الأرقام">
-          <select value={settings.numerals || 'ar'} onChange={e => { const v = e.target.value; setSettings(s => ({ ...s, numerals: v })); const res = dataStore.settings.update({ numerals: v }); if (!res.ok) toast(res.message, 'error'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض الأرقام">
+          <select value={uiNumerals} onChange={e => { const v = e.target.value; setUiNumerals(v); applyNumerals(v); toast('تم تحديث عرض الأرقام'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض الأرقام">
             <option value="ar">عربي</option>
             <option value="en">إنجليزي</option>
           </select>
@@ -2073,7 +2104,12 @@ const DEFAULT_EVENTS_NC = [
 ];
 function getKeyNC(y, m, d) { return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
 function getDaysInMonthNC(year, month) { return new Date(year, month, 0).getDate(); }
-function toArabicNumNC(n) { return String(n).replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]); }
+function toArabicNumNC(n) {
+  const s = String(n);
+  // Numerals 2/3: Respect UI numerals setting for Notes/Calendar display.
+  if ((__uiNumeralsMode || 'ar') === 'en') return s;
+  return s.replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
+}
 
 function NotesCalendarAddInput({ placeholder, onAdd, colors }) {
   const [text, setText] = useState("");
@@ -2594,7 +2630,7 @@ const App = () => {
   // Ensure seed data on first load
   useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
   // Phase 7.1: apply saved theme on load
-  useEffect(() => { initTheme(); }, []);
+  useEffect(() => { initTheme(); initNumerals(); }, []);
   // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
   useEffect(() => {
     const handler = (e) => { if (dirty) { e.preventDefault(); e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟'; return e.returnValue; } };
