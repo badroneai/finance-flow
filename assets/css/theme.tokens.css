@@ -53,17 +53,24 @@
 
 /* Dim (darker than light, lighter than dark) */
 :root[data-theme="dim"] {
-  /* Navy-dim: noticeably darker than light, but still comfortable */
-  --color-bg: #0b1626;
-  --color-surface: #0f2238;
-  --color-text: #e6edf6;
-  --color-muted: #b6c2d1;
-  --color-border: rgba(230, 237, 246, 0.16);
+  /* Navy-dim: clearly darker than light, softer than dark */
+  --color-bg: #081324;
+  --color-surface: #0c1d33;
+  --color-text: #eaf0f8;
+  --color-muted: #c0cad8;
+  --color-border: rgba(234, 240, 248, 0.20);
 
+  /* Accent slightly warmer, to keep identity without feeling "bright" */
   --color-primary: #0b2d4a;
-  --color-accent: #d6b14a;
+  --color-accent: #d2ad43;
   --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(214, 177, 74, 0.26);
+  --color-focus-soft: rgba(210, 173, 67, 0.26);
+
+  /* Polish via tokens only (no app.css changes) */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
 /* Dark */
