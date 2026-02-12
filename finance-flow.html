@@ -2303,6 +2303,15 @@ const SettingsPage = ({ onShowOnboarding }) => {
           </button>
         </div>
         <p className="text-xs text-gray-400 mt-2">النسخ الاحتياطي لا يرسل بيانات للسحابة.</p>
+
+        <div className="mt-4 rounded-xl border border-gray-100 p-4" aria-label="المزامنة السحابية">
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-semibold text-gray-900">المزامنة السحابية (Pro) — قريبًا</div>
+            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pro</span>
+          </div>
+          <p className="text-sm text-gray-500 mt-2">مزامنة بياناتك بين أكثر من جهاز مع تسجيل دخول آمن.</p>
+        </div>
+
         <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleImportFileChange} className="hidden" aria-hidden="true"/>
       </div>
 
