@@ -2029,7 +2029,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 // ============================================
 // SETTINGS PAGE
 // ============================================
-const SettingsPage = () => {
+const SettingsPage = ({ onShowOnboarding }) => {
   const toast = useToast();
   const [settings, setSettings] = useState(dataStore.settings.get());
   const [uiTheme, setUiTheme] = useState(getSavedTheme() || 'system');
@@ -2180,14 +2180,23 @@ const SettingsPage = () => {
           </select>
         </Field>
 
-        <button type="button" onClick={() => {
-          try { localStorage.removeItem(UI_THEME_KEY); } catch {}
-          setUiTheme('system');
-          applyTheme('system');
-          toast('تمت إعادة ضبط المظهر');
-        }} className="mt-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة ضبط المظهر">
-          إعادة ضبط المظهر
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" onClick={() => {
+            try { localStorage.removeItem(UI_THEME_KEY); } catch {}
+            setUiTheme('system');
+            applyTheme('system');
+            toast('تمت إعادة ضبط المظهر');
+          }} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة ضبط المظهر">
+            إعادة ضبط المظهر
+          </button>
+
+          <button type="button" onClick={() => {
+            if (typeof onShowOnboarding === 'function') onShowOnboarding();
+            toast('سيتم عرض شاشة الترحيب');
+          }} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة عرض شاشة الترحيب">
+            إعادة عرض شاشة الترحيب
+          </button>
+        </div>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
@@ -2872,7 +2881,7 @@ const App = () => {
       case 'drafts': return <DraftsPage setPage={setPage} setLetterType={setLetterType} setEditDraft={setEditDraft}/>;
       case 'calendar': return <NotesCalendar mode="calendar"/>;
       case 'notes': return <NotesCalendar mode="notes"/>;
-      case 'settings': return <SettingsPage/>;
+      case 'settings': return <SettingsPage onShowOnboarding={() => { try { localStorage.removeItem(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); }} />;
       default: return <HomePage setPage={setPage}/>;
     }
   };
@@ -2907,7 +2916,19 @@ const App = () => {
                     <li>يمكنك التصدير CSV في أي وقت.</li>
                   </ul>
 
-                  <div className="mt-5 flex flex-col gap-2">
+                  <button type="button" className="mt-4 text-sm" style={{ color: 'var(--color-primary)', textAlign: 'start' }} onClick={() => {
+                    setOnboardingSeen();
+                    setShowOnboarding(false);
+                    setPage('settings');
+                    setTimeout(() => {
+                      const el = document.querySelector('[aria-label="وضع العرض"]');
+                      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 50);
+                  }}>
+                    افتح الإعدادات
+                  </button>
+
+                  <div className="mt-4 flex flex-col gap-2">
                     <button type="button" className="btn-primary w-full" style={{ padding: '0.9rem 1rem', borderRadius: 'var(--radius)', background: 'var(--color-primary)', color: '#fff' }} onClick={() => { setOnboardingSeen(); setShowOnboarding(false); }}>
                       ابدأ الآن
                     </button>
