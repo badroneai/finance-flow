@@ -430,6 +430,9 @@ const applyTheme = (theme) => {
 };
 
 const initTheme = () => {
+  // Ignore legacy theme sources by design. Do NOT read ff_settings.theme or body.dataset.theme.
+  try { if (document.body && document.body.dataset && document.body.dataset.theme) delete document.body.dataset.theme; } catch {}
+
   const saved = getSavedTheme();
   // Default behavior: System when not set
   const t = saved || 'system';
