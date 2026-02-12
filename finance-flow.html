@@ -1119,7 +1119,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
   );
 };
 
-const Topbar = ({ page, setMobileOpen, headerDateText }) => {
+const Topbar = ({ page, setMobileOpen, headerDateText, onOpenHelp }) => {
   const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
   return (
     <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-start justify-between gap-3 sticky top-0 z-30 no-print">
@@ -1127,8 +1127,21 @@ const Topbar = ({ page, setMobileOpen, headerDateText }) => {
         <button className="md:hidden p-2 rounded-lg hover:bg-gray-100 flex-shrink-0" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة"><Icons.menu size={22}/></button>
         <h2 className="text-lg font-bold text-gray-900 truncate">{titles[page] || ''}</h2>
       </div>
-      <div className="text-xs text-gray-500 text-left max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
-        {headerDateText || ''}
+
+      <div className="flex items-start gap-3 flex-shrink-0">
+        <button type="button" onClick={onOpenHelp} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 text-xs font-medium hover:bg-gray-50" aria-label="دليل سريع">
+          <span className="inline-flex items-center gap-1">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M12 18h.01"/>
+              <path d="M9.09 9a3 3 0 115.82 1c0 2-3 2-3 4"/>
+              <circle cx="12" cy="12" r="10"/>
+            </svg>
+            دليل سريع
+          </span>
+        </button>
+        <div className="text-xs text-gray-500 text-left max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
+          {headerDateText || ''}
+        </div>
       </div>
     </header>
   );
@@ -2879,6 +2892,7 @@ const App = () => {
   const [headerDateText, setHeaderDateText] = useState('');
 
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
 
   const updateHeaderDate = useCallback(() => {
     setHeaderDateText(formatDateHeader(new Date()));
@@ -2961,7 +2975,7 @@ const App = () => {
         <div className="app-shell flex min-h-screen">
           <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen}/>
           <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
-            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
+            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''} onOpenHelp={() => setShowHelp(true)}/>
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
               {!showOnboarding && <WelcomeBanner/>}
             </div>
@@ -3008,6 +3022,68 @@ const App = () => {
               </div>
             )}
             <div className="print-container">{renderPage()}</div>
+
+            {showHelp && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="دليل سريع">
+                <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => setShowHelp(false)} />
+                <div className="relative w-full max-w-lg rounded-2xl border p-5 shadow-lg" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold" style={{ margin: 0 }}>دليل قيد العقار — سريعًا</h3>
+                    </div>
+                    <button type="button" className="text-sm" style={{ color: 'var(--color-muted)' }} aria-label="إغلاق" onClick={() => setShowHelp(false)}>×</button>
+                  </div>
+
+                  <div className="mt-4 space-y-3 text-sm" style={{ color: 'var(--color-text)' }}>
+                    <div>
+                      <div className="font-semibold">1) أين تُحفظ بياناتي؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>تُحفظ محليًا داخل المتصفح على جهازك. لا نرفع بيانات للسحابة.</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold">2) كيف أبدأ؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>أضف أول حركة مالية، ثم راجع الملخص بالأعلى.</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold">3) كيف أنسخ احتياطيًا؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>من الإعدادات → "تنزيل نسخة احتياطية (JSON)".</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold">4) كيف أستعيد نسخة احتياطية؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>من الإعدادات → "استعادة من نسخة احتياطية" ثم اختر الملف.</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold">5) هل التصدير CSV يغيّر الأرقام/التنسيق؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>CSV يخرج “قيم خام” بدون تنسيق لغة، مناسب للإكسل.</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold">6) ماذا لو مسحت بيانات المتصفح؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>قد تفقد بياناتك. استخدم النسخ الاحتياطي دوريًا.</div>
+                    </div>
+                    <div>
+                      <div className="font-semibold">7) كيف أغيّر المظهر/الأرقام/التاريخ؟</div>
+                      <div style={{ color: 'var(--color-muted)' }}>من الإعدادات: الثيم (نهاري/خافت/ليلي/حسب النظام) + عرض الأرقام + عرض التاريخ.</div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-2">
+                    <button type="button" className="px-4 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }} onClick={() => { setShowHelp(false); setPage('settings'); }}>
+                      افتح الإعدادات
+                    </button>
+                    <button type="button" className="px-4 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }} onClick={() => {
+                      setShowHelp(false);
+                      setPage('settings');
+                      setTimeout(() => {
+                        const headings = Array.from(document.querySelectorAll('h3'));
+                        const el = headings.find(h => (h.textContent || '').includes('النسخ الاحتياطي'));
+                        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }, 50);
+                    }}>
+                      فتح ملف النسخ الاحتياطي
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           <footer className="no-print border-t border-gray-100 py-3 px-4 text-center text-sm text-gray-500" role="contentinfo">
             <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>
           </footer>
