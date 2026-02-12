@@ -2158,16 +2158,27 @@ const SettingsPage = ({ onShowOnboarding }) => {
       }
 
       importDataRef.current = envelope.data;
+      const keys = getBackupAppKeys();
+      const current = {};
+      keys.forEach((k) => {
+        try { current[k] = localStorage.getItem(k); } catch { current[k] = null; }
+      });
+
+      let changeCount = 0;
+      keys.forEach((k) => {
+        const cur = current[k];
+        const next = Object.prototype.hasOwnProperty.call(envelope.data, k) ? String(envelope.data[k]) : null;
+        if ((cur ?? null) !== (next ?? null)) changeCount++;
+      });
+
       setConfirm({
         title: 'استعادة نسخة احتياطية',
-        message: 'سيتم استبدال البيانات الحالية. هل أنت متأكد؟',
+        message: `سيتم استبدال البيانات الحالية (${formatNumber(changeCount, { maximumFractionDigits: 0 })} مفاتيح). هل أنت متأكد؟`,
         danger: true,
         confirmLabel: 'نعم، استبدل البيانات',
         onConfirm: () => {
           const d = importDataRef.current;
           if (!d) { setConfirm(null); return; }
-
-          const keys = getBackupAppKeys();
 
           // Replace app keys only
           keys.forEach((k) => {
@@ -2285,6 +2296,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
             <Icons.fileText size={16}/> استعادة من نسخة احتياطية
           </button>
         </div>
+        <p className="text-xs text-gray-400 mt-2">النسخ الاحتياطي لا يرسل بيانات للسحابة.</p>
         <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleImportFileChange} className="hidden" aria-hidden="true"/>
       </div>
 
