@@ -9,7 +9,34 @@
   .print-container { padding: 0 !important; margin: 0 !important; max-width: 100% !important; }
 }
 * { box-sizing: border-box; }
+
+/* ==========================================================
+   Phase B+3 Hotfix: Ensure themes visibly apply
+   We map commonly-used Tailwind utility color classes
+   to design tokens using html[data-theme] scoping.
+   (No HTML changes required)
+========================================================== */
+html[data-theme] body {
+  background-color: var(--color-bg) !important;
+  color: var(--color-text) !important;
+}
+
+html[data-theme] .bg-gray-50 { background-color: var(--color-bg) !important; }
+html[data-theme] .bg-white { background-color: var(--color-surface) !important; }
+
+html[data-theme] .text-gray-900 { color: var(--color-text) !important; }
+html[data-theme] .text-gray-700 { color: var(--color-text) !important; }
+html[data-theme] .text-gray-600 { color: var(--color-muted) !important; }
+html[data-theme] .text-gray-500 { color: var(--color-muted) !important; }
+html[data-theme] .text-gray-400 { color: var(--color-muted) !important; }
+
+html[data-theme] .border-gray-100 { border-color: var(--color-border) !important; }
+html[data-theme] .border-gray-200 { border-color: var(--color-border) !important; }
+html[data-theme] .border-slate-200 { border-color: var(--color-border) !important; }
+
+/* Keep focus visible consistent across themes */
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: 4px; }
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 3px; }
