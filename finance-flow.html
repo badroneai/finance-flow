@@ -2145,27 +2145,46 @@ const SettingsPage = ({ onShowOnboarding }) => {
     e.target.value = '';
     const reader = new FileReader();
     reader.onload = () => {
-      let data;
-      try { data = JSON.parse(reader.result); } catch {
+      let envelope;
+      try { envelope = JSON.parse(reader.result); } catch {
         toast('ملف غير صالح (ليس JSON)', 'error');
         return;
       }
-      if (!data || typeof data.version !== 'number' || !Array.isArray(data.transactions) || !Array.isArray(data.commissions) || !Array.isArray(data.drafts) || !data.settings || typeof data.settings !== 'object') {
-        toast('تنسيق النسخة الاحتياطية غير صحيح أو قديم', 'error');
+
+      const ok = envelope && envelope.app === 'qaydalaqar-finance-flow' && envelope.schema === 1 && envelope.data && typeof envelope.data === 'object';
+      if (!ok) {
+        toast('تنسيق النسخة الاحتياطية غير صحيح (app/schema)', 'error');
         return;
       }
-      importDataRef.current = data;
-      setConfirm({ title: 'استيراد نسخة احتياطية', message: 'سيتم استبدال جميع البيانات الحالية. هل أنت متأكد؟', danger: true, onConfirm: () => {
-        const d = importDataRef.current;
-        if (!d) { setConfirm(null); return; }
-        let r = safeSet(KEYS.transactions, d.transactions); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        r = safeSet(KEYS.commissions, d.commissions); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        r = safeSet(KEYS.drafts, d.drafts); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        r = safeSet(KEYS.settings, d.settings); if (!r.ok) { toast(r.message, 'error'); setConfirm(null); return; }
-        safeSet(KEYS.seeded, true);
-        setConfirm(null);
-        window.location.reload();
-      }});
+
+      importDataRef.current = envelope.data;
+      setConfirm({
+        title: 'استعادة نسخة احتياطية',
+        message: 'سيتم استبدال البيانات الحالية. هل أنت متأكد؟',
+        danger: true,
+        confirmLabel: 'نعم، استبدل البيانات',
+        onConfirm: () => {
+          const d = importDataRef.current;
+          if (!d) { setConfirm(null); return; }
+
+          const keys = getBackupAppKeys();
+
+          // Replace app keys only
+          keys.forEach((k) => {
+            try { localStorage.removeItem(k); } catch {}
+          });
+          keys.forEach((k) => {
+            try {
+              if (Object.prototype.hasOwnProperty.call(d, k)) localStorage.setItem(k, String(d[k]));
+            } catch {
+              // ignore individual key failures
+            }
+          });
+
+          setConfirm(null);
+          window.location.reload();
+        }
+      });
     };
     reader.readAsText(file, 'UTF-8');
   };
@@ -2262,8 +2281,8 @@ const SettingsPage = ({ onShowOnboarding }) => {
           <button type="button" onClick={handleExportBackup} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50 flex items-center gap-2" aria-label="تنزيل نسخة احتياطية JSON">
             <Icons.download size={16}/> تنزيل نسخة احتياطية (JSON)
           </button>
-          <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center gap-2" aria-label="استيراد نسخة احتياطية">
-            <Icons.fileText size={16}/> استيراد نسخة احتياطية
+          <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center gap-2" aria-label="استعادة نسخة احتياطية">
+            <Icons.fileText size={16}/> استعادة من نسخة احتياطية
           </button>
         </div>
         <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleImportFileChange} className="hidden" aria-hidden="true"/>
