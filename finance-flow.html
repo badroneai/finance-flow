@@ -2081,23 +2081,60 @@ const SettingsPage = ({ onShowOnboarding }) => {
     });
   };
 
+  const getBackupAppKeys = () => ([
+    // Financial/local data keys
+    KEYS.transactions,
+    KEYS.commissions,
+    KEYS.drafts,
+    KEYS.settings,
+    KEYS.seeded,
+    // UI keys
+    UI_THEME_KEY,
+    UI_NUMERALS_KEY,
+    UI_DATE_HEADER_KEY,
+    UI_ONBOARDING_SEEN_KEY,
+    // Optional UI state
+    'hasSeenWelcomeBanner'
+  ]);
+
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const formatBackupFilename = (d) => {
+    const yyyy = d.getFullYear();
+    const mm = pad2(d.getMonth() + 1);
+    const dd = pad2(d.getDate());
+    const hh = pad2(d.getHours());
+    const min = pad2(d.getMinutes());
+    return `qaydalaqar-backup-${yyyy}${mm}${dd}-${hh}${min}.json`;
+  };
+
   const handleExportBackup = () => {
-    const data = {
-      version: BACKUP_VERSION,
-      createdAt: new Date().toISOString(),
-      transactions: safeGet(KEYS.transactions, []),
-      commissions: safeGet(KEYS.commissions, []),
-      drafts: safeGet(KEYS.drafts, []),
-      settings: safeGet(KEYS.settings, SEED_SETTINGS)
+    const now = new Date();
+    const keys = getBackupAppKeys();
+    const data = {};
+    keys.forEach((k) => {
+      try {
+        const v = localStorage.getItem(k);
+        if (v != null) data[k] = v;
+      } catch {
+        // ignore
+      }
+    });
+
+    const envelope = {
+      app: 'qaydalaqar-finance-flow',
+      schema: 1,
+      exported_at: new Date().toISOString(),
+      data
     };
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+
+    const blob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `finance-flow-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = formatBackupFilename(now);
     a.click();
     URL.revokeObjectURL(url);
-    toast('تم تصدير النسخة الاحتياطية');
+    toast('تم تنزيل النسخة الاحتياطية');
   };
 
   const handleImportBackupClick = () => { fileInputRef.current && fileInputRef.current.click(); };
@@ -2220,10 +2257,10 @@ const SettingsPage = ({ onShowOnboarding }) => {
 
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">النسخ الاحتياطي</h3>
-        <p className="text-sm text-gray-600 mb-4">صدّر كل البيانات إلى ملف JSON أو استورد نسخة احتياطية سابقة (استبدال كامل للبيانات الحالية).</p>
+        <p className="text-sm text-gray-600 mb-4">صدّر نسخة احتياطية إلى ملف JSON أو استعد نسخة سابقة (استبدال كامل للبيانات الحالية).</p>
         <div className="flex flex-wrap gap-3">
-          <button type="button" onClick={handleExportBackup} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50 flex items-center gap-2" aria-label="تصدير نسخة احتياطية">
-            <Icons.download size={16}/> تصدير نسخة احتياطية
+          <button type="button" onClick={handleExportBackup} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50 flex items-center gap-2" aria-label="تنزيل نسخة احتياطية JSON">
+            <Icons.download size={16}/> تنزيل نسخة احتياطية (JSON)
           </button>
           <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center gap-2" aria-label="استيراد نسخة احتياطية">
             <Icons.fileText size={16}/> استيراد نسخة احتياطية
