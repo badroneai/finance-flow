@@ -362,6 +362,7 @@ const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', dra
 const UI_THEME_KEY = 'ui_theme';
 const UI_NUMERALS_KEY = 'ui_numerals';
 const UI_DATE_HEADER_KEY = 'ui_date_header';
+const UI_ONBOARDING_SEEN_KEY = 'ui_onboarding_seen';
 
 // In-memory source of truth for display-only numerals (ar/en)
 let __uiNumeralsMode = null;
@@ -465,6 +466,18 @@ const setDateHeaderPref = (value) => {
   const v = (value === 'off' || value === 'greg' || value === 'hijri' || value === 'both') ? value : 'both';
   try { localStorage.setItem(UI_DATE_HEADER_KEY, v); } catch {}
   try { window.dispatchEvent(new CustomEvent('ui:dateHeader')); } catch {}
+};
+
+const getOnboardingSeen = () => {
+  try {
+    return localStorage.getItem(UI_ONBOARDING_SEEN_KEY) === '1';
+  } catch {
+    return false;
+  }
+};
+
+const setOnboardingSeen = () => {
+  try { localStorage.setItem(UI_ONBOARDING_SEEN_KEY, '1'); } catch {}
 };
 
 const applyNumerals = (mode) => {
@@ -2016,7 +2029,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 // ============================================
 // SETTINGS PAGE
 // ============================================
-const SettingsPage = () => {
+const SettingsPage = ({ onShowOnboarding }) => {
   const toast = useToast();
   const [settings, setSettings] = useState(dataStore.settings.get());
   const [uiTheme, setUiTheme] = useState(getSavedTheme() || 'system');
@@ -2167,14 +2180,23 @@ const SettingsPage = () => {
           </select>
         </Field>
 
-        <button type="button" onClick={() => {
-          try { localStorage.removeItem(UI_THEME_KEY); } catch {}
-          setUiTheme('system');
-          applyTheme('system');
-          toast('تمت إعادة ضبط المظهر');
-        }} className="mt-2 px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة ضبط المظهر">
-          إعادة ضبط المظهر
-        </button>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <button type="button" onClick={() => {
+            try { localStorage.removeItem(UI_THEME_KEY); } catch {}
+            setUiTheme('system');
+            applyTheme('system');
+            toast('تمت إعادة ضبط المظهر');
+          }} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة ضبط المظهر">
+            إعادة ضبط المظهر
+          </button>
+
+          <button type="button" onClick={() => {
+            if (typeof onShowOnboarding === 'function') onShowOnboarding();
+            toast('سيتم عرض شاشة الترحيب');
+          }} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة عرض شاشة الترحيب">
+            إعادة عرض شاشة الترحيب
+          </button>
+        </div>
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
@@ -2788,6 +2810,8 @@ const App = () => {
   const [headerDateMode, setHeaderDateMode] = useState(getSavedDateHeader() || 'both');
   const [headerDateText, setHeaderDateText] = useState('');
 
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
   const updateHeaderDate = useCallback(() => {
     setHeaderDateText(formatDateHeader(new Date()));
   }, []);
@@ -2806,9 +2830,12 @@ const App = () => {
   }, [updateHeaderDate]);
 
   // Phase 7.1: apply saved theme/numerals on load + initialize header date
+  // Onboarding (first-run): show once if ui_onboarding_seen is not set
   useEffect(() => {
     initTheme();
     initNumerals();
+
+    setShowOnboarding(!getOnboardingSeen());
 
     const datePref = (getSavedDateHeader() || 'both');
     setHeaderDateMode(datePref);
@@ -2854,7 +2881,7 @@ const App = () => {
       case 'drafts': return <DraftsPage setPage={setPage} setLetterType={setLetterType} setEditDraft={setEditDraft}/>;
       case 'calendar': return <NotesCalendar mode="calendar"/>;
       case 'notes': return <NotesCalendar mode="notes"/>;
-      case 'settings': return <SettingsPage/>;
+      case 'settings': return <SettingsPage onShowOnboarding={() => { try { localStorage.removeItem(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); }} />;
       default: return <HomePage setPage={setPage}/>;
     }
   };
@@ -2868,8 +2895,50 @@ const App = () => {
           <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
             <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
-              <WelcomeBanner/>
+              {!showOnboarding && <WelcomeBanner/>}
             </div>
+
+            {showOnboarding && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="مرحبًا بك">
+                <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={() => { setOnboardingSeen(); setShowOnboarding(false); }} />
+                <div className="relative w-full max-w-md rounded-2xl border p-5 shadow-lg" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)' }}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-bold" style={{ margin: 0 }}>مرحبًا بك في قيد العقار</h3>
+                      <p className="text-sm" style={{ margin: '0.5rem 0 0', color: 'var(--color-muted)' }}>ابدأ خلال دقيقة:</p>
+                    </div>
+                    <button type="button" className="text-sm" style={{ color: 'var(--color-muted)' }} aria-label="إغلاق" onClick={() => { setOnboardingSeen(); setShowOnboarding(false); }}>×</button>
+                  </div>
+
+                  <ul className="mt-4 text-sm space-y-2" style={{ paddingInlineStart: '1.2rem', margin: '1rem 0 0', color: 'var(--color-text)' }}>
+                    <li>بياناتك تُحفظ محليًا داخل المتصفح.</li>
+                    <li>ابدأ بإضافة أول حركة مالية من زر (إضافة).</li>
+                    <li>يمكنك التصدير CSV في أي وقت.</li>
+                  </ul>
+
+                  <button type="button" className="mt-4 text-sm" style={{ color: 'var(--color-primary)', textAlign: 'start' }} onClick={() => {
+                    setOnboardingSeen();
+                    setShowOnboarding(false);
+                    setPage('settings');
+                    setTimeout(() => {
+                      const el = document.querySelector('[aria-label="وضع العرض"]');
+                      if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }, 50);
+                  }}>
+                    افتح الإعدادات
+                  </button>
+
+                  <div className="mt-4 flex flex-col gap-2">
+                    <button type="button" className="btn-primary w-full" style={{ padding: '0.9rem 1rem', borderRadius: 'var(--radius)', background: 'var(--color-primary)', color: '#fff' }} onClick={() => { setOnboardingSeen(); setShowOnboarding(false); }}>
+                      ابدأ الآن
+                    </button>
+                    <button type="button" className="w-full" style={{ padding: '0.75rem 1rem', borderRadius: 'var(--radius)', border: '1px solid var(--color-border)', background: 'transparent', color: 'var(--color-muted)' }} onClick={() => { setOnboardingSeen(); setShowOnboarding(false); }}>
+                      لا تُظهر مرة أخرى
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
             <div className="print-container">{renderPage()}</div>
           <footer className="no-print border-t border-gray-100 py-3 px-4 text-center text-sm text-gray-500" role="contentinfo">
             <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>
