@@ -2888,10 +2888,4 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// ============================================
-// MOUNT
-// ============================================
-const root = 
-root.render(<ErrorBoundary><App/></ErrorBoundary>);
-
 export default App;
