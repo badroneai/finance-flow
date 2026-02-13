@@ -30,6 +30,13 @@ import {
 import { normalizeBudgets, computeBudgetHealth } from './core/ledger-budgets.js';
 
 import {
+  computeLedgerHealth,
+  computeLedgerProjection,
+  computeScenario,
+  isSeededOnly,
+} from './core/ledger-intelligence-v1.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
@@ -1831,6 +1838,12 @@ const LedgersPage = () => {
   const [paySource, setPaySource] = useState(null); // recurring item
   const [payForm, setPayForm] = useState({ type: 'expense', category: 'other', paymentMethod: 'cash', amount: '', date: '', description: '' });
 
+  // Intelligence UI (display-only; no storage)
+  const [healthHelpOpen, setHealthHelpOpen] = useState(false);
+  const [simRentPct, setSimRentPct] = useState(0);
+  const [simBillsPct, setSimBillsPct] = useState(0);
+  const [simMaintPct, setSimMaintPct] = useState(0);
+
   // Supports Arabic/Indic numerals and common separators for amount parsing.
   const normalizeNumeralsToAscii = (input) => {
     const s = String(input ?? '');
@@ -1954,6 +1967,17 @@ const LedgersPage = () => {
   const recurringDashboard = computeRecurringDashboard(activeRecurring);
   const completeness = computeLedgerCompleteness(activeRecurring);
   const recurringSections = groupRecurringBySections(activeRecurring);
+
+  const seededOnlyList = activeRecurring.filter(isSeededOnly);
+
+  const health = (() => {
+    if (!activeId) return null;
+    const all = dataStore.transactions.list();
+    const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+    return computeLedgerHealth({ recurringItems: seededOnlyList, transactions: txs });
+  })();
+
+  const projection = computeLedgerProjection({ recurringItems: seededOnlyList });
 
   const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
 
@@ -2424,6 +2448,88 @@ const LedgersPage = () => {
 
       {tab === 'recurring' && (
         <>
+          {/* Ledger Intelligence v1 */}
+          <div className="grid gap-3 md:grid-cols-3 mb-4">
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-bold text-gray-900">صحة الدفتر</h4>
+                  <p className="text-xs text-gray-500 mt-1">عرض فقط • تعتمد على البنود seeded وحركات الدفتر (meta)</p>
+                </div>
+                <span className="px-2 py-1 rounded-full text-xs border border-gray-200 bg-gray-50 text-gray-700">{health?.score ?? 0}/100</span>
+              </div>
+
+              <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة التسعير</span><span className="font-semibold text-gray-900">{health ? `${health.pricedCount}/${health.totalSeeded}` : '—'}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة الانضباط (30 يوم)</span><span className="font-semibold text-gray-900">{health ? `${Math.round((health.disciplineRatio || 0) * 100)}%` : '—'}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">مخاطر</span><span className="font-semibold text-gray-900">{health ? `High ${health.highRiskCount} • متأخر ${health.overdueCount} • قادم ${health.dueSoon14Count}` : '—'}</span></div>
+              </div>
+
+              <button type="button" onClick={() => setHealthHelpOpen(v => !v)} className="mt-3 text-xs text-blue-700 hover:underline" aria-label="كيف نحسبها؟">كيف نحسبها؟</button>
+              {healthHelpOpen ? (
+                <div className="mt-2 text-xs text-gray-600 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                  score = (التسعير×50) + (١-نسبة التأخر)×30 + (١-نسبة High-risk غير المسعّر)×20. ويتم قصّه بين 0 و100.
+                </div>
+              ) : null}
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-bold text-gray-900">توقعات السنة</h4>
+                  <p className="text-xs text-gray-500 mt-1">التوقعات تُحسب من البنود المسعّرة فقط</p>
+                </div>
+              </div>
+
+              <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">Annual Run-rate</span><span className="font-semibold text-gray-900"><Currency value={projection.annualRunRate} /></span></div>
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">الحد الأدنى</span><span className="font-semibold text-gray-900"><Currency value={projection.annualMin} /></span></div>
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">الحد الأعلى</span><span className="font-semibold text-gray-900"><Currency value={projection.annualMax} /></span></div>
+              </div>
+              <p className="mt-2 text-xs text-gray-500">(min/max تظهر فقط إذا كان للبند priceBand)</p>
+            </div>
+
+            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h4 className="font-bold text-gray-900">محاكاة سريعة</h4>
+                  <p className="text-xs text-gray-500 mt-1">لا تغيّر البيانات • حساب لحظي</p>
+                </div>
+              </div>
+
+              <div className="mt-3 flex flex-col gap-2 text-xs">
+                <div>
+                  <div className="flex items-center justify-between"><span>زيادة الإيجارات %</span><strong>{simRentPct}%</strong></div>
+                  <input type="range" min="0" max="30" value={simRentPct} onChange={(e) => setSimRentPct(Number(e.target.value))} className="w-full" aria-label="زيادة الإيجارات" />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between"><span>زيادة الفواتير %</span><strong>{simBillsPct}%</strong></div>
+                  <input type="range" min="0" max="30" value={simBillsPct} onChange={(e) => setSimBillsPct(Number(e.target.value))} className="w-full" aria-label="زيادة الفواتير" />
+                </div>
+                <div>
+                  <div className="flex items-center justify-between"><span>ضغط الصيانة %</span><strong>{simMaintPct}%</strong></div>
+                  <input type="range" min="0" max="30" value={simMaintPct} onChange={(e) => setSimMaintPct(Number(e.target.value))} className="w-full" aria-label="ضغط الصيانة" />
+                </div>
+
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <button type="button" onClick={() => { setSimRentPct(0); setSimBillsPct(0); setSimMaintPct(0); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="متفائل">متفائل</button>
+                  <button type="button" onClick={() => { setSimRentPct(8); setSimBillsPct(6); setSimMaintPct(5); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="واقعي">واقعي</button>
+                  <button type="button" onClick={() => { setSimRentPct(20); setSimBillsPct(18); setSimMaintPct(15); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="ضاغط">ضاغط</button>
+                </div>
+
+                {(() => {
+                  const scenario = computeScenario({ recurringItems: seededOnlyList, rentPct: simRentPct, billsPct: simBillsPct, maintPct: simMaintPct });
+                  return (
+                    <div className="mt-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
+                      <div className="flex items-center justify-between gap-2"><span className="text-gray-600">New Annual Forecast</span><span className="font-semibold text-gray-900"><Currency value={scenario.newAnnual} /></span></div>
+                      <div className="flex items-center justify-between gap-2 mt-1"><span className="text-gray-600">الفرق</span><span className={`font-semibold ${scenario.delta >= 0 ? 'text-red-700' : 'text-green-700'}`}>{scenario.delta >= 0 ? '+' : ''}<Currency value={scenario.delta} /></span></div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+
           {/* Ledger Operator Mode */}
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
             <div className="flex items-start justify-between gap-3">
