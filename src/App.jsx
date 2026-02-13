@@ -38,6 +38,8 @@ import {
   getBucketForRecurring,
 } from './core/ledger-reports.js';
 
+import { getTemplateForLedgerType } from './domain/ledgerTemplates.js';
+
 const getActiveLedgerIdSafe = () => {
   try { return getActiveLedgerId() || ''; } catch { return ''; }
 };
@@ -103,11 +105,23 @@ const today = () => new Date().toISOString().split('T')[0];
 
 // (month label/key moved to domain charts helpers)
 
-/** تهريب حقل CSV (RFC 4180) لتصدير العمولات */
+/** تهريب حقل CSV (RFC 4180) */
 const csvEscape = (v) => {
   const s = v == null ? '' : String(v);
   if (/[,\r\n"]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
   return s;
+};
+
+const downloadCSV = ({ filename, headers, rows }) => {
+  const BOM = '\uFEFF';
+  const all = [headers, ...rows]
+    .map(r => r.map(csvEscape).join(','))
+    .join('\n');
+  const blob = new Blob([BOM + all], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
 };
 
 // ============================================
@@ -1806,6 +1820,12 @@ const LedgersPage = () => {
   const [pricingAmount, setPricingAmount] = useState('');
   const [pricingDate, setPricingDate] = useState('');
 
+  // Saudi auto-pricing wizard v2
+  const [saPricingOpen, setSaPricingOpen] = useState(false);
+  const [saCity, setSaCity] = useState('riyadh');
+  const [saSize, setSaSize] = useState('medium');
+  const [saOnlyUnpriced, setSaOnlyUnpriced] = useState(true);
+
   // Convert-to-transaction modal
   const [payOpen, setPayOpen] = useState(false);
   const [paySource, setPaySource] = useState(null); // recurring item
@@ -2021,6 +2041,68 @@ const LedgersPage = () => {
     setPricingAmount('');
     setPricingDate(ensureDateValue(item?.nextDueDate));
     setPricingOpen(true);
+  };
+
+  const SA_CITY_FACTOR = {
+    riyadh: 1.15,
+    jeddah: 1.10,
+    dammam: 1.05,
+    qassim: 0.95,
+    other: 1.00,
+  };
+
+  const SA_SIZE_FACTOR = {
+    small: 0.85,
+    medium: 1.00,
+    large: 1.25,
+  };
+
+  const applySaudiAutoPricing = ({ city, size, onlyUnpriced }) => {
+    if (!activeId) return { ok: false, message: 'اختر دفترًا نشطًا أولًا' };
+    return applySaudiAutoPricingForLedger({ ledgerId: activeId, city, size, onlyUnpriced });
+  };
+
+  const applySaudiAutoPricingForLedger = ({ ledgerId, city, size, onlyUnpriced }) => {
+    const lid = String(ledgerId || '').trim();
+    if (!lid) return { ok: false, message: 'دفتر غير صالح' };
+
+    const cityFactor = SA_CITY_FACTOR[String(city || 'other')] ?? 1.0;
+    const sizeFactor = SA_SIZE_FACTOR[String(size || 'medium')] ?? 1.0;
+
+    const list = Array.isArray(recurring) ? recurring : [];
+    const ts = new Date().toISOString();
+
+    const next = list.map((r) => {
+      if (r.ledgerId !== lid) return r;
+
+      const seeded = isSeededRecurring(r);
+      const band = r.priceBand && typeof r.priceBand === 'object' ? r.priceBand : null;
+      const typical = band && Number.isFinite(Number(band.typical)) ? Number(band.typical) : 0;
+      if (!seeded || typical <= 0) return r;
+
+      if (onlyUnpriced && Number(r.amount) > 0) return r;
+
+      const eligible = !!r.cityFactorEligible;
+      const amount = Math.round(typical * (eligible ? cityFactor : 1.0) * sizeFactor);
+
+      const due = String(r.nextDueDate || '').trim();
+      const nextDueDate = due ? due : ensureDateValue(due);
+
+      const desiredFreq = String(r.defaultFreq || r.frequency || 'monthly').toLowerCase();
+      const freq = (desiredFreq === 'monthly' || desiredFreq === 'quarterly' || desiredFreq === 'yearly' || desiredFreq === 'adhoc') ? desiredFreq : String(r.frequency || 'monthly');
+
+      return {
+        ...r,
+        amount: amount > 0 ? amount : r.amount,
+        frequency: freq,
+        nextDueDate,
+        updatedAt: ts,
+      };
+    });
+
+    try { setRecurringItems(next); } catch { return { ok: false, message: 'تعذر تطبيق التسعير' }; }
+    setRecurringState(next);
+    return { ok: true };
   };
 
   const applyPricingToItem = (itemId, { amount, nextDueDate }) => {
@@ -2241,6 +2323,71 @@ const LedgersPage = () => {
                           </button>
                         );
                       })()}
+
+                      {(() => {
+                        const isOffice = normalizeLedgerType(l.type) === 'office';
+                        const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(r => r.ledgerId === l.id);
+                        const txs = dataStore.transactions.list();
+                        const hasTx = filterTransactionsForLedgerByMeta({ transactions: txs, ledgerId: l.id }).length > 0;
+                        const disabled = !isOffice || hasRecurring || hasTx;
+                        const title = !isOffice ? 'متاح فقط لمكتب' : (hasRecurring || hasTx) ? 'تم إعداد الديمو مسبقًا' : 'زرع نموذج مكتب كامل مع تسعير تلقائي'
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            title={title}
+                            onClick={() => {
+                              if (disabled) return;
+                              setConfirm({
+                                title: 'تفعيل نموذج مكتب كامل (Demo)',
+                                message: 'سيتم زرع التزامات المكتب وتطبيق تسعير مقترح. هل تريد المتابعة؟',
+                                confirmLabel: 'نعم، فعّل الديمو',
+                                onConfirm: () => {
+                                  try {
+                                    const list = Array.isArray(recurring) ? recurring : [];
+                                    const already = list.some(r => r.ledgerId === l.id);
+                                    const txsNow = dataStore.transactions.list();
+                                    const hasTxNow = filterTransactionsForLedgerByMeta({ transactions: txsNow, ledgerId: l.id }).length > 0;
+                                    if (already || hasTxNow) { toast('تم إعداد الديمو مسبقًا'); setConfirm(null); return; }
+
+                                    const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
+                                    const next = [...list, ...seeded];
+                                    setRecurringItems(next);
+                                    setRecurringState(next);
+
+                                    // Apply Saudi pricing preset (Riyadh + Medium)
+                                    const r = applySaudiAutoPricingForLedger({ ledgerId: l.id, city: 'riyadh', size: 'medium', onlyUnpriced: false });
+                                    if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); setConfirm(null); refresh(); return; }
+
+                                    // Optional: create 3 demo payments to populate reports
+                                    const updated = JSON.parse(localStorage.getItem('ff_recurring_items') || '[]').filter(x => x.ledgerId === l.id);
+                                    const pick = (title) => updated.find(x => String(x.title || '').includes(title));
+                                    const itemsToPay = [pick('إيجار'), pick('كهرباء'), pick('إنترنت')].filter(Boolean).slice(0,3);
+                                    for (const it of itemsToPay) {
+                                      if (Number(it.amount) <= 0) continue;
+                                      const meta = buildTxMetaFromRecurring({ activeLedgerId: l.id, recurring: it });
+                                      dataStore.transactions.create({ type: 'expense', category: 'other', amount: Number(it.amount), paymentMethod: 'cash', date: today(), description: it.title, meta });
+                                    }
+
+                                    toast('تم تفعيل الديمو بنجاح');
+                                    setConfirm(null);
+                                    refresh();
+                                  } catch {
+                                    toast('تعذر تفعيل الديمو', 'error');
+                                    setConfirm(null);
+                                  }
+                                },
+                              });
+                            }}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                            aria-label="تفعيل نموذج مكتب كامل (Demo)"
+                          >
+                            تفعيل نموذج مكتب كامل (Demo)
+                          </button>
+                        );
+                      })()}
+
                       <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
                       <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
                     </div>
@@ -2319,6 +2466,15 @@ const LedgersPage = () => {
                   إكمال التسعير
                 </button>
               ) : null}
+
+              <button
+                type="button"
+                onClick={() => setSaPricingOpen(true)}
+                className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
+                aria-label="معالج تسعير سعودي"
+              >
+                معالج تسعير سعودي
+              </button>
             </div>
 
             {/* Outlook 30/60/90 */}
@@ -2543,9 +2699,69 @@ const LedgersPage = () => {
           ) : (
             <div className="flex flex-col gap-4">
               <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-bold text-gray-900">Mini P&L</h4>
-                  <span className="text-xs text-gray-500">عدد الحركات المصنفة: {ledgerReports?.txCount || 0}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-500">عدد الحركات المصنفة: {ledgerReports?.txCount || 0}</span>
+                    <button type="button" onClick={() => {
+                      if (!activeId) return;
+                      const all = dataStore.transactions.list();
+                      const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+
+                      const now = new Date();
+                      const daysAgo = (n) => {
+                        const d = new Date(now.getTime());
+                        d.setDate(d.getDate() - n);
+                        return d;
+                      };
+                      const last30 = txs.filter(t => {
+                        const dt = new Date(String(t.date || '') + 'T00:00:00');
+                        if (Number.isNaN(dt.getTime())) return false;
+                        return dt.getTime() >= daysAgo(30).getTime();
+                      });
+                      const last365 = txs.filter(t => {
+                        const dt = new Date(String(t.date || '') + 'T00:00:00');
+                        if (Number.isNaN(dt.getTime())) return false;
+                        return dt.getTime() >= daysAgo(365).getTime();
+                      });
+
+                      const pl30 = computePL({ transactions: last30 });
+                      const pl365 = computePL({ transactions: last365 });
+
+                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'غير مصنف';
+                      const breakdown = computeTopBuckets({ transactions: txs, limit: 50 });
+
+                      const headers = ['الفترة','دخل','مصروف','صافي','Bucket','إجمالي Bucket (مصروفات فقط)'];
+                      const rows = [];
+                      rows.push(['آخر 30 يوم', pl30.income, pl30.expense, pl30.net, '', '']);
+                      rows.push(['آخر 12 شهر', pl365.income, pl365.expense, pl365.net, '', '']);
+                      rows.push(['', '', '', '', '', '']);
+                      for (const x of breakdown) rows.push(['', '', '', '', bucketName(x.bucket), x.total]);
+
+                      downloadCSV({ filename: `ledger_report_${today()}.csv`, headers, rows });
+                      toast('تم تصدير تقرير CSV');
+                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير تقرير CSV">تصدير تقرير CSV</button>
+
+                    <button type="button" onClick={() => {
+                      const list = activeRecurring;
+                      const headers = ['الالتزام','Bucket','إلزامي','خطورة','التكرار','تاريخ الاستحقاق','المبلغ'];
+                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'أخرى';
+                      const rows = list.map(r => {
+                        const bucket = getBucketForRecurring(r);
+                        return [
+                          r.title || '',
+                          bucketName(bucket),
+                          r.required ? 'نعم' : 'لا',
+                          r.riskLevel || '',
+                          r.frequency || '',
+                          r.nextDueDate || '',
+                          Number(r.amount) || 0,
+                        ];
+                      });
+                      downloadCSV({ filename: `ledger_obligations_${today()}.csv`, headers, rows });
+                      toast('تم تصدير الالتزامات CSV');
+                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير الالتزامات CSV">تصدير الالتزامات CSV</button>
+                  </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-3 mt-3">
@@ -2595,6 +2811,59 @@ const LedgersPage = () => {
           )}
         </>
       )}
+
+      {/* Saudi Auto-Pricing Wizard v2 */}
+      {saPricingOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">معالج تسعير سعودي</h3>
+                <p className="text-sm text-gray-500 mt-1">يملأ مبالغ مقترحة للعناصر seeded حسب المدينة والحجم.</p>
+              </div>
+              <button type="button" onClick={() => setSaPricingOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+                <select value={saCity} onChange={(e) => setSaCity(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="مدينة التسعير">
+                  <option value="riyadh">الرياض</option>
+                  <option value="jeddah">جدة</option>
+                  <option value="dammam">الدمام</option>
+                  <option value="qassim">القصيم</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">حجم الكيان</label>
+                <select value={saSize} onChange={(e) => setSaSize(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="حجم الكيان">
+                  <option value="small">صغير</option>
+                  <option value="medium">متوسط</option>
+                  <option value="large">كبير</option>
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={saOnlyUnpriced} onChange={(e) => setSaOnlyUnpriced(e.target.checked)} />
+                  تطبيق على العناصر غير المُسعّرة فقط
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setSaPricingOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+              <button type="button" onClick={() => {
+                const r = applySaudiAutoPricing({ city: saCity, size: saSize, onlyUnpriced: saOnlyUnpriced });
+                if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); return; }
+                toast('تم تطبيق التسعير المقترح');
+                setSaPricingOpen(false);
+                refresh();
+              }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تطبيق">تطبيق</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Quick Pricing Wizard */}
       {pricingOpen && unpricedList.length > 0 ? (
