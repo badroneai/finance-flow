@@ -4,7 +4,26 @@ import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
 
-import { filterTransactions, sumTransactions, filterCommissions, computeCommissionTotals, listAgentNames } from './domain/index.js';
+import {
+  filterTransactions,
+  sumTransactions,
+  filterCommissions,
+  computeCommissionTotals,
+  listAgentNames,
+  // Notes/Calendar domain
+  gregorianToHijri,
+  getKeyNC,
+  toArabicNumNC,
+  buildCalendarDays,
+  getEventsForDate,
+  isHoliday,
+  addDailyNote as domainAddDailyNote,
+  toggleDailyNote as domainToggleDailyNote,
+  deleteDailyNote as domainDeleteDailyNote,
+  addPinnedNote as domainAddPinnedNote,
+  deletePinnedNote as domainDeletePinnedNote,
+  updatePinnedNote as domainUpdatePinnedNote,
+} from './domain/index.js';
 
 // Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
 
@@ -2044,19 +2063,6 @@ const SettingsPage = ({ onShowOnboarding }) => {
 // ============================================
 // NOTES & CALENDAR (integrated from notes-calendar)
 // ============================================
-function gregorianToHijri(gY, gM, gD) {
-  const d = new Date(gY, gM - 1, gD);
-  const jd = Math.floor((d.getTime() - new Date(1970, 0, 1).getTime()) / 86400000) + 2440588;
-  const l = jd - 1948440 + 10632;
-  const n = Math.floor((l - 1) / 10631);
-  const ll = l - 10631 * n + 354;
-  const jj = Math.floor((10985 - ll) / 5316) * Math.floor((50 * ll) / 17719) + Math.floor(ll / 5670) * Math.floor((43 * ll) / 15238);
-  const ll2 = ll - Math.floor((30 - jj) / 15) * Math.floor((17719 * jj) / 50) - Math.floor(jj / 16) * Math.floor((15238 * jj) / 43) + 29;
-  const hM = Math.floor((24 * ll2) / 709);
-  const hD = ll2 - Math.floor((709 * hM) / 24);
-  const hY = 30 * n + jj - 30;
-  return { year: hY, month: hM, day: hD };
-}
 const HIJRI_MONTHS_NC = ["محرّم","صفر","ربيع الأول","ربيع الثاني","جمادى الأولى","جمادى الآخرة","رجب","شعبان","رمضان","شوال","ذو القعدة","ذو الحجة"];
 const GREG_MONTHS_NC = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"];
 const DAY_NAMES_NC = ["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
@@ -2076,14 +2082,7 @@ const DEFAULT_EVENTS_NC = [
   { id: "e4", title: "يوم التأسيس", category: "holiday", dateType: "gregorian", gMonth: 2, gDay: 22, duration: 1, recurring: true },
   { id: "e5", title: "بداية رمضان", category: "religious", dateType: "hijri", hMonth: 9, hDay: 1, duration: 1, recurring: true },
 ];
-function getKeyNC(y, m, d) { return `${y}-${String(m).padStart(2,"0")}-${String(d).padStart(2,"0")}`; }
-function getDaysInMonthNC(year, month) { return new Date(year, month, 0).getDate(); }
-function toArabicNumNC(n) {
-  const s = String(n);
-  // Numerals 2/3: Respect UI numerals setting for Notes/Calendar display.
-  if ((__uiNumeralsMode || 'ar') === 'en') return s;
-  return s.replace(/\d/g, d => "٠١٢٣٤٥٦٧٨٩"[d]);
-}
+// (moved to src/domain/utils.js)
 
 function NotesCalendarAddInput({ placeholder, onAdd, colors }) {
   const [text, setText] = useState("");
@@ -2299,63 +2298,19 @@ function NotesCalendar({ mode = 'calendar' }) {
   const selHijri = gregorianToHijri(selParts[0], selParts[1], selParts[2]);
   const selDayName = DAY_NAMES_NC[new Date(selParts[0], selParts[1] - 1, selParts[2]).getDay()];
 
-  const calendarDays = useMemo(() => {
-    const firstDay = new Date(currentYear, currentMonth, 1).getDay();
-    const daysInMonth = getDaysInMonthNC(currentYear, currentMonth + 1);
-    const prevDays = getDaysInMonthNC(currentYear, currentMonth);
-    const days = [];
-    for (let i = firstDay - 1; i >= 0; i--) {
-      const d = prevDays - i;
-      const m = currentMonth === 0 ? 12 : currentMonth;
-      const y = currentMonth === 0 ? currentYear - 1 : currentYear;
-      days.push({ day: d, month: m, year: y, current: false });
-    }
-    for (let d = 1; d <= daysInMonth; d++) days.push({ day: d, month: currentMonth + 1, year: currentYear, current: true });
-    const remaining = 42 - days.length;
-    for (let d = 1; d <= remaining; d++) {
-      const m = currentMonth === 11 ? 1 : currentMonth + 2;
-      const y = currentMonth === 11 ? currentYear + 1 : currentYear;
-      days.push({ day: d, month: m, year: y, current: false });
-    }
-    return days;
-  }, [currentMonth, currentYear]);
+  const calendarDays = useMemo(() => buildCalendarDays(currentYear, currentMonth), [currentMonth, currentYear]);
 
-  const getEventsForDate = useCallback((gY, gM, gD) => {
-    const h = gregorianToHijri(gY, gM, gD);
-    return events.filter(ev => {
-      if (ev.dateType === "hijri") {
-        for (let i = 0; i < (ev.duration || 1); i++) { if (h.month === ev.hMonth && h.day === ev.hDay + i) return true; }
-      } else {
-        for (let i = 0; i < (ev.duration || 1); i++) {
-          const checkDate = new Date(gY, gM - 1, gD);
-          const evDate = new Date(gY, ev.gMonth - 1, ev.gDay + i);
-          if (checkDate.getTime() === evDate.getTime()) return true;
-        }
-      }
-      return false;
-    });
-  }, [events]);
-
-  const isHoliday = useCallback((gY, gM, gD) => getEventsForDate(gY, gM, gD).some(e => e.category === "holiday" || e.category === "religious"), [getEventsForDate]);
+  const getEventsForDateLocal = useCallback((gY, gM, gD) => getEventsForDate(events, gY, gM, gD), [events]);
+  const isHolidayLocal = useCallback((gY, gM, gD) => isHoliday(getEventsForDateLocal(gY, gM, gD)), [getEventsForDateLocal]);
 
   const currentDailyNotes = dailyNotes[selectedDate] || [];
   const setCurrentDailyNotes = (notes) => { setDailyNotes(prev => ({ ...prev, [selectedDate]: notes })); };
-  const addDailyNote = (text) => {
-    const t = (text || "").trim();
-    if (!t) return;
-    setDailyNotes(prev => ({
-      ...prev,
-      [selectedDate]: [...(prev[selectedDate] || []), { id: `d${Date.now()}`, text: t, done: false, createdAt: Date.now() }]
-    }));
-  };
-  const toggleDailyNote = (id) => { setCurrentDailyNotes(currentDailyNotes.map(n => n.id === id ? { ...n, done: !n.done } : n)); };
-  const deleteDailyNote = (id) => { setCurrentDailyNotes(currentDailyNotes.filter(n => n.id !== id)); };
-  const addPinnedNote = (text, color) => {
-    if (!text.trim()) return;
-    setPinnedNotes(prev => [...prev, { id: `p${Date.now()}`, text, color: color || "rgba(15,28,46,0.06)", createdAt: Date.now() }]);
-  };
-  const deletePinnedNote = (id) => { setPinnedNotes(prev => prev.filter(n => n.id !== id)); };
-  const updatePinnedNote = (id, text) => { setPinnedNotes(prev => prev.map(n => n.id === id ? { ...n, text } : n)); };
+  const addDailyNote = (text) => { setDailyNotes(prev => domainAddDailyNote(prev, selectedDate, text)); };
+  const toggleDailyNote = (id) => { setCurrentDailyNotes(domainToggleDailyNote(currentDailyNotes, id)); };
+  const deleteDailyNote = (id) => { setCurrentDailyNotes(domainDeleteDailyNote(currentDailyNotes, id)); };
+  const addPinnedNote = (text, color) => { setPinnedNotes(prev => domainAddPinnedNote(prev, text, color, "rgba(15,28,46,0.06)")); };
+  const deletePinnedNote = (id) => { setPinnedNotes(prev => domainDeletePinnedNote(prev, id)); };
+  const updatePinnedNote = (id, text) => { setPinnedNotes(prev => domainUpdatePinnedNote(prev, id, text)); };
 
   const prevMonth = () => { if (currentMonth === 0) { setCurrentMonth(11); setCurrentYear(y => y - 1); } else setCurrentMonth(m => m - 1); };
   const nextMonth = () => { if (currentMonth === 11) { setCurrentMonth(0); setCurrentYear(y => y + 1); } else setCurrentMonth(m => m + 1); };
@@ -2398,8 +2353,8 @@ function NotesCalendar({ mode = 'calendar' }) {
                 const isToday = key === todayKey;
                 const isSelected = key === selectedDate;
                 const hijri = gregorianToHijri(item.year, item.month, item.day);
-                const dayEvents = getEventsForDate(item.year, item.month, item.day);
-                const holiday = isHoliday(item.year, item.month, item.day);
+                const dayEvents = getEventsForDateLocal(item.year, item.month, item.day);
+                const holiday = isHolidayLocal(item.year, item.month, item.day);
                 const hasTasks = dailyNotes[key]?.length > 0;
                 const hasPendingTasks = dailyNotes[key]?.some(n => !n.done);
                 const dayOfWeek = new Date(item.year, item.month - 1, item.day).getDay();
@@ -2439,7 +2394,7 @@ function NotesCalendar({ mode = 'calendar' }) {
             </div>
           </div>
           {(() => {
-            const evs = getEventsForDate(selParts[0], selParts[1], selParts[2]);
+            const evs = getEventsForDateLocal(selParts[0], selParts[1], selParts[2]);
             if (evs.length === 0) return null;
             return (
               <div style={{ marginTop: 12, background: colors.card, borderRadius: 14, border: `1px solid ${colors.border}`, padding: 16 }}>
