@@ -1056,6 +1056,27 @@ const NAV_ITEMS = [
 ];
 
 const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen, onOpenHelp }) => {
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpenSections, setMobileOpenSections] = useState({ finance:false, org:false });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const apply = () => setIsMobile(!!mq.matches);
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else mq.addListener(apply);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', apply);
+      else mq.removeListener(apply);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Default: collapsed on mobile whenever the mobile sidebar opens
+    if (isMobile && mobileOpen) setMobileOpenSections({ finance:false, org:false });
+  }, [isMobile, mobileOpen]);
+
   const handleNav = (id) => {
     if (id === 'help') { typeof onOpenHelp === 'function' && onOpenHelp(); setMobileOpen(false); return; }
     setPage(id === 'home' ? 'dashboard' : id);
@@ -1103,10 +1124,34 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
           const renderSection = (section) => {
             const items = visible.filter(i => i.section === section.id);
             if (!items.length) return null;
+
+            const isAccordion = isMobile && (section.id === 'finance' || section.id === 'org');
+            const isOpen = section.id === 'finance' ? mobileOpenSections.finance : section.id === 'org' ? mobileOpenSections.org : true;
+            const controlsId = `sidebar-section-${section.id}`;
+
             return (
               <div key={section.id} className="mb-2">
-                {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium tracking-wider">{section.title}</p>}
-                {items.map(renderItem)}
+                {!collapsed && !isAccordion && (
+                  <p className="px-3 py-1 text-xs text-gray-500 font-medium tracking-wider">{section.title}</p>
+                )}
+
+                {!collapsed && isAccordion && (
+                  <button
+                    type="button"
+                    aria-label={section.title}
+                    aria-expanded={!!isOpen}
+                    aria-controls={controlsId}
+                    onClick={() => setMobileOpenSections(s => ({ ...s, [section.id]: !isOpen }))}
+                    className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-xs text-gray-400 hover:bg-gray-700/40 hover:text-gray-200"
+                  >
+                    <span className="font-medium tracking-wider">{section.title}</span>
+                    <Icons.chevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}/>
+                  </button>
+                )}
+
+                <div id={controlsId} hidden={isAccordion ? !isOpen : false}>
+                  {items.map(renderItem)}
+                </div>
               </div>
             );
           };
