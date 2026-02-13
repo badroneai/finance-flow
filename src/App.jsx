@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } from 'react';
 
+import { STORAGE_KEYS } from '../assets/js/core/keys.js';
+import { storage } from '../assets/js/core/storage.js';
+
 // ============================================
 // TYPES
 // ============================================
@@ -462,7 +465,7 @@ const SarSymbol = ({ className = 'w-4 h-4', title = 'ريال سعودي' }) => 
 
 const Currency = ({ value, className = '', symbolClassName = 'w-4 h-4' }) => (
   <span className={`inline-flex items-center gap-1 ${className}`}>
-    <span>{QA.formatters.formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
+    <span>{formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}</span>
     <SarSymbol className={symbolClassName} />
   </span>
 );
@@ -470,7 +473,7 @@ const Currency = ({ value, className = '', symbolClassName = 'w-4 h-4' }) => (
 const formatPercent = (value) => `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
 
 // Backward alias for chart/tooltip where raw number string is needed
-const formatNum = (n) => QA.formatters.formatNumber(n, { maximumFractionDigits: 2 });
+const formatNum = (n) => formatNumber(n, { maximumFractionDigits: 2 });
 
 // ============================================
 // DATE FORMATTER (Phase 7.3 — Gregorian + Hijri, respects ui_numerals)
@@ -1431,8 +1434,8 @@ const CommissionsPage = () => {
                     </td>
                     <td className="px-4 py-3 font-semibold text-gray-900"><Currency value={c.dealValue} symbolClassName="w-3.5 h-3.5" /></td>
                     <td className="px-4 py-3">
-                      <div className="text-xs">مكتب: {QA.formatters.formatPercent(c.officePercent)}</div>
-                      <div className="text-xs">وكيل: {QA.formatters.formatPercent(c.agentPercent)}</div>
+                      <div className="text-xs">مكتب: {formatPercent(c.officePercent)}</div>
+                      <div className="text-xs">وكيل: {formatPercent(c.agentPercent)}</div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="text-xs text-blue-600 font-medium"><Currency value={officeAmt} symbolClassName="w-3 h-3" /></div>
@@ -1800,9 +1803,9 @@ const SettingsPage = ({ onShowOnboarding }) => {
       title: 'حذف جميع البيانات',
       message: 'سيتم حذف جميع البيانات المحفوظة:',
       messageList: [
-        `جميع الحركات المالية (${QA.formatters.formatNumber(txCount, { maximumFractionDigits: 0 })})`,
-        `جميع العمولات (${QA.formatters.formatNumber(cmCount, { maximumFractionDigits: 0 })})`,
-        `جميع المسودات (${QA.formatters.formatNumber(draftCount, { maximumFractionDigits: 0 })})`,
+        `جميع الحركات المالية (${formatNumber(txCount, { maximumFractionDigits: 0 })})`,
+        `جميع العمولات (${formatNumber(cmCount, { maximumFractionDigits: 0 })})`,
+        `جميع المسودات (${formatNumber(draftCount, { maximumFractionDigits: 0 })})`,
         'جميع الإعدادات'
       ],
       dangerText: 'لا يمكن التراجع عن هذا الإجراء.',
@@ -1910,7 +1913,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
 
       setConfirm({
         title: 'استعادة نسخة احتياطية',
-        message: `سيتم استبدال البيانات الحالية (${QA.formatters.formatNumber(changeCount, { maximumFractionDigits: 0 })} مفاتيح). هل أنت متأكد؟`,
+        message: `سيتم استبدال البيانات الحالية (${formatNumber(changeCount, { maximumFractionDigits: 0 })} مفاتيح). هل أنت متأكد؟`,
         danger: true,
         confirmLabel: 'نعم، استبدل البيانات',
         onConfirm: () => {

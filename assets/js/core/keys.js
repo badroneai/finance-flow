@@ -22,8 +22,3 @@ export const STORAGE_KEYS = {
   UI_ONBOARDING: 'ui_onboarding_seen',
   UI_WELCOME: 'hasSeenWelcomeBanner',
 };
-
-// Make available to the existing single-file app (no module refactor yet)
-if (typeof window !== 'undefined') {
-  window.STORAGE_KEYS = window.STORAGE_KEYS || STORAGE_KEYS;
-}

@@ -50,12 +50,6 @@ tailwind.config = {
 <body class="bg-gray-50 text-gray-900 font-sans" data-theme="light">
 <div id="root"></div>
 
-<!-- Stage 2.1 (ESM, core only): load storage keys module early and expose the exact same global for legacy consumers -->
-<script type="module">
-  import { STORAGE_KEYS } from '/assets/js/core/keys.js';
-  // One usage only: keep the existing global contract (no behavior change)
-  window.STORAGE_KEYS = window.STORAGE_KEYS || STORAGE_KEYS;
-</script>
 
 <script type="module" src="/src/main.jsx"></script>
 <style id="phase-6b-tokens">
