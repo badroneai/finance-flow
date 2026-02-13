@@ -41,6 +41,8 @@ import {
   buildLast6MonthsIncomeExpenseChart,
 } from './domain/index.js';
 
+import { checkStorageQuota } from './core/storage-quota.js';
+
 // Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
 
 
@@ -289,18 +291,7 @@ const detectPrivateBrowsing = () => {
   }
 };
 
-/** Phase 9.3: فحص امتلاء التخزين (يُرجع true إذا كان هناك مساحة) */
-const checkStorageQuota = () => {
-  try {
-    const test = new Array(1024 * 512).join('a');
-    storageFacade.setRaw('_ff_quota_test', test);
-    storageFacade.removeRaw('_ff_quota_test');
-    return true;
-  } catch (e) {
-    if (e && (e.name === 'QuotaExceededError' || e.code === 22)) return false;
-    return true;
-  }
-};
+// (moved to src/core/storage-quota.js)
 
 /** للاختبار فقط: ضع true لتمثيل فشل الكتابة ثم أعد false قبل التسليم */
 const SIMULATE_STORAGE_FAILURE = false;
@@ -684,7 +675,7 @@ const TrustChecks = () => {
     if (detectPrivateBrowsing()) {
       toast('البيانات تُحفظ على هذا الجهاز فقط. في وضع التصفح الخاص قد تُفقد عند إغلاق المتصفح. للحفاظ عليها استخدم التصفح العادي.', 'warning');
     }
-    if (!checkStorageQuota()) {
+    if (!checkStorageQuota(storageFacade)) {
       toast('مساحة التخزين قريبة من الامتلاء. يُنصح بتصدير نسخة احتياطية أو حذف بعض البيانات.', 'warning');
     }
   }, [toast]);
