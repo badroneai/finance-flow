@@ -1978,11 +1978,26 @@ const LedgersPage = () => {
 
   const seededOnlyList = activeRecurring.filter(isSeededOnly);
 
+  const ledgerTxs = (() => {
+    if (!activeId) return [];
+    const all = dataStore.transactions.list();
+    return filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+  })();
+
   const health = (() => {
     if (!activeId) return null;
-    const all = dataStore.transactions.list();
-    const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
-    return computeLedgerHealth({ recurringItems: seededOnlyList, transactions: txs });
+    return computeLedgerHealth({ recurringItems: seededOnlyList, transactions: ledgerTxs });
+  })();
+
+  const brain = (() => {
+    if (!activeId) return null;
+    const ctx = { recurringItems: Array.isArray(recurring) ? recurring : [], transactions: ledgerTxs };
+    const burn = calculateBurnRateBundle(activeId, ctx);
+    const pressure = calculateCashPressureScore(activeId, ctx);
+    const risk90 = calculateNext90DayRisk(activeId, ctx);
+    const trend = calculateDisciplineTrend(activeId, ctx);
+    const cluster = detectHighRiskCluster(activeId, ctx);
+    return { burn, pressure, risk90, trend, cluster };
   })();
 
   const projection = computeLedgerProjection({ recurringItems: seededOnlyList });
@@ -2456,6 +2471,73 @@ const LedgersPage = () => {
 
       {tab === 'recurring' && (
         <>
+          {/* Ledger Brain Dashboard */}
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <div>
+                <h4 className="font-bold text-gray-900">🧠 لوحة الذكاء المالي</h4>
+                <p className="text-xs text-gray-500 mt-1">عرض فقط • بدون أي تغيير على البيانات</p>
+              </div>
+            </div>
+
+            <div className="mt-3 grid gap-3 md:grid-cols-4">
+              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                <div className="text-xs text-gray-500">Burn Rate</div>
+                <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.burn?.monthly || 0} /> / شهر</div>
+                <div className="mt-1 text-xs text-gray-600">90 يوم: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.d90 || 0} /></span></div>
+                <div className="text-xs text-gray-600">سنة: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.yearly || 0} /></span></div>
+              </div>
+
+              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-gray-500">ضغط السيولة</div>
+                  <span className="text-xs font-semibold text-gray-900">{brain?.pressure?.score ?? 0}/100</span>
+                </div>
+                <div className="mt-2 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط ضغط السيولة">
+                  <div className={`h-full ${Number(brain?.pressure?.score||0) >= 70 ? 'bg-red-600' : Number(brain?.pressure?.score||0) >= 40 ? 'bg-amber-500' : 'bg-green-600'}`} style={{ width: `${Math.min(100, Number(brain?.pressure?.score||0))}%` }} />
+                </div>
+                <div className="mt-2 text-xs text-gray-700">{brain?.pressure?.band || '—'}</div>
+              </div>
+
+              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                <div className="flex items-center justify-between">
+                  <div className="text-xs text-gray-500">مخاطر 90 يوم</div>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border ${brain?.risk90?.level === 'critical' ? 'border-red-100 bg-red-50 text-red-700' : brain?.risk90?.level === 'high' ? 'border-amber-100 bg-amber-50 text-amber-800' : brain?.risk90?.level === 'medium' ? 'border-blue-100 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}>{brain?.risk90?.label || '—'}</span>
+                </div>
+                <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.risk90?.due90Total || 0} /></div>
+                <div className="mt-1 text-xs text-gray-600">عدد البنود: <span className="font-semibold text-gray-900">{brain?.risk90?.due90Count ?? 0}</span></div>
+              </div>
+
+              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                <div className="text-xs text-gray-500">الاتجاه التشغيلي</div>
+                <div className="mt-1 flex items-center gap-2">
+                  <span className="text-sm font-semibold text-gray-900">{brain?.trend?.trend || '—'}</span>
+                  <span className="text-sm text-gray-500">{brain?.trend?.trend === 'يتحسن' ? '↑' : brain?.trend?.trend === 'يتراجع' ? '↓' : '→'}</span>
+                </div>
+                <div className="mt-1 text-xs text-gray-600">60 يوم: دفعات <span className="font-semibold text-gray-900">{brain?.trend?.paid60 ?? 0}</span> / مستحق <span className="font-semibold text-gray-900">{brain?.trend?.due60 ?? 0}</span></div>
+              </div>
+            </div>
+
+            {(() => {
+              const pressure = Number(brain?.pressure?.score || 0);
+              const unpricedRatio = Number(brain?.pressure?.unpricedRatio || 0);
+              const show = (brain?.cluster === true) || pressure > 70 || unpricedRatio > 0.40;
+              if (!show) return null;
+              return (
+                <div className="mt-3 p-3 rounded-xl border border-amber-100 bg-amber-50">
+                  <div className="font-semibold text-amber-900 text-sm">⚠️ تنبيه تشغيلي</div>
+                  <div className="text-xs text-amber-900 mt-1">دفتر معرض لمخاطر تشغيلية خلال 90 يوم. (ضغط السيولة/تأخر/High-risk/عدم تسعير)</div>
+                  <div className="mt-2">
+                    <button type="button" onClick={() => {
+                      const el = document.querySelector('[data-critical="1"], [data-overdue="1"]');
+                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }} className="px-3 py-2 rounded-lg bg-white border border-amber-200 text-amber-900 text-sm font-medium hover:bg-amber-100" aria-label="انتقل للبنود الحرجة">انتقل للبنود الحرجة</button>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+
           {/* Ledger Intelligence v1 */}
           <div className="grid gap-3 md:grid-cols-3 mb-4">
             <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
@@ -2825,7 +2907,14 @@ const LedgersPage = () => {
 
                         <div className="divide-y divide-gray-100">
                           {list.map((r) => (
-                            <div key={r.id} id={`rec-${r.id}`} data-overdue={isPastDue(r) ? '1' : '0'} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div
+                              key={r.id}
+                              id={`rec-${r.id}`}
+                              data-overdue={isPastDue(r) ? '1' : '0'}
+                              data-highrisk={normalizeRecurringRisk(r.riskLevel) === 'high' ? '1' : '0'}
+                              data-critical={(normalizeRecurringRisk(r.riskLevel) === 'high' && (isPastDue(r) || Number(r.amount) === 0)) ? '1' : '0'}
+                              className="p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                            >
                               <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
                                   <span className="truncate">{r.title}</span>
