@@ -1033,20 +1033,53 @@ const Badge = ({ children, color='blue' }) => {
 // NAVIGATION
 // ============================================
 const NAV_ITEMS = [
-  { id:'home', label:'الرئيسية', icon:Icons.home },
-  { id:'transactions', label:'الحركات المالية', icon:Icons.list, group:'finance' },
-  { id:'commissions', label:'العمولات', icon:Icons.percent, group:'finance' },
-  { id:'templates', label:'قوالب الخطابات', icon:Icons.mail, group:'letters' },
-  { id:'generator', label:'إنشاء خطاب', icon:Icons.fileText, group:'letters' },
-  { id:'drafts', label:'المسودات', icon:Icons.fileText, group:'letters' },
-  { id:'calendar', label:'التقويم', icon:Icons.calendar, group:'notes' },
-  { id:'notes', label:'الملاحظات', icon:Icons.notes, group:'notes' },
-  { id:'help', label:'دليل سريع', icon:Icons.info },
+  // 🏠 لوحة التحكم (عنصر مستقل)
+  { id:'home', label:'لوحة التحكم', icon:Icons.dashboard },
+
+  // 💰 المالية (Accordion للجوال)
+  { id:'transactions', label:'الحركات المالية', icon:Icons.list, section:'finance' },
+  { id:'commissions', label:'العمولات', icon:Icons.percent, section:'finance' },
+
+  // ✉️ الخطابات (عنصر مستقل)
+  { id:'templates', label:'الخطابات', icon:Icons.mail },
+  // صفحات الخطابات الأخرى تبقى موجودة لكن تُخفى من القائمة الجانبية حسب المطلوب
+  { id:'generator', label:'إنشاء خطاب', icon:Icons.fileText, hiddenInSidebar:true },
+  { id:'drafts', label:'المسودات', icon:Icons.fileText, hiddenInSidebar:true },
+
+  // 🗓️ التنظيم (Accordion للجوال)
+  { id:'calendar', label:'التقويم', icon:Icons.calendar, section:'org' },
+  { id:'notes', label:'الملاحظات', icon:Icons.notes, section:'org' },
+
+  // ❓ الدليل السريع (عنصر مستقل)
+  { id:'help', label:'الدليل السريع', icon:Icons.info },
+
+  // ⚙️ الإعدادات (عنصر مستقل)
   { id:'settings', label:'الإعدادات', icon:Icons.settings },
 ];
 
 const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen, onOpenHelp }) => {
-  const groups = { finance: 'التدفقات المالية', letters: 'الخطابات', notes: 'الملاحظات والتقويم' };
+  const [isMobile, setIsMobile] = useState(false);
+  const [mobileOpenSections, setMobileOpenSections] = useState({ finance:false, org:false });
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const apply = () => setIsMobile(!!mq.matches);
+    apply();
+    if (mq.addEventListener) mq.addEventListener('change', apply);
+    else mq.addListener(apply);
+    return () => {
+      if (mq.removeEventListener) mq.removeEventListener('change', apply);
+      else mq.removeListener(apply);
+    };
+  }, []);
+
+  useEffect(() => {
+    // Default: collapsed whenever the mobile sidebar overlay opens
+    // (mobileOpen is only used for the md:hidden mobile overlay)
+    if (mobileOpen) setMobileOpenSections({ finance:false, org:false });
+  }, [mobileOpen]);
+
   const handleNav = (id) => {
     if (id === 'help') { typeof onOpenHelp === 'function' && onOpenHelp(); setMobileOpen(false); return; }
     setPage(id === 'home' ? 'dashboard' : id);
@@ -1065,42 +1098,80 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
               <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5"/>
             </svg>
           </div>
-          {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1><p className="text-gray-400 text-xs">نظام التدفقات المالية</p></div>}
+          {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1></div>}
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="القائمة الرئيسية">
-        {NAV_ITEMS.filter(i => !i.group && i.id === 'home').map(item => (
-          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-              (page === item.id || (item.id === 'home' && page === 'dashboard')) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-            } ${collapsed ? 'justify-center' : ''}`}>
-            <item.icon size={18}/>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
-        {Object.entries(groups).map(([key, label]) => (
-          <div key={key} className="mb-2">
-            {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium uppercase tracking-wider">{label}</p>}
-            {NAV_ITEMS.filter(i => i.group === key).map(item => (
+        {(() => {
+          const visible = NAV_ITEMS.filter(i => !i.hiddenInSidebar);
+          const byId = (id) => visible.find(i => i.id === id);
+
+          const homeItem = byId('home');
+          const financeItems = visible.filter(i => i.section === 'finance');
+          const orgItems = visible.filter(i => i.section === 'org');
+          const lettersItem = byId('templates');
+          const helpItem = byId('help');
+          const settingsItem = byId('settings');
+
+          const renderItem = (item) => {
+            if (!item) return null;
+            return (
               <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
                 className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-                  page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
+                  (item.id === 'home' ? (page === 'dashboard' || page === 'home') : page === item.id) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
                 } ${collapsed ? 'justify-center' : ''}`}>
                 <item.icon size={18}/>
                 {!collapsed && <span>{item.label}</span>}
               </button>
-            ))}
-          </div>
-        ))}
-        {NAV_ITEMS.filter(i => !i.group && i.id !== 'home').map(item => (
-          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-              page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-            } ${collapsed ? 'justify-center' : ''}`}>
-            <item.icon size={18}/>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
+            );
+          };
+
+          const renderAccordion = (id, title, items) => {
+            // Mobile accordion is controlled by the mobile overlay (mobileOpen) to avoid
+            // relying on matchMedia timing.
+            const isAccordion = (id === 'finance' || id === 'org') && (mobileOpen || isMobile);
+            const isOpen = id === 'finance' ? mobileOpenSections.finance : id === 'org' ? mobileOpenSections.org : true;
+            const controlsId = `sidebar-section-${id}`;
+            return (
+              <div key={id} className="mb-2">
+                {!collapsed && isAccordion && (
+                  <button
+                    type="button"
+                    aria-label={title}
+                    aria-expanded={!!isOpen}
+                    aria-controls={controlsId}
+                    onClick={() => setMobileOpenSections(s => ({ ...s, [id]: !isOpen }))}
+                    className="w-full flex items-center justify-between gap-3 px-3 py-2 rounded-lg text-xs text-gray-400 hover:bg-gray-700/40 hover:text-gray-200"
+                  >
+                    <span className="font-medium tracking-wider">{title}</span>
+                    <Icons.chevronDown size={16} className={`transition-transform ${isOpen ? 'rotate-180' : ''}`}/>
+                  </button>
+                )}
+
+                {!collapsed && !isAccordion && (
+                  <p className="px-3 py-1 text-xs text-gray-500 font-medium tracking-wider">{title}</p>
+                )}
+
+                <div id={controlsId} hidden={isAccordion ? !isOpen : false}>
+                  {items.map(renderItem)}
+                </div>
+              </div>
+            );
+          };
+
+          return (
+            <>
+              {renderItem(homeItem)}
+              <div className="my-2 border-t border-gray-700/50" aria-hidden="true"/>
+              {renderAccordion('finance', '💰 المالية', financeItems)}
+              {renderItem(lettersItem)}
+              {renderAccordion('org', '🗓️ التنظيم', orgItems)}
+              <div className="my-2 border-t border-gray-700/50" aria-hidden="true"/>
+              {renderItem(helpItem)}
+              {renderItem(settingsItem)}
+            </>
+          );
+        })()}
       </nav>
     </div>
   );
