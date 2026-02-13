@@ -23,6 +23,15 @@ import {
   addPinnedNote as domainAddPinnedNote,
   deletePinnedNote as domainDeletePinnedNote,
   updatePinnedNote as domainUpdatePinnedNote,
+
+  // Letters/Templates/Drafts domain
+  DEFAULT_BODIES,
+  TEMPLATES,
+  FIELD_LABELS,
+  getTemplateByType,
+  buildInitialFields,
+  validateLetterFields,
+  formatDraftDate,
 } from './domain/index.js';
 
 // Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
@@ -1549,26 +1558,7 @@ const CommissionForm = ({ initial, onSave, onCancel, defaultPercent }) => {
 // ============================================
 // LETTERS TEMPLATES PAGE
 // ============================================
-/** نصوص خطاب كاملة افتراضية لكل قالب (مثل قالب مخاطبة جهة) */
-const DEFAULT_BODIES = {
-  intro: 'يسعدنا أن نعرّف بأنفسنا كمكتب عقاري معتمد، ونقدّم خدماتنا في مجال التسويق وإدارة العقارات والاستشارات. نتطلع إلى التعاون معكم وخدمتكم بأفضل ما لدينا، مع ضمان الجدية والسرية في التعامل.',
-  request: '',
-  delegation: 'نفيدكم بأنه قد تم تفويض السيد/ة ________ صاحب/ة الهوية رقم ________ للقيام بـ ________ نيابة عن هذا المكتب. وهذا التفويض ساري المفعول من تاريخه حتى إشعار آخر.',
-};
-
-const TEMPLATES = [
-  { type:'intro', title:'خطاب تعريف بالمكتب', desc:'تعريف رسمي بالمكتب العقاري وخدماته', fields:['officeName','recipientName','recipientOrg','body','date','managerName'] },
-  { type:'request', title:'خطاب مخاطبة جهة', desc:'مخاطبة رسمية لجهة حكومية أو خاصة', fields:['officeName','recipientOrg','subject','body','date','managerName'] },
-  { type:'delegation', title:'خطاب تفويض', desc:'تفويض مندوب لتمثيل المكتب', fields:['officeName','delegateName','delegateId','purpose','body','date','managerName'] },
-];
-
-const FIELD_LABELS = {
-  officeName:'اسم المكتب', recipientName:'اسم المستلم', recipientOrg:'الجهة المستلمة', date:'التاريخ',
-  managerName:'اسم المدير', subject:'الموضوع', body:'نص الخطاب', delegateName:'اسم المفوَّض', delegateId:'رقم الهوية', purpose:'الغرض من التفويض'
-};
-
-/** تنسيق التاريخ للمسودات والقوالب: ميلادي + هجري (يتبع إعداد numerals) */
-const formatDateArabic = (dateStr) => (dateStr ? formatDateHeader(dateStr) : '');
+// (moved to src/domain/{letterTemplates.js, drafts.js})
 
 const TemplatesPage = ({ setPage, setLetterType }) => (
   <div className="p-4 md:p-6 max-w-4xl mx-auto">
@@ -1592,36 +1582,17 @@ const TemplatesPage = ({ setPage, setLetterType }) => (
 // ============================================
 const GeneratorPage = ({ letterType, setLetterType }) => {
   const toast = useToast();
-  const template = TEMPLATES.find(t => t.type === letterType) || TEMPLATES[0];
+  const template = getTemplateByType(letterType);
   const settings = dataStore.settings.get();
-  const [fields, setFields] = useState(() => {
-    const f = {};
-    template.fields.forEach(k => {
-      if (k === 'officeName') f[k] = settings.officeName;
-      else if (k === 'date') f[k] = today();
-      else if (k === 'body') f[k] = DEFAULT_BODIES[template.type] ?? '';
-      else f[k] = '';
-    });
-    return f;
-  });
+  const [fields, setFields] = useState(() => buildInitialFields(template, { officeName: settings.officeName, today: today() }));
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const f = {};
-    template.fields.forEach(k => {
-      if (k === 'officeName') f[k] = settings.officeName;
-      else if (k === 'date') f[k] = today();
-      else if (k === 'body') f[k] = DEFAULT_BODIES[template.type] ?? '';
-      else f[k] = '';
-    });
-    setFields(f);
+    setFields(buildInitialFields(template, { officeName: settings.officeName, today: today() }));
   }, [letterType]);
 
   const validate = () => {
-    const errs = {};
-    template.fields.forEach(k => {
-      if (!fields[k]?.trim()) errs[k] = `${FIELD_LABELS[k]} مطلوب`;
-    });
+    const errs = validateLetterFields(template, fields, FIELD_LABELS);
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -1755,7 +1726,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
               <div className="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center mb-4 text-blue-600"><Icons.fileText size={20}/></div>
               <h3 className="font-bold text-gray-900 mb-1">{LETTER_TYPES[d.templateType]}</h3>
               <p className="text-sm text-gray-500 mb-2">{d.fields?.officeName || ''} — {d.fields?.recipientOrg || d.fields?.recipientName || d.fields?.delegateName || ''}</p>
-              <p className="text-sm text-gray-500 mb-4">{formatDateArabic(d.updatedAt)}</p>
+              <p className="text-sm text-gray-500 mb-4">{formatDraftDate(d.updatedAt, formatDateHeader)}</p>
               <button onClick={() => handleEdit(d)} className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="فتح المسودة">فتح المسودة</button>
             </div>
           ))}
