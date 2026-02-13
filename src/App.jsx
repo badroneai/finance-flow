@@ -3,7 +3,14 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, createContext
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
-import { getLedgers, setLedgers, getActiveLedgerId, setActiveLedgerId } from './core/ledger-store.js';
+import {
+  getLedgers,
+  setLedgers,
+  getActiveLedgerId,
+  setActiveLedgerId,
+  getRecurringItems,
+  setRecurringItems,
+} from './core/ledger-store.js';
 
 import {
   filterTransactions,
@@ -1685,16 +1692,25 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 // ============================================
 const LedgersPage = () => {
   const toast = useToast();
+  const [tab, setTab] = useState('ledgers'); // ledgers | recurring
+
   const [ledgers, setLedgersState] = useState([]);
   const [activeId, setActiveIdState] = useState('');
 
+  // Ledgers CRUD
   const [newName, setNewName] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
 
+  // Recurring items CRUD (linked by active ledger id)
+  const [recurring, setRecurringState] = useState([]);
+  const [recForm, setRecForm] = useState({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
+  const [recEditingId, setRecEditingId] = useState(null);
+
   const refresh = useCallback(() => {
     try { setLedgersState(getLedgers()); } catch { setLedgersState([]); }
     try { setActiveIdState(getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
+    try { setRecurringState(getRecurringItems() || []); } catch { setRecurringState([]); }
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
@@ -1703,7 +1719,6 @@ const LedgersPage = () => {
     const t = (name || '').trim();
     if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
 
-    // Minimal entity for v1 (no schema changes beyond PR-1 spec)
     const ts = new Date().toISOString();
     const id = (() => {
       try { if (crypto && typeof crypto.randomUUID === 'function') return `ledg_${crypto.randomUUID()}`; } catch {}
@@ -1755,55 +1770,198 @@ const LedgersPage = () => {
     refresh();
   };
 
+  const activeLedger = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === activeId) || null;
+  const activeRecurring = (Array.isArray(recurring) ? recurring : []).filter(r => r.ledgerId === activeId);
+
+  const resetRecForm = () => setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
+
+  const startEditRecurring = (item) => {
+    setRecEditingId(item.id);
+    setRecForm({
+      title: item.title || '',
+      amount: String(item.amount ?? ''),
+      frequency: item.frequency || 'monthly',
+      nextDueDate: item.nextDueDate || '',
+      notes: item.notes || '',
+    });
+  };
+
+  const saveRecurring = () => {
+    if (!activeId) { toast('اختر دفترًا نشطًا أولًا', 'error'); return; }
+
+    const title = (recForm.title || '').trim();
+    if (!title) { toast('اسم الالتزام مطلوب', 'error'); return; }
+
+    const amount = Number(recForm.amount);
+    if (Number.isNaN(amount)) { toast('المبلغ غير صحيح', 'error'); return; }
+
+    const freq = (recForm.frequency === 'monthly' || recForm.frequency === 'quarterly' || recForm.frequency === 'yearly') ? recForm.frequency : 'monthly';
+    const nextDueDate = String(recForm.nextDueDate || '').trim();
+    if (!nextDueDate) { toast('تاريخ الاستحقاق القادم مطلوب', 'error'); return; }
+
+    const ts = new Date().toISOString();
+    const id = recEditingId || (() => {
+      try { if (crypto && typeof crypto.randomUUID === 'function') return `rec_${crypto.randomUUID()}`; } catch {}
+      return `rec_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+    })();
+
+    const next = (() => {
+      const list = Array.isArray(recurring) ? recurring : [];
+      if (!recEditingId) {
+        return [...list, { id, ledgerId: activeId, title, category: 'rent', amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), createdAt: ts, updatedAt: ts }];
+      }
+      return list.map(r => (r.id === recEditingId ? { ...r, title, amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), updatedAt: ts } : r));
+    })();
+
+    try { setRecurringItems(next); } catch { toast('تعذر حفظ الالتزام', 'error'); return; }
+
+    toast(recEditingId ? 'تم تحديث الالتزام' : 'تمت إضافة الالتزام');
+    setRecEditingId(null);
+    resetRecForm();
+    refresh();
+  };
+
+  const deleteRecurring = (id) => {
+    const next = (Array.isArray(recurring) ? recurring : []).filter(r => r.id !== id);
+    try { setRecurringItems(next); } catch { toast('تعذر حذف الالتزام', 'error'); return; }
+    toast('تم حذف الالتزام');
+    refresh();
+  };
+
   return (
     <div className="p-4 md:p-6 max-w-5xl mx-auto">
       <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
         <h3 className="font-bold text-gray-900 mb-1">الدفاتر</h3>
         <p className="text-sm text-gray-500">أنشئ عدة دفاتر لإدارة أكثر من جهة/مكتب (النسخة الحالية تبدأ بدفتر افتراضي).</p>
-      </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-1">اسم الدفتر الجديد</label>
-            <input value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
-          </div>
-          <button type="button" onClick={() => createLedger(newName)} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
+        <div className="flex gap-2 mt-4">
+          <button type="button" onClick={() => setTab('ledgers')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'ledgers' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label="دفاتر">دفاتر</button>
+          <button type="button" onClick={() => setTab('recurring')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'recurring' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label="التزامات متكررة">التزامات متكررة</button>
         </div>
       </div>
 
-      {(!ledgers || ledgers.length === 0) ? (
-        <EmptyState message="لا توجد دفاتر" />
-      ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {ledgers.filter(l => !l.archived).map((l) => (
-            <div key={l.id} className={`bg-white rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-gray-100'}`}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="min-w-0">
-                  <h4 className="font-bold text-gray-900 truncate">{l.name}</h4>
-                  <p className="text-xs text-gray-500 mt-1">{l.type} • {l.currency}</p>
-                </div>
-                {l.id === activeId && <Badge color="blue">نشط</Badge>}
+      {tab === 'ledgers' && (
+        <>
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الدفتر الجديد</label>
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
               </div>
-
-              {editingId === l.id ? (
-                <div className="mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">تعديل الاسم</label>
-                  <input value={editingName} onChange={(e) => setEditingName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
-                  <div className="flex gap-2 justify-end mt-3">
-                    <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-                    <button type="button" onClick={saveEdit} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex flex-wrap gap-2 justify-end mt-4">
-                  <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
-                  <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
-                </div>
-              )}
+              <button type="button" onClick={() => createLedger(newName)} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
             </div>
-          ))}
-        </div>
+          </div>
+
+          {(!ledgers || ledgers.length === 0) ? (
+            <EmptyState message="لا توجد دفاتر" />
+          ) : (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {ledgers.filter(l => !l.archived).map((l) => (
+                <div key={l.id} className={`bg-white rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-gray-100'}`}>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <h4 className="font-bold text-gray-900 truncate">{l.name}</h4>
+                      <p className="text-xs text-gray-500 mt-1">{l.type} • {l.currency}</p>
+                    </div>
+                    {l.id === activeId && <Badge color="blue">نشط</Badge>}
+                  </div>
+
+                  {editingId === l.id ? (
+                    <div className="mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">تعديل الاسم</label>
+                      <input value={editingName} onChange={(e) => setEditingName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
+                      <div className="flex gap-2 justify-end mt-3">
+                        <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+                        <button type="button" onClick={saveEdit} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2 justify-end mt-4">
+                      <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
+                      <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {tab === 'recurring' && (
+        <>
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <h4 className="font-bold text-gray-900">التزامات متكررة</h4>
+                <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
+              </div>
+              {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الالتزام</label>
+                <input value={recForm.title} onChange={(e) => setRecForm(f => ({ ...f, title: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الالتزام" placeholder="مثال: إيجار المكتب" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
+                <input type="number" value={recForm.amount} onChange={(e) => setRecForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الالتزام" placeholder="0" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">التكرار</label>
+                <select value={recForm.frequency} onChange={(e) => setRecForm(f => ({ ...f, frequency: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="تكرار الالتزام">
+                  <option value="monthly">شهري</option>
+                  <option value="quarterly">ربع سنوي</option>
+                  <option value="yearly">سنوي</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الاستحقاق القادم</label>
+                <input type="date" value={recForm.nextDueDate} onChange={(e) => setRecForm(f => ({ ...f, nextDueDate: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق القادم" />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات (اختياري)</label>
+                <textarea value={recForm.notes} onChange={(e) => setRecForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="ملاحظات الالتزام" />
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end mt-4">
+              {recEditingId && (
+                <button type="button" onClick={() => { setRecEditingId(null); resetRecForm(); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء تعديل الالتزام">إلغاء</button>
+              )}
+              <button type="button" onClick={saveRecurring} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ الالتزام">{recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}</button>
+            </div>
+          </div>
+
+          {activeRecurring.length === 0 ? (
+            <EmptyState message="لا توجد التزامات متكررة لهذا الدفتر" />
+          ) : (
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
+                <h4 className="font-bold text-gray-900">القائمة</h4>
+                <span className="text-xs text-gray-500">{activeRecurring.length}</span>
+              </div>
+              <div className="divide-y divide-gray-100">
+                {activeRecurring.map((r) => (
+                  <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-gray-900 truncate">{r.title}</div>
+                      <div className="text-xs text-gray-500 mt-1">{r.frequency} • {r.nextDueDate} • {formatNumber(r.amount, { maximumFractionDigits: 2 })}</div>
+                      {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
+                    </div>
+                    <div className="flex gap-2 justify-end">
+                      <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
+                      <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );
