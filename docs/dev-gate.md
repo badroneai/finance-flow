@@ -22,6 +22,10 @@
 6) Mobile sanity:
    - فتح القائمة الجانبية
    - التنقل بين الصفحات الأساسية بدون كسر layout
+7) CI (بعد إضافة CI):
+   - build/lint PASS على GitHub Actions
+8) E2E (بعد إضافة E2E):
+   - Playwright PASS على GitHub Actions
 
 ## مخرجات كل PR
 - رابط PR
