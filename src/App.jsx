@@ -298,13 +298,7 @@ const SIMULATE_STORAGE_FAILURE = false;
 /** Phase 9.3 للاختبار فقط: ضع true لتمثيل خطأ في الـ render (شاشة الاستعادة) ثم أعد false */
 const SIMULATE_RENDER_ERROR = false;
 
-const safeGet = (key, fallback) => {
-  try {
-    return storageFacade.getJSON(key, fallback);
-  } catch {
-    return fallback;
-  }
-};
+const safeGet = (key, fallback) => storageFacade.getJSON(key, fallback);
 
 /** Phase 9.2: يرجع { ok: true } عند النجاح، أو { ok: false, code: 'quota'|'unknown', message } عند الفشل. يتعامل مع QuotaExceededError صراحة. */
 const safeSet = (key, val) => {
