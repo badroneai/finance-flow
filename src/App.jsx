@@ -1770,6 +1770,32 @@ const LedgersPage = () => {
   const [recForm, setRecForm] = useState({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
   const [recEditingId, setRecEditingId] = useState(null);
 
+  // Supports Arabic/Indic numerals and common separators for amount parsing.
+  const normalizeNumeralsToAscii = (input) => {
+    const s = String(input ?? '');
+    const map = {
+      // Arabic-Indic
+      '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+      // Eastern Arabic-Indic (Persian)
+      '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+    };
+    return s
+      .split('')
+      .map(ch => map[ch] ?? ch)
+      // remove thousands separators + spaces
+      .join('')
+      .replace(/[\s\u00A0]/g, '')
+      .replace(/[٬,]/g, '')
+      // normalize decimal separators
+      .replace(/[٫]/g, '.');
+  };
+
+  const parseRecurringAmount = (raw) => {
+    const normalized = normalizeNumeralsToAscii(raw);
+    const n = Number(normalized);
+    return Number.isFinite(n) ? n : NaN;
+  };
+
   const refresh = useCallback(() => {
     try { setLedgersState(getLedgers()); } catch { setLedgersState([]); }
     try { setActiveIdState(getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
@@ -1868,8 +1894,8 @@ const LedgersPage = () => {
     const title = (recForm.title || '').trim();
     if (!title) { toast('اسم الالتزام مطلوب', 'error'); return; }
 
-    const amount = Number(recForm.amount);
-    if (Number.isNaN(amount)) { toast('المبلغ غير صحيح', 'error'); return; }
+    const amount = parseRecurringAmount(recForm.amount);
+    if (!Number.isFinite(amount)) { toast('المبلغ غير صالح', 'error'); return; }
 
     const freq = (recForm.frequency === 'monthly' || recForm.frequency === 'quarterly' || recForm.frequency === 'yearly') ? recForm.frequency : 'monthly';
     const nextDueDate = String(recForm.nextDueDate || '').trim();
@@ -2026,7 +2052,7 @@ const LedgersPage = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
-                <input type="number" value={recForm.amount} onChange={(e) => setRecForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الالتزام" placeholder="0" />
+                <input type="text" inputMode="decimal" value={recForm.amount} onChange={(e) => setRecForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الالتزام" placeholder="0" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">التكرار</label>
@@ -2067,7 +2093,13 @@ const LedgersPage = () => {
                   <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="font-semibold text-gray-900 truncate">{r.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">{r.frequency} • {r.nextDueDate} • {formatNumber(r.amount, { maximumFractionDigits: 2 })}</div>
+                      <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
+                        <span>{r.frequency}</span>
+                        <span>•</span>
+                        <span>{r.nextDueDate}</span>
+                        <span>•</span>
+                        <span><Currency value={r.amount} /></span>
+                      </div>
                       {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
                     </div>
                     <div className="flex gap-2 justify-end">
