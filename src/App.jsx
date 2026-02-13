@@ -72,6 +72,13 @@ import {
 } from './core/ledger-cash-plan.js';
 
 import {
+  pushHistoryEntry,
+  summarizePayNow,
+  lastPayNowAt,
+  daysSince,
+} from './core/ledger-item-history.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
@@ -2111,6 +2118,7 @@ const LedgersPage = () => {
   const cashPlan = computeCashPlan({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
 
   const [inboxFilter, setInboxFilter] = useState('all'); // all|overdue|soon|unpriced|high
+  const [historyModal, setHistoryModal] = useState(null); // null | { item }
 
   const inboxView = (() => {
     const list = Array.isArray(inbox) ? inbox : [];
@@ -2308,12 +2316,16 @@ const LedgersPage = () => {
     setRecurringState(next);
   };
 
-  const updateRecurringOps = (itemId, patch = {}) => {
+  const updateRecurringOps = (itemId, patch = {}, historyEntry = null) => {
     const list = Array.isArray(recurring) ? recurring : [];
     const ts = new Date().toISOString();
     const next = list.map(r => {
       if (r.id !== itemId) return r;
-      return { ...r, ...patch, updatedAt: ts };
+      let updated = { ...r, ...patch, updatedAt: ts };
+      if (historyEntry) {
+        updated = pushHistoryEntry(updated, { ...historyEntry, at: historyEntry.at || ts });
+      }
+      return updated;
     });
     try { setRecurringItems(next); } catch { toast('تعذر حفظ حالة العنصر', 'error'); return false; }
     setRecurringState(next);
@@ -2671,6 +2683,16 @@ const LedgersPage = () => {
                           <span className={`px-2 py-0.5 rounded-full text-[11px] border ${it.reason.includes('خطر') ? 'border-red-100 bg-red-50 text-red-700' : it.reason.includes('متأخر') ? 'border-yellow-100 bg-yellow-50 text-yellow-800' : 'border-blue-100 bg-blue-50 text-blue-700'}`}>{it.reason}</span>
                           {it.amount > 0 ? <span className="text-xs text-gray-600"><Currency value={it.amount} /></span> : <span className="text-xs text-amber-700">غير مسعّر</span>}
                           {it.nextDueDate ? <span className="text-xs text-gray-500">• {it.nextDueDate}</span> : null}
+                          {(() => {
+                            const lastAt = lastPayNowAt(it.history);
+                            const d = daysSince(lastAt);
+                            return (
+                              <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-gray-50 text-gray-700">
+                                {d == null ? 'لم يُسجل دفع بعد' : `آخر دفع: قبل ${d} يوم`}
+                              </span>
+                            );
+                          })()}
+
                           {it.payState ? <span className={`px-2 py-0.5 rounded-full text-[11px] border ${it.payState === 'paid' ? 'border-green-100 bg-green-50 text-green-700' : it.payState === 'skipped' ? 'border-gray-200 bg-gray-50 text-gray-700' : 'border-amber-100 bg-amber-50 text-amber-800'}`}>{it.payState === 'paid' ? 'مدفوع' : it.payState === 'skipped' ? 'تجاوزته' : 'غير مدفوع'}</span> : null}
                         </div>
                         {it.note?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{it.note}</div> : null}
@@ -2685,7 +2707,7 @@ const LedgersPage = () => {
                         }} disabled={it.amount === 0} className={`px-3 py-2 rounded-lg text-sm font-medium border ${it.amount === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`} aria-label="سجّل كدفعة الآن">سجّل كدفعة الآن</button>
 
                         <button type="button" onClick={() => {
-                          updateRecurringOps(it.id, { status: 'resolved', snoozeUntil: '' });
+                          updateRecurringOps(it.id, { status: 'resolved', snoozeUntil: '' }, { type: 'note', meta: { note: 'resolved (done)' } });
                           toast('تم وضعه كمنجز');
                           refresh();
                         }} className="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-200 text-sm font-medium hover:bg-green-100" aria-label="تم">تم</button>
@@ -2696,7 +2718,7 @@ const LedgersPage = () => {
                           let until = '';
                           if (/^\d{4}-\d{2}-\d{2}$/.test(days.trim())) until = days.trim();
                           else until = addDaysISO(Number(days));
-                          updateRecurringOps(it.id, { status: 'snoozed', snoozeUntil: until });
+                          updateRecurringOps(it.id, { status: 'snoozed', snoozeUntil: until }, { type: 'snooze', meta: { snoozeUntil: until } });
                           toast('تم التأجيل');
                           refresh();
                         }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="أجّل">أجّل</button>
@@ -2704,23 +2726,28 @@ const LedgersPage = () => {
                         <button type="button" onClick={() => {
                           const note = prompt('ملاحظة للعنصر:', String(it.note || ''));
                           if (note == null) return;
-                          updateRecurringOps(it.id, { note: String(note) });
+                          updateRecurringOps(it.id, { note: String(note) }, { type: 'note', meta: { note: String(note) } });
                           toast('تم حفظ الملاحظة');
                           refresh();
                         }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="ملاحظة">ملاحظة</button>
+
+                        <button type="button" onClick={() => {
+                          const full = (Array.isArray(recurring) ? recurring : []).find(x => x.id === it.id);
+                          setHistoryModal({ item: full || it });
+                        }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="سجل">🧾 سجل</button>
                       </div>
                     </div>
 
                     {/* Payment State buttons */}
                     <div className="flex flex-wrap gap-2 justify-end">
                       <button type="button" onClick={() => {
-                        updateRecurringOps(it.id, { payState: 'paid', payStateAt: new Date().toISOString() });
+                        updateRecurringOps(it.id, { payState: 'paid', payStateAt: new Date().toISOString() }, { type: 'state_paid' });
                         toast('تم وضعه كمدفوع');
                         refresh();
                       }} className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700" aria-label="مدفوع">✅ مدفوع</button>
 
                       <button type="button" onClick={() => {
-                        updateRecurringOps(it.id, { payState: 'skipped', payStateAt: new Date().toISOString() });
+                        updateRecurringOps(it.id, { payState: 'skipped', payStateAt: new Date().toISOString() }, { type: 'state_skipped' });
                         toast('تم وضعه كتجاوز');
                         refresh();
                       }} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200" aria-label="تجاوزته">⏭️ تجاوزته</button>
@@ -2728,7 +2755,7 @@ const LedgersPage = () => {
                       <button type="button" onClick={() => {
                         const n = prompt('ملاحظة لحالة الدفع (اختياري):', String(it.payStateNote || ''));
                         if (n == null) return;
-                        updateRecurringOps(it.id, { payStateNote: String(n), payStateAt: new Date().toISOString() });
+                        updateRecurringOps(it.id, { payStateNote: String(n), payStateAt: new Date().toISOString() }, { type: 'note', meta: { note: String(n) } });
                         toast('تم حفظ ملاحظة الدفع');
                         refresh();
                       }} className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-medium hover:bg-gray-50" aria-label="ملاحظة الدفع">ملاحظة الدفع</button>
@@ -3414,6 +3441,9 @@ const LedgersPage = () => {
                                 >
                                   سجّل كدفعة الآن
                                 </button>
+                                <button type="button" onClick={() => {
+                                  setHistoryModal({ item: r });
+                                }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="سجل">🧾 سجل</button>
                                 <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
                                 <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
                               </div>
@@ -4100,6 +4130,8 @@ const LedgersPage = () => {
 
                 const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
 
+                const dueDateBefore = String(paySource?.nextDueDate || '');
+
                 const res = dataStore.transactions.create({
                   type,
                   category,
@@ -4113,15 +4145,27 @@ const LedgersPage = () => {
 
                 toast('تم تسجيل الدفعة');
 
-                // Update ops state on the recurring item (no tx logic change)
+                // Update ops state + append history (no tx logic change)
                 try {
                   if (paySource?.id) {
-                    updateRecurringOps(paySource.id, {
-                      status: 'resolved',
-                      lastPaidAt: new Date().toISOString(),
-                      payState: 'paid',
-                      payStateAt: new Date().toISOString(),
-                    });
+                    updateRecurringOps(
+                      paySource.id,
+                      {
+                        status: 'resolved',
+                        lastPaidAt: new Date().toISOString(),
+                        payState: 'paid',
+                        payStateAt: new Date().toISOString(),
+                      },
+                      {
+                        type: 'pay_now',
+                        amount,
+                        txId: res?.item?.id || res?.data?.id || res?.tx?.id || undefined,
+                        meta: {
+                          dueDate: dueDateBefore,
+                          method: paymentMethod,
+                        },
+                      }
+                    );
                   }
                 } catch {}
 
@@ -4132,6 +4176,72 @@ const LedgersPage = () => {
           </div>
         </div>
       ) : null}
+
+      <Modal
+        open={!!historyModal}
+        onClose={() => setHistoryModal(null)}
+        title={`🧾 سجل البند${historyModal?.item?.title ? ` — ${historyModal.item.title}` : ''}`}
+        wide={false}
+      >
+        {(() => {
+          const item = historyModal?.item;
+          const h = Array.isArray(item?.history) ? item.history : [];
+          const summary = summarizePayNow(h, { now: new Date() });
+          const latest = h.slice().reverse().slice(0, 10);
+
+          const label = (t) => {
+            if (t === 'pay_now') return 'سجّل كدفعة الآن';
+            if (t === 'state_paid') return 'تم وضعه كمدفوع';
+            if (t === 'state_skipped') return 'تم وضعه كتجاوز';
+            if (t === 'snooze') return 'تأجيل';
+            if (t === 'note') return 'ملاحظة';
+            return String(t || 'حدث');
+          };
+
+          return (
+            <div className="flex flex-col gap-3">
+              <div className="grid grid-cols-3 gap-2">
+                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                  <div className="text-[11px] text-gray-500">Paid last 90d</div>
+                  <div className="font-bold text-gray-900 mt-1"><Currency value={summary.paid90} /></div>
+                </div>
+                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
+                  <div className="text-[11px] text-gray-500">Paid last 12m</div>
+                  <div className="font-bold text-gray-900 mt-1"><Currency value={summary.paid12m} /></div>
+                </div>
+                <div className="p-3 rounded-xl border border-gray-100 bg-white">
+                  <div className="text-[11px] text-gray-500">Count pay_now (12m)</div>
+                  <div className="font-bold text-gray-900 mt-1">{summary.count12m}</div>
+                </div>
+              </div>
+
+              {latest.length === 0 ? (
+                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-700">لا يوجد سجل بعد.</div>
+              ) : (
+                <div className="max-h-72 overflow-y-auto border border-gray-100 rounded-xl">
+                  {latest.map((e, idx) => (
+                    <div key={idx} className={`p-3 ${idx ? 'border-t border-gray-100' : ''}`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="font-semibold text-gray-900">{label(e.type)}</div>
+                        <div className="text-[11px] text-gray-500">{String(e.at || '')}</div>
+                      </div>
+                      {Number(e.amount) ? <div className="text-sm text-gray-700 mt-1">المبلغ: <Currency value={Number(e.amount)} /></div> : null}
+                      {e?.meta?.dueDate ? <div className="text-[11px] text-gray-500 mt-1">dueDate: {e.meta.dueDate}</div> : null}
+                      {e?.meta?.snoozeUntil ? <div className="text-[11px] text-gray-500 mt-1">snoozeUntil: {e.meta.snoozeUntil}</div> : null}
+                      {e?.meta?.method ? <div className="text-[11px] text-gray-500 mt-1">method: {e.meta.method}</div> : null}
+                      {e?.meta?.note ? <div className="text-[11px] text-gray-500 mt-1 whitespace-pre-wrap">note: {e.meta.note}</div> : null}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div className="flex justify-end">
+                <button type="button" onClick={() => setHistoryModal(null)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إغلاق">إغلاق</button>
+              </div>
+            </div>
+          );
+        })()}
+      </Modal>
 
       <ConfirmDialog
         open={!!confirm}
