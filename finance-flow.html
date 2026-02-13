@@ -1075,9 +1075,10 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
   }, []);
 
   useEffect(() => {
-    // Default: collapsed on mobile whenever the mobile sidebar opens
-    if (isMobile && mobileOpen) setMobileOpenSections({ finance:false, org:false });
-  }, [isMobile, mobileOpen]);
+    // Default: collapsed whenever the mobile sidebar overlay opens
+    // (mobileOpen is only used for the md:hidden mobile overlay)
+    if (mobileOpen) setMobileOpenSections({ finance:false, org:false });
+  }, [mobileOpen]);
 
   const handleNav = (id) => {
     if (id === 'help') { typeof onOpenHelp === 'function' && onOpenHelp(); setMobileOpen(false); return; }
@@ -1126,7 +1127,9 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
           };
 
           const renderAccordion = (id, title, items) => {
-            const isAccordion = isMobile && (id === 'finance' || id === 'org');
+            // Mobile accordion is controlled by the mobile overlay (mobileOpen) to avoid
+            // relying on matchMedia timing.
+            const isAccordion = (id === 'finance' || id === 'org') && (mobileOpen || isMobile);
             const isOpen = id === 'finance' ? mobileOpenSections.finance : id === 'org' ? mobileOpenSections.org : true;
             const controlsId = `sidebar-section-${id}`;
             return (
