@@ -30,6 +30,13 @@ import {
 import { normalizeBudgets, computeBudgetHealth } from './core/ledger-budgets.js';
 
 import {
+  computeLedgerHealth,
+  computeLedgerProjection,
+  computeScenario,
+  isSeededOnly,
+} from './core/ledger-intelligence-v1.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
