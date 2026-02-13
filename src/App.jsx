@@ -12,6 +12,10 @@ import {
   setRecurringItems,
 } from './core/ledger-store.js';
 
+const getActiveLedgerIdSafe = () => {
+  try { return getActiveLedgerId() || ''; } catch { return ''; }
+};
+
 import {
   filterTransactions,
   sumTransactions,
@@ -326,6 +330,30 @@ const dataStore = {
   transactions: {
     list: (filters) => {
       let items = safeGet(KEYS.transactions, []);
+
+      // Ledger binding migration (schema-safe, idempotent):
+      // - If a transaction has no ledgerId, bind it to current active ledger id.
+      // - Save once only if there are changes.
+      try {
+        const activeLedgerId = getActiveLedgerIdSafe();
+        if (activeLedgerId) {
+          let changed = false;
+          const next = (Array.isArray(items) ? items : []).map((t) => {
+            if (t && !t.ledgerId) {
+              changed = true;
+              return { ...t, ledgerId: activeLedgerId };
+            }
+            return t;
+          });
+          if (changed) {
+            items = next;
+            safeSet(KEYS.transactions, items);
+          }
+        }
+      } catch {
+        // ignore migration failures
+      }
+
       if (!filters) return items;
       if (filters.fromDate) items = items.filter(t => t.date >= filters.fromDate);
       if (filters.toDate) items = items.filter(t => t.date <= filters.toDate);
@@ -340,7 +368,8 @@ const dataStore = {
     },
     create: (data) => {
       const items = safeGet(KEYS.transactions, []);
-      const item = { ...data, id: genId(), createdAt: now(), updatedAt: now() };
+      const ledgerId = getActiveLedgerIdSafe();
+      const item = { ...data, ledgerId, id: genId(), createdAt: now(), updatedAt: now() };
       items.push(item);
       const r = safeSet(KEYS.transactions, items);
       if (!r.ok) return r;
@@ -1032,10 +1061,19 @@ const TransactionsPage = () => {
 
   const refresh = useCallback(() => {
     const all = dataStore.transactions.list();
-    setTxs(filterTransactions(all, filters));
+    const activeLedgerId = getActiveLedgerIdSafe();
+    const scoped = activeLedgerId ? all.filter(t => t.ledgerId === activeLedgerId) : all;
+    setTxs(filterTransactions(scoped, filters));
   }, [filters]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Refresh when active ledger changes
+  useEffect(() => {
+    const onActive = () => refresh();
+    window.addEventListener('ledger:activeChanged', onActive);
+    return () => window.removeEventListener('ledger:activeChanged', onActive);
+  }, [refresh]);
 
   const { income, expense } = sumTransactions(txs);
 
