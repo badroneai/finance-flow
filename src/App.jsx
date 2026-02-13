@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, createContext
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
+import { getLedgers, setLedgers, getActiveLedgerId, setActiveLedgerId } from './core/ledger-store.js';
 
 import {
   filterTransactions,
@@ -787,6 +788,7 @@ const NAV_ITEMS = [
   { id:'home', label:'الرئيسية', icon:Icons.home },
   { id:'transactions', label:'الحركات المالية', icon:Icons.list, group:'finance' },
   { id:'commissions', label:'العمولات', icon:Icons.percent, group:'finance' },
+  { id:'ledgers', label:'الدفاتر', icon:Icons.list, group:'finance' },
   { id:'templates', label:'قوالب الخطابات', icon:Icons.mail, group:'letters' },
   { id:'generator', label:'إنشاء خطاب', icon:Icons.fileText, group:'letters' },
   { id:'drafts', label:'المسودات', icon:Icons.fileText, group:'letters' },
@@ -877,7 +879,7 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
 };
 
 const Topbar = ({ page, setMobileOpen, headerDateText }) => {
-  const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
+  const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', ledgers:'الدفاتر', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
   return (
     <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-start justify-between gap-3 sticky top-0 z-30 no-print">
       <div className="flex items-center gap-3 min-w-0">
@@ -1674,6 +1676,135 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
         </div>
       )}
       <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger/>
+    </div>
+  );
+};
+
+// ============================================
+// LEDGERS PAGE
+// ============================================
+const LedgersPage = () => {
+  const toast = useToast();
+  const [ledgers, setLedgersState] = useState([]);
+  const [activeId, setActiveIdState] = useState('');
+
+  const [newName, setNewName] = useState('');
+  const [editingId, setEditingId] = useState(null);
+  const [editingName, setEditingName] = useState('');
+
+  const refresh = useCallback(() => {
+    try { setLedgersState(getLedgers()); } catch { setLedgersState([]); }
+    try { setActiveIdState(getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
+  }, []);
+
+  useEffect(() => { refresh(); }, [refresh]);
+
+  const createLedger = (name) => {
+    const t = (name || '').trim();
+    if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
+
+    // Minimal entity for v1 (no schema changes beyond PR-1 spec)
+    const ts = new Date().toISOString();
+    const id = (() => {
+      try { if (crypto && typeof crypto.randomUUID === 'function') return `ledg_${crypto.randomUUID()}`; } catch {}
+      return `ledg_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+    })();
+
+    const next = [...(Array.isArray(ledgers) ? ledgers : []), {
+      id,
+      name: t,
+      type: 'office',
+      currency: 'SAR',
+      createdAt: ts,
+      updatedAt: ts,
+      archived: false,
+    }];
+
+    try { setLedgers(next); } catch { toast('تعذر حفظ الدفتر', 'error'); return; }
+    try { if (!getActiveLedgerId()) setActiveLedgerId(id); } catch {}
+
+    setNewName('');
+    toast('تمت إضافة الدفتر');
+    refresh();
+  };
+
+  const startEdit = (ledger) => {
+    setEditingId(ledger.id);
+    setEditingName(ledger.name || '');
+  };
+
+  const saveEdit = () => {
+    const t = (editingName || '').trim();
+    if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
+
+    const next = (Array.isArray(ledgers) ? ledgers : []).map(l => {
+      if (l.id !== editingId) return l;
+      return { ...l, name: t, updatedAt: new Date().toISOString() };
+    });
+
+    try { setLedgers(next); } catch { toast('تعذر حفظ التعديل', 'error'); return; }
+    toast('تم تحديث اسم الدفتر');
+    setEditingId(null);
+    setEditingName('');
+    refresh();
+  };
+
+  const setActive = (id) => {
+    try { setActiveLedgerId(id); } catch { toast('تعذر تعيين الدفتر النشط', 'error'); return; }
+    toast('تم تعيين الدفتر النشط');
+    refresh();
+  };
+
+  return (
+    <div className="p-4 md:p-6 max-w-5xl mx-auto">
+      <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+        <h3 className="font-bold text-gray-900 mb-1">الدفاتر</h3>
+        <p className="text-sm text-gray-500">أنشئ عدة دفاتر لإدارة أكثر من جهة/مكتب (النسخة الحالية تبدأ بدفتر افتراضي).</p>
+      </div>
+
+      <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+        <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1">اسم الدفتر الجديد</label>
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
+          </div>
+          <button type="button" onClick={() => createLedger(newName)} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
+        </div>
+      </div>
+
+      {(!ledgers || ledgers.length === 0) ? (
+        <EmptyState message="لا توجد دفاتر" />
+      ) : (
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {ledgers.filter(l => !l.archived).map((l) => (
+            <div key={l.id} className={`bg-white rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-gray-100'}`}>
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0">
+                  <h4 className="font-bold text-gray-900 truncate">{l.name}</h4>
+                  <p className="text-xs text-gray-500 mt-1">{l.type} • {l.currency}</p>
+                </div>
+                {l.id === activeId && <Badge color="blue">نشط</Badge>}
+              </div>
+
+              {editingId === l.id ? (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">تعديل الاسم</label>
+                  <input value={editingName} onChange={(e) => setEditingName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
+                  <div className="flex gap-2 justify-end mt-3">
+                    <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+                    <button type="button" onClick={saveEdit} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2 justify-end mt-4">
+                  <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
+                  <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
@@ -2554,6 +2685,7 @@ const App = () => {
       case 'dashboard': return <DashboardPage/>;
       case 'transactions': return <TransactionsPage/>;
       case 'commissions': return <CommissionsPage/>;
+      case 'ledgers': return <LedgersPage/>;
       case 'templates': return <TemplatesPage setPage={setPage} setLetterType={setLetterType}/>;
       case 'generator': return <GeneratorPage letterType={letterType} setLetterType={setLetterType}/>;
       case 'drafts': return <DraftsPage setPage={setPage} setLetterType={setLetterType} setEditDraft={setEditDraft}/>;
