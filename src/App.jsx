@@ -1957,6 +1957,29 @@ const LedgersPage = () => {
 
   const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
 
+  const operatorMode = (() => {
+    const list = activeRecurring;
+    const overdue = list.filter(x => isPastDue(x));
+    const upcoming14 = list.filter(x => !isPastDue(x) && isDueWithinDays(x, 14));
+
+    const byDueAsc = (a, b) => {
+      const da = new Date(String(a?.nextDueDate || '') + 'T00:00:00').getTime();
+      const db = new Date(String(b?.nextDueDate || '') + 'T00:00:00').getTime();
+      return (da || 0) - (db || 0);
+    };
+
+    const priorityNow = [
+      ...overdue.sort(byDueAsc),
+      ...upcoming14.sort(byDueAsc),
+    ].slice(0, 10);
+
+    const pricedCount = list.filter(x => Number(x?.amount) > 0).length;
+    const unpricedCount = list.filter(x => Number(x?.amount) === 0).length;
+    const monthlyTotal = list.filter(x => String(x.frequency || '').toLowerCase() === 'monthly' && Number(x.amount) > 0).reduce((a, x) => a + Number(x.amount), 0);
+
+    return { priorityNow, overdueCount: overdue.length, upcoming14Count: upcoming14.length, pricedCount, unpricedCount, monthlyTotal };
+  })();
+
   const outlook = (() => {
     const list = activeRecurring;
     const within = (days) => {
@@ -2401,6 +2424,73 @@ const LedgersPage = () => {
 
       {tab === 'recurring' && (
         <>
+          {/* Ledger Operator Mode */}
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h4 className="font-bold text-gray-900">لوحة تشغيل الدفتر</h4>
+                <p className="text-sm text-gray-500 mt-1">الأولوية الآن (متأخر ثم أقرب 14 يوم) • دفتر: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
+
+                <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700">
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري (مسعّر): <strong className="text-gray-900"><Currency value={operatorMode.monthlyTotal} /></strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">مسعّر: <strong className="text-gray-900">{operatorMode.pricedCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">غير مسعّر: <strong className="text-gray-900">{operatorMode.unpricedCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">متأخر: <strong className="text-gray-900">{operatorMode.overdueCount}</strong></span>
+                </div>
+
+                <div className="mt-3 flex flex-col gap-2">
+                  {operatorMode.priorityNow.length === 0 ? (
+                    <div className="text-sm text-gray-500">لا توجد مهام تشغيلية قريبة.</div>
+                  ) : (
+                    operatorMode.priorityNow.map((r) => (
+                      <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-gray-100 bg-white">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-gray-900 truncate">{r.title || '—'}</div>
+                          <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-2">
+                            <span>{r.nextDueDate || '—'}</span>
+                            <span className="text-gray-300">•</span>
+                            <span><Currency value={Number(r.amount) || 0} /></span>
+                            {isPastDue(r) ? (
+                              <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">قادم</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-2 justify-end">
+                          <button
+                            type="button"
+                            disabled={Number(r.amount) === 0}
+                            title={Number(r.amount) === 0 ? 'حدد المبلغ أولاً' : 'سجّل كدفعة الآن'}
+                            onClick={() => startPayNow(r)}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${Number(r.amount) === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                            aria-label="سجّل كدفعة الآن"
+                          >
+                            سجّل كدفعة الآن
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+
+                <p className="text-xs text-gray-500 mt-3">الأرقام المقترحة تقديرية لمساعدتك على الانضباط، ويمكن تعديلها.</p>
+              </div>
+
+              <div className="flex flex-col items-end gap-2">
+                {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
+                <button
+                  type="button"
+                  onClick={openPricingWizard}
+                  className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
+                  aria-label="مرّرني على غير المسعّر"
+                >
+                  مرّرني على غير المسعّر
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
             <div className="flex items-start justify-between gap-3">
               <div>
