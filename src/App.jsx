@@ -12,6 +12,8 @@ import {
   setRecurringItems,
 } from './core/ledger-store.js';
 
+import { seedRecurringForLedger } from './domain/ledgerTemplates.js';
+
 const getActiveLedgerIdSafe = () => {
   try { return getActiveLedgerId() || ''; } catch { return ''; }
 };
@@ -1731,6 +1733,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 const LedgersPage = () => {
   const toast = useToast();
   const [tab, setTab] = useState('ledgers'); // ledgers | recurring
+  const [confirm, setConfirm] = useState(null);
 
   const [ledgers, setLedgersState] = useState([]);
   const [activeId, setActiveIdState] = useState('');
@@ -1871,7 +1874,7 @@ const LedgersPage = () => {
     const amount = Number(recForm.amount);
     if (Number.isNaN(amount)) { toast('المبلغ غير صحيح', 'error'); return; }
 
-    const freq = (recForm.frequency === 'monthly' || recForm.frequency === 'quarterly' || recForm.frequency === 'yearly') ? recForm.frequency : 'monthly';
+    const freq = (recForm.frequency === 'monthly' || recForm.frequency === 'quarterly' || recForm.frequency === 'yearly' || recForm.frequency === 'adhoc') ? recForm.frequency : 'monthly';
     const nextDueDate = String(recForm.nextDueDate || '').trim();
     if (!nextDueDate) { toast('تاريخ الاستحقاق القادم مطلوب', 'error'); return; }
 
@@ -1995,6 +1998,47 @@ const LedgersPage = () => {
                     </div>
                   ) : (
                     <div className="flex flex-wrap gap-2 justify-end mt-4">
+                      {(() => {
+                        const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(r => r.ledgerId === l.id);
+                        const disabled = hasRecurring;
+                        const title = disabled ? 'تمت إضافة النموذج مسبقًا' : 'إضافة التزامات افتراضية لهذا الدفتر';
+                        return (
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            title={title}
+                            onClick={() => {
+                              if (disabled) return;
+                              setConfirm({
+                                title: 'إضافة نموذج الالتزامات',
+                                message: 'سيتم إضافة التزامات افتراضية لهذا الدفتر. هل تريد المتابعة؟',
+                                confirmLabel: 'نعم، أضف النموذج',
+                                onConfirm: () => {
+                                  try {
+                                    const list = Array.isArray(recurring) ? recurring : [];
+                                    const already = list.some(r => r.ledgerId === l.id);
+                                    if (already) { toast('تمت إضافة النموذج مسبقًا'); setConfirm(null); return; }
+
+                                    const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
+                                    const next = [...list, ...seeded];
+                                    setRecurringItems(next);
+                                    toast('تمت إضافة الالتزامات الافتراضية.');
+                                    setConfirm(null);
+                                    refresh();
+                                  } catch {
+                                    toast('تعذر إضافة النموذج', 'error');
+                                    setConfirm(null);
+                                  }
+                                },
+                              });
+                            }}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                            aria-label="إضافة نموذج الالتزامات"
+                          >
+                            إضافة نموذج الالتزامات
+                          </button>
+                        );
+                      })()}
                       <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
                       <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
                     </div>
@@ -2034,6 +2078,7 @@ const LedgersPage = () => {
                   <option value="monthly">شهري</option>
                   <option value="quarterly">ربع سنوي</option>
                   <option value="yearly">سنوي</option>
+                  <option value="adhoc">عند الحاجة</option>
                 </select>
               </div>
               <div>
@@ -2081,6 +2126,16 @@ const LedgersPage = () => {
           )}
         </>
       )}
+
+      <ConfirmDialog
+        open={!!confirm}
+        title={confirm?.title}
+        message={confirm?.message}
+        confirmLabel={confirm?.confirmLabel}
+        onConfirm={confirm?.onConfirm}
+        onCancel={() => setConfirm(null)}
+        danger={false}
+      />
     </div>
   );
 };
