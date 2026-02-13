@@ -4,6 +4,9 @@ import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
 
+// Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
+
+
 // ============================================
 // TYPES
 // ============================================
@@ -103,7 +106,7 @@ try { window.__uiNumeralsMode = __uiNumeralsMode; } catch {}
 
 const getSavedTheme = () => {
   try {
-    const t = storage.getRaw(UI_THEME_KEY);
+    const t = storageFacade.getRaw(UI_THEME_KEY);
     return (t === 'system' || t === 'light' || t === 'dim' || t === 'dark') ? t : null;
   } catch {
     return null;
@@ -161,7 +164,7 @@ const applyTheme = (theme) => {
 
   const effective = (t === 'system') ? getEffectiveSystemTheme() : t;
   document.documentElement.dataset.theme = effective;
-  try { storage.setRaw(UI_THEME_KEY, t); } catch {}
+  try { storageFacade.setRaw(UI_THEME_KEY, t); } catch {}
 };
 
 const initTheme = () => {
@@ -186,7 +189,7 @@ const getSavedNumerals = () => {
 
 const getSavedDateHeader = () => {
   try {
-    const v = storage.getRaw(UI_DATE_HEADER_KEY);
+    const v = storageFacade.getRaw(UI_DATE_HEADER_KEY);
     // Legacy migration: on/off → both/off
     if (v === 'on') return 'both';
     if (v === 'off') return 'off';
@@ -198,20 +201,20 @@ const getSavedDateHeader = () => {
 
 const setDateHeaderPref = (value) => {
   const v = (value === 'off' || value === 'greg' || value === 'hijri' || value === 'both') ? value : 'both';
-  try { storage.setRaw(UI_DATE_HEADER_KEY, v); } catch {}
+  try { storageFacade.setRaw(UI_DATE_HEADER_KEY, v); } catch {}
   try { window.dispatchEvent(new CustomEvent('ui:dateHeader')); } catch {}
 };
 
 const getOnboardingSeen = () => {
   try {
-    return storage.getRaw(UI_ONBOARDING_SEEN_KEY) === '1';
+    return storageFacade.getRaw(UI_ONBOARDING_SEEN_KEY) === '1';
   } catch {
     return false;
   }
 };
 
 const setOnboardingSeen = () => {
-  try { storage.setRaw(UI_ONBOARDING_SEEN_KEY, '1'); } catch {}
+  try { storageFacade.setRaw(UI_ONBOARDING_SEEN_KEY, '1'); } catch {}
 };
 
 const applyNumerals = (mode) => {
@@ -219,7 +222,7 @@ const applyNumerals = (mode) => {
   __uiNumeralsMode = m;
   try { window.__uiNumeralsMode = __uiNumeralsMode; } catch {}
   document.documentElement.dataset.numerals = m;
-  try { storage.setRaw(UI_NUMERALS_KEY, m); } catch {}
+  try { storageFacade.setRaw(UI_NUMERALS_KEY, m); } catch {}
   // Notify UI layers that depend on numerals (e.g., date header)
   try { window.dispatchEvent(new CustomEvent('ui:numerals')); } catch {}
 };
