@@ -1740,6 +1740,12 @@ const SettingsPage = ({ onShowOnboarding }) => {
     KEYS.drafts,
     KEYS.settings,
     KEYS.seeded,
+
+    // Ledgers (PR-1)
+    'ff_ledgers',
+    'ff_recurring_items',
+    'ff_active_ledger_id',
+
     // UI keys
     UI_THEME_KEY,
     UI_NUMERALS_KEY,
