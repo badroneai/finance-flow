@@ -1,0 +1,89 @@
+/* Qaydalaqar Design Tokens
+   Phase B+3: themes via :root[data-theme]
+   Notes:
+   - Theme is applied on <html> via: document.documentElement.dataset.theme
+   - No external font loads are added here; HTML already loads IBM Plex Sans Arabic.
+*/
+
+/* Base (fallback) tokens */
+:root {
+  /* Color system (semantic) */
+  --color-bg: #f8fafc;          /* page background */
+  --color-surface: #ffffff;     /* cards / panels */
+  --color-text: #0f172a;        /* main text */
+  --color-muted: #475569;       /* secondary text */
+  --color-border: #e2e8f0;      /* borders / dividers */
+
+  /* Brand */
+  --color-primary: #0b2d4a;     /* Qaydalaqar navy */
+  --color-accent: #c9a227;      /* Qaydalaqar gold */
+
+  /* Focus ring */
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(201, 162, 39, 0.25);
+
+  /* Radius + shadow */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 4px 12px rgba(0,0,0,0.10);
+  --shadow-sm: 0 1px 3px rgba(0,0,0,0.10);
+
+  /* Typography */
+  --font-ar: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-en: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+
+  /* Numerals / locale formatting (hooks for later JS) */
+  --numerals: "ar"; /* ar | en */
+  --calendar: "gregorian"; /* gregorian | hijri */
+}
+
+/* Light (default) */
+:root[data-theme="light"] {
+  --color-bg: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-muted: #475569;
+  --color-border: #e2e8f0;
+
+  --color-primary: #0b2d4a;
+  --color-accent: #c9a227;
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(201, 162, 39, 0.25);
+}
+
+/* Dim (darker than light, lighter than dark) */
+:root[data-theme="dim"] {
+  /* Navy-dim: clearly darker than light, softer than dark */
+  --color-bg: #081324;
+  --color-surface: #0c1d33;
+  --color-text: #eaf0f8;
+  --color-muted: #c0cad8;
+  --color-border: rgba(234, 240, 248, 0.20);
+
+  /* Accent slightly warmer, to keep identity without feeling "bright" */
+  --color-primary: #0b2d4a;
+  --color-accent: #d2ad43;
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(210, 173, 67, 0.26);
+
+  /* Polish via tokens only (no app.css changes) */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+/* Dark */
+:root[data-theme="dark"] {
+  /* Navy-dark: true dark mode with clear surface separation */
+  --color-bg: #050b14;
+  --color-surface: #0a1627;
+  --color-text: #eef3f9;
+  --color-muted: #aab7c8;
+  --color-border: rgba(238, 243, 249, 0.14);
+
+  --color-primary: #0b2d4a;
+  --color-accent: #e0c05a;
+  --color-focus: var(--color-accent);
+  --color-focus-soft: rgba(224, 192, 90, 0.28);
+}
