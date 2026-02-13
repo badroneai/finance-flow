@@ -2891,4 +2891,5 @@ class ErrorBoundary extends React.Component {
   }
 }
 
+export { Sidebar, Modal, ConfirmDialog, NotesCalendarAddEventModal };
 export default App;
