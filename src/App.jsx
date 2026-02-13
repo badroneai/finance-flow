@@ -50,6 +50,13 @@ import {
 } from './core/ledger-brain.js';
 
 import {
+  normalizeMonthlyRunRate,
+  forecast6m,
+  cashGapModel,
+  insightsFromForecast,
+} from './core/ledger-forecast.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
