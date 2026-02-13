@@ -58,6 +58,25 @@ html[data-theme] .border-slate-200 { border-color: var(--color-border) !importan
 /* Keep focus visible consistent across themes */
 :focus-visible { outline: 2px solid var(--color-focus); outline-offset: 2px; border-radius: 4px; }
 
+/* ==========================================================
+   Hamburger button contrast (Topbar mobile menu)
+   Goal: consistent visibility across pages + light/dim/dark
+   ========================================================== */
+.hamburger-btn {
+  color: var(--color-text) !important;
+  border: 1px solid var(--color-border) !important;
+  background: var(--color-surface) !important;
+  opacity: 1 !important;
+}
+.hamburger-btn:hover {
+  background: var(--color-bg) !important;
+}
+.hamburger-btn svg {
+  stroke: currentColor !important;
+  fill: none !important;
+  opacity: 1 !important;
+}
+
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--color-bg); }
 ::-webkit-scrollbar-thumb { background: var(--color-muted); border-radius: 3px; }
