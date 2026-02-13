@@ -2521,7 +2521,8 @@ const LedgersPage = () => {
             {(() => {
               const pressure = Number(brain?.pressure?.score || 0);
               const unpricedRatio = Number(brain?.pressure?.unpricedRatio || 0);
-              const show = (brain?.cluster === true) || pressure > 70 || unpricedRatio > 0.40;
+              const criticalNow = seededOnlyList.some(r => String(r?.riskLevel || '').toLowerCase() === 'high' && (isPastDue(r) || Number(r.amount) === 0));
+              const show = (brain?.cluster === true) || criticalNow || pressure > 70 || unpricedRatio > 0.40;
               if (!show) return null;
               return (
                 <div className="mt-3 p-3 rounded-xl border border-amber-100 bg-amber-50">
