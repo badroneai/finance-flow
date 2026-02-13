@@ -38,6 +38,8 @@ import {
   getBucketForRecurring,
 } from './core/ledger-reports.js';
 
+import { getTemplateForLedgerType } from './domain/ledgerTemplates.js';
+
 const getActiveLedgerIdSafe = () => {
   try { return getActiveLedgerId() || ''; } catch { return ''; }
 };
@@ -103,11 +105,23 @@ const today = () => new Date().toISOString().split('T')[0];
 
 // (month label/key moved to domain charts helpers)
 
-/** تهريب حقل CSV (RFC 4180) لتصدير العمولات */
+/** تهريب حقل CSV (RFC 4180) */
 const csvEscape = (v) => {
   const s = v == null ? '' : String(v);
   if (/[,\r\n"]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
   return s;
+};
+
+const downloadCSV = ({ filename, headers, rows }) => {
+  const BOM = '\uFEFF';
+  const all = [headers, ...rows]
+    .map(r => r.map(csvEscape).join(','))
+    .join('\n');
+  const blob = new Blob([BOM + all], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
 };
 
 // ============================================
@@ -2045,6 +2059,12 @@ const LedgersPage = () => {
 
   const applySaudiAutoPricing = ({ city, size, onlyUnpriced }) => {
     if (!activeId) return { ok: false, message: 'اختر دفترًا نشطًا أولًا' };
+    return applySaudiAutoPricingForLedger({ ledgerId: activeId, city, size, onlyUnpriced });
+  };
+
+  const applySaudiAutoPricingForLedger = ({ ledgerId, city, size, onlyUnpriced }) => {
+    const lid = String(ledgerId || '').trim();
+    if (!lid) return { ok: false, message: 'دفتر غير صالح' };
 
     const cityFactor = SA_CITY_FACTOR[String(city || 'other')] ?? 1.0;
     const sizeFactor = SA_SIZE_FACTOR[String(size || 'medium')] ?? 1.0;
@@ -2053,7 +2073,7 @@ const LedgersPage = () => {
     const ts = new Date().toISOString();
 
     const next = list.map((r) => {
-      if (r.ledgerId !== activeId) return r;
+      if (r.ledgerId !== lid) return r;
 
       const seeded = isSeededRecurring(r);
       const band = r.priceBand && typeof r.priceBand === 'object' ? r.priceBand : null;
