@@ -249,8 +249,8 @@ const STORAGE_ERROR_MESSAGE = 'لم يتم الحفظ. مساحة التخزين
 /** Phase 9.1: كشف التصفح الخاص */
 const detectPrivateBrowsing = () => {
   try {
-    localStorage.setItem('_ff_private_test', '1');
-    localStorage.removeItem('_ff_private_test');
+    storageFacade.setRaw('_ff_private_test', '1');
+    storageFacade.removeRaw('_ff_private_test');
     return false;
   } catch (e) {
     return true;
@@ -261,8 +261,8 @@ const detectPrivateBrowsing = () => {
 const checkStorageQuota = () => {
   try {
     const test = new Array(1024 * 512).join('a');
-    localStorage.setItem('_ff_quota_test', test);
-    localStorage.removeItem('_ff_quota_test');
+    storageFacade.setRaw('_ff_quota_test', test);
+    storageFacade.removeRaw('_ff_quota_test');
     return true;
   } catch (e) {
     if (e && (e.name === 'QuotaExceededError' || e.code === 22)) return false;
@@ -277,9 +277,7 @@ const SIMULATE_RENDER_ERROR = false;
 
 const safeGet = (key, fallback) => {
   try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
+    return storageFacade.getJSON(key, fallback);
   } catch {
     return fallback;
   }
@@ -289,8 +287,9 @@ const safeGet = (key, fallback) => {
 const safeSet = (key, val) => {
   if (SIMULATE_STORAGE_FAILURE) throw new DOMException('Simulated quota exceeded', 'QuotaExceededError');
   try {
-    localStorage.setItem(key, JSON.stringify(val));
-    return { ok: true };
+    const ok = storageFacade.setJSON(key, val);
+    if (ok) return { ok: true };
+    return { ok: false, code: 'unknown', message: STORAGE_ERROR_MESSAGE };
   } catch (e) {
     const isQuota = e && (e.name === 'QuotaExceededError' || e.code === 22);
     const message = isQuota ? STORAGE_ERROR_MESSAGE : (e && e.message) ? String(e.message) : STORAGE_ERROR_MESSAGE;
