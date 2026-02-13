@@ -2386,7 +2386,7 @@ const LedgersPage = () => {
                                     // Optional: create 3 demo payments to populate reports
                                     const updated = JSON.parse(localStorage.getItem('ff_recurring_items') || '[]').filter(x => x.ledgerId === l.id);
                                     const pick = (title) => updated.find(x => String(x.title || '').includes(title));
-                                    const itemsToPay = [pick('إيجار'), pick('كهرباء'), pick('إنترنت')].filter(Boolean).slice(0,3);
+                                    const itemsToPay = [pick('إيجار'), pick('كهرباء'), pick('ماء'), pick('ترخيص'), pick('فال')].filter(Boolean).slice(0,3);
                                     for (const it of itemsToPay) {
                                       if (Number(it.amount) <= 0) continue;
                                       const meta = buildTxMetaFromRecurring({ activeLedgerId: l.id, recurring: it });
