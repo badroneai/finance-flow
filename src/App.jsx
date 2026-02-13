@@ -1972,7 +1972,7 @@ const LedgersPage = () => {
     const next = (() => {
       const list = Array.isArray(recurring) ? recurring : [];
       if (!recEditingId) {
-        return [...list, { id, ledgerId: activeId, title, category: 'rent', amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), createdAt: ts, updatedAt: ts }];
+        return [...list, { id, ledgerId: activeId, title, category: '', amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), createdAt: ts, updatedAt: ts }];
       }
       return list.map(r => (r.id === recEditingId ? { ...r, title, amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), updatedAt: ts } : r));
     })();

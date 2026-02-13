@@ -132,11 +132,19 @@ export function seedRecurringForLedger({ ledgerId, ledgerType, now = new Date() 
 
       const freq = (x.frequency === 'monthly' || x.frequency === 'quarterly' || x.frequency === 'yearly' || x.frequency === 'adhoc') ? x.frequency : 'monthly';
 
+      const cat = String(x.category || '').toLowerCase();
+      const category = (cat === 'system' || cat === 'operational' || cat === 'maintenance' || cat === 'marketing') ? cat : '';
+      const risk = String(x.riskLevel || '').toLowerCase();
+      const riskLevel = (risk === 'high' || risk === 'medium' || risk === 'low') ? risk : '';
+
       return {
         id,
         ledgerId: lid,
         title: String(x.title || '').trim(),
-        category: 'rent',
+        // category is used as a lightweight metadata field for seeded obligations
+        category,
+        required: !!x.required,
+        riskLevel,
         amount: Number.isFinite(Number(x.amount)) ? Number(x.amount) : 0,
         frequency: freq,
         nextDueDate: String(x.nextDueDate || '').trim(),
