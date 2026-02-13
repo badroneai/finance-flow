@@ -1785,6 +1785,17 @@ const LedgersPage = () => {
   const [recForm, setRecForm] = useState({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
   const [recEditingId, setRecEditingId] = useState(null);
 
+  // Quick pricing wizard
+  const [pricingOpen, setPricingOpen] = useState(false);
+  const [pricingIndex, setPricingIndex] = useState(0);
+  const [pricingAmount, setPricingAmount] = useState('');
+  const [pricingDate, setPricingDate] = useState('');
+
+  // Convert-to-transaction modal
+  const [payOpen, setPayOpen] = useState(false);
+  const [paySource, setPaySource] = useState(null); // recurring item
+  const [payForm, setPayForm] = useState({ type: 'expense', category: 'other', paymentMethod: 'cash', amount: '', date: '', description: '' });
+
   // Supports Arabic/Indic numerals and common separators for amount parsing.
   const normalizeNumeralsToAscii = (input) => {
     const s = String(input ?? '');
@@ -1902,6 +1913,56 @@ const LedgersPage = () => {
   const recurringDashboard = computeRecurringDashboard(activeRecurring);
   const completeness = computeLedgerCompleteness(activeRecurring);
   const recurringSections = groupRecurringBySections(activeRecurring);
+
+  const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
+
+  const ensureDateValue = (d) => {
+    const x = String(d || '').trim();
+    if (x) return x;
+    // default: 30 days from today
+    const t = new Date();
+    t.setDate(t.getDate() + 30);
+    return `${t.getFullYear()}-${String(t.getMonth() + 1).padStart(2, '0')}-${String(t.getDate()).padStart(2, '0')}`;
+  };
+
+  const openPricingWizard = () => {
+    if (unpricedList.length === 0) return;
+    setPricingIndex(0);
+    const item = unpricedList[0];
+    setPricingAmount('');
+    setPricingDate(ensureDateValue(item?.nextDueDate));
+    setPricingOpen(true);
+  };
+
+  const applyPricingToItem = (itemId, { amount, nextDueDate }) => {
+    const list = Array.isArray(recurring) ? recurring : [];
+    const ts = new Date().toISOString();
+    const next = list.map(r => {
+      if (r.id !== itemId) return r;
+      return {
+        ...r,
+        amount,
+        nextDueDate,
+        updatedAt: ts,
+      };
+    });
+    setRecurringItems(next);
+    setRecurringState(next);
+  };
+
+  const startPayNow = (r) => {
+    if (!r) return;
+    setPaySource(r);
+    setPayForm({
+      type: 'expense',
+      category: 'other',
+      paymentMethod: 'cash',
+      amount: String(Number(r.amount) || ''),
+      date: today(),
+      description: String(r.title || '').trim(),
+    });
+    setPayOpen(true);
+  };
 
   const resetRecForm = () => setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
 
@@ -2156,6 +2217,19 @@ const LedgersPage = () => {
               </div>
               {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
             </div>
+
+            <div className="flex gap-2 justify-end">
+              {unpricedList.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={openPricingWizard}
+                  className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm font-medium hover:bg-amber-100"
+                  aria-label="إكمال التسعير"
+                >
+                  إكمال التسعير
+                </button>
+              ) : null}
+            </div>
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
@@ -2262,7 +2336,17 @@ const LedgersPage = () => {
                                 {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
                               </div>
 
-                              <div className="flex gap-2 justify-end">
+                              <div className="flex flex-wrap gap-2 justify-end">
+                                <button
+                                  type="button"
+                                  disabled={Number(r.amount) === 0}
+                                  title={Number(r.amount) === 0 ? 'حدد المبلغ أولاً' : 'سجّل كدفعة الآن'}
+                                  onClick={() => startPayNow(r)}
+                                  className={`px-3 py-2 rounded-lg text-sm font-medium border ${Number(r.amount) === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                                  aria-label="سجّل كدفعة الآن"
+                                >
+                                  سجّل كدفعة الآن
+                                </button>
                                 <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
                                 <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
                               </div>
@@ -2278,6 +2362,181 @@ const LedgersPage = () => {
           )}
         </>
       )}
+
+      {/* Quick Pricing Wizard */}
+      {pricingOpen && unpricedList.length > 0 ? (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            {(() => {
+              const item = unpricedList[Math.min(pricingIndex, unpricedList.length - 1)];
+              if (!item) return null;
+
+              return (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900">إكمال التسعير</h3>
+                      <p className="text-sm text-gray-500 mt-1">{pricingIndex + 1} / {unpricedList.length} — {item.title}</p>
+                    </div>
+                    <button type="button" onClick={() => setPricingOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3 mt-4">
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
+                      <input
+                        type="text"
+                        inputMode="decimal"
+                        value={pricingAmount}
+                        onChange={(e) => setPricingAmount(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                        placeholder="0"
+                        aria-label="مبلغ التسعير"
+                      />
+                    </div>
+                    <div className="col-span-2 sm:col-span-1">
+                      <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الاستحقاق</label>
+                      <input
+                        type="date"
+                        value={pricingDate}
+                        onChange={(e) => setPricingDate(e.target.value)}
+                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
+                        aria-label="تاريخ التسعير"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 justify-end mt-4">
+                    <button type="button" onClick={() => {
+                      // Skip
+                      const next = pricingIndex + 1;
+                      if (next >= unpricedList.length) { setPricingOpen(false); refresh(); return; }
+                      setPricingIndex(next);
+                      const nxt = unpricedList[next];
+                      setPricingAmount('');
+                      setPricingDate(ensureDateValue(nxt?.nextDueDate));
+                    }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="تخطي">تخطي</button>
+
+                    <button type="button" onClick={() => {
+                      // Save & next
+                      const amount = parseRecurringAmount(pricingAmount);
+                      if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
+                      const due = String(pricingDate || '').trim();
+                      if (!due) { toast('تاريخ الاستحقاق مطلوب', 'error'); return; }
+                      try {
+                        applyPricingToItem(item.id, { amount, nextDueDate: due });
+                      } catch { toast('تعذر حفظ التسعير', 'error'); return; }
+
+                      const next = pricingIndex + 1;
+                      if (next >= unpricedList.length) {
+                        toast('تم تحديث التسعير');
+                        setPricingOpen(false);
+                        refresh();
+                        return;
+                      }
+                      setPricingIndex(next);
+                      const nxt = unpricedList[next];
+                      setPricingAmount('');
+                      setPricingDate(ensureDateValue(nxt?.nextDueDate));
+                    }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="التالي">التالي</button>
+
+                    <button type="button" onClick={() => {
+                      // Save & finish
+                      const amount = parseRecurringAmount(pricingAmount);
+                      if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
+                      const due = String(pricingDate || '').trim();
+                      if (!due) { toast('تاريخ الاستحقاق مطلوب', 'error'); return; }
+                      try {
+                        applyPricingToItem(item.id, { amount, nextDueDate: due });
+                        toast('تم تحديث التسعير');
+                        setPricingOpen(false);
+                        refresh();
+                      } catch { toast('تعذر حفظ التسعير', 'error'); }
+                    }} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium" aria-label="حفظ وإنهاء">حفظ وإنهاء</button>
+                  </div>
+                </>
+              );
+            })()}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Convert to Transaction */}
+      {payOpen && paySource ? (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">سجّل كدفعة الآن</h3>
+                <p className="text-sm text-gray-500 mt-1">{paySource.title}</p>
+              </div>
+              <button type="button" onClick={() => setPayOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
+                <input value={payForm.description} onChange={(e) => setPayForm(f => ({ ...f, description: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="وصف الدفعة" />
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
+                <input type="text" inputMode="decimal" value={payForm.amount} onChange={(e) => setPayForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الدفعة" />
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
+                <input type="date" value={payForm.date} onChange={(e) => setPayForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الدفعة" />
+              </div>
+
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">النوع</label>
+                <select value={payForm.type} onChange={(e) => setPayForm(f => ({ ...f, type: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع الحركة">
+                  <option value="expense">خرج</option>
+                  <option value="income">دخل</option>
+                </select>
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">طريقة الدفع</label>
+                <select value={payForm.paymentMethod} onChange={(e) => setPayForm(f => ({ ...f, paymentMethod: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="طريقة الدفع">
+                  <option value="cash">كاش</option>
+                  <option value="bank">تحويل</option>
+                  <option value="card">بطاقة</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setPayOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+              <button type="button" onClick={() => {
+                const amount = parseRecurringAmount(payForm.amount);
+                if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
+                const date = String(payForm.date || '').trim();
+                if (!date) { toast('التاريخ مطلوب', 'error'); return; }
+
+                const type = (payForm.type === 'income' || payForm.type === 'expense') ? payForm.type : 'expense';
+                const paymentMethod = String(payForm.paymentMethod || 'cash');
+                const description = String(payForm.description || '').trim();
+
+                // Minimal safe defaults (do not change transactions logic):
+                const category = 'other';
+
+                const res = dataStore.transactions.create({
+                  type,
+                  category,
+                  amount,
+                  paymentMethod,
+                  date,
+                  description,
+                });
+                if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
+
+                toast('تم تسجيل الدفعة');
+                setPayOpen(false);
+              }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل">تسجيل</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       <ConfirmDialog
         open={!!confirm}
