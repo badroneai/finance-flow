@@ -1,14 +1,10 @@
 /*
   قيد العقار (Finance Flow)
-  Stage 3 — core/storage.js
+  Stage 2 — core/storage.js
 
   الهدف:
   - واجهة موحّدة للتعامل مع localStorage.
-  - بدون تغيير سلوك التطبيق.
-
-  ملاحظة:
-  - هذا الملف Module (ESM) ويُحمّل عبر <script type="module">.
-  - نكشف storage/ffStorage على window لتستخدمه النسخة الحالية (single-file) بدون refactor كبير.
+  - إزالة أي globals (عدم كشف storage على window).
 */
 
 import { STORAGE_KEYS } from './keys.js';
@@ -53,9 +49,3 @@ export const ffStorage = {
   getSeededRaw() { return storage.getRaw(STORAGE_KEYS.SEEDED); },
   setSeededRaw(v) { storage.setRaw(STORAGE_KEYS.SEEDED, v); },
 };
-
-// Expose for legacy single-file usage (no behavior change)
-if (typeof window !== 'undefined') {
-  window.storage = window.storage || storage;
-  window.ffStorage = window.ffStorage || ffStorage;
-}

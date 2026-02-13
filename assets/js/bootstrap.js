@@ -1,13 +1,9 @@
 /*
   قيد العقار (Finance Flow)
-  Stage 1/4 — Bootstrap entrypoint
+  Stage 2 — Bootstrap entrypoint
 
   الهدف:
-  - نقطة تحميل Modules بشكل تدريجي بدون تغيير سلوك.
-  - في هذه المرحلة نُحمّل formatters ونكشفها على window.QA.
+  - إبقاء نقطة دخول اختيارية للـmodules بدون أي globals.
 */
 
-import * as formatters from './core/formatters.js';
-
-window.QA = window.QA || {};
-window.QA.formatters = window.QA.formatters || formatters;
+export * as formatters from './core/formatters.js';
