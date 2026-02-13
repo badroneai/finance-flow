@@ -45,16 +45,20 @@ const mk = ({
 });
 
 export const LEDGER_TEMPLATES = {
-  office: ({ todayISO }) => ([
-    mk({ title: 'إيجار المكتب', frequency: 'monthly', nextDueDate: todayISO, notes: 'إلزامي غالبًا', category: 'system', required: true, riskLevel: 'high' }),
-    mk({ title: 'رواتب الموظفين', frequency: 'monthly', nextDueDate: todayISO, notes: 'حسب الفريق', category: 'system', required: true, riskLevel: 'high' }),
-    mk({ title: 'كهرباء المكتب', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'medium' }),
-    mk({ title: 'إنترنت / اتصالات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: true, riskLevel: 'medium' }),
-    mk({ title: 'اشتراك منصات عقارية', frequency: 'monthly', nextDueDate: todayISO, notes: 'مثل: عقار/حراج/…', category: 'marketing', required: false, riskLevel: 'low' }),
-    mk({ title: 'مصروفات تسويق وإعلانات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'marketing', required: false, riskLevel: 'low' }),
-    mk({ title: 'صيانة عامة للمكتب', frequency: 'quarterly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
-    mk({ title: 'تجديد رخص/اشتراكات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
-    mk({ title: 'ضيافة/قهوة/مستلزمات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: false, riskLevel: 'low' }),
+  office: ({ todayISO, nextMonthISO, plus90ISO, plus365ISO }) => ([
+    mk({ title: 'إيجار المكتب', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'system', required: true, riskLevel: 'high', saHint: 'أساس التشغيل للمكتب', priceBand: { min: 3500, max: 18000, typical: 8500 }, defaultFreq: 'monthly', cityFactorEligible: true }),
+    mk({ title: 'رواتب الموظفين', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'system', required: true, riskLevel: 'high', saHint: 'حسب عدد الفريق', priceBand: { min: 0, max: 60000, typical: 18000 }, defaultFreq: 'monthly', cityFactorEligible: true }),
+    mk({ title: 'كهرباء المكتب', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'system', required: true, riskLevel: 'medium', saHint: 'فاتورة شهرية', priceBand: { min: 150, max: 1200, typical: 450 }, defaultFreq: 'monthly', cityFactorEligible: false }),
+    mk({ title: 'ماء المكتب', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'system', required: false, riskLevel: 'low', saHint: 'حسب الاستهلاك', priceBand: { min: 0, max: 300, typical: 80 }, defaultFreq: 'monthly', cityFactorEligible: false }),
+    mk({ title: 'إنترنت / اتصالات', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'operational', required: true, riskLevel: 'medium', saHint: 'ضروري للتشغيل', priceBand: { min: 200, max: 800, typical: 350 }, defaultFreq: 'monthly', cityFactorEligible: false }),
+    mk({ title: 'اشتراك منصات عقارية', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'marketing', required: false, riskLevel: 'low', saHint: 'يزيد عدد العملاء', priceBand: { min: 0, max: 5000, typical: 1200 }, defaultFreq: 'monthly', cityFactorEligible: true }),
+    mk({ title: 'إعلانات ممولة (سناب/قوقل)', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'marketing', required: false, riskLevel: 'low', saHint: 'للجذب السريع', priceBand: { min: 0, max: 15000, typical: 2500 }, defaultFreq: 'monthly', cityFactorEligible: true }),
+    mk({ title: 'مصاريف ضيافة/قهوة', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'operational', required: false, riskLevel: 'low', saHint: 'تحسين تجربة العملاء', priceBand: { min: 50, max: 800, typical: 200 }, defaultFreq: 'monthly', cityFactorEligible: false }),
+    mk({ title: 'نظافة المكتب', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'operational', required: false, riskLevel: 'low', saHint: 'حسب الاتفاق', priceBand: { min: 0, max: 1200, typical: 400 }, defaultFreq: 'monthly', cityFactorEligible: true }),
+    mk({ title: 'صيانة عامة (ربع سنوي)', frequency: 'quarterly', nextDueDate: plus90ISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium', saHint: 'وقاية من الأعطال', priceBand: { min: 0, max: 3000, typical: 600 }, defaultFreq: 'quarterly', cityFactorEligible: false }),
+    mk({ title: 'تجديد رخص/اشتراكات', frequency: 'yearly', nextDueDate: plus365ISO, notes: '', category: 'system', required: true, riskLevel: 'high', saHint: 'لتجنب الإيقاف', priceBand: { min: 0, max: 8000, typical: 1200 }, defaultFreq: 'yearly', cityFactorEligible: false }),
+    mk({ title: 'رسوم محاسب/مراجعة', frequency: 'monthly', nextDueDate: nextMonthISO, notes: '', category: 'operational', required: false, riskLevel: 'medium', saHint: 'تنظيم السجلات', priceBand: { min: 0, max: 6000, typical: 1500 }, defaultFreq: 'monthly', cityFactorEligible: true }),
+    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة', category: 'adhoc', required: false, riskLevel: 'high', saHint: 'احتياطي للطوارئ', priceBand: { min: 0, max: 10000, typical: 1000 }, defaultFreq: 'adhoc', cityFactorEligible: false }),
   ]),
 
   chalet: ({ todayISO }) => ([
