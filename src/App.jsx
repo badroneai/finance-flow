@@ -57,6 +57,12 @@ import {
 } from './core/ledger-forecast.js';
 
 import {
+  buildIncomeModelFn,
+  getLast4MonthsTable,
+  targetsEvaluation,
+} from './core/ledger-variance.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
