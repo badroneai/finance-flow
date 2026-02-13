@@ -64,6 +64,15 @@ export function computeLedgerHealth({ recurringItems = [], transactions = [] } =
   });
   const overdueCount = overdue.length;
 
+  const dueSoon14 = priced.filter(r => {
+    const ms = toDateMs(r.nextDueDate);
+    if (ms == null) return false;
+    const t = todayMs();
+    const d14 = t + 14 * 24 * 60 * 60 * 1000;
+    return ms >= t && ms <= d14;
+  });
+  const dueSoon14Count = dueSoon14.length;
+
   const highRisk = seeded.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
   const highRiskCount = highRisk.length;
   const highRiskUnpriced = highRisk.filter(r => Number(r?.amount) === 0);
@@ -95,6 +104,7 @@ export function computeLedgerHealth({ recurringItems = [], transactions = [] } =
     totalSeeded: total,
     pricedCount,
     overdueCount,
+    dueSoon14Count,
     highRiskCount,
     highRiskUnpricedCount: highRiskUnpriced.length,
     pricedRatio,

@@ -2462,7 +2462,7 @@ const LedgersPage = () => {
               <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
                 <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة التسعير</span><span className="font-semibold text-gray-900">{health ? `${health.pricedCount}/${health.totalSeeded}` : '—'}</span></div>
                 <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة الانضباط (30 يوم)</span><span className="font-semibold text-gray-900">{health ? `${Math.round((health.disciplineRatio || 0) * 100)}%` : '—'}</span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">مخاطر</span><span className="font-semibold text-gray-900">{health ? `High ${health.highRiskCount} • متأخر ${health.overdueCount}` : '—'}</span></div>
+                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">مخاطر</span><span className="font-semibold text-gray-900">{health ? `High ${health.highRiskCount} • متأخر ${health.overdueCount} • قادم ${health.dueSoon14Count}` : '—'}</span></div>
               </div>
 
               <button type="button" onClick={() => setHealthHelpOpen(v => !v)} className="mt-3 text-xs text-blue-700 hover:underline" aria-label="كيف نحسبها؟">كيف نحسبها؟</button>
