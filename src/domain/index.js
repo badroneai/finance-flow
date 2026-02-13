@@ -10,3 +10,7 @@ export * from './notes.js';
 export * from './letterTemplates.js';
 export * from './letters.js';
 export * from './drafts.js';
+
+// Dashboard/Reports/Charts
+export * from './reports.js';
+export * from './charts.js';

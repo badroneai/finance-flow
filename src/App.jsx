@@ -32,6 +32,13 @@ import {
   buildInitialFields,
   validateLetterFields,
   formatDraftDate,
+
+  // Dashboard/Reports/Charts domain
+  getDashboardDateRange,
+  computeIncomeExpenseNet,
+  splitCommissionsByStatus,
+  computeCommissionOfficeTotals,
+  buildLast6MonthsIncomeExpenseChart,
 } from './domain/index.js';
 
 // Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
@@ -959,61 +966,18 @@ const DashboardPage = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
 
-  const getDateRange = () => {
-    const now = new Date();
-    if (periodType === 'thisMonth') {
-      return { from: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`, to: `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-31` };
-    }
-    if (periodType === 'last3') {
-      const d = new Date(now); d.setMonth(d.getMonth()-3);
-      return { from: d.toISOString().split('T')[0], to: now.toISOString().split('T')[0] };
-    }
-    if (periodType === 'last6') {
-      const d = new Date(now); d.setMonth(d.getMonth()-6);
-      return { from: d.toISOString().split('T')[0], to: now.toISOString().split('T')[0] };
-    }
-    if (periodType === 'thisYear') {
-      return { from: `${now.getFullYear()}-01-01`, to: `${now.getFullYear()}-12-31` };
-    }
-    if (periodType === 'custom') {
-      return { from: fromDate, to: toDate };
-    }
-    return { from: '', to: '' };
-  };
-
-  const range = getDateRange();
+  const range = getDashboardDateRange(periodType, fromDate, toDate);
   const txs = dataStore.transactions.list({ fromDate: range.from, toDate: range.to });
   const allCms = dataStore.commissions.list();
 
-  const income = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-  const expense = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
-  const net = income - expense;
-  const pendingCms = allCms.filter(c => c.status === 'pending');
-  const paidCms = allCms.filter(c => c.status === 'paid');
-  const pendingTotal = pendingCms.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
-  const paidTotal = paidCms.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
+  const { income, expense, net } = computeIncomeExpenseNet(txs);
+  const { pendingCms, paidCms } = splitCommissionsByStatus(allCms);
+  const { pendingTotal, paidTotal } = computeCommissionOfficeTotals(pendingCms, paidCms);
 
   // Bar chart data: last 6 months
   const chartData = useMemo(() => {
     const allTxs = dataStore.transactions.list({});
-    const months = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const key = getMonthKey(d.toISOString());
-      const label = d.toLocaleDateString('ar-SA', { month:'short' });
-      months.push({ key, label, income: 0, expense: 0 });
-    }
-    allTxs.forEach(t => {
-      const mk = getMonthKey(t.date);
-      const m = months.find(m => m.key === mk);
-      if (m) {
-        if (t.type === 'income') m.income += t.amount;
-        else m.expense += t.amount;
-      }
-    });
-    const maxVal = Math.max(...months.map(m => Math.max(m.income, m.expense)), 1);
-    return { months, maxVal };
+    return buildLast6MonthsIncomeExpenseChart(allTxs);
   }, [txs]);
 
   return (
