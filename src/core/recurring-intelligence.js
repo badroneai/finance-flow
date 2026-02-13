@@ -33,9 +33,12 @@ export function isDueWithinDays(item, days, { now = new Date() } = {}) {
   if (!d) return false;
   const due = new Date(d + 'T00:00:00');
   if (Number.isNaN(due.getTime())) return false;
-  const end = new Date(now.getTime());
+
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const end = new Date(start.getTime());
   end.setDate(end.getDate() + Number(days || 0));
-  return due.getTime() <= end.getTime();
+
+  return due.getTime() >= start.getTime() && due.getTime() <= end.getTime();
 }
 
 export function isPastDue(item, { now = new Date() } = {}) {
