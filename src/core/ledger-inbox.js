@@ -109,6 +109,8 @@ export function buildLedgerInbox({ ledgerId, recurringItems = [], now = new Date
       payStateAt: r?.payStateAt || '',
       payStateNote: String(r?.payStateNote || ''),
 
+      history: Array.isArray(r?.history) ? r.history : [],
+
       reason,
       priority,
     });
