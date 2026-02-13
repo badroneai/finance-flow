@@ -2818,36 +2818,36 @@ const LedgersPage = () => {
                       const pl30 = computePL({ transactions: last30 });
                       const pl365 = computePL({ transactions: last365 });
 
-                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'غير مصنف';
+                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'other';
                       const breakdown = computeTopBuckets({ transactions: txs, limit: 50 });
+                      const breakdownStr = breakdown.map(x => `${bucketName(x.bucket)}:${Number(x.total) || 0}`).join(' | ');
+                      const generatedAt = new Date().toISOString();
 
-                      const headers = ['الفترة','دخل','مصروف','صافي','Bucket','إجمالي Bucket (مصروفات فقط)'];
-                      const rows = [];
-                      rows.push(['آخر 30 يوم', pl30.income, pl30.expense, pl30.net, '', '']);
-                      rows.push(['آخر 12 شهر', pl365.income, pl365.expense, pl365.net, '', '']);
-                      rows.push(['', '', '', '', '', '']);
-                      for (const x of breakdown) rows.push(['', '', '', '', bucketName(x.bucket), x.total]);
+                      const headers = ['period','income_total','expense_total','net_total','breakdown_by_bucket','generated_at'];
+                      const rows = [
+                        ['30d', pl30.income, pl30.expense, pl30.net, breakdownStr, generatedAt],
+                        ['12m', pl365.income, pl365.expense, pl365.net, breakdownStr, generatedAt],
+                      ];
 
                       downloadCSV({ filename: `ledger_report_${today()}.csv`, headers, rows });
-                      toast('تم تصدير تقرير CSV');
-                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير تقرير CSV">تصدير تقرير CSV</button>
+                      toast('تم تصدير تقرير الدفتر CSV');
+                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير تقرير الدفتر CSV">تصدير تقرير الدفتر CSV</button>
 
                     <button type="button" onClick={() => {
                       const list = activeRecurring;
-                      const headers = ['الالتزام','Bucket','إلزامي','خطورة','التكرار','تاريخ الاستحقاق','المبلغ'];
-                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'أخرى';
-                      const rows = list.map(r => {
-                        const bucket = getBucketForRecurring(r);
-                        return [
-                          r.title || '',
-                          bucketName(bucket),
-                          r.required ? 'نعم' : 'لا',
-                          r.riskLevel || '',
-                          r.frequency || '',
-                          r.nextDueDate || '',
-                          Number(r.amount) || 0,
-                        ];
-                      });
+                      const headers = ['ledgerId','name','bucket','required','riskLevel','frequency','nextDueDate','amount','saHint'];
+                      const bucketRaw = (r) => getBucketForRecurring(r) || 'other';
+                      const rows = list.map(r => ([
+                        r.ledgerId || '',
+                        r.title || '',
+                        bucketRaw(r),
+                        r.required ? 'true' : 'false',
+                        r.riskLevel || '',
+                        r.frequency || '',
+                        r.nextDueDate || '',
+                        Number(r.amount) || 0,
+                        r.saHint || '',
+                      ]));
                       downloadCSV({ filename: `ledger_obligations_${today()}.csv`, headers, rows });
                       toast('تم تصدير الالتزامات CSV');
                     }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير الالتزامات CSV">تصدير الالتزامات CSV</button>
