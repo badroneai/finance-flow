@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo, useRef, createContext
 
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
+import { storageFacade } from './core/storage-facade.js';
 
 // ============================================
 // TYPES
@@ -2585,7 +2586,7 @@ const WelcomeBanner = () => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const hasSeenBanner = localStorage.getItem(STORAGE_KEYS.UI_WELCOME);
+    const hasSeenBanner = storageFacade.getRaw(STORAGE_KEYS.UI_WELCOME);
     const tx = safeGet(KEYS.transactions, []);
     const comm = safeGet(KEYS.commissions, []);
     const hasData = tx.length > 0 || comm.length > 0;
@@ -2594,7 +2595,7 @@ const WelcomeBanner = () => {
 
   const dismiss = () => {
     setShow(false);
-    localStorage.setItem(STORAGE_KEYS.UI_WELCOME, 'true');
+    storageFacade.setRaw(STORAGE_KEYS.UI_WELCOME, 'true');
   };
 
   if (!show) return null;
