@@ -1033,20 +1033,29 @@ const Badge = ({ children, color='blue' }) => {
 // NAVIGATION
 // ============================================
 const NAV_ITEMS = [
-  { id:'home', label:'الرئيسية', icon:Icons.home },
-  { id:'transactions', label:'الحركات المالية', icon:Icons.list, group:'finance' },
-  { id:'commissions', label:'العمولات', icon:Icons.percent, group:'finance' },
-  { id:'templates', label:'قوالب الخطابات', icon:Icons.mail, group:'letters' },
-  { id:'generator', label:'إنشاء خطاب', icon:Icons.fileText, group:'letters' },
-  { id:'drafts', label:'المسودات', icon:Icons.fileText, group:'letters' },
-  { id:'calendar', label:'التقويم', icon:Icons.calendar, group:'notes' },
-  { id:'notes', label:'الملاحظات', icon:Icons.notes, group:'notes' },
-  { id:'help', label:'دليل سريع', icon:Icons.info },
-  { id:'settings', label:'الإعدادات', icon:Icons.settings },
+  // 💰 المالية
+  { id:'home', label:'لوحة التحكم', icon:Icons.dashboard, section:'finance' },
+  { id:'transactions', label:'الحركات المالية', icon:Icons.list, section:'finance' },
+  { id:'commissions', label:'العمولات', icon:Icons.percent, section:'finance' },
+
+  // 🧾 الخطابات (صفحة واحدة في القائمة)
+  { id:'templates', label:'الخطابات', icon:Icons.mail, section:'letters' },
+  // صفحات الخطابات الأخرى تبقى موجودة لكن تُخفى من القائمة الجانبية حسب المطلوب
+  { id:'generator', label:'إنشاء خطاب', icon:Icons.fileText, hiddenInSidebar:true },
+  { id:'drafts', label:'المسودات', icon:Icons.fileText, hiddenInSidebar:true },
+
+  // 🗓️ التنظيم
+  { id:'calendar', label:'التقويم', icon:Icons.calendar, section:'org' },
+  { id:'notes', label:'الملاحظات', icon:Icons.notes, section:'org' },
+
+  // 🛟 الدعم
+  { id:'help', label:'الدليل السريع', icon:Icons.info, section:'support' },
+
+  // ⚙️ الإعدادات
+  { id:'settings', label:'الإعدادات', icon:Icons.settings, section:'settings' },
 ];
 
 const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen, onOpenHelp }) => {
-  const groups = { finance: 'التدفقات المالية', letters: 'الخطابات', notes: 'الملاحظات والتقويم' };
   const handleNav = (id) => {
     if (id === 'help') { typeof onOpenHelp === 'function' && onOpenHelp(); setMobileOpen(false); return; }
     setPage(id === 'home' ? 'dashboard' : id);
@@ -1065,42 +1074,51 @@ const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobile
               <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5"/>
             </svg>
           </div>
-          {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1><p className="text-gray-400 text-xs">نظام التدفقات المالية</p></div>}
+          {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1></div>}
         </div>
       </div>
       <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="القائمة الرئيسية">
-        {NAV_ITEMS.filter(i => !i.group && i.id === 'home').map(item => (
-          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-              (page === item.id || (item.id === 'home' && page === 'dashboard')) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-            } ${collapsed ? 'justify-center' : ''}`}>
-            <item.icon size={18}/>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
-        {Object.entries(groups).map(([key, label]) => (
-          <div key={key} className="mb-2">
-            {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium uppercase tracking-wider">{label}</p>}
-            {NAV_ITEMS.filter(i => i.group === key).map(item => (
-              <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-                  page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-                } ${collapsed ? 'justify-center' : ''}`}>
-                <item.icon size={18}/>
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            ))}
-          </div>
-        ))}
-        {NAV_ITEMS.filter(i => !i.group && i.id !== 'home').map(item => (
-          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-              page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-            } ${collapsed ? 'justify-center' : ''}`}>
-            <item.icon size={18}/>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
+        {(() => {
+          const visible = NAV_ITEMS.filter(i => !i.hiddenInSidebar);
+          const sections = [
+            { id:'finance', title:'💰 المالية' },
+            { id:'letters', title:'🧾 الخطابات' },
+            { id:'org', title:'🗓️ التنظيم' },
+          ];
+          const tail = [
+            { id:'support', title:'🛟 الدعم' },
+            { id:'settings', title:'⚙️ الإعدادات' },
+          ];
+
+          const renderItem = (item) => (
+            <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
+                (item.id === 'home' ? (page === 'dashboard' || page === 'home') : page === item.id) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
+              } ${collapsed ? 'justify-center' : ''}`}>
+              <item.icon size={18}/>
+              {!collapsed && <span>{item.label}</span>}
+            </button>
+          );
+
+          const renderSection = (section) => {
+            const items = visible.filter(i => i.section === section.id);
+            if (!items.length) return null;
+            return (
+              <div key={section.id} className="mb-2">
+                {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium tracking-wider">{section.title}</p>}
+                {items.map(renderItem)}
+              </div>
+            );
+          };
+
+          return (
+            <>
+              {sections.map(renderSection)}
+              <div className="my-2 border-t border-gray-700/50" aria-hidden="true"/>
+              {tail.map(renderSection)}
+            </>
+          );
+        })()}
       </nav>
     </div>
   );
