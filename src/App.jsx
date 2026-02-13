@@ -1806,6 +1806,12 @@ const LedgersPage = () => {
   const [pricingAmount, setPricingAmount] = useState('');
   const [pricingDate, setPricingDate] = useState('');
 
+  // Saudi auto-pricing wizard v2
+  const [saPricingOpen, setSaPricingOpen] = useState(false);
+  const [saCity, setSaCity] = useState('riyadh');
+  const [saSize, setSaSize] = useState('medium');
+  const [saOnlyUnpriced, setSaOnlyUnpriced] = useState(true);
+
   // Convert-to-transaction modal
   const [payOpen, setPayOpen] = useState(false);
   const [paySource, setPaySource] = useState(null); // recurring item
@@ -2021,6 +2027,62 @@ const LedgersPage = () => {
     setPricingAmount('');
     setPricingDate(ensureDateValue(item?.nextDueDate));
     setPricingOpen(true);
+  };
+
+  const SA_CITY_FACTOR = {
+    riyadh: 1.15,
+    jeddah: 1.10,
+    dammam: 1.05,
+    qassim: 0.95,
+    other: 1.00,
+  };
+
+  const SA_SIZE_FACTOR = {
+    small: 0.85,
+    medium: 1.00,
+    large: 1.25,
+  };
+
+  const applySaudiAutoPricing = ({ city, size, onlyUnpriced }) => {
+    if (!activeId) return { ok: false, message: 'اختر دفترًا نشطًا أولًا' };
+
+    const cityFactor = SA_CITY_FACTOR[String(city || 'other')] ?? 1.0;
+    const sizeFactor = SA_SIZE_FACTOR[String(size || 'medium')] ?? 1.0;
+
+    const list = Array.isArray(recurring) ? recurring : [];
+    const ts = new Date().toISOString();
+
+    const next = list.map((r) => {
+      if (r.ledgerId !== activeId) return r;
+
+      const seeded = isSeededRecurring(r);
+      const band = r.priceBand && typeof r.priceBand === 'object' ? r.priceBand : null;
+      const typical = band && Number.isFinite(Number(band.typical)) ? Number(band.typical) : 0;
+      if (!seeded || typical <= 0) return r;
+
+      if (onlyUnpriced && Number(r.amount) > 0) return r;
+
+      const eligible = !!r.cityFactorEligible;
+      const amount = Math.round(typical * (eligible ? cityFactor : 1.0) * sizeFactor);
+
+      const due = String(r.nextDueDate || '').trim();
+      const nextDueDate = due ? due : ensureDateValue(due);
+
+      const desiredFreq = String(r.defaultFreq || r.frequency || 'monthly').toLowerCase();
+      const freq = (desiredFreq === 'monthly' || desiredFreq === 'quarterly' || desiredFreq === 'yearly' || desiredFreq === 'adhoc') ? desiredFreq : String(r.frequency || 'monthly');
+
+      return {
+        ...r,
+        amount: amount > 0 ? amount : r.amount,
+        frequency: freq,
+        nextDueDate,
+        updatedAt: ts,
+      };
+    });
+
+    try { setRecurringItems(next); } catch { return { ok: false, message: 'تعذر تطبيق التسعير' }; }
+    setRecurringState(next);
+    return { ok: true };
   };
 
   const applyPricingToItem = (itemId, { amount, nextDueDate }) => {
@@ -2319,6 +2381,15 @@ const LedgersPage = () => {
                   إكمال التسعير
                 </button>
               ) : null}
+
+              <button
+                type="button"
+                onClick={() => setSaPricingOpen(true)}
+                className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
+                aria-label="معالج تسعير سعودي"
+              >
+                معالج تسعير سعودي
+              </button>
             </div>
 
             {/* Outlook 30/60/90 */}
@@ -2595,6 +2666,59 @@ const LedgersPage = () => {
           )}
         </>
       )}
+
+      {/* Saudi Auto-Pricing Wizard v2 */}
+      {saPricingOpen ? (
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
+          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">معالج تسعير سعودي</h3>
+                <p className="text-sm text-gray-500 mt-1">يملأ مبالغ مقترحة للعناصر seeded حسب المدينة والحجم.</p>
+              </div>
+              <button type="button" onClick={() => setSaPricingOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mt-4">
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
+                <select value={saCity} onChange={(e) => setSaCity(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="مدينة التسعير">
+                  <option value="riyadh">الرياض</option>
+                  <option value="jeddah">جدة</option>
+                  <option value="dammam">الدمام</option>
+                  <option value="qassim">القصيم</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+              <div className="col-span-2 sm:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">حجم الكيان</label>
+                <select value={saSize} onChange={(e) => setSaSize(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="حجم الكيان">
+                  <option value="small">صغير</option>
+                  <option value="medium">متوسط</option>
+                  <option value="large">كبير</option>
+                </select>
+              </div>
+              <div className="col-span-2">
+                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+                  <input type="checkbox" checked={saOnlyUnpriced} onChange={(e) => setSaOnlyUnpriced(e.target.checked)} />
+                  تطبيق على العناصر غير المُسعّرة فقط
+                </label>
+              </div>
+            </div>
+
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setSaPricingOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+              <button type="button" onClick={() => {
+                const r = applySaudiAutoPricing({ city: saCity, size: saSize, onlyUnpriced: saOnlyUnpriced });
+                if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); return; }
+                toast('تم تطبيق التسعير المقترح');
+                setSaPricingOpen(false);
+                refresh();
+              }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تطبيق">تطبيق</button>
+            </div>
+          </div>
+        </div>
+      ) : null}
 
       {/* Quick Pricing Wizard */}
       {pricingOpen && unpricedList.length > 0 ? (
