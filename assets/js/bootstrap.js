@@ -1,12 +1,13 @@
 /*
   قيد العقار (Finance Flow)
-  Stage 1 — Bootstrap entrypoint
+  Stage 1/4 — Bootstrap entrypoint
 
   الهدف:
-  - نقطة تشغيل JS بسيطة (بدون تغيير سلوك) تمهيدًا لفصل الكود إلى Modules لاحقًا.
-  - في هذه المرحلة لا يتم نقل أي منطق مالي أو UI.
+  - نقطة تحميل Modules بشكل تدريجي بدون تغيير سلوك.
+  - في هذه المرحلة نُحمّل formatters ونكشفها على window.QA.
 */
 
-// Minimal, non-behavioral bootstrap marker
+import * as formatters from './core/formatters.js';
+
 window.QA = window.QA || {};
-console.debug('[QA] bootstrap loaded');
+window.QA.formatters = window.QA.formatters || formatters;
