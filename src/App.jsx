@@ -24,7 +24,19 @@ import {
   normalizeRisk as normalizeRecurringRisk,
   sectionStats,
   sortRecurringInSection,
+  isDueWithinDays,
 } from './core/recurring-intelligence.js';
+
+import { normalizeBudgets, computeBudgetHealth } from './core/ledger-budgets.js';
+
+import {
+  buildTxMetaFromRecurring,
+  computeComplianceScore,
+  computePL,
+  computeTopBuckets,
+  filterTransactionsForLedgerByMeta,
+  getBucketForRecurring,
+} from './core/ledger-reports.js';
 
 const getActiveLedgerIdSafe = () => {
   try { return getActiveLedgerId() || ''; } catch { return ''; }
@@ -1744,7 +1756,7 @@ const DraftsPage = ({ setPage, setLetterType, setEditDraft }) => {
 // ============================================
 const LedgersPage = () => {
   const toast = useToast();
-  const [tab, setTab] = useState('ledgers'); // ledgers | recurring
+  const [tab, setTab] = useState('ledgers'); // ledgers | recurring | reports
   const [confirm, setConfirm] = useState(null);
 
   const [ledgers, setLedgersState] = useState([]);
@@ -1784,6 +1796,9 @@ const LedgersPage = () => {
   const [recurring, setRecurringState] = useState([]);
   const [recForm, setRecForm] = useState({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
   const [recEditingId, setRecEditingId] = useState(null);
+
+  // Budget targets (stored inside active ledger object)
+  const [budgetForm, setBudgetForm] = useState({ monthlyTarget: '', yearlyTarget: '' });
 
   // Quick pricing wizard
   const [pricingOpen, setPricingOpen] = useState(false);
@@ -1829,6 +1844,12 @@ const LedgersPage = () => {
   }, []);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // Keep budget form in sync with active ledger
+  useEffect(() => {
+    const b = normalizeBudgets(activeLedger?.budgets);
+    setBudgetForm({ monthlyTarget: b.monthlyTarget ? String(b.monthlyTarget) : '', yearlyTarget: b.yearlyTarget ? String(b.yearlyTarget) : '' });
+  }, [activeId]);
 
   const createLedger = () => {
     const t = (newName || '').trim();
@@ -1915,6 +1936,74 @@ const LedgersPage = () => {
   const recurringSections = groupRecurringBySections(activeRecurring);
 
   const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
+
+  const outlook = (() => {
+    const list = activeRecurring;
+    const within = (days) => {
+      const due = list.filter(x => isDueWithinDays(x, days));
+      const pricedTotal = due.filter(x => Number(x?.amount) > 0).reduce((a, x) => a + Number(x.amount), 0);
+      const unpricedCount = due.filter(x => Number(x?.amount) === 0).length;
+      return { pricedTotal, count: due.length, unpricedCount };
+    };
+    return {
+      d30: within(30),
+      d60: within(60),
+      d90: within(90),
+    };
+  })();
+
+  const actuals = (() => {
+    const priced = activeRecurring.filter(x => Number(x?.amount) > 0);
+    const actualMonthly = priced.filter(x => String(x.frequency || '').toLowerCase() === 'monthly').reduce((a, x) => a + Number(x.amount), 0);
+    const actualYearly = priced.filter(x => String(x.frequency || '').toLowerCase() === 'yearly').reduce((a, x) => a + Number(x.amount), 0);
+    return { actualMonthly, actualYearly };
+  })();
+
+  const budgetsHealth = computeBudgetHealth({ actualMonthly: actuals.actualMonthly, actualYearly: actuals.actualYearly, budgets: activeLedger?.budgets });
+
+  const ledgerAlerts = (() => {
+    const alerts = [];
+    const seeded = activeRecurring.filter(isSeededRecurring);
+    const overdue = seeded.filter(x => isPastDue(x));
+    const highRiskUnpriced = seeded.filter(x => String(x.riskLevel || '').toLowerCase() === 'high' && Number(x.amount) === 0);
+    if (overdue.length) alerts.push({ id: 'overdue', title: 'استحقاقات متأخرة', reason: `لديك ${overdue.length} التزام(ات) متأخر(ة).`, action: 'scroll-overdue' });
+    if (highRiskUnpriced.length) alerts.push({ id: 'highrisk-unpriced', title: 'بنود عالية الخطورة غير مُسعّرة', reason: `لديك ${highRiskUnpriced.length} بند عالي الخطورة بدون مبلغ.`, action: 'open-pricing' });
+    if ((budgetsHealth.monthlyTarget || budgetsHealth.yearlyTarget) && budgetsHealth.status === 'danger') alerts.push({ id: 'budget', title: 'تجاوز للميزانية', reason: 'إجماليات الالتزامات أعلى من الهدف.', action: 'scroll-summary' });
+    const completeness = computeLedgerCompleteness(activeRecurring);
+    if (completeness && completeness.pct < 60) alerts.push({ id: 'completion', title: 'اكتمال منخفض', reason: `اكتمال التسعير ${completeness.pct}% فقط.`, action: 'open-pricing' });
+    return alerts;
+  })();
+
+  const ledgerReports = (() => {
+    if (!activeId) return null;
+    const all = dataStore.transactions.list();
+    const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+
+    const now = new Date();
+    const daysAgo = (n) => {
+      const d = new Date(now.getTime());
+      d.setDate(d.getDate() - n);
+      return d;
+    };
+    const last30 = txs.filter(t => {
+      const dt = new Date(String(t.date || '') + 'T00:00:00');
+      if (Number.isNaN(dt.getTime())) return false;
+      return dt.getTime() >= daysAgo(30).getTime();
+    });
+    const last365 = txs.filter(t => {
+      const dt = new Date(String(t.date || '') + 'T00:00:00');
+      if (Number.isNaN(dt.getTime())) return false;
+      return dt.getTime() >= daysAgo(365).getTime();
+    });
+
+    const pl30 = computePL({ transactions: last30 });
+    const pl365 = computePL({ transactions: last365 });
+
+    const topBuckets = computeTopBuckets({ transactions: txs, limit: 5 });
+    const compliance = computeComplianceScore({ recurringItems: activeRecurring, budgetsHealth });
+
+    return { txCount: txs.length, pl30, pl365, topBuckets, compliance };
+  })();
 
   const ensureDateValue = (d) => {
     const x = String(d || '').trim();
@@ -2025,9 +2114,10 @@ const LedgersPage = () => {
         <h3 className="font-bold text-gray-900 mb-1">الدفاتر</h3>
         <p className="text-sm text-gray-500">أنشئ عدة دفاتر لإدارة أكثر من جهة/مكتب (النسخة الحالية تبدأ بدفتر افتراضي).</p>
 
-        <div className="flex gap-2 mt-4">
+        <div className="flex flex-wrap gap-2 mt-4">
           <button type="button" onClick={() => setTab('ledgers')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'ledgers' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label="دفاتر">دفاتر</button>
           <button type="button" onClick={() => setTab('recurring')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'recurring' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label="التزامات متكررة">التزامات متكررة</button>
+          <button type="button" onClick={() => setTab('reports')} className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === 'reports' ? 'bg-blue-600 text-white' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`} aria-label="تقارير الدفتر">تقارير الدفتر</button>
         </div>
       </div>
 
@@ -2171,7 +2261,7 @@ const LedgersPage = () => {
                 <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
 
                 {/* Summary (display-only) */}
-                <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700">
+                <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700" id="ledger-summary">
                   {/* Aggregations */}
                   <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري: <strong className="text-gray-900"><Currency value={recurringDashboard.monthlyTotal} /></strong></span>
                   <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي سنوي: <strong className="text-gray-900"><Currency value={recurringDashboard.yearlyTotal} /></strong></span>
@@ -2218,7 +2308,7 @@ const LedgersPage = () => {
               {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
             </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex flex-wrap gap-2 justify-end">
               {unpricedList.length > 0 ? (
                 <button
                   type="button"
@@ -2230,6 +2320,78 @@ const LedgersPage = () => {
                 </button>
               ) : null}
             </div>
+
+            {/* Outlook 30/60/90 */}
+            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+              <div className="p-2 rounded-lg bg-white border border-gray-100">
+                <div className="text-gray-500">30 يوم</div>
+                <div className="font-semibold text-gray-900"><Currency value={outlook.d30.pricedTotal} /></div>
+                <div className="text-gray-500">{outlook.d30.count} • غير مُسعّر {outlook.d30.unpricedCount}</div>
+              </div>
+              <div className="p-2 rounded-lg bg-white border border-gray-100">
+                <div className="text-gray-500">60 يوم</div>
+                <div className="font-semibold text-gray-900"><Currency value={outlook.d60.pricedTotal} /></div>
+                <div className="text-gray-500">{outlook.d60.count} • غير مُسعّر {outlook.d60.unpricedCount}</div>
+              </div>
+              <div className="p-2 rounded-lg bg-white border border-gray-100">
+                <div className="text-gray-500">90 يوم</div>
+                <div className="font-semibold text-gray-900"><Currency value={outlook.d90.pricedTotal} /></div>
+                <div className="text-gray-500">{outlook.d90.count} • غير مُسعّر {outlook.d90.unpricedCount}</div>
+              </div>
+            </div>
+
+            {/* Budget targets */}
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">هدف شهري (اختياري)</label>
+                <input type="text" inputMode="decimal" value={budgetForm.monthlyTarget} onChange={(e) => setBudgetForm(f => ({ ...f, monthlyTarget: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="هدف شهري" placeholder="0" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">هدف سنوي (اختياري)</label>
+                <input type="text" inputMode="decimal" value={budgetForm.yearlyTarget} onChange={(e) => setBudgetForm(f => ({ ...f, yearlyTarget: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="هدف سنوي" placeholder="0" />
+              </div>
+            </div>
+
+            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div className="text-gray-600">
+                الفعلي (شهري/سنوي): <span className="font-semibold text-gray-900"><Currency value={actuals.actualMonthly} /></span> / <span className="font-semibold text-gray-900"><Currency value={actuals.actualYearly} /></span>
+              </div>
+              <div className={`px-2 py-1 rounded-full border ${budgetsHealth.status === 'danger' ? 'bg-red-50 border-red-100 text-red-800' : budgetsHealth.status === 'warn' ? 'bg-yellow-50 border-yellow-100 text-yellow-800' : budgetsHealth.status === 'good' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
+                {budgetsHealth.status === 'danger' ? 'خطر' : budgetsHealth.status === 'warn' ? 'تحذير' : budgetsHealth.status === 'good' ? 'ممتاز' : 'بدون هدف'}
+              </div>
+              <button type="button" onClick={() => {
+                if (!activeId) return;
+                const m = parseRecurringAmount(budgetForm.monthlyTarget);
+                const y = parseRecurringAmount(budgetForm.yearlyTarget);
+                const budgets = normalizeBudgets({ monthlyTarget: Number.isFinite(m) ? m : 0, yearlyTarget: Number.isFinite(y) ? y : 0 });
+                const next = (Array.isArray(ledgers) ? ledgers : []).map(l => l.id === activeId ? { ...l, budgets, updatedAt: new Date().toISOString() } : l);
+                try { setLedgers(next); } catch { toast('تعذر حفظ الميزانية', 'error'); return; }
+                toast('تم حفظ الميزانية');
+                refresh();
+              }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="حفظ الميزانية">حفظ الميزانية</button>
+            </div>
+
+            {/* Alerts */}
+            {ledgerAlerts.length ? (
+              <div className="mt-3 p-3 rounded-lg border border-gray-100 bg-white">
+                <div className="font-semibold text-gray-900 text-sm mb-2">تنبيهات الدفتر</div>
+                <div className="flex flex-col gap-2">
+                  {ledgerAlerts.map(a => (
+                    <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div>
+                        <div className="font-medium text-gray-900">{a.title}</div>
+                        <div className="text-gray-500">{a.reason}</div>
+                      </div>
+                      <button type="button" onClick={() => {
+                        if (a.action === 'open-pricing') { openPricingWizard(); return; }
+                        if (a.action === 'scroll-summary') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+                        if (a.action === 'scroll-overdue') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+                      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب">اذهب</button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
@@ -2359,6 +2521,77 @@ const LedgersPage = () => {
                 </div>
               );
             })()
+          )}
+        </>
+      )}
+
+      {tab === 'reports' && (
+        <>
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="font-bold text-gray-900">تقارير الدفتر</h4>
+                <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
+                <p className="text-xs text-gray-500 mt-1">ملاحظة: هذه التقارير تُحسب فقط من الحركات التي تم إنشاؤها عبر "سجّل كدفعة الآن" (لأنها تحمل meta للدفتر).</p>
+              </div>
+              {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
+            </div>
+          </div>
+
+          {(!activeId) ? (
+            <EmptyState message="اختر دفترًا نشطًا لعرض التقارير" />
+          ) : (
+            <div className="flex flex-col gap-4">
+              <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-gray-900">Mini P&L</h4>
+                  <span className="text-xs text-gray-500">عدد الحركات المصنفة: {ledgerReports?.txCount || 0}</span>
+                </div>
+
+                <div className="grid md:grid-cols-2 gap-3 mt-3">
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">
+                    <div className="text-xs text-gray-500">آخر 30 يوم</div>
+                    <div className="mt-1 text-sm">دخل: <strong><Currency value={ledgerReports?.pl30?.income || 0} /></strong></div>
+                    <div className="text-sm">مصروف: <strong><Currency value={ledgerReports?.pl30?.expense || 0} /></strong></div>
+                    <div className="text-sm">صافي: <strong><Currency value={ledgerReports?.pl30?.net || 0} /></strong></div>
+                  </div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">
+                    <div className="text-xs text-gray-500">آخر 12 شهر (تقريبي)</div>
+                    <div className="mt-1 text-sm">دخل: <strong><Currency value={ledgerReports?.pl365?.income || 0} /></strong></div>
+                    <div className="text-sm">مصروف: <strong><Currency value={ledgerReports?.pl365?.expense || 0} /></strong></div>
+                    <div className="text-sm">صافي: <strong><Currency value={ledgerReports?.pl365?.net || 0} /></strong></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
+                <h4 className="font-bold text-gray-900">Top 5 مصروفات حسب Bucket</h4>
+                {(!ledgerReports?.topBuckets || ledgerReports.topBuckets.length === 0) ? (
+                  <p className="text-sm text-gray-500 mt-2">لا توجد بيانات كافية بعد. استخدم "سجّل كدفعة الآن" لتغذية التقرير.</p>
+                ) : (
+                  <div className="mt-3 flex flex-col gap-2 text-sm">
+                    {ledgerReports.topBuckets.map((b) => (
+                      <div key={b.bucket} className="flex items-center justify-between gap-2">
+                        <span className="text-gray-700">{CATEGORY_LABEL[b.bucket] || b.bucket || 'غير مصنف'}</span>
+                        <strong className="text-gray-900"><Currency value={b.total} /></strong>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
+                <h4 className="font-bold text-gray-900">Compliance Score</h4>
+                {ledgerReports?.compliance ? (
+                  <div className="mt-2">
+                    <div className="text-sm">النتيجة: <strong>{ledgerReports.compliance.pct}%</strong></div>
+                    <div className="text-xs text-gray-500 mt-1">{ledgerReports.compliance.note}</div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 mt-2">لا توجد عناصر seeded كافية لحساب الانضباط.</p>
+                )}
+              </div>
+            </div>
           )}
         </>
       )}
@@ -2520,6 +2753,8 @@ const LedgersPage = () => {
                 // Minimal safe defaults (do not change transactions logic):
                 const category = 'other';
 
+                const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
+
                 const res = dataStore.transactions.create({
                   type,
                   category,
@@ -2527,6 +2762,7 @@ const LedgersPage = () => {
                   paymentMethod,
                   date,
                   description,
+                  meta,
                 });
                 if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
 
