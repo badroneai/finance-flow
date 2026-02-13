@@ -2465,7 +2465,7 @@ const LedgersPage = () => {
 
                         <div className="divide-y divide-gray-100">
                           {list.map((r) => (
-                            <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                            <div key={r.id} id={`rec-${r.id}`} data-overdue={isPastDue(r) ? '1' : '0'} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                               <div className="flex-1 min-w-0">
                                 <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
                                   <span className="truncate">{r.title}</span>
