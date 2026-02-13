@@ -2323,6 +2323,71 @@ const LedgersPage = () => {
                           </button>
                         );
                       })()}
+
+                      {(() => {
+                        const isOffice = normalizeLedgerType(l.type) === 'office';
+                        const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(r => r.ledgerId === l.id);
+                        const txs = dataStore.transactions.list();
+                        const hasTx = filterTransactionsForLedgerByMeta({ transactions: txs, ledgerId: l.id }).length > 0;
+                        const disabled = !isOffice || hasRecurring || hasTx;
+                        const title = !isOffice ? 'متاح فقط لمكتب' : (hasRecurring || hasTx) ? 'تم إعداد الديمو مسبقًا' : 'زرع نموذج مكتب كامل مع تسعير تلقائي'
+
+                        return (
+                          <button
+                            type="button"
+                            disabled={disabled}
+                            title={title}
+                            onClick={() => {
+                              if (disabled) return;
+                              setConfirm({
+                                title: 'تفعيل نموذج مكتب كامل (Demo)',
+                                message: 'سيتم زرع التزامات المكتب وتطبيق تسعير مقترح. هل تريد المتابعة؟',
+                                confirmLabel: 'نعم، فعّل الديمو',
+                                onConfirm: () => {
+                                  try {
+                                    const list = Array.isArray(recurring) ? recurring : [];
+                                    const already = list.some(r => r.ledgerId === l.id);
+                                    const txsNow = dataStore.transactions.list();
+                                    const hasTxNow = filterTransactionsForLedgerByMeta({ transactions: txsNow, ledgerId: l.id }).length > 0;
+                                    if (already || hasTxNow) { toast('تم إعداد الديمو مسبقًا'); setConfirm(null); return; }
+
+                                    const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
+                                    const next = [...list, ...seeded];
+                                    setRecurringItems(next);
+                                    setRecurringState(next);
+
+                                    // Apply Saudi pricing preset (Riyadh + Medium)
+                                    const r = applySaudiAutoPricingForLedger({ ledgerId: l.id, city: 'riyadh', size: 'medium', onlyUnpriced: false });
+                                    if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); setConfirm(null); refresh(); return; }
+
+                                    // Optional: create 3 demo payments to populate reports
+                                    const updated = JSON.parse(localStorage.getItem('ff_recurring_items') || '[]').filter(x => x.ledgerId === l.id);
+                                    const pick = (title) => updated.find(x => String(x.title || '').includes(title));
+                                    const itemsToPay = [pick('إيجار'), pick('كهرباء'), pick('إنترنت')].filter(Boolean).slice(0,3);
+                                    for (const it of itemsToPay) {
+                                      if (Number(it.amount) <= 0) continue;
+                                      const meta = buildTxMetaFromRecurring({ activeLedgerId: l.id, recurring: it });
+                                      dataStore.transactions.create({ type: 'expense', category: 'other', amount: Number(it.amount), paymentMethod: 'cash', date: today(), description: it.title, meta });
+                                    }
+
+                                    toast('تم تفعيل الديمو بنجاح');
+                                    setConfirm(null);
+                                    refresh();
+                                  } catch {
+                                    toast('تعذر تفعيل الديمو', 'error');
+                                    setConfirm(null);
+                                  }
+                                },
+                              });
+                            }}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                            aria-label="تفعيل نموذج مكتب كامل (Demo)"
+                          >
+                            تفعيل نموذج مكتب كامل (Demo)
+                          </button>
+                        );
+                      })()}
+
                       <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
                       <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
                     </div>
