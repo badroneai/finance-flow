@@ -63,6 +63,11 @@ import {
 } from './core/ledger-variance.js';
 
 import {
+  buildLedgerInbox,
+  addDaysISO,
+} from './core/ledger-inbox.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
@@ -2098,6 +2103,8 @@ const LedgersPage = () => {
 
   const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
 
+  const inbox = buildLedgerInbox({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
+
   const operatorMode = (() => {
     const list = activeRecurring;
     const overdue = list.filter(x => isPastDue(x));
@@ -2283,6 +2290,18 @@ const LedgersPage = () => {
     });
     setRecurringItems(next);
     setRecurringState(next);
+  };
+
+  const updateRecurringOps = (itemId, patch = {}) => {
+    const list = Array.isArray(recurring) ? recurring : [];
+    const ts = new Date().toISOString();
+    const next = list.map(r => {
+      if (r.id !== itemId) return r;
+      return { ...r, ...patch, updatedAt: ts };
+    });
+    try { setRecurringItems(next); } catch { toast('تعذر حفظ حالة العنصر', 'error'); return false; }
+    setRecurringState(next);
+    return true;
   };
 
   const startPayNow = (r) => {
@@ -2566,6 +2585,80 @@ const LedgersPage = () => {
 
       {tab === 'recurring' && (
         <>
+          {/* Ledger Inbox */}
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="font-bold text-gray-900">📥 صندوق وارد الدفتر</h4>
+                <p className="text-xs text-gray-500 mt-1">يركّز على التنفيذ: متأخر/قريب/غير مسعّر/خطر</p>
+              </div>
+              <div className="text-xs text-gray-500">{inbox.length ? `عدد العناصر: ${inbox.length}` : ''}</div>
+            </div>
+
+            {inbox.length === 0 ? (
+              <div className="mt-3 p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-700">صندوق الوارد نظيف ✅</div>
+            ) : (
+              <div className="mt-3 flex flex-col gap-2">
+                {inbox.slice(0, 10).map((it) => (
+                  <div key={it.id} className="p-3 rounded-xl border border-gray-100 bg-white flex flex-col sm:flex-row sm:items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="font-semibold text-gray-900 truncate">{it.title || '—'}</div>
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] border ${it.reason.includes('خطر') ? 'border-red-100 bg-red-50 text-red-700' : it.reason.includes('متأخر') ? 'border-yellow-100 bg-yellow-50 text-yellow-800' : 'border-blue-100 bg-blue-50 text-blue-700'}`}>{it.reason}</span>
+                        {it.amount > 0 ? <span className="text-xs text-gray-600"><Currency value={it.amount} /></span> : <span className="text-xs text-amber-700">غير مسعّر</span>}
+                        {it.nextDueDate ? <span className="text-xs text-gray-500">• {it.nextDueDate}</span> : null}
+                      </div>
+                      {it.note?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{it.note}</div> : null}
+                      {it.snoozeUntil ? <div className="text-[11px] text-gray-400 mt-1">مؤجل حتى: {it.snoozeUntil}</div> : null}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <button type="button" onClick={() => {
+                        const r = (Array.isArray(recurring) ? recurring : []).find(x => x.id === it.id);
+                        if (r) startPayNow(r);
+                      }} disabled={it.amount === 0} className={`px-3 py-2 rounded-lg text-sm font-medium border ${it.amount === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`} aria-label="سجّل كدفعة الآن">سجّل كدفعة الآن</button>
+
+                      <button type="button" onClick={() => {
+                        updateRecurringOps(it.id, { status: 'resolved', snoozeUntil: '' });
+                        toast('تم وضعه كمنجز');
+                        refresh();
+                      }} className="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-200 text-sm font-medium hover:bg-green-100" aria-label="تم">تم</button>
+
+                      <button type="button" onClick={() => {
+                        // simple snooze picker
+                        const days = prompt('أجّل كم يوم؟ (3/7/14) أو اكتب تاريخ YYYY-MM-DD', '7');
+                        if (!days) return;
+                        let until = '';
+                        if (/^\d{4}-\d{2}-\d{2}$/.test(days.trim())) until = days.trim();
+                        else until = addDaysISO(Number(days));
+                        updateRecurringOps(it.id, { status: 'snoozed', snoozeUntil: until });
+                        toast('تم التأجيل');
+                        refresh();
+                      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="أجّل">أجّل</button>
+
+                      <button type="button" onClick={() => {
+                        const note = prompt('ملاحظة للعنصر:', String(it.note || ''));
+                        if (note == null) return;
+                        updateRecurringOps(it.id, { note: String(note) });
+                        toast('تم حفظ الملاحظة');
+                        refresh();
+                      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="ملاحظة">ملاحظة</button>
+                    </div>
+                  </div>
+                ))}
+
+                {inbox.length > 10 ? (
+                  <button type="button" onClick={() => {
+                    const el = document.getElementById('ledger-inbox-all');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 self-start" aria-label="عرض الكل">عرض الكل</button>
+                ) : null}
+
+                <div id="ledger-inbox-all" />
+              </div>
+            )}
+          </div>
+
           {/* Ledger Brain Dashboard */}
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
             <div className="flex flex-wrap items-start justify-between gap-2">
@@ -3930,7 +4023,16 @@ const LedgersPage = () => {
                 if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
 
                 toast('تم تسجيل الدفعة');
+
+                // Update ops state on the recurring item (no tx logic change)
+                try {
+                  if (paySource?.id) {
+                    updateRecurringOps(paySource.id, { status: 'resolved', lastPaidAt: new Date().toISOString() });
+                  }
+                } catch {}
+
                 setPayOpen(false);
+                refresh();
               }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل">تسجيل</button>
             </div>
           </div>
