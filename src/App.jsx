@@ -61,15 +61,7 @@ const now = () => new Date().toISOString();
 const today = () => new Date().toISOString().split('T')[0];
 /* Phase 7.2: Central Formatter (depends on dataStore — defined below) */
 
-const getMonthLabel = (dateStr) => {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
-};
-
-const getMonthKey = (dateStr) => {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-};
+// (month label/key moved to domain charts helpers)
 
 /** تهريب حقل CSV (RFC 4180) لتصدير العمولات */
 const csvEscape = (v) => {
