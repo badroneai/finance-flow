@@ -46,6 +46,8 @@ export function setActiveLedgerId(id) {
   const v = id == null ? '' : String(id);
   if (!v) return;
   storageFacade.setRaw(LEDGER_STORAGE_KEYS.ACTIVE_LEDGER_ID, v);
+  // Notify listeners (e.g., transactions page) that the active ledger changed.
+  try { window.dispatchEvent(new CustomEvent('ledger:activeChanged')); } catch {}
 }
 
 /**
