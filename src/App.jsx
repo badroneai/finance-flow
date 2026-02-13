@@ -41,6 +41,8 @@ import {
   buildLast6MonthsIncomeExpenseChart,
 } from './domain/index.js';
 
+import { checkStorageQuota } from './core/storage-quota.js';
+
 // Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
 
 
@@ -61,15 +63,7 @@ const now = () => new Date().toISOString();
 const today = () => new Date().toISOString().split('T')[0];
 /* Phase 7.2: Central Formatter (depends on dataStore — defined below) */
 
-const getMonthLabel = (dateStr) => {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString('ar-SA', { month: 'long', year: 'numeric' });
-};
-
-const getMonthKey = (dateStr) => {
-  const d = new Date(dateStr);
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
-};
+// (month label/key moved to domain charts helpers)
 
 /** تهريب حقل CSV (RFC 4180) لتصدير العمولات */
 const csvEscape = (v) => {
@@ -297,31 +291,14 @@ const detectPrivateBrowsing = () => {
   }
 };
 
-/** Phase 9.3: فحص امتلاء التخزين (يُرجع true إذا كان هناك مساحة) */
-const checkStorageQuota = () => {
-  try {
-    const test = new Array(1024 * 512).join('a');
-    storageFacade.setRaw('_ff_quota_test', test);
-    storageFacade.removeRaw('_ff_quota_test');
-    return true;
-  } catch (e) {
-    if (e && (e.name === 'QuotaExceededError' || e.code === 22)) return false;
-    return true;
-  }
-};
+// (moved to src/core/storage-quota.js)
 
 /** للاختبار فقط: ضع true لتمثيل فشل الكتابة ثم أعد false قبل التسليم */
 const SIMULATE_STORAGE_FAILURE = false;
 /** Phase 9.3 للاختبار فقط: ضع true لتمثيل خطأ في الـ render (شاشة الاستعادة) ثم أعد false */
 const SIMULATE_RENDER_ERROR = false;
 
-const safeGet = (key, fallback) => {
-  try {
-    return storageFacade.getJSON(key, fallback);
-  } catch {
-    return fallback;
-  }
-};
+const safeGet = (key, fallback) => storageFacade.getJSON(key, fallback);
 
 /** Phase 9.2: يرجع { ok: true } عند النجاح، أو { ok: false, code: 'quota'|'unknown', message } عند الفشل. يتعامل مع QuotaExceededError صراحة. */
 const safeSet = (key, val) => {
@@ -692,7 +669,7 @@ const TrustChecks = () => {
     if (detectPrivateBrowsing()) {
       toast('البيانات تُحفظ على هذا الجهاز فقط. في وضع التصفح الخاص قد تُفقد عند إغلاق المتصفح. للحفاظ عليها استخدم التصفح العادي.', 'warning');
     }
-    if (!checkStorageQuota()) {
+    if (!checkStorageQuota(storageFacade)) {
       toast('مساحة التخزين قريبة من الامتلاء. يُنصح بتصدير نسخة احتياطية أو حذف بعض البيانات.', 'warning');
     }
   }, [toast]);
