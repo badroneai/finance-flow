@@ -4,6 +4,8 @@ import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
 
+import { filterTransactions, sumTransactions, filterCommissions, computeCommissionTotals, listAgentNames } from './domain/index.js';
+
 // Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
 
 
@@ -1051,13 +1053,13 @@ const TransactionsPage = () => {
   const [confirm, setConfirm] = useState(null);
 
   const refresh = useCallback(() => {
-    setTxs(dataStore.transactions.list(filters));
+    const all = dataStore.transactions.list();
+    setTxs(filterTransactions(all, filters));
   }, [filters]);
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const income = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-  const expense = txs.filter(t => t.type === 'expense').reduce((s,t) => s + t.amount, 0);
+  const { income, expense } = sumTransactions(txs);
 
   const handleSave = (data, editId) => {
     const res = editId ? dataStore.transactions.update(editId, data) : dataStore.transactions.create(data);
@@ -1279,34 +1281,10 @@ const CommissionsPage = () => {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const applyFilters = useCallback(() => {
-    let list = [...allCms];
-    if (filters.search && filters.search.trim()) {
-      const s = filters.search.trim().toLowerCase();
-      list = list.filter(c => (c.clientName || '').toLowerCase().includes(s) || (c.agentName || '').toLowerCase().includes(s));
-    }
-    if (filters.status) list = list.filter(c => c.status === filters.status);
-    if (filters.agent) list = list.filter(c => (c.agentName || '') === filters.agent);
-    if (filters.fromDate || filters.toDate) {
-      list = list.filter(c => {
-        const dateVal = c.dueDate || c.paidDate || null;
-        if (!dateVal) return false;
-        if (filters.fromDate && dateVal < filters.fromDate) return false;
-        if (filters.toDate && dateVal > filters.toDate) return false;
-        return true;
-      });
-    }
-    return list;
-  }, [allCms, filters]);
+  const cms = useMemo(() => filterCommissions(allCms, filters), [allCms, filters]);
+  const { pendingOffice, paidOffice, totalAgent } = useMemo(() => computeCommissionTotals(cms), [cms]);
 
-  const cms = applyFilters();
-  const pending = cms.filter(c => c.status === 'pending');
-  const paid = cms.filter(c => c.status === 'paid');
-  const pendingOffice = pending.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
-  const paidOffice = paid.reduce((s,c) => s + c.dealValue * c.officePercent / 100, 0);
-  const totalAgent = cms.reduce((s,c) => s + c.dealValue * c.agentPercent / 100, 0);
-
-  const agentNames = useMemo(() => [...new Set(allCms.map(c => c.agentName).filter(Boolean))].sort(), [allCms]);
+  const agentNames = useMemo(() => listAgentNames(allCms), [allCms]);
 
   const handleSave = (data, editId) => {
     const res = editId ? dataStore.commissions.update(editId, data) : dataStore.commissions.create(data);
