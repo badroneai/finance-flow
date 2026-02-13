@@ -2708,7 +2708,7 @@ const App = () => {
       case 'drafts': return <DraftsPage setPage={setPage} setLetterType={setLetterType} setEditDraft={setEditDraft}/>;
       case 'calendar': return <NotesCalendar mode="calendar"/>;
       case 'notes': return <NotesCalendar mode="notes"/>;
-      case 'settings': return <SettingsPage onShowOnboarding={() => { try { localStorage.removeItem(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); }} />;
+      case 'settings': return <SettingsPage onShowOnboarding={() => { try { storageFacade.removeRaw(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); }} />;
       default: return <HomePage setPage={setPage}/>;
     }
   };
