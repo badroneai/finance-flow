@@ -417,7 +417,7 @@ const dataStore = {
       return { ok: true };
     },
     clearAll: () => {
-      Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+      storageFacade.removeMany(Object.values(KEYS));
     },
     ensureSeeded: () => {
       if (!safeGet(KEYS.seeded, false)) {
@@ -1853,7 +1853,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
     const data = {};
     keys.forEach((k) => {
       try {
-        const v = localStorage.getItem(k);
+        const v = storageFacade.getRaw(k);
         if (v != null) data[k] = v;
       } catch {
         // ignore
@@ -1901,7 +1901,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
       const keys = getBackupAppKeys();
       const current = {};
       keys.forEach((k) => {
-        try { current[k] = localStorage.getItem(k); } catch { current[k] = null; }
+        try { current[k] = storageFacade.getRaw(k); } catch { current[k] = null; }
       });
 
       let changeCount = 0;
@@ -1921,12 +1921,10 @@ const SettingsPage = ({ onShowOnboarding }) => {
           if (!d) { setConfirm(null); return; }
 
           // Replace app keys only
-          keys.forEach((k) => {
-            try { localStorage.removeItem(k); } catch {}
-          });
+          storageFacade.removeMany(keys);
           keys.forEach((k) => {
             try {
-              if (Object.prototype.hasOwnProperty.call(d, k)) localStorage.setItem(k, String(d[k]));
+              if (Object.prototype.hasOwnProperty.call(d, k)) storageFacade.setRaw(k, String(d[k]));
             } catch {
               // ignore individual key failures
             }
@@ -1989,7 +1987,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" onClick={() => {
-            try { localStorage.removeItem(UI_THEME_KEY); } catch {}
+            try { storageFacade.removeRaw(UI_THEME_KEY); } catch {}
             setUiTheme('system');
             applyTheme('system');
             toast('تمت إعادة ضبط المظهر');
