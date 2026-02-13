@@ -177,7 +177,7 @@ const initTheme = () => {
 
 const getSavedNumerals = () => {
   try {
-    const n = storage.getRaw(UI_NUMERALS_KEY);
+    const n = storageFacade.getRaw(UI_NUMERALS_KEY);
     return (n === 'ar' || n === 'en') ? n : null;
   } catch {
     return null;
