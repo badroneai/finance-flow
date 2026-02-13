@@ -11,7 +11,7 @@
 */
 
 import { storageFacade } from './storage-facade.js';
-import { createDefaultLedger, validateLedger } from '../domain/ledgers.js';
+import { createDefaultLedger, validateLedger, withLedgerDefaults } from '../domain/ledgers.js';
 
 export const LEDGER_STORAGE_KEYS = {
   LEDGERS: 'ff_ledgers',
@@ -20,7 +20,10 @@ export const LEDGER_STORAGE_KEYS = {
 };
 
 export function getLedgers() {
-  return storageFacade.getJSON(LEDGER_STORAGE_KEYS.LEDGERS, []);
+  const raw = storageFacade.getJSON(LEDGER_STORAGE_KEYS.LEDGERS, []);
+  const list = Array.isArray(raw) ? raw : [];
+  // Backward compatible migration-on-read: add defaults for older ledgers.
+  return list.map(withLedgerDefaults);
 }
 
 export function setLedgers(list) {
