@@ -4,6 +4,9 @@ import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
 
+// Stage 3 bundle: keep existing storage import, but prefer facade for any new/updated call sites
+
+
 // ============================================
 // TYPES
 // ============================================
@@ -103,7 +106,7 @@ try { window.__uiNumeralsMode = __uiNumeralsMode; } catch {}
 
 const getSavedTheme = () => {
   try {
-    const t = storage.getRaw(UI_THEME_KEY);
+    const t = storageFacade.getRaw(UI_THEME_KEY);
     return (t === 'system' || t === 'light' || t === 'dim' || t === 'dark') ? t : null;
   } catch {
     return null;
@@ -161,7 +164,7 @@ const applyTheme = (theme) => {
 
   const effective = (t === 'system') ? getEffectiveSystemTheme() : t;
   document.documentElement.dataset.theme = effective;
-  try { storage.setRaw(UI_THEME_KEY, t); } catch {}
+  try { storageFacade.setRaw(UI_THEME_KEY, t); } catch {}
 };
 
 const initTheme = () => {
@@ -186,7 +189,7 @@ const getSavedNumerals = () => {
 
 const getSavedDateHeader = () => {
   try {
-    const v = storage.getRaw(UI_DATE_HEADER_KEY);
+    const v = storageFacade.getRaw(UI_DATE_HEADER_KEY);
     // Legacy migration: on/off → both/off
     if (v === 'on') return 'both';
     if (v === 'off') return 'off';
@@ -198,20 +201,20 @@ const getSavedDateHeader = () => {
 
 const setDateHeaderPref = (value) => {
   const v = (value === 'off' || value === 'greg' || value === 'hijri' || value === 'both') ? value : 'both';
-  try { storage.setRaw(UI_DATE_HEADER_KEY, v); } catch {}
+  try { storageFacade.setRaw(UI_DATE_HEADER_KEY, v); } catch {}
   try { window.dispatchEvent(new CustomEvent('ui:dateHeader')); } catch {}
 };
 
 const getOnboardingSeen = () => {
   try {
-    return storage.getRaw(UI_ONBOARDING_SEEN_KEY) === '1';
+    return storageFacade.getRaw(UI_ONBOARDING_SEEN_KEY) === '1';
   } catch {
     return false;
   }
 };
 
 const setOnboardingSeen = () => {
-  try { storage.setRaw(UI_ONBOARDING_SEEN_KEY, '1'); } catch {}
+  try { storageFacade.setRaw(UI_ONBOARDING_SEEN_KEY, '1'); } catch {}
 };
 
 const applyNumerals = (mode) => {
@@ -219,7 +222,7 @@ const applyNumerals = (mode) => {
   __uiNumeralsMode = m;
   try { window.__uiNumeralsMode = __uiNumeralsMode; } catch {}
   document.documentElement.dataset.numerals = m;
-  try { storage.setRaw(UI_NUMERALS_KEY, m); } catch {}
+  try { storageFacade.setRaw(UI_NUMERALS_KEY, m); } catch {}
   // Notify UI layers that depend on numerals (e.g., date header)
   try { window.dispatchEvent(new CustomEvent('ui:numerals')); } catch {}
 };
@@ -249,8 +252,8 @@ const STORAGE_ERROR_MESSAGE = 'لم يتم الحفظ. مساحة التخزين
 /** Phase 9.1: كشف التصفح الخاص */
 const detectPrivateBrowsing = () => {
   try {
-    localStorage.setItem('_ff_private_test', '1');
-    localStorage.removeItem('_ff_private_test');
+    storageFacade.setRaw('_ff_private_test', '1');
+    storageFacade.removeRaw('_ff_private_test');
     return false;
   } catch (e) {
     return true;
@@ -261,8 +264,8 @@ const detectPrivateBrowsing = () => {
 const checkStorageQuota = () => {
   try {
     const test = new Array(1024 * 512).join('a');
-    localStorage.setItem('_ff_quota_test', test);
-    localStorage.removeItem('_ff_quota_test');
+    storageFacade.setRaw('_ff_quota_test', test);
+    storageFacade.removeRaw('_ff_quota_test');
     return true;
   } catch (e) {
     if (e && (e.name === 'QuotaExceededError' || e.code === 22)) return false;
@@ -277,9 +280,7 @@ const SIMULATE_RENDER_ERROR = false;
 
 const safeGet = (key, fallback) => {
   try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return fallback;
-    return JSON.parse(raw);
+    return storageFacade.getJSON(key, fallback);
   } catch {
     return fallback;
   }
@@ -289,8 +290,9 @@ const safeGet = (key, fallback) => {
 const safeSet = (key, val) => {
   if (SIMULATE_STORAGE_FAILURE) throw new DOMException('Simulated quota exceeded', 'QuotaExceededError');
   try {
-    localStorage.setItem(key, JSON.stringify(val));
-    return { ok: true };
+    const ok = storageFacade.setJSON(key, val);
+    if (ok) return { ok: true };
+    return { ok: false, code: 'unknown', message: STORAGE_ERROR_MESSAGE };
   } catch (e) {
     const isQuota = e && (e.name === 'QuotaExceededError' || e.code === 22);
     const message = isQuota ? STORAGE_ERROR_MESSAGE : (e && e.message) ? String(e.message) : STORAGE_ERROR_MESSAGE;
@@ -418,7 +420,7 @@ const dataStore = {
       return { ok: true };
     },
     clearAll: () => {
-      Object.values(KEYS).forEach(k => localStorage.removeItem(k));
+      storageFacade.removeMany(Object.values(KEYS));
     },
     ensureSeeded: () => {
       if (!safeGet(KEYS.seeded, false)) {
@@ -1854,7 +1856,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
     const data = {};
     keys.forEach((k) => {
       try {
-        const v = localStorage.getItem(k);
+        const v = storageFacade.getRaw(k);
         if (v != null) data[k] = v;
       } catch {
         // ignore
@@ -1902,7 +1904,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
       const keys = getBackupAppKeys();
       const current = {};
       keys.forEach((k) => {
-        try { current[k] = localStorage.getItem(k); } catch { current[k] = null; }
+        try { current[k] = storageFacade.getRaw(k); } catch { current[k] = null; }
       });
 
       let changeCount = 0;
@@ -1922,12 +1924,10 @@ const SettingsPage = ({ onShowOnboarding }) => {
           if (!d) { setConfirm(null); return; }
 
           // Replace app keys only
-          keys.forEach((k) => {
-            try { localStorage.removeItem(k); } catch {}
-          });
+          storageFacade.removeMany(keys);
           keys.forEach((k) => {
             try {
-              if (Object.prototype.hasOwnProperty.call(d, k)) localStorage.setItem(k, String(d[k]));
+              if (Object.prototype.hasOwnProperty.call(d, k)) storageFacade.setRaw(k, String(d[k]));
             } catch {
               // ignore individual key failures
             }
@@ -1990,7 +1990,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" onClick={() => {
-            try { localStorage.removeItem(UI_THEME_KEY); } catch {}
+            try { storageFacade.removeRaw(UI_THEME_KEY); } catch {}
             setUiTheme('system');
             applyTheme('system');
             toast('تمت إعادة ضبط المظهر');
