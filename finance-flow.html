@@ -39,6 +39,7 @@
 <link rel="stylesheet" href="assets/qaydalaqar-theme.css"/>
 <link rel="stylesheet" href="assets/css/theme.tokens.css"/>
 <link rel="stylesheet" href="assets/css/app.css"/>
+<script type="module" src="assets/js/core/keys.js"></script>
 <script>
 tailwind.config = {
   theme: {
@@ -341,7 +342,7 @@ const SEED_SETTINGS = { officeName:'مكتب مثال العقاري', phone:'05
 // DATASTORE (LocalStorage Abstraction)
 // ============================================
 // Replace LocalStorage calls with API in this layer later
-const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', drafts:'ff_drafts', settings:'ff_settings', seeded:'ff_seeded' };
+const KEYS = { transactions:STORAGE_KEYS.TRANSACTIONS, commissions:STORAGE_KEYS.COMMISSIONS, drafts:STORAGE_KEYS.DRAFTS, settings:STORAGE_KEYS.SETTINGS, seeded:STORAGE_KEYS.SEEDED };
 
 // ============================================
 // UI THEME (Phase B+3)
@@ -359,10 +360,10 @@ const KEYS = { transactions:'ff_transactions', commissions:'ff_commissions', dra
 //   - dataStore.settings.get reads current.theme (around lines ~632-635)
 // - No document.body.dataset.theme usage found (we will still guard against it in initTheme)
 // - No localStorage key named "theme" or "darkMode" found
-const UI_THEME_KEY = 'ui_theme';
-const UI_NUMERALS_KEY = 'ui_numerals';
-const UI_DATE_HEADER_KEY = 'ui_date_header';
-const UI_ONBOARDING_SEEN_KEY = 'ui_onboarding_seen';
+const UI_THEME_KEY = STORAGE_KEYS.UI_THEME;
+const UI_NUMERALS_KEY = STORAGE_KEYS.UI_NUMERALS;
+const UI_DATE_HEADER_KEY = STORAGE_KEYS.UI_DATE_HEADER;
+const UI_ONBOARDING_SEEN_KEY = STORAGE_KEYS.UI_ONBOARDING;
 
 // In-memory source of truth for display-only numerals (ar/en)
 let __uiNumeralsMode = null;
@@ -2100,7 +2101,7 @@ const SettingsPage = ({ onShowOnboarding }) => {
     UI_DATE_HEADER_KEY,
     UI_ONBOARDING_SEEN_KEY,
     // Optional UI state
-    'hasSeenWelcomeBanner'
+    STORAGE_KEYS.UI_WELCOME
   ]);
 
   const pad2 = (n) => String(n).padStart(2, '0');
@@ -2851,7 +2852,7 @@ const WelcomeBanner = () => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
-    const hasSeenBanner = localStorage.getItem('hasSeenWelcomeBanner');
+    const hasSeenBanner = localStorage.getItem(STORAGE_KEYS.UI_WELCOME);
     const tx = safeGet(KEYS.transactions, []);
     const comm = safeGet(KEYS.commissions, []);
     const hasData = tx.length > 0 || comm.length > 0;
@@ -2860,7 +2861,7 @@ const WelcomeBanner = () => {
 
   const dismiss = () => {
     setShow(false);
-    localStorage.setItem('hasSeenWelcomeBanner', 'true');
+    localStorage.setItem(STORAGE_KEYS.UI_WELCOME, 'true');
   };
 
   if (!show) return null;
