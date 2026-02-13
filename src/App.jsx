@@ -1697,10 +1697,35 @@ const LedgersPage = () => {
   const [ledgers, setLedgersState] = useState([]);
   const [activeId, setActiveIdState] = useState('');
 
+  const LEDGER_TYPE_LABELS = {
+    office: '🏢 مكتب',
+    chalet: '🏡 شاليه',
+    apartment: '🏠 شقة',
+    villa: '🏘️ فيلا',
+    building: '🏬 عمارة',
+    personal: '👤 شخصي',
+    other: '📁 أخرى',
+  };
+
+  const normalizeLedgerType = (t) => {
+    const x = String(t || '').toLowerCase();
+    return (x === 'office' || x === 'chalet' || x === 'apartment' || x === 'villa' || x === 'building' || x === 'personal' || x === 'other') ? x : 'office';
+  };
+
+  const normalizeNote = (s) => {
+    const x = String(s ?? '').trim();
+    if (!x) return '';
+    return x.length > 120 ? x.slice(0, 120) : x;
+  };
+
   // Ledgers CRUD
   const [newName, setNewName] = useState('');
+  const [newType, setNewType] = useState('office');
+  const [newNote, setNewNote] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [editingName, setEditingName] = useState('');
+  const [editingType, setEditingType] = useState('office');
+  const [editingNote, setEditingNote] = useState('');
 
   // Recurring items CRUD (linked by active ledger id)
   const [recurring, setRecurringState] = useState([]);
@@ -1715,8 +1740,8 @@ const LedgersPage = () => {
 
   useEffect(() => { refresh(); }, [refresh]);
 
-  const createLedger = (name) => {
-    const t = (name || '').trim();
+  const createLedger = () => {
+    const t = (newName || '').trim();
     if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
 
     const ts = new Date().toISOString();
@@ -1728,7 +1753,8 @@ const LedgersPage = () => {
     const next = [...(Array.isArray(ledgers) ? ledgers : []), {
       id,
       name: t,
-      type: 'office',
+      type: normalizeLedgerType(newType),
+      note: normalizeNote(newNote),
       currency: 'SAR',
       createdAt: ts,
       updatedAt: ts,
@@ -1739,6 +1765,8 @@ const LedgersPage = () => {
     try { if (!getActiveLedgerId()) setActiveLedgerId(id); } catch {}
 
     setNewName('');
+    setNewType('office');
+    setNewNote('');
     toast('تمت إضافة الدفتر');
     refresh();
   };
@@ -1746,6 +1774,8 @@ const LedgersPage = () => {
   const startEdit = (ledger) => {
     setEditingId(ledger.id);
     setEditingName(ledger.name || '');
+    setEditingType(normalizeLedgerType(ledger.type));
+    setEditingNote(String(ledger.note ?? ''));
   };
 
   const saveEdit = () => {
@@ -1754,13 +1784,21 @@ const LedgersPage = () => {
 
     const next = (Array.isArray(ledgers) ? ledgers : []).map(l => {
       if (l.id !== editingId) return l;
-      return { ...l, name: t, updatedAt: new Date().toISOString() };
+      return {
+        ...l,
+        name: t,
+        type: normalizeLedgerType(editingType),
+        note: normalizeNote(editingNote),
+        updatedAt: new Date().toISOString(),
+      };
     });
 
     try { setLedgers(next); } catch { toast('تعذر حفظ التعديل', 'error'); return; }
-    toast('تم تحديث اسم الدفتر');
+    toast('تم تحديث الدفتر');
     setEditingId(null);
     setEditingName('');
+    setEditingType('office');
+    setEditingNote('');
     refresh();
   };
 
@@ -1843,12 +1881,30 @@ const LedgersPage = () => {
       {tab === 'ledgers' && (
         <>
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex flex-col sm:flex-row gap-2 sm:items-end">
-              <div className="flex-1">
+            <div className="grid md:grid-cols-3 gap-3 items-end">
+              <div className="md:col-span-1">
                 <label className="block text-sm font-medium text-gray-700 mb-1">اسم الدفتر الجديد</label>
                 <input value={newName} onChange={(e) => setNewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
               </div>
-              <button type="button" onClick={() => createLedger(newName)} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">اختر نوع الدفتر</label>
+                <select value={newType} onChange={(e) => setNewType(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع الدفتر">
+                  <option value="office">🏢 مكتب</option>
+                  <option value="chalet">🏡 شاليه</option>
+                  <option value="apartment">🏠 شقة</option>
+                  <option value="villa">🏘️ فيلا</option>
+                  <option value="building">🏬 عمارة</option>
+                  <option value="personal">👤 شخصي</option>
+                  <option value="other">📁 أخرى</option>
+                </select>
+              </div>
+              <div className="md:col-span-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">وصف مختصر (اختياري)</label>
+                <input value={newNote} onChange={(e) => setNewNote(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="وصف مختصر" placeholder="وصف مختصر (اختياري)" />
+              </div>
+            </div>
+            <div className="flex justify-end mt-3">
+              <button type="button" onClick={createLedger} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
             </div>
           </div>
 
@@ -1861,7 +1917,12 @@ const LedgersPage = () => {
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
                       <h4 className="font-bold text-gray-900 truncate">{l.name}</h4>
-                      <p className="text-xs text-gray-500 mt-1">{l.type} • {l.currency}</p>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        <span className="text-xs text-gray-500">{LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || '🏢 مكتب'}</span>
+                        <span className="text-xs text-gray-400">•</span>
+                        <span className="text-xs text-gray-500">{l.currency}</span>
+                      </div>
+                      {String(l.note || '').trim() ? <p className="text-xs text-gray-500 mt-2">{l.note}</p> : null}
                     </div>
                     {l.id === activeId && <Badge color="blue">نشط</Badge>}
                   </div>
@@ -1870,6 +1931,25 @@ const LedgersPage = () => {
                     <div className="mt-4">
                       <label className="block text-sm font-medium text-gray-700 mb-1">تعديل الاسم</label>
                       <input value={editingName} onChange={(e) => setEditingName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
+
+                      <div className="grid md:grid-cols-2 gap-3 mt-3">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">اختر نوع الدفتر</label>
+                          <select value={editingType} onChange={(e) => setEditingType(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="تعديل نوع الدفتر">
+                            <option value="office">🏢 مكتب</option>
+                            <option value="chalet">🏡 شاليه</option>
+                            <option value="apartment">🏠 شقة</option>
+                            <option value="villa">🏘️ فيلا</option>
+                            <option value="building">🏬 عمارة</option>
+                            <option value="personal">👤 شخصي</option>
+                            <option value="other">📁 أخرى</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">وصف مختصر (اختياري)</label>
+                          <input value={editingNote} onChange={(e) => setEditingNote(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل الوصف" placeholder="وصف مختصر (اختياري)" />
+                        </div>
+                      </div>
                       <div className="flex gap-2 justify-end mt-3">
                         <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
                         <button type="button" onClick={saveEdit} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
