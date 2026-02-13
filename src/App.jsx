@@ -14,6 +14,18 @@ import {
 
 import { seedRecurringForLedger } from './domain/ledgerTemplates.js';
 
+import {
+  computeLedgerCompleteness,
+  computeRecurringDashboard,
+  groupRecurringBySections,
+  isPastDue,
+  isSeededRecurring,
+  normalizeCategory as normalizeRecurringCategory,
+  normalizeRisk as normalizeRecurringRisk,
+  sectionStats,
+  sortRecurringInSection,
+} from './core/recurring-intelligence.js';
+
 const getActiveLedgerIdSafe = () => {
   try { return getActiveLedgerId() || ''; } catch { return ''; }
 };
@@ -1883,59 +1895,13 @@ const LedgersPage = () => {
     operational: 'تشغيلي',
     maintenance: 'صيانة',
     marketing: 'تسويق',
+    adhoc: 'عند الحاجة',
   };
 
-  const normalizeCategory = (c) => {
-    const x = String(c || '').toLowerCase();
-    return (x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing') ? x : '';
-  };
-
-  const normalizeRisk = (r) => {
-    const x = String(r || '').toLowerCase();
-    return (x === 'high' || x === 'medium' || x === 'low') ? x : '';
-  };
-
-  const recurringPriority = (r) => {
-    const freq = String(r?.frequency || '').toLowerCase();
-    const cat = normalizeCategory(r?.category);
-    const req = !!r?.required;
-
-    // 5) adhoc always last
-    if (freq === 'adhoc') return 90;
-
-    // 1) required + system
-    if (req && cat === 'system') return 10;
-    // 2) required + operational
-    if (req && cat === 'operational') return 20;
-    // 3) maintenance
-    if (cat === 'maintenance') return 30;
-    // 4) optional
-    if (!req) return 40;
-
-    return 50;
-  };
-
-  const activeRecurring = [...activeRecurringRaw].sort((a, b) => {
-    const pa = recurringPriority(a);
-    const pb = recurringPriority(b);
-    if (pa !== pb) return pa - pb;
-    const da = String(a?.nextDueDate || '');
-    const db = String(b?.nextDueDate || '');
-    if (da && db && da !== db) return da.localeCompare(db);
-    return String(a?.title || '').localeCompare(String(b?.title || ''));
-  });
-
-  const recurringSummary = (() => {
-    const list = activeRecurring;
-    const total = list.length;
-    const requiredCount = list.filter(x => !!x?.required).length;
-    const highRiskCount = list.filter(x => normalizeRisk(x?.riskLevel) === 'high').length;
-    const nextDue = list
-      .map(x => String(x?.nextDueDate || '').trim())
-      .filter(Boolean)
-      .sort((a, b) => a.localeCompare(b))[0] || '';
-    return { total, requiredCount, highRiskCount, nextDue };
-  })();
+  const activeRecurring = [...activeRecurringRaw];
+  const recurringDashboard = computeRecurringDashboard(activeRecurring);
+  const completeness = computeLedgerCompleteness(activeRecurring);
+  const recurringSections = groupRecurringBySections(activeRecurring);
 
   const resetRecForm = () => setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
 
@@ -2144,11 +2110,48 @@ const LedgersPage = () => {
                 <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
 
                 {/* Summary (display-only) */}
-                <div className="mt-3 flex flex-wrap gap-2 items-center text-xs text-gray-600">
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الإجمالي: <strong className="text-gray-800">{recurringSummary.total}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الإلزامي: <strong className="text-gray-800">{recurringSummary.requiredCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">خطر مرتفع: <strong className="text-gray-800">{recurringSummary.highRiskCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">أقرب استحقاق: <strong className="text-gray-800">{recurringSummary.nextDue || '—'}</strong></span>
+                <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700">
+                  {/* Aggregations */}
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري: <strong className="text-gray-900"><Currency value={recurringDashboard.monthlyTotal} /></strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي سنوي: <strong className="text-gray-900"><Currency value={recurringDashboard.yearlyTotal} /></strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي 30 يوم: <strong className="text-gray-900"><Currency value={recurringDashboard.within30Total} /></strong></span>
+
+                  {/* Compliance */}
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الكل: <strong className="text-gray-900">{recurringDashboard.totalCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إلزامي: <strong className="text-gray-900">{recurringDashboard.requiredCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">غير مُسعّر: <strong className="text-gray-900">{recurringDashboard.unpricedCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">خطر مرتفع: <strong className="text-gray-900">{recurringDashboard.highRiskCount}</strong></span>
+
+                  {/* Completeness */}
+                  {completeness ? (
+                    <span className="col-span-2 sm:col-span-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
+                      اكتمال الدفتر: <strong className="text-gray-900">{completeness.pct}%</strong>
+                      <span className="block mt-1 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط اكتمال">
+                        <span className="block h-full bg-blue-600" style={{ width: `${completeness.pct}%` }} />
+                      </span>
+                    </span>
+                  ) : null}
+                </div>
+
+                {/* Next 3 dues */}
+                <div className="mt-3 text-xs text-gray-600">
+                  <div className="font-medium text-gray-800 mb-1">القادم (أقرب 3):</div>
+                  {recurringDashboard.next3.length === 0 ? (
+                    <div>—</div>
+                  ) : (
+                    <div className="flex flex-col gap-1">
+                      {recurringDashboard.next3.map((x) => (
+                        <div key={x.id} className="flex flex-wrap items-center gap-2">
+                          <span className="text-gray-900">{x.title}</span>
+                          <span className="text-gray-400">•</span>
+                          <span>{x.nextDueDate || '—'}</span>
+                          <span className="text-gray-400">•</span>
+                          <span><Currency value={Number(x.amount) || 0} /></span>
+                          {isPastDue(x) ? <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span> : null}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
               {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
@@ -2195,48 +2198,83 @@ const LedgersPage = () => {
           {activeRecurring.length === 0 ? (
             <EmptyState message="لا توجد التزامات متكررة لهذا الدفتر" />
           ) : (
-            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <h4 className="font-bold text-gray-900">القائمة</h4>
-                <span className="text-xs text-gray-500">{activeRecurring.length}</span>
-              </div>
-              <div className="divide-y divide-gray-100">
-                {activeRecurring.map((r) => (
-                  <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
-                        <span className="truncate">{r.title}</span>
+            (() => {
+              const sections = [
+                { key: 'system', title: 'نظامي' },
+                { key: 'operational', title: 'تشغيلي' },
+                { key: 'maintenance', title: 'صيانة' },
+                { key: 'marketing', title: 'تسويق' },
+                { key: 'adhoc', title: 'عند الحاجة' },
+                { key: 'uncategorized', title: 'أخرى' },
+              ];
 
-                        {normalizeCategory(r.category) ? (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-white text-gray-600">{CATEGORY_LABEL[normalizeCategory(r.category)]}</span>
-                        ) : null}
+              return (
+                <div className="flex flex-col gap-4">
+                  {sections.map((s) => {
+                    const listRaw = recurringSections[s.key] || [];
+                    if (listRaw.length === 0) return null;
+                    const list = sortRecurringInSection(listRaw);
+                    const stats = sectionStats(list);
 
-                        {r.required ? (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">إلزامي</span>
-                        ) : null}
+                    return (
+                      <div key={s.key} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+                        <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-bold text-gray-900">{s.title}</h4>
+                            <span className="text-xs text-gray-500">({stats.count})</span>
+                            {stats.unpricedCount ? <span className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5">غير مُسعّر: {stats.unpricedCount}</span> : null}
+                          </div>
+                          <div className="text-xs text-gray-600">المجموع: <strong className="text-gray-900"><Currency value={stats.subtotal} /></strong></div>
+                        </div>
 
-                        {normalizeRisk(r.riskLevel) === 'high' ? (
-                          <span className="px-2 py-0.5 rounded-full text-[11px] border border-red-100 bg-red-50 text-red-700">خطر مرتفع</span>
-                        ) : null}
+                        <div className="divide-y divide-gray-100">
+                          {list.map((r) => (
+                            <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
+                                  <span className="truncate">{r.title}</span>
+
+                                  {normalizeRecurringCategory(r.category) ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-white text-gray-600">{CATEGORY_LABEL[normalizeRecurringCategory(r.category)]}</span>
+                                  ) : null}
+
+                                  {r.required ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">إلزامي</span>
+                                  ) : null}
+
+                                  {Number(r.amount) === 0 ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-amber-100 bg-amber-50 text-amber-800">بحاجة لتسعير</span>
+                                  ) : null}
+
+                                  {normalizeRecurringRisk(r.riskLevel) === 'high' ? (
+                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-red-100 bg-red-50 text-red-700">خطر مرتفع</span>
+                                  ) : null}
+                                </div>
+
+                                <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
+                                  <span>{r.frequency}</span>
+                                  <span>•</span>
+                                  <span>{r.nextDueDate}</span>
+                                  <span>•</span>
+                                  <span><Currency value={r.amount} /></span>
+                                  {isPastDue(r) ? <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span> : null}
+                                </div>
+                                {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
+                              </div>
+
+                              <div className="flex gap-2 justify-end">
+                                <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
+                                <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-
-                      <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
-                        <span>{r.frequency}</span>
-                        <span>•</span>
-                        <span>{r.nextDueDate}</span>
-                        <span>•</span>
-                        <span><Currency value={r.amount} /></span>
-                      </div>
-                      {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
-                    </div>
-                    <div className="flex gap-2 justify-end">
-                      <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
-                      <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
+                    );
+                  })}
+                </div>
+              );
+            })()
           )}
         </>
       )}
