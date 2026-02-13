@@ -50,6 +50,11 @@ tailwind.config = {
 <body class="bg-gray-50 text-gray-900 font-sans" data-theme="light">
 <div id="root"></div>
 
+<!-- Stage 2.2 (ESM, core only): load QA module early and preserve window.QA for legacy consumers -->
+<script type="module">
+  import { QA } from '/assets/js/core/qa.js';
+  window.QA = window.QA || QA;
+</script>
 
 <script type="module" src="/src/main.jsx"></script>
 <style id="phase-6b-tokens">
