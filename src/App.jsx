@@ -2634,9 +2634,69 @@ const LedgersPage = () => {
           ) : (
             <div className="flex flex-col gap-4">
               <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <h4 className="font-bold text-gray-900">Mini P&L</h4>
-                  <span className="text-xs text-gray-500">عدد الحركات المصنفة: {ledgerReports?.txCount || 0}</span>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-xs text-gray-500">عدد الحركات المصنفة: {ledgerReports?.txCount || 0}</span>
+                    <button type="button" onClick={() => {
+                      if (!activeId) return;
+                      const all = dataStore.transactions.list();
+                      const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+
+                      const now = new Date();
+                      const daysAgo = (n) => {
+                        const d = new Date(now.getTime());
+                        d.setDate(d.getDate() - n);
+                        return d;
+                      };
+                      const last30 = txs.filter(t => {
+                        const dt = new Date(String(t.date || '') + 'T00:00:00');
+                        if (Number.isNaN(dt.getTime())) return false;
+                        return dt.getTime() >= daysAgo(30).getTime();
+                      });
+                      const last365 = txs.filter(t => {
+                        const dt = new Date(String(t.date || '') + 'T00:00:00');
+                        if (Number.isNaN(dt.getTime())) return false;
+                        return dt.getTime() >= daysAgo(365).getTime();
+                      });
+
+                      const pl30 = computePL({ transactions: last30 });
+                      const pl365 = computePL({ transactions: last365 });
+
+                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'غير مصنف';
+                      const breakdown = computeTopBuckets({ transactions: txs, limit: 50 });
+
+                      const headers = ['الفترة','دخل','مصروف','صافي','Bucket','إجمالي Bucket (مصروفات فقط)'];
+                      const rows = [];
+                      rows.push(['آخر 30 يوم', pl30.income, pl30.expense, pl30.net, '', '']);
+                      rows.push(['آخر 12 شهر', pl365.income, pl365.expense, pl365.net, '', '']);
+                      rows.push(['', '', '', '', '', '']);
+                      for (const x of breakdown) rows.push(['', '', '', '', bucketName(x.bucket), x.total]);
+
+                      downloadCSV({ filename: `ledger_report_${today()}.csv`, headers, rows });
+                      toast('تم تصدير تقرير CSV');
+                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير تقرير CSV">تصدير تقرير CSV</button>
+
+                    <button type="button" onClick={() => {
+                      const list = activeRecurring;
+                      const headers = ['الالتزام','Bucket','إلزامي','خطورة','التكرار','تاريخ الاستحقاق','المبلغ'];
+                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'أخرى';
+                      const rows = list.map(r => {
+                        const bucket = getBucketForRecurring(r);
+                        return [
+                          r.title || '',
+                          bucketName(bucket),
+                          r.required ? 'نعم' : 'لا',
+                          r.riskLevel || '',
+                          r.frequency || '',
+                          r.nextDueDate || '',
+                          Number(r.amount) || 0,
+                        ];
+                      });
+                      downloadCSV({ filename: `ledger_obligations_${today()}.csv`, headers, rows });
+                      toast('تم تصدير الالتزامات CSV');
+                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير الالتزامات CSV">تصدير الالتزامات CSV</button>
+                  </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-3 mt-3">
