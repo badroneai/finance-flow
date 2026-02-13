@@ -15,7 +15,19 @@ const addDays = (d, days) => {
 
 const firstOfNextMonth = (d) => new Date(d.getFullYear(), d.getMonth() + 1, 1);
 
-const mk = ({ title, frequency, nextDueDate, notes, category, required, riskLevel }) => ({
+const mk = ({
+  title,
+  frequency,
+  nextDueDate,
+  notes,
+  category,
+  required,
+  riskLevel,
+  saHint,
+  priceBand,
+  defaultFreq,
+  cityFactorEligible,
+}) => ({
   title: String(title || '').trim(),
   amount: 0,
   frequency,
@@ -25,6 +37,11 @@ const mk = ({ title, frequency, nextDueDate, notes, category, required, riskLeve
   category, // system | operational | maintenance | marketing
   required: !!required,
   riskLevel, // high | medium | low
+  // Saudi template metadata (seeded only)
+  saHint: String(saHint || '').trim(),
+  priceBand: priceBand && typeof priceBand === 'object' ? priceBand : null, // {min,max,typical}
+  defaultFreq: String(defaultFreq || frequency || '').trim(),
+  cityFactorEligible: !!cityFactorEligible,
 });
 
 export const LEDGER_TEMPLATES = {
@@ -137,6 +154,13 @@ export function seedRecurringForLedger({ ledgerId, ledgerType, now = new Date() 
       const risk = String(x.riskLevel || '').toLowerCase();
       const riskLevel = (risk === 'high' || risk === 'medium' || risk === 'low') ? risk : '';
 
+      const band = x.priceBand && typeof x.priceBand === 'object' ? x.priceBand : null;
+      const priceBand = band ? {
+        min: Number.isFinite(Number(band.min)) ? Number(band.min) : 0,
+        max: Number.isFinite(Number(band.max)) ? Number(band.max) : 0,
+        typical: Number.isFinite(Number(band.typical)) ? Number(band.typical) : 0,
+      } : null;
+
       return {
         id,
         ledgerId: lid,
@@ -145,6 +169,11 @@ export function seedRecurringForLedger({ ledgerId, ledgerType, now = new Date() 
         category,
         required: !!x.required,
         riskLevel,
+        // Saudi template metadata
+        saHint: String(x.saHint || '').trim(),
+        priceBand,
+        defaultFreq: String(x.defaultFreq || freq || '').trim(),
+        cityFactorEligible: !!x.cityFactorEligible,
         amount: Number.isFinite(Number(x.amount)) ? Number(x.amount) : 0,
         frequency: freq,
         nextDueDate: String(x.nextDueDate || '').trim(),
