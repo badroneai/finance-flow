@@ -15,71 +15,75 @@ const addDays = (d, days) => {
 
 const firstOfNextMonth = (d) => new Date(d.getFullYear(), d.getMonth() + 1, 1);
 
-const mk = ({ title, frequency, nextDueDate, notes }) => ({
+const mk = ({ title, frequency, nextDueDate, notes, category, required, riskLevel }) => ({
   title: String(title || '').trim(),
   amount: 0,
   frequency,
   nextDueDate,
   notes: String(notes || '').trim(),
+  // Intelligence metadata (seeded only)
+  category, // system | operational | maintenance | marketing
+  required: !!required,
+  riskLevel, // high | medium | low
 });
 
 export const LEDGER_TEMPLATES = {
   office: ({ todayISO }) => ([
-    mk({ title: 'إيجار المكتب', frequency: 'monthly', nextDueDate: todayISO, notes: 'إلزامي غالبًا' }),
-    mk({ title: 'رواتب الموظفين', frequency: 'monthly', nextDueDate: todayISO, notes: 'حسب الفريق' }),
-    mk({ title: 'كهرباء المكتب', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'إنترنت / اتصالات', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'اشتراك منصات عقارية', frequency: 'monthly', nextDueDate: todayISO, notes: 'مثل: عقار/حراج/…' }),
-    mk({ title: 'مصروفات تسويق وإعلانات', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة عامة للمكتب', frequency: 'quarterly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'تجديد رخص/اشتراكات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'ضيافة/قهوة/مستلزمات', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
+    mk({ title: 'إيجار المكتب', frequency: 'monthly', nextDueDate: todayISO, notes: 'إلزامي غالبًا', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'رواتب الموظفين', frequency: 'monthly', nextDueDate: todayISO, notes: 'حسب الفريق', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'كهرباء المكتب', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'medium' }),
+    mk({ title: 'إنترنت / اتصالات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: true, riskLevel: 'medium' }),
+    mk({ title: 'اشتراك منصات عقارية', frequency: 'monthly', nextDueDate: todayISO, notes: 'مثل: عقار/حراج/…', category: 'marketing', required: false, riskLevel: 'low' }),
+    mk({ title: 'مصروفات تسويق وإعلانات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'marketing', required: false, riskLevel: 'low' }),
+    mk({ title: 'صيانة عامة للمكتب', frequency: 'quarterly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
+    mk({ title: 'تجديد رخص/اشتراكات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'ضيافة/قهوة/مستلزمات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: false, riskLevel: 'low' }),
   ]),
 
   chalet: ({ todayISO }) => ([
-    mk({ title: 'كهرباء', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'ماء', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة المكيفات', frequency: 'quarterly', nextDueDate: todayISO, notes: 'قبل مواسم الصيف' }),
-    mk({ title: 'عامل نظافة/تنظيف', frequency: 'monthly', nextDueDate: todayISO, notes: 'حسب الاستخدام' }),
-    mk({ title: 'مستلزمات (مناديل/منظفات)', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة المسبح (إن وجد)', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة الحديقة', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'تأمين/حراسة (اختياري)', frequency: 'monthly', nextDueDate: todayISO, notes: 'اختياري' }),
-    mk({ title: 'تجديد معدات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '' }),
+    mk({ title: 'كهرباء', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'ماء', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'medium' }),
+    mk({ title: 'صيانة المكيفات', frequency: 'quarterly', nextDueDate: todayISO, notes: 'قبل مواسم الصيف', category: 'maintenance', required: true, riskLevel: 'high' }),
+    mk({ title: 'عامل نظافة/تنظيف', frequency: 'monthly', nextDueDate: todayISO, notes: 'حسب الاستخدام', category: 'operational', required: false, riskLevel: 'medium' }),
+    mk({ title: 'مستلزمات (مناديل/منظفات)', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: false, riskLevel: 'low' }),
+    mk({ title: 'صيانة المسبح (إن وجد)', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
+    mk({ title: 'صيانة الحديقة', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'low' }),
+    mk({ title: 'تأمين/حراسة (اختياري)', frequency: 'monthly', nextDueDate: todayISO, notes: 'اختياري', category: 'system', required: false, riskLevel: 'low' }),
+    mk({ title: 'تجديد معدات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
   ]),
 
   building: ({ todayISO }) => ([
-    mk({ title: 'كهرباء (مشتركة)', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'ماء (مشتركة)', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة المصعد (إن وجد)', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'نظافة الممرات', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'حارس/بواب (إن وجد)', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة دورية (سباكة/كهرباء)', frequency: 'quarterly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة' }),
-    mk({ title: 'تأمين المبنى (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'دهانات/ترميمات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '' }),
+    mk({ title: 'كهرباء (مشتركة)', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'ماء (مشتركة)', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'صيانة المصعد (إن وجد)', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: true, riskLevel: 'high' }),
+    mk({ title: 'نظافة الممرات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: true, riskLevel: 'medium' }),
+    mk({ title: 'حارس/بواب (إن وجد)', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: false, riskLevel: 'medium' }),
+    mk({ title: 'صيانة دورية (سباكة/كهرباء)', frequency: 'quarterly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
+    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة', category: 'operational', required: false, riskLevel: 'high' }),
+    mk({ title: 'تأمين المبنى (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'دهانات/ترميمات (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
   ]),
 
   villa: ({ todayISO }) => ([
-    mk({ title: 'كهرباء', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'ماء', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة المكيفات', frequency: 'quarterly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة سباكة', frequency: 'quarterly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'نظافة/تنظيف', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة الحديقة', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'تأمين (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة' }),
+    mk({ title: 'كهرباء', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'ماء', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'medium' }),
+    mk({ title: 'صيانة المكيفات', frequency: 'quarterly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: true, riskLevel: 'high' }),
+    mk({ title: 'صيانة سباكة', frequency: 'quarterly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
+    mk({ title: 'نظافة/تنظيف', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: false, riskLevel: 'medium' }),
+    mk({ title: 'صيانة الحديقة', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'low' }),
+    mk({ title: 'تأمين (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة', category: 'operational', required: false, riskLevel: 'high' }),
   ]),
 
   personal: ({ todayISO }) => ([
-    mk({ title: 'اشتراك جوال/إنترنت', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'وقود/تنقلات', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'مصروفات منزلية', frequency: 'monthly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'تأمين سيارة (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'صيانة سيارة', frequency: 'quarterly', nextDueDate: todayISO, notes: '' }),
-    mk({ title: 'ادخار/استثمار', frequency: 'monthly', nextDueDate: todayISO, notes: 'اختياري' }),
-    mk({ title: 'تبرعات/مساهمات', frequency: 'monthly', nextDueDate: todayISO, notes: 'اختياري' }),
-    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة' }),
+    mk({ title: 'اشتراك جوال/إنترنت', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'medium' }),
+    mk({ title: 'وقود/تنقلات', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'operational', required: false, riskLevel: 'medium' }),
+    mk({ title: 'مصروفات منزلية', frequency: 'monthly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'تأمين سيارة (سنوي)', frequency: 'yearly', nextDueDate: todayISO, notes: '', category: 'system', required: true, riskLevel: 'high' }),
+    mk({ title: 'صيانة سيارة', frequency: 'quarterly', nextDueDate: todayISO, notes: '', category: 'maintenance', required: false, riskLevel: 'medium' }),
+    mk({ title: 'ادخار/استثمار', frequency: 'monthly', nextDueDate: todayISO, notes: 'اختياري', category: 'operational', required: false, riskLevel: 'low' }),
+    mk({ title: 'تبرعات/مساهمات', frequency: 'monthly', nextDueDate: todayISO, notes: 'اختياري', category: 'marketing', required: false, riskLevel: 'low' }),
+    mk({ title: 'مصاريف طوارئ', frequency: 'adhoc', nextDueDate: todayISO, notes: 'عند الحاجة', category: 'operational', required: false, riskLevel: 'high' }),
   ]),
 };
 
@@ -128,11 +132,19 @@ export function seedRecurringForLedger({ ledgerId, ledgerType, now = new Date() 
 
       const freq = (x.frequency === 'monthly' || x.frequency === 'quarterly' || x.frequency === 'yearly' || x.frequency === 'adhoc') ? x.frequency : 'monthly';
 
+      const cat = String(x.category || '').toLowerCase();
+      const category = (cat === 'system' || cat === 'operational' || cat === 'maintenance' || cat === 'marketing') ? cat : '';
+      const risk = String(x.riskLevel || '').toLowerCase();
+      const riskLevel = (risk === 'high' || risk === 'medium' || risk === 'low') ? risk : '';
+
       return {
         id,
         ledgerId: lid,
         title: String(x.title || '').trim(),
-        category: 'rent',
+        // category is used as a lightweight metadata field for seeded obligations
+        category,
+        required: !!x.required,
+        riskLevel,
         amount: Number.isFinite(Number(x.amount)) ? Number(x.amount) : 0,
         frequency: freq,
         nextDueDate: String(x.nextDueDate || '').trim(),

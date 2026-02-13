@@ -1876,7 +1876,66 @@ const LedgersPage = () => {
   };
 
   const activeLedger = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === activeId) || null;
-  const activeRecurring = (Array.isArray(recurring) ? recurring : []).filter(r => r.ledgerId === activeId);
+  const activeRecurringRaw = (Array.isArray(recurring) ? recurring : []).filter(r => r.ledgerId === activeId);
+
+  const CATEGORY_LABEL = {
+    system: 'نظامي',
+    operational: 'تشغيلي',
+    maintenance: 'صيانة',
+    marketing: 'تسويق',
+  };
+
+  const normalizeCategory = (c) => {
+    const x = String(c || '').toLowerCase();
+    return (x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing') ? x : '';
+  };
+
+  const normalizeRisk = (r) => {
+    const x = String(r || '').toLowerCase();
+    return (x === 'high' || x === 'medium' || x === 'low') ? x : '';
+  };
+
+  const recurringPriority = (r) => {
+    const freq = String(r?.frequency || '').toLowerCase();
+    const cat = normalizeCategory(r?.category);
+    const req = !!r?.required;
+
+    // 5) adhoc always last
+    if (freq === 'adhoc') return 90;
+
+    // 1) required + system
+    if (req && cat === 'system') return 10;
+    // 2) required + operational
+    if (req && cat === 'operational') return 20;
+    // 3) maintenance
+    if (cat === 'maintenance') return 30;
+    // 4) optional
+    if (!req) return 40;
+
+    return 50;
+  };
+
+  const activeRecurring = [...activeRecurringRaw].sort((a, b) => {
+    const pa = recurringPriority(a);
+    const pb = recurringPriority(b);
+    if (pa !== pb) return pa - pb;
+    const da = String(a?.nextDueDate || '');
+    const db = String(b?.nextDueDate || '');
+    if (da && db && da !== db) return da.localeCompare(db);
+    return String(a?.title || '').localeCompare(String(b?.title || ''));
+  });
+
+  const recurringSummary = (() => {
+    const list = activeRecurring;
+    const total = list.length;
+    const requiredCount = list.filter(x => !!x?.required).length;
+    const highRiskCount = list.filter(x => normalizeRisk(x?.riskLevel) === 'high').length;
+    const nextDue = list
+      .map(x => String(x?.nextDueDate || '').trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b))[0] || '';
+    return { total, requiredCount, highRiskCount, nextDue };
+  })();
 
   const resetRecForm = () => setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
 
@@ -1913,7 +1972,7 @@ const LedgersPage = () => {
     const next = (() => {
       const list = Array.isArray(recurring) ? recurring : [];
       if (!recEditingId) {
-        return [...list, { id, ledgerId: activeId, title, category: 'rent', amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), createdAt: ts, updatedAt: ts }];
+        return [...list, { id, ledgerId: activeId, title, category: '', amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), createdAt: ts, updatedAt: ts }];
       }
       return list.map(r => (r.id === recEditingId ? { ...r, title, amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), updatedAt: ts } : r));
     })();
@@ -2079,10 +2138,18 @@ const LedgersPage = () => {
       {tab === 'recurring' && (
         <>
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <h4 className="font-bold text-gray-900">التزامات متكررة</h4>
                 <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
+
+                {/* Summary (display-only) */}
+                <div className="mt-3 flex flex-wrap gap-2 items-center text-xs text-gray-600">
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الإجمالي: <strong className="text-gray-800">{recurringSummary.total}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الإلزامي: <strong className="text-gray-800">{recurringSummary.requiredCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">خطر مرتفع: <strong className="text-gray-800">{recurringSummary.highRiskCount}</strong></span>
+                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">أقرب استحقاق: <strong className="text-gray-800">{recurringSummary.nextDue || '—'}</strong></span>
+                </div>
               </div>
               {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
             </div>
@@ -2137,7 +2204,22 @@ const LedgersPage = () => {
                 {activeRecurring.map((r) => (
                   <div key={r.id} className="p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-semibold text-gray-900 truncate">{r.title}</div>
+                      <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
+                        <span className="truncate">{r.title}</span>
+
+                        {normalizeCategory(r.category) ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-white text-gray-600">{CATEGORY_LABEL[normalizeCategory(r.category)]}</span>
+                        ) : null}
+
+                        {r.required ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">إلزامي</span>
+                        ) : null}
+
+                        {normalizeRisk(r.riskLevel) === 'high' ? (
+                          <span className="px-2 py-0.5 rounded-full text-[11px] border border-red-100 bg-red-50 text-red-700">خطر مرتفع</span>
+                        ) : null}
+                      </div>
+
                       <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
                         <span>{r.frequency}</span>
                         <span>•</span>
