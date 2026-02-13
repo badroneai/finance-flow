@@ -242,3 +242,205 @@ export function calculateBurnRateBundle(ledgerId, ctx = {}) {
     yearly: burn * 12,
   };
 }
+
+// ============================================
+// v3 — Smart Breakdown Engine + Playbook + Benchmarks (Pure)
+// ============================================
+
+const normalizeCategory = (c) => {
+  const x = String(c || '').toLowerCase();
+  return (x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing') ? x : 'other';
+};
+
+const monthlyEquivalent = (r) => {
+  const amt = Number(r?.amount) || 0;
+  if (amt <= 0) return 0;
+  const m = freqMultiplier(r?.frequency);
+  if (m <= 0) return 0;
+  return (amt * m) / 12;
+};
+
+export function getBurnBreakdown(ledgerId, ctx = {}) {
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(r => Number(r?.amount) > 0);
+  const buckets = {};
+  for (const r of items) {
+    const cat = normalizeCategory(r?.category);
+    buckets[cat] = (buckets[cat] || 0) + monthlyEquivalent(r);
+  }
+  const totalMonthly = Object.values(buckets).reduce((a, n) => a + (Number(n) || 0), 0);
+  const list = Object.keys(buckets).map((category) => {
+    const monthlySum = Number(buckets[category]) || 0;
+    const percentOfTotal = totalMonthly > 0 ? Math.round((monthlySum / totalMonthly) * 100) : 0;
+    return { category, monthlySum, percentOfTotal };
+  }).sort((a, b) => b.monthlySum - a.monthlySum);
+  return { totalMonthly, buckets: list };
+}
+
+export function getPressureBreakdown(ledgerId, ctx = {}) {
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems);
+  const txs = filterLedgerTransactions(ledgerId, ctx.transactions);
+
+  const total = items.length;
+  const missingPricingCount = items.filter(r => Number(r?.amount) === 0).length;
+  const priced = items.filter(r => Number(r?.amount) > 0);
+  const overdueCount = countOverdue(priced);
+
+  const highRisk = items.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRiskUnpriced = highRisk.filter(r => Number(r?.amount) === 0).length;
+
+  const dueThis30 = priced.filter(r => {
+    const ms = toDateMs(r?.nextDueDate);
+    if (ms == null) return false;
+    return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
+  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+
+  const paidThis30 = txs.filter(t => {
+    const ms = toDateMs(t?.date);
+    if (ms == null) return false;
+    return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
+  }).reduce((a, t) => a + (Number(t?.amount) || 0), 0);
+
+  const disciplineRatio = dueThis30 > 0 ? clamp(paidThis30 / dueThis30, 0, 2) : 0;
+
+  const unpricedRatio = total ? (missingPricingCount / total) : 0;
+  const overdueRatio = priced.length ? (overdueCount / priced.length) : 0;
+  const highRiskUnpricedFlag = highRiskUnpriced > 0 ? 1 : 0;
+  const disciplinePenalty = 1 - clamp(disciplineRatio, 0, 1);
+
+  const weightedScoreParts = {
+    unpriced: unpricedRatio * 40,
+    overdue: overdueRatio * 30,
+    highRiskUnpriced: highRiskUnpricedFlag * 20,
+    discipline: disciplinePenalty * 10,
+  };
+
+  return {
+    missingPricingCount,
+    overdueCount,
+    highRiskUnpriced,
+    disciplineRatio,
+    weightedScoreParts,
+  };
+}
+
+export function getRiskBreakdown90d(ledgerId, ctx = {}) {
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems);
+  const due90 = sumDueWithinDays(items, 90);
+  const burn = calculateBurnRate(ledgerId, ctx).monthlyTotal;
+  const burnRatio = burn > 0 ? due90 / (burn * 3) : (due90 > 0 ? 9 : 0);
+
+  const highRiskItems = items.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRiskCount = highRiskItems.length;
+  const overdueAmount = items.filter(r => {
+    if (Number(r?.amount) <= 0) return false;
+    const ms = toDateMs(r?.nextDueDate);
+    if (ms == null) return false;
+    return ms < startOfTodayMs();
+  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+
+  const risk = calculateNext90DayRisk(ledgerId, ctx);
+  return {
+    totalDueAmount: due90,
+    highRiskCount,
+    overdueAmount,
+    burnRatio,
+    computedLevel: risk.level,
+  };
+}
+
+export function getDailyPlaybook(ledgerId, ctx = {}) {
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems);
+  const t = startOfTodayMs();
+  const d14 = daysFromNowMs(14);
+
+  const scoreFor = (r) => {
+    const high = String(r?.riskLevel || '').toLowerCase() === 'high';
+    const priced = Number(r?.amount) > 0;
+    const ms = toDateMs(r?.nextDueDate);
+    const overdue = priced && ms != null && ms < t;
+    const dueSoon14 = priced && ms != null && ms >= t && ms <= d14;
+    const missingPricing = Number(r?.amount) === 0;
+
+    if (high && overdue) return { p: 100, type: 'highrisk_overdue', reason: 'بند عالي المخاطر ومتأخر.' };
+    if (overdue) return { p: 80, type: 'overdue', reason: 'بند متأخر ويحتاج إجراء.' };
+    if (high && missingPricing) return { p: 70, type: 'highrisk_unpriced', reason: 'عالي المخاطر بدون تسعير.' };
+    if (dueSoon14) return { p: 60, type: 'due_soon', reason: 'قادم خلال 14 يوم.' };
+    if (missingPricing) return { p: 40, type: 'missing_pricing', reason: 'بدون تسعير.' };
+    return null;
+  };
+
+  const tasks = [];
+  for (const r of items) {
+    const s = scoreFor(r);
+    if (!s) continue;
+    tasks.push({
+      type: s.type,
+      title: r.title || '—',
+      reason: s.reason,
+      priorityScore: s.p,
+      recurringId: r.id,
+    });
+  }
+
+  return tasks.sort((a, b) => b.priorityScore - a.priorityScore).slice(0, 5);
+}
+
+export const SAUDI_BENCHMARKS = {
+  office: { rentRatioMax: 0.45, utilitiesRatioMax: 0.12, marketingRatioMax: 0.15 },
+  chalet: { rentRatioMax: 0.55, utilitiesRatioMax: 0.15, marketingRatioMax: 0.10 },
+  building: { rentRatioMax: 0.35, utilitiesRatioMax: 0.10, marketingRatioMax: 0.12 },
+  villa: { rentRatioMax: 0.50, utilitiesRatioMax: 0.14, marketingRatioMax: 0.08 },
+  personal: { rentRatioMax: 0.50, utilitiesRatioMax: 0.15, marketingRatioMax: 0.05 },
+};
+
+const isRentLike = (r) => {
+  const hint = String(r?.saHint || '').toLowerCase();
+  if (hint.includes('إيجار') || hint.includes('ايجار')) return true;
+  const title = String(r?.title || '').toLowerCase();
+  if (title.includes('إيجار') || title.includes('ايجار')) return true;
+  return false;
+};
+
+const isUtilitiesLike = (r) => {
+  const hint = String(r?.saHint || '').toLowerCase();
+  const title = String(r?.title || '').toLowerCase();
+  return hint.includes('كهرب') || hint.includes('ماء') || hint.includes('اتصال') || hint.includes('إنترنت') || hint.includes('انترنت') || hint.includes('هاتف') ||
+    title.includes('كهرب') || title.includes('ماء') || title.includes('اتصال') || title.includes('إنترنت') || title.includes('انترنت') || title.includes('هاتف');
+};
+
+export function getBenchmarkComparison(ledgerId, ctx = {}) {
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(r => Number(r?.amount) > 0);
+
+  const ledgerType = String(ctx.ledgerType || ctx.ledger?.type || '').toLowerCase();
+  const bench = SAUDI_BENCHMARKS[ledgerType] || SAUDI_BENCHMARKS.office;
+
+  const totalBurn = items.reduce((a, r) => a + monthlyEquivalent(r), 0);
+  const rent = items.filter(isRentLike).reduce((a, r) => a + monthlyEquivalent(r), 0);
+  const utilities = items.filter(isUtilitiesLike).reduce((a, r) => a + monthlyEquivalent(r), 0);
+  const marketing = items.filter(r => normalizeCategory(r?.category) === 'marketing').reduce((a, r) => a + monthlyEquivalent(r), 0);
+
+  const rentRatio = totalBurn > 0 ? rent / totalBurn : 0;
+  const utilitiesRatio = totalBurn > 0 ? utilities / totalBurn : 0;
+  const marketingRatio = totalBurn > 0 ? marketing / totalBurn : 0;
+
+  const flags = [];
+  flags.push({ type: 'rent', status: rentRatio > bench.rentRatioMax ? 'high' : 'ok', ratio: rentRatio, max: bench.rentRatioMax });
+  flags.push({ type: 'utilities', status: utilitiesRatio > bench.utilitiesRatioMax ? 'high' : 'ok', ratio: utilitiesRatio, max: bench.utilitiesRatioMax });
+  flags.push({ type: 'marketing', status: marketingRatio > bench.marketingRatioMax ? 'high' : 'ok', ratio: marketingRatio, max: bench.marketingRatioMax });
+
+  const pct = (x) => `${Math.round((x || 0) * 100)}%`;
+  const commentary = [
+    `إيجارك يمثل ${pct(rentRatio)} من مصروفاتك الشهرية (الشائع ≤${pct(bench.rentRatioMax)}).`,
+    `المرافق تمثل ${pct(utilitiesRatio)} (الشائع ≤${pct(bench.utilitiesRatioMax)}).`,
+    `التسويق يمثل ${pct(marketingRatio)} (الشائع ≤${pct(bench.marketingRatioMax)}).`,
+  ].join(' ');
+
+  return {
+    ledgerType: ledgerType || 'office',
+    totalBurn,
+    ratios: { rentRatio, utilitiesRatio, marketingRatio },
+    benchmarks: bench,
+    flags,
+    commentary,
+  };
+}

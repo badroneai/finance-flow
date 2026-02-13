@@ -42,6 +42,11 @@ import {
   calculateNext90DayRisk,
   calculateDisciplineTrend,
   detectHighRiskCluster,
+  getBurnBreakdown,
+  getPressureBreakdown,
+  getRiskBreakdown90d,
+  getDailyPlaybook,
+  getBenchmarkComparison,
 } from './core/ledger-brain.js';
 
 import {
@@ -1852,6 +1857,9 @@ const LedgersPage = () => {
   const [simBillsPct, setSimBillsPct] = useState(0);
   const [simMaintPct, setSimMaintPct] = useState(0);
 
+  // Ledger Brain Pro UI (breakdowns + playbook)
+  const [brainDetails, setBrainDetails] = useState(null); // null | 'burn' | 'pressure' | 'risk90' | 'trend'
+
   // Supports Arabic/Indic numerals and common separators for amount parsing.
   const normalizeNumeralsToAscii = (input) => {
     const s = String(input ?? '');
@@ -1989,15 +1997,21 @@ const LedgersPage = () => {
     return computeLedgerHealth({ recurringItems: seededOnlyList, transactions: ledgerTxs });
   })();
 
+  const brainCtx = (() => {
+    const ledgerType = String(activeLedger?.type || 'office');
+    return { ledgerType, recurringItems: Array.isArray(recurring) ? recurring : [], transactions: ledgerTxs };
+  })();
+
   const brain = (() => {
     if (!activeId) return null;
-    const ctx = { recurringItems: Array.isArray(recurring) ? recurring : [], transactions: ledgerTxs };
-    const burn = calculateBurnRateBundle(activeId, ctx);
-    const pressure = calculateCashPressureScore(activeId, ctx);
-    const risk90 = calculateNext90DayRisk(activeId, ctx);
-    const trend = calculateDisciplineTrend(activeId, ctx);
-    const cluster = detectHighRiskCluster(activeId, ctx);
-    return { burn, pressure, risk90, trend, cluster };
+    const burn = calculateBurnRateBundle(activeId, brainCtx);
+    const pressure = calculateCashPressureScore(activeId, brainCtx);
+    const risk90 = calculateNext90DayRisk(activeId, brainCtx);
+    const trend = calculateDisciplineTrend(activeId, brainCtx);
+    const cluster = detectHighRiskCluster(activeId, brainCtx);
+    const playbook = getDailyPlaybook(activeId, brainCtx);
+    const benchmarks = getBenchmarkComparison(activeId, brainCtx);
+    return { burn, pressure, risk90, trend, cluster, playbook, benchmarks };
   })();
 
   const projection = computeLedgerProjection({ recurringItems: seededOnlyList });
@@ -2480,18 +2494,77 @@ const LedgersPage = () => {
               </div>
             </div>
 
+            {/* Pro: Daily Playbook */}
+            <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
+              <div className="flex items-center justify-between gap-2">
+                <h5 className="font-bold text-gray-900">🎯 خطة اليوم</h5>
+                <span className="text-xs text-gray-500">Top 5</span>
+              </div>
+              {(!brain?.playbook || brain.playbook.length === 0) ? (
+                <p className="text-sm text-gray-500 mt-2">دفترك منضبط اليوم.</p>
+              ) : (
+                <div className="mt-3 flex flex-col gap-2">
+                  {brain.playbook.map((t) => (
+                    <div key={t.recurringId} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-gray-100 bg-gray-50">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-gray-900 truncate">{t.title}</div>
+                        <div className="text-xs text-gray-500 mt-1">{t.reason}</div>
+                      </div>
+                      <button type="button" onClick={() => {
+                        const el = document.getElementById(`rec-${t.recurringId}`);
+                        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب للبند">اذهب للبند</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Pro: Saudi Benchmarks */}
+            <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <h5 className="font-bold text-gray-900">📊 مقارنة بالسوق (تقديري)</h5>
+                  <p className="text-xs text-gray-500 mt-1">نِسَب من Burn الشهري (عناصر مسعّرة فقط)</p>
+                </div>
+              </div>
+
+              {brain?.benchmarks ? (
+                <>
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                    {brain.benchmarks.flags.map((f) => (
+                      <div key={f.type} className="p-2 rounded-lg border border-gray-100 bg-gray-50">
+                        <div className="text-gray-500">{f.type === 'rent' ? 'إيجار' : f.type === 'utilities' ? 'مرافق' : 'تسويق'}</div>
+                        <div className="mt-1 font-semibold text-gray-900">{Math.round((f.ratio || 0) * 100)}%</div>
+                        <div className={`mt-1 inline-flex px-2 py-0.5 rounded-full border text-[11px] ${f.status === 'high' ? 'border-red-100 bg-red-50 text-red-700' : 'border-green-100 bg-green-50 text-green-700'}`}>{f.status === 'high' ? 'أعلى من الشائع' : 'ضمن الشائع'}</div>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="mt-3 text-xs text-gray-600">{brain.benchmarks.commentary}</p>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500 mt-2">—</p>
+              )}
+            </div>
+
             <div className="mt-3 grid gap-3 md:grid-cols-4">
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-xs text-gray-500">Burn Rate</div>
+              <div className={`p-3 rounded-xl border bg-gray-50 ${brain?.benchmarks?.flags?.some(f => f.type==='rent' && f.status==='high') ? 'border-amber-200' : 'border-gray-100'}`}>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="text-xs text-gray-500">Burn Rate</div>
+                  <button type="button" onClick={() => setBrainDetails('burn')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
+                </div>
                 <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.burn?.monthly || 0} /> / شهر</div>
                 <div className="mt-1 text-xs text-gray-600">90 يوم: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.d90 || 0} /></span></div>
                 <div className="text-xs text-gray-600">سنة: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.yearly || 0} /></span></div>
               </div>
 
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="flex items-center justify-between">
+              <div className={`p-3 rounded-xl border bg-gray-50 ${Number(brain?.pressure?.score||0) > 75 ? 'border-red-200' : 'border-gray-100'}`}>
+                <div className="flex items-center justify-between gap-2">
                   <div className="text-xs text-gray-500">ضغط السيولة</div>
-                  <span className="text-xs font-semibold text-gray-900">{brain?.pressure?.score ?? 0}/100</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setBrainDetails('pressure')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
+                    <span className="text-xs font-semibold text-gray-900">{brain?.pressure?.score ?? 0}/100</span>
+                  </div>
                 </div>
                 <div className="mt-2 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط ضغط السيولة">
                   <div className={`h-full ${Number(brain?.pressure?.score||0) >= 70 ? 'bg-red-600' : Number(brain?.pressure?.score||0) >= 40 ? 'bg-amber-500' : 'bg-green-600'}`} style={{ width: `${Math.min(100, Number(brain?.pressure?.score||0))}%` }} />
@@ -2500,16 +2573,22 @@ const LedgersPage = () => {
               </div>
 
               <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                   <div className="text-xs text-gray-500">مخاطر 90 يوم</div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full border ${brain?.risk90?.level === 'critical' ? 'border-red-100 bg-red-50 text-red-700' : brain?.risk90?.level === 'high' ? 'border-amber-100 bg-amber-50 text-amber-800' : brain?.risk90?.level === 'medium' ? 'border-blue-100 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}>{brain?.risk90?.label || '—'}</span>
+                  <div className="flex items-center gap-2">
+                    <button type="button" onClick={() => setBrainDetails('risk90')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
+                    <span className={`text-xs px-2 py-0.5 rounded-full border ${brain?.risk90?.level === 'critical' ? 'border-red-100 bg-red-50 text-red-700' : brain?.risk90?.level === 'high' ? 'border-amber-100 bg-amber-50 text-amber-800' : brain?.risk90?.level === 'medium' ? 'border-blue-100 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}>{brain?.risk90?.label || '—'}</span>
+                  </div>
                 </div>
                 <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.risk90?.due90Total || 0} /></div>
                 <div className="mt-1 text-xs text-gray-600">عدد البنود: <span className="font-semibold text-gray-900">{brain?.risk90?.due90Count ?? 0}</span></div>
               </div>
 
               <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-xs text-gray-500">الاتجاه التشغيلي</div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-xs text-gray-500">الاتجاه التشغيلي</div>
+                  <button type="button" onClick={() => setBrainDetails('trend')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
+                </div>
                 <div className="mt-1 flex items-center gap-2">
                   <span className="text-sm font-semibold text-gray-900">{brain?.trend?.trend || '—'}</span>
                   <span className="text-sm text-gray-500">{brain?.trend?.trend === 'يتحسن' ? '↑' : brain?.trend?.trend === 'يتراجع' ? '↓' : '→'}</span>
@@ -3105,6 +3184,114 @@ const LedgersPage = () => {
           )}
         </>
       )}
+
+      {/* Ledger Brain Pro: Details Modal */}
+      <Modal
+        open={!!brainDetails}
+        onClose={() => setBrainDetails(null)}
+        title={brainDetails === 'burn' ? 'تفاصيل Burn Rate' : brainDetails === 'pressure' ? 'تفاصيل ضغط السيولة' : brainDetails === 'risk90' ? 'تفاصيل مخاطر 90 يوم' : brainDetails === 'trend' ? 'تفاصيل الاتجاه التشغيلي' : 'تفاصيل'}
+        wide
+      >
+        {(() => {
+          if (!activeId || !brainDetails) return null;
+          const ctx = brainCtx;
+
+          if (brainDetails === 'burn') {
+            const b = getBurnBreakdown(activeId, ctx);
+            const label = (c) => (c === 'system' ? 'نظامي' : c === 'operational' ? 'تشغيلي' : c === 'maintenance' ? 'صيانة' : c === 'marketing' ? 'تسويق' : 'أخرى');
+            return (
+              <div className="p-1">
+                <div className="text-sm text-gray-700">الإجمالي الشهري (مكافئ): <strong className="text-gray-900"><Currency value={b.totalMonthly} /></strong></div>
+                <div className="mt-3 overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead>
+                      <tr className="text-gray-500">
+                        <th className="text-start py-2">التصنيف</th>
+                        <th className="text-start py-2">شهري</th>
+                        <th className="text-start py-2">% من الإجمالي</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {b.buckets.map((x) => (
+                        <tr key={x.category} className="border-t border-gray-100">
+                          <td className="py-2">{label(x.category)}</td>
+                          <td className="py-2"><Currency value={x.monthlySum} /></td>
+                          <td className="py-2">{x.percentOfTotal}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          }
+
+          if (brainDetails === 'pressure') {
+            const p = getPressureBreakdown(activeId, ctx);
+            const parts = p.weightedScoreParts || {};
+            return (
+              <div className="p-1 text-sm">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">غير مسعّر: <strong>{p.missingPricingCount}</strong></div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">متأخر: <strong>{p.overdueCount}</strong></div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">High-risk غير مسعّر: <strong>{p.highRiskUnpriced}</strong></div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">الانضباط (30 يوم): <strong>{Math.round((p.disciplineRatio || 0) * 100)}%</strong></div>
+                </div>
+
+                <div className="mt-4">
+                  <div className="font-semibold text-gray-900 mb-2">مكونات الوزن (تقريبية)</div>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm">
+                      <thead>
+                        <tr className="text-gray-500">
+                          <th className="text-start py-2">البند</th>
+                          <th className="text-start py-2">نقاط</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {Object.keys(parts).map(k => (
+                          <tr key={k} className="border-t border-gray-100">
+                            <td className="py-2">{k}</td>
+                            <td className="py-2">{Math.round(Number(parts[k]) || 0)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">ملاحظة: هذه التفاصيل لشرح الرقم، بينما الدرجة النهائية تُحسب في calculateCashPressureScore().</p>
+                </div>
+              </div>
+            );
+          }
+
+          if (brainDetails === 'risk90') {
+            const r = getRiskBreakdown90d(activeId, ctx);
+            return (
+              <div className="p-1 text-sm">
+                <div className="grid sm:grid-cols-2 gap-3">
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">مجموع المستحق 90 يوم: <strong><Currency value={r.totalDueAmount} /></strong></div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">High-risk (عدد): <strong>{r.highRiskCount}</strong></div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">مبلغ متأخر: <strong><Currency value={r.overdueAmount} /></strong></div>
+                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">Burn ratio: <strong>{(r.burnRatio || 0).toFixed(2)}</strong></div>
+                </div>
+                <p className="mt-3 text-xs text-gray-500">computedLevel: {r.computedLevel}</p>
+              </div>
+            );
+          }
+
+          if (brainDetails === 'trend') {
+            return (
+              <div className="p-1 text-sm">
+                <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">
+                  الاتجاه الحالي يُستنتج من عدد الدفعات المسجلة خلال 60 يوم مقابل عدد البنود المستحقة خلال نفس الفترة.
+                </div>
+              </div>
+            );
+          }
+
+          return null;
+        })()}
+      </Modal>
 
       {/* Saudi Auto-Pricing Wizard v2 */}
       {saPricingOpen ? (
