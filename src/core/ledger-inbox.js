@@ -96,6 +96,7 @@ export function buildLedgerInbox({ ledgerId, recurringItems = [], now = new Date
       ledgerId: lid,
       title: r.title || '',
       amount: Number(r.amount) || 0,
+      category: String(r?.category || 'other'),
       nextDueDate: r.nextDueDate || '',
       required,
       riskLevel: normalizeRisk(r?.riskLevel) || '',
@@ -103,6 +104,11 @@ export function buildLedgerInbox({ ledgerId, recurringItems = [], now = new Date
       snoozeUntil: r.snoozeUntil || '',
       note: String(r.note || ''),
       lastPaidAt: r.lastPaidAt || '',
+
+      payState: String(r?.payState || 'unpaid'),
+      payStateAt: r?.payStateAt || '',
+      payStateNote: String(r?.payStateNote || ''),
+
       reason,
       priority,
     });
