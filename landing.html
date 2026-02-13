@@ -393,8 +393,9 @@
             <li>نسخ احتياطي تلقائي</li>
             <li>ميزات إضافية للمكاتب</li>
           </ul>
-          <div style="margin-top: 1.25rem;">
+          <div style="margin-top: 1.25rem; display:flex; gap: 0.6rem; flex-wrap: wrap;">
             <button type="button" class="btn btn-outline" disabled aria-disabled="true" style="opacity: 0.6; cursor: not-allowed;">قريبًا</button>
+            <button type="button" class="btn btn-primary" disabled aria-disabled="true" style="opacity: 0.6; cursor: not-allowed; padding: 0.65rem 1.1rem; font-size: 1rem;">قريبًا</button>
           </div>
         </div>
       </div>
@@ -402,7 +403,44 @@
     </div>
   </section>
 
-  <!-- (E) CTA أخير -->
+  <!-- (E) أسئلة شائعة -->
+  <section class="faq" id="faq">
+    <div class="container">
+      <h2>أسئلة شائعة</h2>
+
+      <details class="feature-card" style="background: var(--lp-bg);">
+        <summary style="cursor:pointer; font-weight: 700;">هل البيانات تُحفظ محليًا؟</summary>
+        <p class="caption" style="margin-top: 0.5rem;">نعم. بياناتك تُحفظ داخل المتصفح على جهازك ولا تُرفع للسحابة.</p>
+      </details>
+
+      <details class="feature-card" style="background: var(--lp-bg); margin-top: 0.75rem;">
+        <summary style="cursor:pointer; font-weight: 700;">هل يوجد اشتراك؟</summary>
+        <p class="caption" style="margin-top: 0.5rem;">لا. الخطة المحلية مجانية بالكامل.</p>
+      </details>
+
+      <details class="feature-card" style="background: var(--lp-bg); margin-top: 0.75rem;">
+        <summary style="cursor:pointer; font-weight: 700;">كيف أسوي نسخة احتياطية؟</summary>
+        <p class="caption" style="margin-top: 0.5rem;">من داخل التطبيق: الإعدادات → النسخ الاحتياطي → تنزيل ملف JSON.</p>
+      </details>
+
+      <details class="feature-card" style="background: var(--lp-bg); margin-top: 0.75rem;">
+        <summary style="cursor:pointer; font-weight: 700;">هل أقدر أنقل البيانات لجهاز ثاني؟</summary>
+        <p class="caption" style="margin-top: 0.5rem;">نعم. صدّر نسخة JSON ثم استعدها على الجهاز الآخر.</p>
+      </details>
+
+      <details class="feature-card" style="background: var(--lp-bg); margin-top: 0.75rem;">
+        <summary style="cursor:pointer; font-weight: 700;">هل فيه مزامنة سحابية؟</summary>
+        <p class="caption" style="margin-top: 0.5rem;">ليس الآن. خيار Pro للمزامنة السحابية سيكون إضافيًا لاحقًا.</p>
+      </details>
+
+      <details class="feature-card" style="background: var(--lp-bg); margin-top: 0.75rem;">
+        <summary style="cursor:pointer; font-weight: 700;">هل يدعم المكاتب والشاليهات؟</summary>
+        <p class="caption" style="margin-top: 0.5rem;">نعم. مناسب للمكاتب العقارية الصغيرة ومدراء الشاليهات وملاك الوحدات.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- (F) CTA أخير -->
   <section class="pricing">
     <div class="container" style="text-align:center;">
       <h2>جاهز تبدأ؟</h2>
@@ -411,7 +449,20 @@
     </div>
   </section>
 
-  <!-- (E) Footer -->
+  <!-- (G) تواصل معنا -->
+  <section class="contact" id="contact">
+    <div class="container" style="text-align:center;">
+      <h2>تواصل معنا</h2>
+      <p class="caption" style="max-width:520px;margin:0.75rem auto 1.5rem;">إذا عندك استفسار أو تبغى نسخة Pro لاحقًا — تواصل معنا.</p>
+      <div class="cta" style="justify-content:center;">
+        <button type="button" class="btn btn-primary" disabled aria-disabled="true" style="opacity: 0.6; cursor: not-allowed;">قريبًا</button>
+        <a href="mailto:hello@qaydalaqar.com" class="btn btn-outline">hello@qaydalaqar.com</a>
+      </div>
+      <p class="caption" style="margin-top: 0.75rem;">ملاحظة: حدّث رابط واتساب ورابط قائمة الانتظار عند الجاهزية.</p>
+    </div>
+  </section>
+
+  <!-- (H) Footer -->
   <footer>
     <div class="container">
       <p>© قيد العقار. جميع الحقوق محفوظة.</p>
