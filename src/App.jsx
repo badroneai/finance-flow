@@ -2269,6 +2269,58 @@ const LedgersPage = () => {
     setPayOpen(true);
   };
 
+  const submitPayNow = () => {
+    try {
+      if (!activeId) { toast('اختر دفترًا نشطًا', 'error'); return; }
+      if (!paySource?.id) { toast('اختر بندًا أولاً', 'error'); return; }
+
+      const amount = parseRecurringAmount(payForm.amount);
+      if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
+
+      const date = String(payForm.date || '').trim() || today();
+      const description = String(payForm.description || paySource.title || '').trim();
+      const paymentMethod = String(payForm.paymentMethod || 'cash');
+
+      const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
+      const res = dataStore.transactions.create({
+        type: 'expense',
+        category: 'other',
+        amount: Number(amount),
+        paymentMethod,
+        date,
+        description,
+        meta,
+      });
+
+      if (!res || !res.ok) { toast(res?.message || 'تعذر تسجيل الدفعة', 'error'); return; }
+
+      // Update recurring item ops + history (no schema change)
+      try {
+        updateRecurringOps(
+          paySource.id,
+          {
+            status: 'resolved',
+            lastPaidAt: new Date().toISOString(),
+            payState: 'paid',
+            payStateAt: new Date().toISOString(),
+          },
+          {
+            type: 'pay_now',
+            amount,
+            txId: res?.item?.id || res?.data?.id || res?.tx?.id || undefined,
+            meta: { dueDate: paySource?.nextDueDate, method: paymentMethod },
+          }
+        );
+      } catch {}
+
+      setPayOpen(false);
+      toast('تم تسجيل الدفعة');
+      refresh();
+    } catch {
+      toast('تعذر تسجيل الدفعة', 'error');
+    }
+  };
+
   const saveLedgerBudgets = (patch = {}) => {
     if (!activeId) return false;
     const ts = new Date().toISOString();
