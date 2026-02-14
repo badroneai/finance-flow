@@ -2126,6 +2126,41 @@ const LedgersPage = () => {
     setPricingOpen(true);
   };
 
+  const applyQuickPricing = () => {
+    try {
+      if (!activeId) { toast('اختر دفترًا نشطًا', 'error'); return; }
+      if (!pricingList || pricingList.length === 0) { setPricingOpen(false); return; }
+
+      const item = pricingList[pricingIndex];
+      if (!item) { setPricingOpen(false); return; }
+
+      const amount = parseRecurringAmount(pricingAmount);
+      if (!Number.isFinite(amount) || amount <= 0) {
+        toast('حدد المبلغ أولاً', 'error');
+        return;
+      }
+
+      const nextDueDate = ensureDateValue(pricingDate || item?.nextDueDate);
+      applyPricingToItem(item.id, { amount, nextDueDate });
+
+      const nextIndex = pricingIndex + 1;
+      if (nextIndex >= pricingList.length) {
+        setPricingOpen(false);
+        toast('تم تطبيق التسعير');
+      } else {
+        setPricingIndex(nextIndex);
+        const nextItem = pricingList[nextIndex];
+        setPricingAmount('');
+        setPricingDate(ensureDateValue(nextItem?.nextDueDate));
+        toast('تم حفظ البند');
+      }
+
+      refresh();
+    } catch {
+      toast('تعذر تطبيق التسعير', 'error');
+    }
+  };
+
   const SA_CITY_FACTOR = {
     riyadh: 1.15,
     jeddah: 1.10,
