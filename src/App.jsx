@@ -2625,6 +2625,21 @@ const LedgersPage = () => {
             completeness,
             recurringDashboard,
             updateRecurringOps,
+
+            // Stage 6 extraction fix: variables used inside LedgerRecurringTab must be passed 1:1
+            unpricedList,
+            outlook,
+            actuals,
+            budgetsHealth,
+            ledgerAlerts,
+            budgetForm,
+            setBudgetForm,
+            normalizeBudgets,
+            ledgers,
+            setLedgers,
+            activeRecurring,
+            recurringSections,
+            CATEGORY_LABEL,
           }}
         />
       )}
