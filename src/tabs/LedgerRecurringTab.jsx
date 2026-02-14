@@ -155,6 +155,50 @@ export default function LedgerRecurringTab(props) {
 
   return (
 <>
+  {/* Pay-now modal (Stage 6 stability: restore UI for submitPayNow) */}
+  {payOpen ? (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-label="تسجيل دفعة الآن">
+      <div className="w-full max-w-lg bg-white rounded-2xl border border-gray-100 shadow-xl p-4">
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <div className="font-bold text-gray-900">تسجيل دفعة الآن</div>
+            <div className="text-xs text-gray-500 mt-1">{paySource?.title || '—'}</div>
+          </div>
+          <button type="button" onClick={() => setPayOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 text-sm" aria-label="إغلاق">إغلاق</button>
+        </div>
+
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <div className="col-span-2">
+            <label className="block text-xs text-gray-600 mb-1">المبلغ</label>
+            <input type="text" inputMode="decimal" value={payForm.amount} onChange={(e) => setPayForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="المبلغ" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">التاريخ</label>
+            <input type="date" value={payForm.date} onChange={(e) => setPayForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="التاريخ" />
+          </div>
+          <div>
+            <label className="block text-xs text-gray-600 mb-1">طريقة الدفع</label>
+            <select value={payForm.paymentMethod} onChange={(e) => setPayForm(f => ({ ...f, paymentMethod: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="طريقة الدفع">
+              <option value="cash">نقدي</option>
+              <option value="bank_transfer">تحويل بنكي</option>
+              <option value="check">شيك</option>
+              <option value="electronic">بطاقة إلكترونية</option>
+            </select>
+          </div>
+          <div className="col-span-2">
+            <label className="block text-xs text-gray-600 mb-1">الوصف</label>
+            <input type="text" value={payForm.description} onChange={(e) => setPayForm(f => ({ ...f, description: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="الوصف" />
+          </div>
+        </div>
+
+        <div className="mt-4 flex justify-end gap-2">
+          <button type="button" onClick={() => setPayOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+          <button type="button" onClick={submitPayNow} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل">تسجيل</button>
+        </div>
+      </div>
+    </div>
+  ) : null}
+
   {/* Authority Layer (v8) */}
   <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
     <div className="flex items-start justify-between gap-3">
