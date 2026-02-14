@@ -136,6 +136,21 @@ export default function LedgerRecurringTab(props) {
     completeness,
     recurringDashboard,
     updateRecurringOps,
+
+    // Vars referenced in extracted JSX (must be passed from LedgersPage)
+    unpricedList,
+    outlook,
+    actuals,
+    budgetsHealth,
+    ledgerAlerts,
+    budgetForm,
+    setBudgetForm,
+    normalizeBudgets,
+    ledgers,
+    setLedgers,
+    activeRecurring,
+    recurringSections,
+    CATEGORY_LABEL,
   } = props;
 
   return (
