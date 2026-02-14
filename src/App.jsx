@@ -5485,15 +5485,7 @@ const App = () => {
                       فتح ملف النسخ الاحتياطي
                     </button>
 
-                    <div className="mt-4 rounded-xl border p-3" style={{ borderColor: 'var(--color-border)', background: 'rgba(0,0,0,0.03)' }}>
-                      <div className="font-semibold text-sm">تحتاج مساعدة؟</div>
-                      <a className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium" style={{ background: 'var(--color-primary)', color: '#fff', textDecoration: 'none' }} href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener" aria-label="تواصل واتساب">
-                        تواصل واتساب
-                      </a>
-                      <div className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
-                        TODO: ضع رقم واتساب بصيغة 966XXXXXXXXX
-                      </div>
-                    </div>
+                    {/* Help contact intentionally omitted (local-first app). */}
                   </div>
                 </div>
               </div>
