@@ -1946,6 +1946,17 @@ const LedgersPage = () => {
   const completeness = computeLedgerCompleteness(activeRecurring);
   const recurringSections = groupRecurringBySections(activeRecurring);
 
+  // Stage 6 extraction: keep section metadata 1:1 for LedgerRecurringTab
+  const sections = [
+    { key: 'system', title: 'نظامي' },
+    { key: 'operational', title: 'تشغيلي' },
+    { key: 'maintenance', title: 'صيانة' },
+    { key: 'marketing', title: 'تسويق' },
+    { key: 'adhoc', title: 'عند الحاجة' },
+    { key: 'uncategorized', title: 'أخرى' },
+  ];
+  const grouped = recurringSections;
+
   const seededOnlyList = activeRecurring.filter(isSeededOnly);
 
   const ledgerTxs = (() => {
