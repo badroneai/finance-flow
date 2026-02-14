@@ -7,6 +7,10 @@ import { Modal, ConfirmDialog } from './ui/Modals.jsx';
 import { LedgerHeader } from './ui/ledger/LedgerHeader.jsx';
 import { LedgerTabsShell } from './ui/ledger/LedgerTabsShell.jsx';
 
+// Stage 6 extraction: tab modules (Vite-safe)
+import LedgerRecurringTab from './tabs/LedgerRecurringTab.jsx';
+import LedgerPerformanceTab from './tabs/LedgerPerformanceTab.jsx';
+import LedgerReportsTab from './tabs/LedgerReportsTab.jsx';
 
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
