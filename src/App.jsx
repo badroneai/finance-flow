@@ -1992,6 +1992,9 @@ const LedgersPage = () => {
 
   const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
 
+  // Pricing wizard list (Stage 6 extraction: keep 1:1 behavior)
+  const pricingList = unpricedList;
+
   const inbox = buildLedgerInbox({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
   const cashPlan = computeCashPlan({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
 
