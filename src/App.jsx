@@ -12,6 +12,8 @@ import LedgerRecurringTab from './tabs/LedgerRecurringTab.jsx';
 import LedgerPerformanceTab from './tabs/LedgerPerformanceTab.jsx';
 import LedgerReportsTab from './tabs/LedgerReportsTab.jsx';
 
+import { invariant, assertFn } from './core/contracts.js';
+
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
@@ -48,7 +50,9 @@ import {
   isSeededOnly,
 } from './core/ledger-intelligence-v1.js';
 
-import {
+import { ledgerBrain, ledgerForecast, ledgerVariance } from './core/exports-map.js';
+
+const {
   calculateBurnRateBundle,
   calculateCashPressureScore,
   calculateNext90DayRisk,
@@ -59,20 +63,20 @@ import {
   getRiskBreakdown90d,
   getDailyPlaybook,
   getBenchmarkComparison,
-} from './core/ledger-brain.js';
+} = ledgerBrain;
 
-import {
+const {
   normalizeMonthlyRunRate,
   forecast6m,
   cashGapModel,
   insightsFromForecast,
-} from './core/ledger-forecast.js';
+} = ledgerForecast;
 
-import {
+const {
   buildIncomeModelFn,
   getLast4MonthsTable,
   targetsEvaluation,
-} from './core/ledger-variance.js';
+} = ledgerVariance;
 
 import {
   buildLedgerInbox,
@@ -2606,147 +2610,157 @@ const LedgersPage = () => {
       )}
 
       {tab === 'recurring' && (
-        <LedgerRecurringTab
-          {...{
-            Currency,
-            Badge,
-            EmptyState,
+        (() => {
+          // Stage 7B: runtime contract guards (dev-only throw, prod warn)
+          invariant(!!activeId, 'LedgerRecurringTab requires activeId');
+          assertFn(startPayNow, 'startPayNow');
+          assertFn(submitPayNow, 'submitPayNow');
+          assertFn(applyQuickPricing, 'applyQuickPricing');
 
-            activeId,
-            activeLedger,
-            recurring,
-            startPayNow,
-            startEditRecurring,
-            deleteRecurring,
-            resetRecForm,
-            saveRecurring,
-            recForm,
-            setRecForm,
-            recEditingId,
-            setRecEditingId,
+          return (
+            <LedgerRecurringTab
+              {...{
+                Currency,
+                Badge,
+                EmptyState,
 
-            authorityOpen,
-            setAuthorityOpen,
-            budgets,
-            saveLedgerBudgets,
-            budgetAuth,
-            compliance,
-            brain,
-            spendByBucket,
+                activeId,
+                activeLedger,
+                recurring,
+                startPayNow,
+                startEditRecurring,
+                deleteRecurring,
+                resetRecForm,
+                saveRecurring,
+                recForm,
+                setRecForm,
+                recEditingId,
+                setRecEditingId,
 
-            inbox,
-            cashPlan,
-            inboxFilter,
-            setInboxFilter,
-            inboxView,
-            lastPayNowAt,
-            daysSince,
-            addDaysISO,
-            setHistoryModal,
+                authorityOpen,
+                setAuthorityOpen,
+                budgets,
+                saveLedgerBudgets,
+                budgetAuth,
+                compliance,
+                brain,
+                spendByBucket,
 
-            forecastRunRate,
-            cashGap,
-            assumedInflow,
-            setAssumedInflow,
-            forecastPreset,
-            setForecastPreset,
-            scRent,
-            setScRent,
-            scUtilities,
-            setScUtilities,
-            scMaintenance,
-            setScMaintenance,
-            scMarketing,
-            setScMarketing,
-            scOther,
-            setScOther,
-            forecastInsights,
+                inbox,
+                cashPlan,
+                inboxFilter,
+                setInboxFilter,
+                inboxView,
+                lastPayNowAt,
+                daysSince,
+                addDaysISO,
+                setHistoryModal,
 
-            brainDetails,
-            setBrainDetails,
-            seededOnlyList,
-            isPastDue,
-            operatorMode,
-            openPricingWizard,
+                forecastRunRate,
+                cashGap,
+                assumedInflow,
+                setAssumedInflow,
+                forecastPreset,
+                setForecastPreset,
+                scRent,
+                setScRent,
+                scUtilities,
+                setScUtilities,
+                scMaintenance,
+                setScMaintenance,
+                scMarketing,
+                setScMarketing,
+                scOther,
+                setScOther,
+                forecastInsights,
 
-            health,
-            healthHelpOpen,
-            setHealthHelpOpen,
-            projection,
-            simRentPct,
-            setSimRentPct,
-            simBillsPct,
-            setSimBillsPct,
-            simMaintPct,
-            setSimMaintPct,
-            computeScenario,
+                brainDetails,
+                setBrainDetails,
+                seededOnlyList,
+                isPastDue,
+                operatorMode,
+                openPricingWizard,
 
-            pricingOpen,
-            setPricingOpen,
-            pricingIndex,
-            setPricingIndex,
-            pricingAmount,
-            setPricingAmount,
-            pricingDate,
-            setPricingDate,
-            pricingList,
-            applyQuickPricing,
+                health,
+                healthHelpOpen,
+                setHealthHelpOpen,
+                projection,
+                simRentPct,
+                setSimRentPct,
+                simBillsPct,
+                setSimBillsPct,
+                simMaintPct,
+                setSimMaintPct,
+                computeScenario,
 
-            saPricingOpen,
-            setSaPricingOpen,
-            saCity,
-            setSaCity,
-            saSize,
-            setSaSize,
-            saOnlyUnpriced,
-            setSaOnlyUnpriced,
-            applySaudiAutoPricingForLedger,
+                pricingOpen,
+                setPricingOpen,
+                pricingIndex,
+                setPricingIndex,
+                pricingAmount,
+                setPricingAmount,
+                pricingDate,
+                setPricingDate,
+                pricingList,
+                applyQuickPricing,
 
-            payOpen,
-            setPayOpen,
-            paySource,
-            setPaySource,
-            payForm,
-            setPayForm,
-            submitPayNow,
+                saPricingOpen,
+                setSaPricingOpen,
+                saCity,
+                setSaCity,
+                saSize,
+                setSaSize,
+                saOnlyUnpriced,
+                setSaOnlyUnpriced,
+                applySaudiAutoPricingForLedger,
 
-            toast,
-            refresh,
-            setConfirm,
-            seedRecurringForLedger,
-            filterTransactionsForLedgerByMeta,
-            dataStore,
-            normalizeLedgerType,
-            parseRecurringAmount,
-            normalizeRecurringCategory,
-            normalizeRecurringRisk,
-            sections,
-            sectionStats,
-            grouped,
-            sortRecurringInSection,
-            isSeededRecurring,
-            isSeededOnly,
-            isDueWithinDays,
-            completeness,
-            recurringDashboard,
-            updateRecurringOps,
+                payOpen,
+                setPayOpen,
+                paySource,
+                setPaySource,
+                payForm,
+                setPayForm,
+                submitPayNow,
 
-            // Stage 6 extraction fix: variables used inside LedgerRecurringTab must be passed 1:1
-            unpricedList,
-            outlook,
-            actuals,
-            budgetsHealth,
-            ledgerAlerts,
-            budgetForm,
-            setBudgetForm,
-            normalizeBudgets,
-            ledgers,
-            setLedgers,
-            activeRecurring,
-            recurringSections,
-            CATEGORY_LABEL,
-          }}
-        />
+                toast,
+                refresh,
+                setConfirm,
+                seedRecurringForLedger,
+                filterTransactionsForLedgerByMeta,
+                dataStore,
+                normalizeLedgerType,
+                parseRecurringAmount,
+                normalizeRecurringCategory,
+                normalizeRecurringRisk,
+                sections,
+                sectionStats,
+                grouped,
+                sortRecurringInSection,
+                isSeededRecurring,
+                isSeededOnly,
+                isDueWithinDays,
+                completeness,
+                recurringDashboard,
+                updateRecurringOps,
+
+                // Stage 6 extraction fix: variables used inside LedgerRecurringTab must be passed 1:1
+                unpricedList,
+                outlook,
+                actuals,
+                budgetsHealth,
+                ledgerAlerts,
+                budgetForm,
+                setBudgetForm,
+                normalizeBudgets,
+                ledgers,
+                setLedgers,
+                activeRecurring,
+                recurringSections,
+                CATEGORY_LABEL,
+              }}
+            />
+          );
+        })()
       )}
       {tab === 'performance' && (
         <LedgerPerformanceTab
