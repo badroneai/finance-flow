@@ -79,6 +79,18 @@ import {
 } from './core/ledger-item-history.js';
 
 import {
+  monthKeyFromDate,
+  computeSpendByBucketFromHistory,
+  computeBudgetUtilization,
+  wouldBreachHardLock,
+  normalizeBudgets as normalizeAuthorityBudgets,
+} from './core/ledger-budget-authority.js';
+
+import {
+  computeComplianceShield,
+} from './core/ledger-compliance.js';
+
+import {
   buildTxMetaFromRecurring,
   computeComplianceScore,
   computePL,
@@ -2117,8 +2129,15 @@ const LedgersPage = () => {
   const inbox = buildLedgerInbox({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
   const cashPlan = computeCashPlan({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
 
+  const budgets = normalizeAuthorityBudgets(activeLedger?.budgets);
+  const spendByBucket = computeSpendByBucketFromHistory({ ledgerId: activeId, recurringItems: Array.isArray(recurring) ? recurring : [], monthKey: monthKeyFromDate(new Date()) });
+  const budgetAuth = computeBudgetUtilization({ budgets, spendByBucket, softThreshold: 0.8 });
+
+  const compliance = computeComplianceShield({ ledgerId: activeId, recurringItems: Array.isArray(recurring) ? recurring : [], now: new Date() });
+
   const [inboxFilter, setInboxFilter] = useState('all'); // all|overdue|soon|unpriced|high
   const [historyModal, setHistoryModal] = useState(null); // null | { item }
+  const [authorityOpen, setAuthorityOpen] = useState(true);
 
   const inboxView = (() => {
     const list = Array.isArray(inbox) ? inbox : [];
@@ -2344,6 +2363,19 @@ const LedgersPage = () => {
       description: String(r.title || '').trim(),
     });
     setPayOpen(true);
+  };
+
+  const saveLedgerBudgets = (patch = {}) => {
+    if (!activeId) return false;
+    const ts = new Date().toISOString();
+    const next = (Array.isArray(ledgers) ? ledgers : []).map(l => {
+      if (l.id !== activeId) return l;
+      return { ...l, budgets: { ...(l.budgets || {}), ...patch }, updatedAt: ts };
+    });
+    try { setLedgers(next); } catch { toast('تعذر حفظ الميزانيات', 'error'); return false; }
+    toast('تم حفظ الميزانيات');
+    refresh();
+    return true;
   };
 
   const resetRecForm = () => setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
@@ -2613,6 +2645,118 @@ const LedgersPage = () => {
 
       {tab === 'recurring' && (
         <>
+          {/* Authority Layer (v8) */}
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h4 className="font-bold text-gray-900">Authority Layer</h4>
+                <p className="text-xs text-gray-500 mt-1">Budget Control • Compliance • Month Awareness (عرض فقط)</p>
+              </div>
+              <button type="button" onClick={() => setAuthorityOpen(v => !v)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="طي/فتح">{authorityOpen ? 'طي' : 'فتح'}</button>
+            </div>
+
+            {authorityOpen ? (
+              <div className="mt-3 grid md:grid-cols-3 gap-3">
+                {/* Budget Authority */}
+                <div className="p-3 rounded-xl border border-gray-100 bg-white">
+                  <div className="flex items-center justify-between">
+                    <div className="font-bold text-gray-900">🛑 سلطة الميزانية</div>
+                    <label className="inline-flex items-center gap-2 text-xs text-gray-700">
+                      <input type="checkbox" checked={!!budgets.hardLock} onChange={(e) => saveLedgerBudgets({ hardLock: e.target.checked })} />
+                      قفل صارم
+                    </label>
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {[
+                      { k: 'system', label: 'System' },
+                      { k: 'operational', label: 'Operational' },
+                      { k: 'maintenance', label: 'Maintenance' },
+                      { k: 'marketing', label: 'Marketing' },
+                    ].map(x => (
+                      <div key={x.k}>
+                        <label className="block text-[11px] text-gray-600 mb-1">{x.label}</label>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          value={budgets[x.k] == null ? '' : String(budgets[x.k])}
+                          onChange={(e) => {
+                            const v = e.target.value;
+                            const n = v === '' ? null : (Number(parseRecurringAmount(v)) || 0);
+                            saveLedgerBudgets({ [x.k]: n });
+                          }}
+                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
+                          placeholder="—"
+                          aria-label={`Budget ${x.label}`}
+                        />
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {['system','operational','maintenance','marketing'].map(k => {
+                      const row = budgetAuth?.perBucket?.[k];
+                      if (!row || !row.target) return (
+                        <div key={k} className="text-[11px] text-gray-400">{k}: —</div>
+                      );
+                      const badge = row.breach ? 'bg-red-50 border-red-100 text-red-700' : row.warn ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-green-50 border-green-100 text-green-700';
+                      return (
+                        <div key={k} className={`p-2 rounded-lg border ${badge}`}>
+                          <div className="text-[11px] font-semibold">{k}: {row.utilizationPct}%</div>
+                          <div className="text-[11px]">{row.spent} / {row.target}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* Compliance Shield */}
+                <div className="p-3 rounded-xl border border-gray-100 bg-white">
+                  <div className="font-bold text-gray-900">🛡️ درع الامتثال</div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <div className="text-2xl font-bold text-gray-900">{compliance?.score ?? '—'}</div>
+                    <span className={`px-2 py-0.5 rounded-full text-[11px] border ${String(compliance?.status).includes('خطر') ? 'border-red-100 bg-red-50 text-red-700' : String(compliance?.status).includes('انتباه') ? 'border-amber-100 bg-amber-50 text-amber-800' : 'border-green-100 bg-green-50 text-green-700'}`}>{compliance?.status || '—'}</span>
+                  </div>
+                  <div className="mt-2 text-xs text-gray-500">أبرز 3 أسباب:</div>
+                  {(!compliance?.drivers || compliance.drivers.length === 0) ? (
+                    <div className="text-sm text-gray-600 mt-1">لا يوجد مخالفات واضحة.</div>
+                  ) : (
+                    <div className="mt-1 text-sm text-gray-700 flex flex-col gap-1">
+                      {compliance.drivers.map(d => (
+                        <div key={d.id}>• {d.reason}: {d.title}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Month Awareness (display only) */}
+                <div className="p-3 rounded-xl border border-gray-100 bg-white">
+                  <div className="font-bold text-gray-900">📅 وعي الشهر (عرض فقط)</div>
+                  {(() => {
+                    const now = new Date();
+                    const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+                    const day = now.getDate();
+                    const left = Math.max(0, daysInMonth - day);
+
+                    const monthlyBurn = Number(brain?.burn?.monthly) || 0;
+                    const spentThisMonth = Object.values(spendByBucket || {}).reduce((a, x) => a + (Number(x)||0), 0);
+                    const expectedRemaining = monthlyBurn > 0 ? (monthlyBurn * (left / daysInMonth)) : 0;
+                    const projected = spentThisMonth + expectedRemaining;
+
+                    const risk = (monthlyBurn > 0 && projected > monthlyBurn * 1.05);
+                    return (
+                      <>
+                        <div className="mt-2 text-sm text-gray-700">أيام متبقية: <strong>{left}</strong></div>
+                        <div className="text-sm text-gray-700 mt-1">Burn متوقع حتى نهاية الشهر: <strong><Currency value={expectedRemaining} /></strong></div>
+                        <div className={`mt-2 p-2 rounded-lg border text-sm ${risk ? 'bg-amber-50 border-amber-100 text-amber-900' : 'bg-green-50 border-green-100 text-green-800'}`}>{risk ? 'احتمال تجاوز' : 'الشهر في منطقة آمنة'}</div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
           {/* Ledger Inbox Pro (v7) */}
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
             <div className="flex items-start justify-between gap-3">
@@ -4125,52 +4269,72 @@ const LedgersPage = () => {
                 const paymentMethod = String(payForm.paymentMethod || 'cash');
                 const description = String(payForm.description || '').trim();
 
-                // Minimal safe defaults (do not change transactions logic):
-                const category = 'other';
+                const proceed = () => {
+                  // Minimal safe defaults (do not change transactions logic):
+                  const category = 'other';
 
-                const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
+                  const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
+                  const dueDateBefore = String(paySource?.nextDueDate || '');
 
-                const dueDateBefore = String(paySource?.nextDueDate || '');
+                  const res = dataStore.transactions.create({
+                    type,
+                    category,
+                    amount,
+                    paymentMethod,
+                    date,
+                    description,
+                    meta,
+                  });
+                  if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
 
-                const res = dataStore.transactions.create({
-                  type,
-                  category,
-                  amount,
-                  paymentMethod,
-                  date,
-                  description,
-                  meta,
-                });
-                if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
+                  toast('تم تسجيل الدفعة');
 
-                toast('تم تسجيل الدفعة');
-
-                // Update ops state + append history (no tx logic change)
-                try {
-                  if (paySource?.id) {
-                    updateRecurringOps(
-                      paySource.id,
-                      {
-                        status: 'resolved',
-                        lastPaidAt: new Date().toISOString(),
-                        payState: 'paid',
-                        payStateAt: new Date().toISOString(),
-                      },
-                      {
-                        type: 'pay_now',
-                        amount,
-                        txId: res?.item?.id || res?.data?.id || res?.tx?.id || undefined,
-                        meta: {
-                          dueDate: dueDateBefore,
-                          method: paymentMethod,
+                  try {
+                    if (paySource?.id) {
+                      updateRecurringOps(
+                        paySource.id,
+                        {
+                          status: 'resolved',
+                          lastPaidAt: new Date().toISOString(),
+                          payState: 'paid',
+                          payStateAt: new Date().toISOString(),
                         },
-                      }
-                    );
+                        {
+                          type: 'pay_now',
+                          amount,
+                          txId: res?.item?.id || res?.data?.id || res?.tx?.id || undefined,
+                          meta: { dueDate: dueDateBefore, method: paymentMethod },
+                        }
+                      );
+                    }
+                  } catch {}
+
+                  setPayOpen(false);
+                  refresh();
+                };
+
+                // HardLock warning (display-only; user can continue)
+                try {
+                  const breach = wouldBreachHardLock({
+                    budgets: budgets,
+                    utilization: budgetAuth,
+                    bucket: paySource?.category,
+                    additionalAmount: amount,
+                  });
+                  if (breach.blocked) {
+                    setConfirm({
+                      title: '⚠️ تجاوز ميزانية التصنيف',
+                      message: breach.reason + '. هل تريد المتابعة رغم ذلك؟',
+                      confirmLabel: 'متابعة رغم ذلك',
+                      onConfirm: () => { setConfirm(null); proceed(); },
+                      onCancel: () => setConfirm(null),
+                      danger: false,
+                    });
+                    return;
                   }
                 } catch {}
 
-                setPayOpen(false);
-                refresh();
+                proceed();
               }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل">تسجيل</button>
             </div>
           </div>
