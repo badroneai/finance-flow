@@ -2478,7 +2478,12 @@ const LedgersPage = () => {
           </div>
 
           {(!ledgers || ledgers.length === 0) ? (
-            <EmptyState message="لا توجد دفاتر" />
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <EmptyState message="لا توجد دفاتر" />
+              <div className="mt-3 flex justify-center">
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'ledgers' } }))} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="افتح المساعدة">افتح المساعدة</button>
+              </div>
+            </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {ledgers.filter(l => !l.archived).map((l) => (
@@ -3501,7 +3506,12 @@ const LedgersPage = () => {
           </div>
 
           {activeRecurring.length === 0 ? (
-            <EmptyState message="لا توجد التزامات متكررة لهذا الدفتر" />
+            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+              <EmptyState message="لا توجد التزامات متكررة لهذا الدفتر" />
+              <div className="mt-3 flex justify-center">
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'recurring' } }))} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="افتح المساعدة">افتح المساعدة</button>
+              </div>
+            </div>
           ) : (
             (() => {
               const sections = [
@@ -5223,6 +5233,7 @@ const App = () => {
 
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [helpSection, setHelpSection] = useState('start'); // start|ledgers|recurring|reports|backup|privacy
 
   useEffect(() => {
     const handler = (e) => {
@@ -5231,6 +5242,21 @@ const App = () => {
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
   }, [showHelp]);
+
+  // Stage 4: Help/FAQ open event (for internal links from empty-states)
+  useEffect(() => {
+    const onHelp = (e) => {
+      const sec = String(e?.detail?.section || '').trim();
+      if (sec) setHelpSection(sec);
+      setShowHelp(true);
+      setTimeout(() => {
+        const el = document.querySelector(`[data-help-section="${sec || helpSection}"]`);
+        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 50);
+    };
+    window.addEventListener('ui:help', onHelp);
+    return () => window.removeEventListener('ui:help', onHelp);
+  }, [helpSection]);
 
   const updateHeaderDate = useCallback(() => {
     setHeaderDateText(formatDateHeader(new Date()));
@@ -5312,7 +5338,7 @@ const App = () => {
       <UnsavedContext.Provider value={setDirty}>
         <TrustChecks/>
         <div className="app-shell flex min-h-screen">
-          <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => setShowHelp(true)}/>
+          <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
           <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
             <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
@@ -5368,39 +5394,80 @@ const App = () => {
                 <div className="relative w-full max-w-lg rounded-2xl border p-5 shadow-lg" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)', maxHeight: '80vh', overflow: 'auto' }}>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <h3 className="text-lg font-bold" style={{ margin: 0 }}>دليل قيد العقار — سريعًا</h3>
+                      <h3 className="text-lg font-bold" style={{ margin: 0 }}>المساعدة (Help / FAQ)</h3>
+                      <p className="text-sm" style={{ margin: '0.35rem 0 0', color: 'var(--color-muted)' }}>دليل عملي — بدون تسويق، فقط خطوات واضحة.</p>
                     </div>
                     <button type="button" className="text-sm" style={{ color: 'var(--color-muted)' }} aria-label="إغلاق" onClick={() => setShowHelp(false)}>×</button>
                   </div>
 
-                  <div className="mt-4 space-y-3 text-sm" style={{ color: 'var(--color-text)' }}>
-                    <div>
-                      <div className="font-semibold">1) أين تُحفظ بياناتي؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>تُحفظ محليًا داخل المتصفح على جهازك. لا نرفع بيانات للسحابة.</div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {[
+                      { k: 'start', label: 'كيف أبدأ؟' },
+                      { k: 'ledgers', label: 'الدفاتر' },
+                      { k: 'recurring', label: 'الالتزامات المتكررة' },
+                      { k: 'reports', label: 'التقارير + CSV' },
+                      { k: 'backup', label: 'النسخ الاحتياطي' },
+                      { k: 'privacy', label: 'الخصوصية' },
+                    ].map(x => (
+                      <button key={x.k} type="button" onClick={() => {
+                        setHelpSection(x.k);
+                        setTimeout(() => {
+                          const el = document.querySelector(`[data-help-section="${x.k}"]`);
+                          if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 50);
+                      }} className={`px-3 py-2 rounded-lg border text-sm ${helpSection === x.k ? 'bg-blue-600 text-white border-blue-600' : ''}`} style={{ borderColor: helpSection === x.k ? '#2563eb' : 'var(--color-border)' }} aria-label={x.label}>{x.label}</button>
+                    ))}
+                  </div>
+
+                  <div className="mt-4 space-y-4 text-sm" style={{ color: 'var(--color-text)' }}>
+                    <div data-help-section="start">
+                      <div className="font-semibold">كيف أبدأ؟</div>
+                      <ol style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
+                        <li>اذهب إلى: الحركات المالية → اضغط (إضافة) وسجّل أول حركة دخل/مصروف.</li>
+                        <li>اذهب إلى: الدفاتر → عيّن دفتر كنشط (لو عندك أكثر من دفتر).</li>
+                        <li>اذهب إلى: الالتزامات المتكررة → أضف البنود الأساسية (إيجار/كهرباء/صيانة/تسويق...)</li>
+                        <li>استخدم: “سجّل كدفعة الآن” للبنود المهمة حتى يظهر أثرها في التقارير/الأداء.</li>
+                      </ol>
                     </div>
-                    <div>
-                      <div className="font-semibold">2) كيف أبدأ؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>أضف أول حركة مالية، ثم راجع الملخص بالأعلى.</div>
+
+                    <div data-help-section="ledgers">
+                      <div className="font-semibold">الدفاتر</div>
+                      <div style={{ color: 'var(--color-muted)' }}>الدفتر = مجموعة بيانات مستقلة. استخدمه لفصل مكاتب/جهات مختلفة.</div>
+                      <ul style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
+                        <li>عيّن دفتر واحد كنشط حتى تكون التقارير/الالتزامات محسوبة عليه.</li>
+                        <li>يمكنك تعديل الاسم/الوصف بسهولة من نفس الصفحة.</li>
+                      </ul>
                     </div>
-                    <div>
-                      <div className="font-semibold">3) كيف أنسخ احتياطيًا؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>من الإعدادات → "تنزيل نسخة احتياطية (JSON)".</div>
+
+                    <div data-help-section="recurring">
+                      <div className="font-semibold">الالتزامات المتكررة</div>
+                      <ul style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
+                        <li>استخدم “غير مسعّر” عندما يكون مبلغ البند غير واضح بعد.</li>
+                        <li>Inbox يساعدك في: المتأخر/القريب/عالي المخاطر/غير المسعّر.</li>
+                        <li>زر “سجّل كدفعة الآن” ينشئ حركة (category=other) ويحدّث سجل البند.</li>
+                      </ul>
                     </div>
-                    <div>
-                      <div className="font-semibold">4) كيف أستعيد نسخة احتياطية؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>من الإعدادات → "استعادة من نسخة احتياطية" ثم اختر الملف.</div>
+
+                    <div data-help-section="reports">
+                      <div className="font-semibold">التقارير والتصدير CSV</div>
+                      <ul style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
+                        <li>التقارير تُظهر ملخصات مفيدة للمتابعة.</li>
+                        <li>CSV يخرج “قيم خام” (بدون تنسيق لغة) ومناسب للإكسل.</li>
+                      </ul>
                     </div>
-                    <div>
-                      <div className="font-semibold">5) هل التصدير CSV يغيّر الأرقام/التنسيق؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>CSV يخرج “قيم خام” بدون تنسيق لغة، مناسب للإكسل.</div>
+
+                    <div data-help-section="backup">
+                      <div className="font-semibold">النسخ الاحتياطي والاستعادة</div>
+                      <ul style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
+                        <li>من الإعدادات: تنزيل نسخة احتياطية (JSON).</li>
+                        <li>من الإعدادات: استعادة من نسخة احتياطية.</li>
+                        <li>مهم: النسخة الاحتياطية تحميك من حذف بيانات المتصفح.</li>
+                      </ul>
                     </div>
-                    <div>
-                      <div className="font-semibold">6) ماذا لو مسحت بيانات المتصفح؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>قد تفقد بياناتك. استخدم النسخ الاحتياطي دوريًا.</div>
-                    </div>
-                    <div>
-                      <div className="font-semibold">7) كيف أغيّر المظهر/الأرقام/التاريخ؟</div>
-                      <div style={{ color: 'var(--color-muted)' }}>من الإعدادات: الثيم (نهاري/خافت/ليلي/حسب النظام) + عرض الأرقام + عرض التاريخ.</div>
+
+                    <div data-help-section="privacy">
+                      <div className="font-semibold">الخصوصية</div>
+                      <div style={{ color: 'var(--color-muted)' }}>بياناتك تُحفظ محليًا داخل المتصفح على جهازك. لا يوجد رفع تلقائي للسحابة.</div>
                     </div>
                   </div>
 
@@ -5409,26 +5476,16 @@ const App = () => {
                       افتح الإعدادات
                     </button>
                     <button type="button" className="px-4 py-2 rounded-lg border text-sm" style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }} onClick={() => {
-                      setShowHelp(false);
-                      setPage('settings');
+                      setHelpSection('backup');
                       setTimeout(() => {
-                        const headings = Array.from(document.querySelectorAll('h3'));
-                        const el = headings.find(h => (h.textContent || '').includes('النسخ الاحتياطي'));
+                        const el = document.querySelector('[data-help-section="backup"]');
                         if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                       }, 50);
                     }}>
                       فتح ملف النسخ الاحتياطي
                     </button>
 
-                    <div className="mt-4 rounded-xl border p-3" style={{ borderColor: 'var(--color-border)', background: 'rgba(0,0,0,0.03)' }}>
-                      <div className="font-semibold text-sm">تحتاج مساعدة؟</div>
-                      <a className="mt-2 inline-flex items-center justify-center px-4 py-2 rounded-lg text-sm font-medium" style={{ background: 'var(--color-primary)', color: '#fff', textDecoration: 'none' }} href="https://wa.me/966XXXXXXXXX" target="_blank" rel="noopener" aria-label="تواصل واتساب">
-                        تواصل واتساب
-                      </a>
-                      <div className="text-xs mt-2" style={{ color: 'var(--color-muted)' }}>
-                        TODO: ضع رقم واتساب بصيغة 966XXXXXXXXX
-                      </div>
-                    </div>
+                    {/* Help contact intentionally omitted (local-first app). */}
                   </div>
                 </div>
               </div>
