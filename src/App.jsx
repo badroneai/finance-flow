@@ -1,5 +1,8 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } from 'react';
 
+import { Sidebar, Topbar } from './ui/Sidebar.jsx';
+import { Modal, ConfirmDialog } from './ui/Modals.jsx';
+
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
 import { storageFacade } from './core/storage-facade.js';
@@ -814,60 +817,7 @@ const TrustChecks = () => {
   return null;
 };
 
-// ============================================
-// CONFIRM DIALOG
-// ============================================
-const ConfirmDialog = ({ open, title, message, messageList, dangerText, confirmLabel, onConfirm, onCancel, danger=false }) => {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onCancel(); };
-    if (open) document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onCancel]);
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={onCancel}>
-      <div className={`confirm-modal bg-white rounded-xl shadow-2xl p-6 max-w-sm w-full ${danger ? 'confirm-modal danger' : ''}`} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="confirmDialogTitle" aria-describedby="confirmDialogDesc">
-        <h3 id="confirmDialogTitle" className="text-lg font-bold mb-2">{title}</h3>
-        <div id="confirmDialogDesc" className="text-gray-600 mb-6 text-sm">
-          {message && <p className="mb-2">{message}</p>}
-          {messageList && messageList.length > 0 && (
-            <ul className="list-disc list-inside mb-2 space-y-0.5">
-              {messageList.map((item, i) => <li key={i}>{item}</li>)}
-            </ul>
-          )}
-          {dangerText && <p className="danger-text text-red-600 font-semibold mt-2">{dangerText}</p>}
-        </div>
-        <div className="confirm-actions flex gap-3 justify-end">
-          <button onClick={onCancel} className="btn-secondary px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="تراجع">{MSG.buttons.cancel}</button>
-          <button onClick={onConfirm} className={`px-4 py-2 rounded-lg text-white text-sm font-medium ${danger ? 'btn-danger bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}`} aria-label="تأكيد">{confirmLabel || 'تأكيد'}</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-// ============================================
-// MODAL
-// ============================================
-const Modal = ({ open, onClose, title, children, wide=false }) => {
-  useEffect(() => {
-    const handler = (e) => { if (e.key === 'Escape') onClose(); };
-    if (open) document.addEventListener('keydown', handler);
-    return () => document.removeEventListener('keydown', handler);
-  }, [open, onClose]);
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-40 flex items-start justify-center bg-black/50 p-4 overflow-y-auto" onClick={onClose}>
-      <div className={`bg-white rounded-xl shadow-2xl mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`} onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-labelledby="modalTitle">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h3 id="modalTitle" className="text-lg font-bold">{title}</h3>
-          <button onClick={onClose} className="p-1 rounded-lg hover:bg-gray-100" aria-label="إغلاق"><Icons.x size={20}/></button>
-        </div>
-        <div className="p-4">{children}</div>
-      </div>
-    </div>
-  );
-};
+/* Modal + ConfirmDialog extracted to src/ui/Modals.jsx */
 
 // ============================================
 // FORM FIELD (مستوى الملف — يمنع remount وفقدان التركيز عند الكتابة)
@@ -935,100 +885,7 @@ const NAV_ITEMS = [
   { id:'settings', label:'الإعدادات', icon:Icons.settings },
 ];
 
-const Sidebar = ({ page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen, onOpenHelp }) => {
-  const groups = { finance: 'التدفقات المالية', letters: 'الخطابات', notes: 'الملاحظات والتقويم' };
-  const handleNav = (id) => {
-    if (id === 'help') { typeof onOpenHelp === 'function' && onOpenHelp(); setMobileOpen(false); return; }
-    setPage(id === 'home' ? 'dashboard' : id);
-    setMobileOpen(false);
-  };
-  
-  const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-gray-700/50">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 flex items-center justify-center flex-shrink-0 text-white" aria-hidden="true">
-            <svg viewBox="0 0 100 100" fill="none" width="36" height="36" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-              <path d="M50 20L24 44V76H38V60H62V76H76V44L50 20Z"/>
-              <path d="M62 30V24H68V36"/>
-              <path d="M20 80H80" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round"/>
-              <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5"/>
-            </svg>
-          </div>
-          {!collapsed && <div><h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1><p className="text-gray-400 text-xs">نظام التدفقات المالية</p></div>}
-        </div>
-      </div>
-      <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="القائمة الرئيسية">
-        {NAV_ITEMS.filter(i => !i.group && i.id === 'home').map(item => (
-          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-              (page === item.id || (item.id === 'home' && page === 'dashboard')) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-            } ${collapsed ? 'justify-center' : ''}`}>
-            <item.icon size={18}/>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
-        {Object.entries(groups).map(([key, label]) => (
-          <div key={key} className="mb-2">
-            {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium uppercase tracking-wider">{label}</p>}
-            {NAV_ITEMS.filter(i => i.group === key).map(item => (
-              <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-                  page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-                } ${collapsed ? 'justify-center' : ''}`}>
-                <item.icon size={18}/>
-                {!collapsed && <span>{item.label}</span>}
-              </button>
-            ))}
-          </div>
-        ))}
-        {NAV_ITEMS.filter(i => !i.group && i.id !== 'home').map(item => (
-          <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-              page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-            } ${collapsed ? 'justify-center' : ''}`}>
-            <item.icon size={18}/>
-            {!collapsed && <span>{item.label}</span>}
-          </button>
-        ))}
-      </nav>
-    </div>
-  );
-
-  return (
-    <>
-      {/* Desktop/Tablet Sidebar */}
-      <aside className={`hidden md:flex flex-col bg-gray-900 h-screen sticky top-0 transition-all duration-300 no-print ${collapsed ? 'w-16' : 'w-60'}`}>
-        {sidebarContent}
-        <button onClick={() => setCollapsed(!collapsed)} className="p-3 border-t border-gray-700/50 text-gray-400 hover:text-white text-xs" aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}>
-          {collapsed ? '◁' : '▷ طي'}
-        </button>
-      </aside>
-      {/* Mobile Overlay */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)}/>
-          <aside className="fixed right-0 top-0 bottom-0 w-64 bg-gray-900 z-50 overflow-y-auto">{sidebarContent}</aside>
-        </div>
-      )}
-    </>
-  );
-};
-
-const Topbar = ({ page, setMobileOpen, headerDateText }) => {
-  const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', ledgers:'الدفاتر', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
-  return (
-    <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-start justify-between gap-3 sticky top-0 z-30 no-print">
-      <div className="flex items-center gap-3 min-w-0">
-        <button className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة"><Icons.menu size={22}/></button>
-        <h2 className="text-lg font-bold text-gray-900 truncate">{titles[page] || ''}</h2>
-      </div>
-      <div className="text-xs text-gray-500 text-left max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
-        {headerDateText || ''}
-      </div>
-    </header>
-  );
-};
+/* Sidebar + Topbar extracted to src/ui/Sidebar.jsx */
 
 // ============================================
 // HOME PAGE
@@ -4352,6 +4209,7 @@ const LedgersPage = () => {
       ) : null}
 
       <Modal
+        Icons={Icons}
         open={!!historyModal}
         onClose={() => setHistoryModal(null)}
         title={`🧾 سجل البند${historyModal?.item?.title ? ` — ${historyModal.item.title}` : ''}`}
@@ -4421,10 +4279,14 @@ const LedgersPage = () => {
         open={!!confirm}
         title={confirm?.title}
         message={confirm?.message}
+        messageList={confirm?.messageList}
+        dangerText={confirm?.dangerText}
         confirmLabel={confirm?.confirmLabel}
+        cancelLabel={confirm?.cancelLabel}
         onConfirm={confirm?.onConfirm}
-        onCancel={() => setConfirm(null)}
-        danger={false}
+        onCancel={confirm?.onCancel || (() => setConfirm(null))}
+        danger={!!confirm?.danger}
+        MSG={MSG}
       />
     </div>
   );
@@ -5338,9 +5200,9 @@ const App = () => {
       <UnsavedContext.Provider value={setDirty}>
         <TrustChecks/>
         <div className="app-shell flex min-h-screen">
-          <Sidebar page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
+          <Sidebar Icons={Icons} page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
           <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
-            <Topbar page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
+            <Topbar Icons={Icons} page={page} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
               {!showOnboarding && <WelcomeBanner/>}
             </div>
