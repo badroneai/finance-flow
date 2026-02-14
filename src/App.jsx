@@ -2722,8 +2722,8 @@ const LedgersPage = () => {
                     <div className="text-sm text-gray-600 mt-1">لا يوجد مخالفات واضحة.</div>
                   ) : (
                     <div className="mt-1 text-sm text-gray-700 flex flex-col gap-1">
-                      {compliance.drivers.map(d => (
-                        <div key={d.id}>• {d.reason}: {d.title}</div>
+                      {compliance.drivers.map((d, idx) => (
+                        <div key={`${d.id}-${idx}`}>• {d.reason}: {d.title}</div>
                       ))}
                     </div>
                   )}
