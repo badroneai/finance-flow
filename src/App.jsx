@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef, createContext, useContext } from 'react';
 
+
 import { Sidebar, Topbar } from './ui/Sidebar.jsx';
 import { Modal, ConfirmDialog } from './ui/Modals.jsx';
+
 
 import { STORAGE_KEYS } from '../assets/js/core/keys.js';
 import { storage } from '../assets/js/core/storage.js';
@@ -2506,1774 +2508,201 @@ const LedgersPage = () => {
       )}
 
       {tab === 'recurring' && (
-        <>
-          {/* Authority Layer (v8) */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-bold text-gray-900">Authority Layer</h4>
-                <p className="text-xs text-gray-500 mt-1">Budget Control • Compliance • Month Awareness (عرض فقط)</p>
-              </div>
-              <button type="button" onClick={() => setAuthorityOpen(v => !v)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="طي/فتح">{authorityOpen ? 'طي' : 'فتح'}</button>
-            </div>
-
-            {authorityOpen ? (
-              <div className="mt-3 grid md:grid-cols-3 gap-3">
-                {/* Budget Authority */}
-                <div className="p-3 rounded-xl border border-gray-100 bg-white">
-                  <div className="flex items-center justify-between">
-                    <div className="font-bold text-gray-900">🛑 سلطة الميزانية</div>
-                    <label className="inline-flex items-center gap-2 text-xs text-gray-700">
-                      <input type="checkbox" checked={!!budgets.hardLock} onChange={(e) => saveLedgerBudgets({ hardLock: e.target.checked })} />
-                      قفل صارم
-                    </label>
-                  </div>
-
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {[
-                      { k: 'system', label: 'System' },
-                      { k: 'operational', label: 'Operational' },
-                      { k: 'maintenance', label: 'Maintenance' },
-                      { k: 'marketing', label: 'Marketing' },
-                    ].map(x => (
-                      <div key={x.k}>
-                        <label className="block text-[11px] text-gray-600 mb-1">{x.label}</label>
-                        <input
-                          type="text"
-                          inputMode="decimal"
-                          value={budgets[x.k] == null ? '' : String(budgets[x.k])}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            const n = v === '' ? null : (Number(parseRecurringAmount(v)) || 0);
-                            saveLedgerBudgets({ [x.k]: n });
-                          }}
-                          className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
-                          placeholder="—"
-                          aria-label={`Budget ${x.label}`}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="mt-2 grid grid-cols-2 gap-2">
-                    {['system','operational','maintenance','marketing'].map(k => {
-                      const row = budgetAuth?.perBucket?.[k];
-                      if (!row || !row.target) return (
-                        <div key={k} className="text-[11px] text-gray-400">{k}: —</div>
-                      );
-                      const badge = row.breach ? 'bg-red-50 border-red-100 text-red-700' : row.warn ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-green-50 border-green-100 text-green-700';
-                      return (
-                        <div key={k} className={`p-2 rounded-lg border ${badge}`}>
-                          <div className="text-[11px] font-semibold">{k}: {row.utilizationPct}%</div>
-                          <div className="text-[11px]">{row.spent} / {row.target}</div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Compliance Shield */}
-                <div className="p-3 rounded-xl border border-gray-100 bg-white">
-                  <div className="font-bold text-gray-900">🛡️ درع الامتثال</div>
-                  <div className="mt-2 flex items-center justify-between">
-                    <div className="text-2xl font-bold text-gray-900">{compliance?.score ?? '—'}</div>
-                    <span className={`px-2 py-0.5 rounded-full text-[11px] border ${String(compliance?.status).includes('خطر') ? 'border-red-100 bg-red-50 text-red-700' : String(compliance?.status).includes('انتباه') ? 'border-amber-100 bg-amber-50 text-amber-800' : 'border-green-100 bg-green-50 text-green-700'}`}>{compliance?.status || '—'}</span>
-                  </div>
-                  <div className="mt-2 text-xs text-gray-500">أبرز 3 أسباب:</div>
-                  {(!compliance?.drivers || compliance.drivers.length === 0) ? (
-                    <div className="text-sm text-gray-600 mt-1">لا يوجد مخالفات واضحة.</div>
-                  ) : (
-                    <div className="mt-1 text-sm text-gray-700 flex flex-col gap-1">
-                      {compliance.drivers.map((d, idx) => (
-                        <div key={`${d.id}-${idx}`}>• {d.reason}: {d.title}</div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Month Awareness (display only) */}
-                <div className="p-3 rounded-xl border border-gray-100 bg-white">
-                  <div className="font-bold text-gray-900">📅 وعي الشهر (عرض فقط)</div>
-                  {(() => {
-                    const now = new Date();
-                    const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-                    const day = now.getDate();
-                    const left = Math.max(0, daysInMonth - day);
-
-                    const monthlyBurn = Number(brain?.burn?.monthly) || 0;
-                    const spentThisMonth = Object.values(spendByBucket || {}).reduce((a, x) => a + (Number(x)||0), 0);
-                    const expectedRemaining = monthlyBurn > 0 ? (monthlyBurn * (left / daysInMonth)) : 0;
-                    const projected = spentThisMonth + expectedRemaining;
-
-                    const risk = (monthlyBurn > 0 && projected > monthlyBurn * 1.05);
-                    return (
-                      <>
-                        <div className="mt-2 text-sm text-gray-700">أيام متبقية: <strong>{left}</strong></div>
-                        <div className="text-sm text-gray-700 mt-1">Burn متوقع حتى نهاية الشهر: <strong><Currency value={expectedRemaining} /></strong></div>
-                        <div className={`mt-2 p-2 rounded-lg border text-sm ${risk ? 'bg-amber-50 border-amber-100 text-amber-900' : 'bg-green-50 border-green-100 text-green-800'}`}>{risk ? 'احتمال تجاوز' : 'الشهر في منطقة آمنة'}</div>
-                      </>
-                    );
-                  })()}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          {/* Ledger Inbox Pro (v7) */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-bold text-gray-900">📥 صندوق وارد الدفتر</h4>
-                <p className="text-xs text-gray-500 mt-1">قائمة تنفيذ + خطة سيولة (Today / 7 Days / 30 Days)</p>
-              </div>
-              <div className="text-xs text-gray-500">{inbox.length ? `عدد العناصر: ${inbox.length}` : ''}</div>
-            </div>
-
-            {/* Cash Plan Panel */}
-            <div className="mt-3 grid md:grid-cols-4 gap-2">
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-[11px] text-gray-500">مطلوب اليوم (مسعّر)</div>
-                <div className="font-bold text-gray-900 mt-1"><Currency value={cashPlan?.totals?.today || 0} /></div>
-              </div>
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-[11px] text-gray-500">مطلوب 7 أيام (مسعّر)</div>
-                <div className="font-bold text-gray-900 mt-1"><Currency value={cashPlan?.totals?.d7 || 0} /></div>
-              </div>
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-[11px] text-gray-500">مطلوب 30 يوم (مسعّر)</div>
-                <div className="font-bold text-gray-900 mt-1"><Currency value={cashPlan?.totals?.d30 || 0} /></div>
-              </div>
-              <div className="p-3 rounded-xl border border-gray-100 bg-white">
-                <div className="text-[11px] text-gray-500">غير مسعّر</div>
-                <div className="font-bold text-gray-900 mt-1">{cashPlan?.counts?.unpriced || 0}</div>
-                <div className="text-[11px] text-gray-400 mt-1">(إلزامي: {cashPlan?.counts?.requiredUnpriced || 0} • خطر: {cashPlan?.counts?.highRiskUnpriced || 0})</div>
-              </div>
-            </div>
-
-            {/* Quick pressure indicator (display only) */}
-            {(() => {
-              const weeklyRef = (Number(brain?.burn?.monthly) || 0) / 4.3;
-              const due7 = Number(cashPlan?.totals?.d7) || 0;
-              if (weeklyRef <= 0 || due7 <= 0) return null;
-              const pressured = due7 > weeklyRef;
-              return (
-                <div className={`mt-2 p-3 rounded-xl border text-sm ${pressured ? 'bg-amber-50 border-amber-100 text-amber-900' : 'bg-green-50 border-green-100 text-green-800'}`}>
-                  مؤشر سريع: {pressured ? 'ضغط سيولة محتمل' : 'الضغط طبيعي'} — 7 أيام: <strong><Currency value={due7} /></strong> مقابل مرجع أسبوعي تقديري <strong><Currency value={weeklyRef} /></strong>
-                </div>
-              );
-            })()}
-
-            {/* Filters */}
-            <div className="mt-3 flex flex-wrap gap-2">
-              {[
-                { key: 'all', label: 'الكل' },
-                { key: 'overdue', label: 'المتأخر' },
-                { key: 'soon', label: 'القريب' },
-                { key: 'unpriced', label: 'غير مسعّر' },
-                { key: 'high', label: 'عالي المخاطر' },
-              ].map((f) => (
-                <button key={f.key} type="button" onClick={() => setInboxFilter(f.key)} className={`px-3 py-2 rounded-lg text-sm font-medium border ${inboxFilter === f.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`} aria-label={f.label}>{f.label}</button>
-              ))}
-            </div>
-
-            {inboxView.length === 0 ? (
-              <div className="mt-3 p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-700">صندوق الوارد نظيف ✅</div>
-            ) : (
-              <div className="mt-3 flex flex-col gap-2">
-                {inboxView.slice(0, 10).map((it) => (
-                  <div key={it.id} className="p-3 rounded-xl border border-gray-100 bg-white flex flex-col gap-2">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <div className="font-semibold text-gray-900 truncate">{it.title || '—'}</div>
-                          <span className={`px-2 py-0.5 rounded-full text-[11px] border ${it.reason.includes('خطر') ? 'border-red-100 bg-red-50 text-red-700' : it.reason.includes('متأخر') ? 'border-yellow-100 bg-yellow-50 text-yellow-800' : 'border-blue-100 bg-blue-50 text-blue-700'}`}>{it.reason}</span>
-                          {it.amount > 0 ? <span className="text-xs text-gray-600"><Currency value={it.amount} /></span> : <span className="text-xs text-amber-700">غير مسعّر</span>}
-                          {it.nextDueDate ? <span className="text-xs text-gray-500">• {it.nextDueDate}</span> : null}
-                          {(() => {
-                            const lastAt = lastPayNowAt(it.history);
-                            const d = daysSince(lastAt);
-                            return (
-                              <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-gray-50 text-gray-700">
-                                {d == null ? 'لم يُسجل دفع بعد' : `آخر دفع: قبل ${d} يوم`}
-                              </span>
-                            );
-                          })()}
-
-                          {it.payState ? <span className={`px-2 py-0.5 rounded-full text-[11px] border ${it.payState === 'paid' ? 'border-green-100 bg-green-50 text-green-700' : it.payState === 'skipped' ? 'border-gray-200 bg-gray-50 text-gray-700' : 'border-amber-100 bg-amber-50 text-amber-800'}`}>{it.payState === 'paid' ? 'مدفوع' : it.payState === 'skipped' ? 'تجاوزته' : 'غير مدفوع'}</span> : null}
-                        </div>
-                        {it.note?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{it.note}</div> : null}
-                        {it.payStateNote?.trim() ? <div className="text-[11px] text-gray-400 mt-1">ملاحظة الدفع: {it.payStateNote}</div> : null}
-                        {it.snoozeUntil ? <div className="text-[11px] text-gray-400 mt-1">مؤجل حتى: {it.snoozeUntil}</div> : null}
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 justify-end">
-                        <button type="button" onClick={() => {
-                          const r = (Array.isArray(recurring) ? recurring : []).find(x => x.id === it.id);
-                          if (r) startPayNow(r);
-                        }} disabled={it.amount === 0} className={`px-3 py-2 rounded-lg text-sm font-medium border ${it.amount === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`} aria-label="سجّل كدفعة الآن">سجّل كدفعة الآن</button>
-
-                        <button type="button" onClick={() => {
-                          updateRecurringOps(it.id, { status: 'resolved', snoozeUntil: '' }, { type: 'note', meta: { note: 'resolved (done)' } });
-                          toast('تم وضعه كمنجز');
-                          refresh();
-                        }} className="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-200 text-sm font-medium hover:bg-green-100" aria-label="تم">تم</button>
-
-                        <button type="button" onClick={() => {
-                          const days = prompt('أجّل كم يوم؟ (3/7/14) أو اكتب تاريخ YYYY-MM-DD', '7');
-                          if (!days) return;
-                          let until = '';
-                          if (/^\d{4}-\d{2}-\d{2}$/.test(days.trim())) until = days.trim();
-                          else until = addDaysISO(Number(days));
-                          updateRecurringOps(it.id, { status: 'snoozed', snoozeUntil: until }, { type: 'snooze', meta: { snoozeUntil: until } });
-                          toast('تم التأجيل');
-                          refresh();
-                        }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="أجّل">أجّل</button>
-
-                        <button type="button" onClick={() => {
-                          const note = prompt('ملاحظة للعنصر:', String(it.note || ''));
-                          if (note == null) return;
-                          updateRecurringOps(it.id, { note: String(note) }, { type: 'note', meta: { note: String(note) } });
-                          toast('تم حفظ الملاحظة');
-                          refresh();
-                        }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="ملاحظة">ملاحظة</button>
-
-                        <button type="button" onClick={() => {
-                          const full = (Array.isArray(recurring) ? recurring : []).find(x => x.id === it.id);
-                          setHistoryModal({ item: full || it });
-                        }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="سجل">🧾 سجل</button>
-                      </div>
-                    </div>
-
-                    {/* Payment State buttons */}
-                    <div className="flex flex-wrap gap-2 justify-end">
-                      <button type="button" onClick={() => {
-                        updateRecurringOps(it.id, { payState: 'paid', payStateAt: new Date().toISOString() }, { type: 'state_paid' });
-                        toast('تم وضعه كمدفوع');
-                        refresh();
-                      }} className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700" aria-label="مدفوع">✅ مدفوع</button>
-
-                      <button type="button" onClick={() => {
-                        updateRecurringOps(it.id, { payState: 'skipped', payStateAt: new Date().toISOString() }, { type: 'state_skipped' });
-                        toast('تم وضعه كتجاوز');
-                        refresh();
-                      }} className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-xs font-medium hover:bg-gray-200" aria-label="تجاوزته">⏭️ تجاوزته</button>
-
-                      <button type="button" onClick={() => {
-                        const n = prompt('ملاحظة لحالة الدفع (اختياري):', String(it.payStateNote || ''));
-                        if (n == null) return;
-                        updateRecurringOps(it.id, { payStateNote: String(n), payStateAt: new Date().toISOString() }, { type: 'note', meta: { note: String(n) } });
-                        toast('تم حفظ ملاحظة الدفع');
-                        refresh();
-                      }} className="px-3 py-1.5 rounded-lg bg-white border border-gray-200 text-gray-700 text-xs font-medium hover:bg-gray-50" aria-label="ملاحظة الدفع">ملاحظة الدفع</button>
-                    </div>
-                  </div>
-                ))}
-
-                {inboxView.length > 10 ? (
-                  <button type="button" onClick={() => {
-                    const el = document.getElementById('ledger-inbox-all');
-                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                  }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 self-start" aria-label="عرض الكل">عرض الكل</button>
-                ) : null}
-
-                <div id="ledger-inbox-all" />
-              </div>
-            )}
-          </div>
-
-          {/* Ledger Brain Dashboard */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h4 className="font-bold text-gray-900">🧠 لوحة الذكاء المالي</h4>
-                <p className="text-xs text-gray-500 mt-1">عرض فقط • بدون أي تغيير على البيانات</p>
-              </div>
-            </div>
-
-            {/* Pro: Daily Playbook */}
-            <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
-              <div className="flex items-center justify-between gap-2">
-                <h5 className="font-bold text-gray-900">🎯 خطة اليوم</h5>
-                <span className="text-xs text-gray-500">Top 5</span>
-              </div>
-              {(!brain?.playbook || brain.playbook.length === 0) ? (
-                <p className="text-sm text-gray-500 mt-2">دفترك منضبط اليوم.</p>
-              ) : (
-                <div className="mt-3 flex flex-col gap-2">
-                  {brain.playbook.map((t) => (
-                    <div key={t.recurringId} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-gray-100 bg-gray-50">
-                      <div className="min-w-0">
-                        <div className="font-semibold text-gray-900 truncate">{t.title}</div>
-                        <div className="text-xs text-gray-500 mt-1">{t.reason}</div>
-                      </div>
-                      <button type="button" onClick={() => {
-                        const el = document.getElementById(`rec-${t.recurringId}`);
-                        if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب للبند">اذهب للبند</button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Pro: Saudi Benchmarks */}
-            <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h5 className="font-bold text-gray-900">📊 مقارنة بالسوق (تقديري)</h5>
-                  <p className="text-xs text-gray-500 mt-1">نِسَب من Burn الشهري (عناصر مسعّرة فقط)</p>
-                </div>
-              </div>
-
-              {brain?.benchmarks ? (
-                <>
-                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                    {brain.benchmarks.flags.map((f) => (
-                      <div key={f.type} className="p-2 rounded-lg border border-gray-100 bg-gray-50">
-                        <div className="text-gray-500">{f.type === 'rent' ? 'إيجار' : f.type === 'utilities' ? 'مرافق' : 'تسويق'}</div>
-                        <div className="mt-1 font-semibold text-gray-900">{Math.round((f.ratio || 0) * 100)}%</div>
-                        <div className={`mt-1 inline-flex px-2 py-0.5 rounded-full border text-[11px] ${f.status === 'high' ? 'border-red-100 bg-red-50 text-red-700' : 'border-green-100 bg-green-50 text-green-700'}`}>{f.status === 'high' ? 'أعلى من الشائع' : 'ضمن الشائع'}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-3 text-xs text-gray-600">{brain.benchmarks.commentary}</p>
-                </>
-              ) : (
-                <p className="text-sm text-gray-500 mt-2">—</p>
-              )}
-            </div>
-
-            <div className="mt-3 grid gap-3 md:grid-cols-4">
-              <div className={`p-3 rounded-xl border bg-gray-50 ${brain?.benchmarks?.flags?.some(f => f.type==='rent' && f.status==='high') ? 'border-amber-200' : 'border-gray-100'}`}>
-                <div className="flex items-start justify-between gap-2">
-                  <div className="text-xs text-gray-500">Burn Rate</div>
-                  <button type="button" onClick={() => setBrainDetails('burn')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-                </div>
-                <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.burn?.monthly || 0} /> / شهر</div>
-                <div className="mt-1 text-xs text-gray-600">90 يوم: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.d90 || 0} /></span></div>
-                <div className="text-xs text-gray-600">سنة: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.yearly || 0} /></span></div>
-              </div>
-
-              <div className={`p-3 rounded-xl border bg-gray-50 ${Number(brain?.pressure?.score||0) > 75 ? 'border-red-200' : 'border-gray-100'}`}>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs text-gray-500">ضغط السيولة</div>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setBrainDetails('pressure')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-                    <span className="text-xs font-semibold text-gray-900">{brain?.pressure?.score ?? 0}/100</span>
-                  </div>
-                </div>
-                <div className="mt-2 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط ضغط السيولة">
-                  <div className={`h-full ${Number(brain?.pressure?.score||0) >= 70 ? 'bg-red-600' : Number(brain?.pressure?.score||0) >= 40 ? 'bg-amber-500' : 'bg-green-600'}`} style={{ width: `${Math.min(100, Number(brain?.pressure?.score||0))}%` }} />
-                </div>
-                <div className="mt-2 text-xs text-gray-700">{brain?.pressure?.band || '—'}</div>
-              </div>
-
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs text-gray-500">مخاطر 90 يوم</div>
-                  <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setBrainDetails('risk90')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-                    <span className={`text-xs px-2 py-0.5 rounded-full border ${brain?.risk90?.level === 'critical' ? 'border-red-100 bg-red-50 text-red-700' : brain?.risk90?.level === 'high' ? 'border-amber-100 bg-amber-50 text-amber-800' : brain?.risk90?.level === 'medium' ? 'border-blue-100 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}>{brain?.risk90?.label || '—'}</span>
-                  </div>
-                </div>
-                <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.risk90?.due90Total || 0} /></div>
-                <div className="mt-1 text-xs text-gray-600">عدد البنود: <span className="font-semibold text-gray-900">{brain?.risk90?.due90Count ?? 0}</span></div>
-              </div>
-
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-xs text-gray-500">الاتجاه التشغيلي</div>
-                  <button type="button" onClick={() => setBrainDetails('trend')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-                </div>
-                <div className="mt-1 flex items-center gap-2">
-                  <span className="text-sm font-semibold text-gray-900">{brain?.trend?.trend || '—'}</span>
-                  <span className="text-sm text-gray-500">{brain?.trend?.trend === 'يتحسن' ? '↑' : brain?.trend?.trend === 'يتراجع' ? '↓' : '→'}</span>
-                </div>
-                <div className="mt-1 text-xs text-gray-600">60 يوم: دفعات <span className="font-semibold text-gray-900">{brain?.trend?.paid60 ?? 0}</span> / مستحق <span className="font-semibold text-gray-900">{brain?.trend?.due60 ?? 0}</span></div>
-              </div>
-            </div>
-
-            {(() => {
-              const pressure = Number(brain?.pressure?.score || 0);
-              const unpricedRatio = Number(brain?.pressure?.unpricedRatio || 0);
-              const criticalNow = seededOnlyList.some(r => String(r?.riskLevel || '').toLowerCase() === 'high' && (isPastDue(r) || Number(r.amount) === 0));
-              const show = (brain?.cluster === true) || criticalNow || pressure > 70 || unpricedRatio > 0.40;
-              if (!show) return null;
-              return (
-                <div className="mt-3 p-3 rounded-xl border border-amber-100 bg-amber-50">
-                  <div className="font-semibold text-amber-900 text-sm">⚠️ تنبيه تشغيلي</div>
-                  <div className="text-xs text-amber-900 mt-1">دفتر معرض لمخاطر تشغيلية خلال 90 يوم. (ضغط السيولة/تأخر/High-risk/عدم تسعير)</div>
-                  <div className="mt-2">
-                    <button type="button" onClick={() => {
-                      const el = document.querySelector('[data-critical="1"], [data-overdue="1"]');
-                      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }} className="px-3 py-2 rounded-lg bg-white border border-amber-200 text-amber-900 text-sm font-medium hover:bg-amber-100" aria-label="انتقل للبنود الحرجة">انتقل للبنود الحرجة</button>
-                  </div>
-                </div>
-              );
-            })()}
-          </div>
-
-          {/* Predictive Ledger v4: 6M Forecast */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex flex-wrap items-start justify-between gap-2">
-              <div>
-                <h4 className="font-bold text-gray-900">🔮 توقعات 6 أشهر</h4>
-                <p className="text-xs text-gray-500 mt-1">هذا المتوقع • هنا الخطر • وهذا اللي تسويه اليوم</p>
-              </div>
-            </div>
-
-            <div className="mt-3 grid gap-3 md:grid-cols-4">
-              {/* Expected Monthly Burn */}
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-xs text-gray-500">Expected Monthly Burn (Scenario)</div>
-                <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={forecastRunRate.monthlyTotal} /> / شهر</div>
-                <div className="mt-2 text-xs text-gray-700 flex flex-col gap-1">
-                  {(['system','operational','maintenance','marketing','other']).map(k => (
-                    <div key={k} className="flex items-center justify-between">
-                      <span className="text-gray-600">{k === 'system' ? 'نظامي' : k === 'operational' ? 'تشغيلي' : k === 'maintenance' ? 'صيانة' : k === 'marketing' ? 'تسويق' : 'أخرى'}</span>
-                      <span className="font-semibold text-gray-900"><Currency value={forecastRunRate.byCategory[k] || 0} /></span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Cash Gap */}
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 md:col-span-2">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div>
-                    <div className="text-xs text-gray-500">Cash Gap</div>
-                    <div className="mt-1 text-sm font-semibold text-gray-900">{cashGap.firstGapMonth ? `يبدأ العجز: ${cashGap.firstGapMonth}` : 'لا يوجد عجز (وفق الدخل المفترض)'}</div>
-                    <div className="text-xs text-gray-600 mt-1">أسوأ عجز: <strong className="text-gray-900"><Currency value={cashGap.worstGap} /></strong></div>
-                  </div>
-                  <div className="min-w-[220px]">
-                    <label className="block text-xs font-medium text-gray-700 mb-1">دخل شهري مفترض (اختياري)</label>
-                    <input type="text" inputMode="decimal" value={assumedInflow} onChange={(e) => setAssumedInflow(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل شهري مفترض" placeholder="0" />
-                  </div>
-                </div>
-
-                <div className="mt-3 overflow-x-auto">
-                  <table className="min-w-full text-xs">
-                    <thead>
-                      <tr className="text-gray-500">
-                        <th className="text-start py-2">شهر</th>
-                        <th className="text-start py-2">Outflow</th>
-                        <th className="text-start py-2">Inflow</th>
-                        <th className="text-start py-2">Net</th>
-                        <th className="text-start py-2">Cumulative</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {cashGap.series.map((r) => (
-                        <tr key={r.monthKey} className="border-t border-gray-100">
-                          <td className="py-2">{r.monthKey}</td>
-                          <td className="py-2"><Currency value={r.outflow} /></td>
-                          <td className="py-2"><Currency value={r.inflow} /></td>
-                          <td className={`py-2 ${r.net < 0 ? 'text-red-700' : 'text-green-700'}`}><Currency value={r.net} /></td>
-                          <td className={`py-2 ${r.cumulative < 0 ? 'text-red-700' : 'text-gray-900'}`}><Currency value={r.cumulative} /></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              {/* Scenarios + actions */}
-              <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                <div className="text-xs text-gray-500">Scenarios</div>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  <button type="button" onClick={() => setForecastPreset('optimistic')} className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset==='optimistic' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`} aria-label="متفائل">متفائل</button>
-                  <button type="button" onClick={() => setForecastPreset('realistic')} className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset==='realistic' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`} aria-label="واقعي">واقعي</button>
-                  <button type="button" onClick={() => setForecastPreset('stressed')} className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset==='stressed' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`} aria-label="ضاغط">ضاغط</button>
-                  <button type="button" onClick={() => setForecastPreset('custom')} className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset==='custom' ? 'bg-blue-600 text-white border-blue-600' : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'}`} aria-label="مخصص">مخصص</button>
-                </div>
-
-                {forecastPreset === 'custom' ? (
-                  <div className="mt-3 text-xs text-gray-700 flex flex-col gap-2">
-                    {([
-                      ['rent','زيادة الإيجارات', scRent, setScRent],
-                      ['utilities','زيادة المرافق', scUtilities, setScUtilities],
-                      ['maintenance','ضغط الصيانة', scMaintenance, setScMaintenance],
-                      ['marketing','زيادة التسويق', scMarketing, setScMarketing],
-                      ['other','أخرى', scOther, setScOther],
-                    ]).map(([k,label,val,setter]) => (
-                      <div key={k}>
-                        <div className="flex items-center justify-between"><span>{label}</span><strong>{Number(val).toFixed(2)}x</strong></div>
-                        <input type="range" min="0.8" max="1.4" step="0.05" value={val} onChange={(e) => setter(Number(e.target.value))} className="w-full" aria-label={label} />
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
-
-                <div className="mt-3">
-                  <div className="text-xs text-gray-500">What should I do next</div>
-                  <div className="mt-2 flex flex-col gap-2">
-                    {forecastInsights.map((t, idx) => (
-                      <div key={idx} className="text-xs text-gray-700">• {t}</div>
-                    ))}
-                  </div>
-
-                  <button type="button" onClick={() => {
-                    // Pick biggest category from runrate and scroll to first matching section
-                    const by = forecastRunRate.byCategory || {};
-                    const top = Object.entries(by).sort((a,b)=> (b[1]||0)-(a[1]||0))[0]?.[0] || 'other';
-                    // map to data attribute in list cards (category badges are based on r.category)
-                    const el = document.querySelector(`[data-overdue="1"], [data-highrisk="1"], [id^="rec-"]`);
-                    if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
-                    toast(`ركز على: ${top}`);
-                  }} className="mt-3 px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب للبنود المؤثرة">اذهب للبنود المؤثرة</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Ledger Intelligence v1 */}
-          <div className="grid gap-3 md:grid-cols-3 mb-4">
-            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h4 className="font-bold text-gray-900">صحة الدفتر</h4>
-                  <p className="text-xs text-gray-500 mt-1">عرض فقط • تعتمد على البنود seeded وحركات الدفتر (meta)</p>
-                </div>
-                <span className="px-2 py-1 rounded-full text-xs border border-gray-200 bg-gray-50 text-gray-700">{health?.score ?? 0}/100</span>
-              </div>
-
-              <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة التسعير</span><span className="font-semibold text-gray-900">{health ? `${health.pricedCount}/${health.totalSeeded}` : '—'}</span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة الانضباط (30 يوم)</span><span className="font-semibold text-gray-900">{health ? `${Math.round((health.disciplineRatio || 0) * 100)}%` : '—'}</span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">مخاطر</span><span className="font-semibold text-gray-900">{health ? `High ${health.highRiskCount} • متأخر ${health.overdueCount} • قادم ${health.dueSoon14Count}` : '—'}</span></div>
-              </div>
-
-              <button type="button" onClick={() => setHealthHelpOpen(v => !v)} className="mt-3 text-xs text-blue-700 hover:underline" aria-label="كيف نحسبها؟">كيف نحسبها؟</button>
-              {healthHelpOpen ? (
-                <div className="mt-2 text-xs text-gray-600 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                  score = (التسعير×50) + (١-نسبة التأخر)×30 + (١-نسبة High-risk غير المسعّر)×20. ويتم قصّه بين 0 و100.
-                </div>
-              ) : null}
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h4 className="font-bold text-gray-900">توقعات السنة</h4>
-                  <p className="text-xs text-gray-500 mt-1">التوقعات تُحسب من البنود المسعّرة فقط</p>
-                </div>
-              </div>
-
-              <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">Annual Run-rate</span><span className="font-semibold text-gray-900"><Currency value={projection.annualRunRate} /></span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">الحد الأدنى</span><span className="font-semibold text-gray-900"><Currency value={projection.annualMin} /></span></div>
-                <div className="flex items-center justify-between gap-2"><span className="text-gray-600">الحد الأعلى</span><span className="font-semibold text-gray-900"><Currency value={projection.annualMax} /></span></div>
-              </div>
-              <p className="mt-2 text-xs text-gray-500">(min/max تظهر فقط إذا كان للبند priceBand)</p>
-            </div>
-
-            <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h4 className="font-bold text-gray-900">محاكاة سريعة</h4>
-                  <p className="text-xs text-gray-500 mt-1">لا تغيّر البيانات • حساب لحظي</p>
-                </div>
-              </div>
-
-              <div className="mt-3 flex flex-col gap-2 text-xs">
-                <div>
-                  <div className="flex items-center justify-between"><span>زيادة الإيجارات %</span><strong>{simRentPct}%</strong></div>
-                  <input type="range" min="0" max="30" value={simRentPct} onChange={(e) => setSimRentPct(Number(e.target.value))} className="w-full" aria-label="زيادة الإيجارات" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between"><span>زيادة الفواتير %</span><strong>{simBillsPct}%</strong></div>
-                  <input type="range" min="0" max="30" value={simBillsPct} onChange={(e) => setSimBillsPct(Number(e.target.value))} className="w-full" aria-label="زيادة الفواتير" />
-                </div>
-                <div>
-                  <div className="flex items-center justify-between"><span>ضغط الصيانة %</span><strong>{simMaintPct}%</strong></div>
-                  <input type="range" min="0" max="30" value={simMaintPct} onChange={(e) => setSimMaintPct(Number(e.target.value))} className="w-full" aria-label="ضغط الصيانة" />
-                </div>
-
-                <div className="flex flex-wrap gap-2 mt-1">
-                  <button type="button" onClick={() => { setSimRentPct(0); setSimBillsPct(0); setSimMaintPct(0); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="متفائل">متفائل</button>
-                  <button type="button" onClick={() => { setSimRentPct(8); setSimBillsPct(6); setSimMaintPct(5); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="واقعي">واقعي</button>
-                  <button type="button" onClick={() => { setSimRentPct(20); setSimBillsPct(18); setSimMaintPct(15); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="ضاغط">ضاغط</button>
-                </div>
-
-                {(() => {
-                  const scenario = computeScenario({ recurringItems: seededOnlyList, rentPct: simRentPct, billsPct: simBillsPct, maintPct: simMaintPct });
-                  return (
-                    <div className="mt-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
-                      <div className="flex items-center justify-between gap-2"><span className="text-gray-600">New Annual Forecast</span><span className="font-semibold text-gray-900"><Currency value={scenario.newAnnual} /></span></div>
-                      <div className="flex items-center justify-between gap-2 mt-1"><span className="text-gray-600">الفرق</span><span className={`font-semibold ${scenario.delta >= 0 ? 'text-red-700' : 'text-green-700'}`}>{scenario.delta >= 0 ? '+' : ''}<Currency value={scenario.delta} /></span></div>
-                    </div>
-                  );
-                })()}
-              </div>
-            </div>
-          </div>
-
-          {/* Ledger Operator Mode */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h4 className="font-bold text-gray-900">لوحة تشغيل الدفتر</h4>
-                <p className="text-sm text-gray-500 mt-1">الأولوية الآن (متأخر ثم أقرب 14 يوم) • دفتر: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-
-                <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700">
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري (مسعّر): <strong className="text-gray-900"><Currency value={operatorMode.monthlyTotal} /></strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">مسعّر: <strong className="text-gray-900">{operatorMode.pricedCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">غير مسعّر: <strong className="text-gray-900">{operatorMode.unpricedCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">متأخر: <strong className="text-gray-900">{operatorMode.overdueCount}</strong></span>
-                </div>
-
-                <div className="mt-3 flex flex-col gap-2">
-                  {operatorMode.priorityNow.length === 0 ? (
-                    <div className="text-sm text-gray-500">لا توجد مهام تشغيلية قريبة.</div>
-                  ) : (
-                    operatorMode.priorityNow.map((r) => (
-                      <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-gray-100 bg-white">
-                        <div className="min-w-0">
-                          <div className="font-semibold text-gray-900 truncate">{r.title || '—'}</div>
-                          <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-2">
-                            <span>{r.nextDueDate || '—'}</span>
-                            <span className="text-gray-300">•</span>
-                            <span><Currency value={Number(r.amount) || 0} /></span>
-                            {isPastDue(r) ? (
-                              <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span>
-                            ) : (
-                              <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">قادم</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex flex-wrap gap-2 justify-end">
-                          <button
-                            type="button"
-                            disabled={Number(r.amount) === 0}
-                            title={Number(r.amount) === 0 ? 'حدد المبلغ أولاً' : 'سجّل كدفعة الآن'}
-                            onClick={() => startPayNow(r)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${Number(r.amount) === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-                            aria-label="سجّل كدفعة الآن"
-                          >
-                            سجّل كدفعة الآن
-                          </button>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-
-                <p className="text-xs text-gray-500 mt-3">الأرقام المقترحة تقديرية لمساعدتك على الانضباط، ويمكن تعديلها.</p>
-              </div>
-
-              <div className="flex flex-col items-end gap-2">
-                {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
-                <button
-                  type="button"
-                  onClick={openPricingWizard}
-                  className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
-                  aria-label="مرّرني على غير المسعّر"
-                >
-                  مرّرني على غير المسعّر
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-bold text-gray-900">التزامات متكررة</h4>
-                <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-
-                {/* Summary (display-only) */}
-                <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700" id="ledger-summary">
-                  {/* Aggregations */}
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري: <strong className="text-gray-900"><Currency value={recurringDashboard.monthlyTotal} /></strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي سنوي: <strong className="text-gray-900"><Currency value={recurringDashboard.yearlyTotal} /></strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي 30 يوم: <strong className="text-gray-900"><Currency value={recurringDashboard.within30Total} /></strong></span>
-
-                  {/* Compliance */}
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الكل: <strong className="text-gray-900">{recurringDashboard.totalCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إلزامي: <strong className="text-gray-900">{recurringDashboard.requiredCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">غير مُسعّر: <strong className="text-gray-900">{recurringDashboard.unpricedCount}</strong></span>
-                  <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">خطر مرتفع: <strong className="text-gray-900">{recurringDashboard.highRiskCount}</strong></span>
-
-                  {/* Completeness */}
-                  {completeness ? (
-                    <span className="col-span-2 sm:col-span-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
-                      اكتمال الدفتر: <strong className="text-gray-900">{completeness.pct}%</strong>
-                      <span className="block mt-1 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط اكتمال">
-                        <span className="block h-full bg-blue-600" style={{ width: `${completeness.pct}%` }} />
-                      </span>
-                    </span>
-                  ) : null}
-                </div>
-
-                {/* Next 3 dues */}
-                <div className="mt-3 text-xs text-gray-600">
-                  <div className="font-medium text-gray-800 mb-1">القادم (أقرب 3):</div>
-                  {recurringDashboard.next3.length === 0 ? (
-                    <div>—</div>
-                  ) : (
-                    <div className="flex flex-col gap-1">
-                      {recurringDashboard.next3.map((x) => (
-                        <div key={x.id} className="flex flex-wrap items-center gap-2">
-                          <span className="text-gray-900">{x.title}</span>
-                          <span className="text-gray-400">•</span>
-                          <span>{x.nextDueDate || '—'}</span>
-                          <span className="text-gray-400">•</span>
-                          <span><Currency value={Number(x.amount) || 0} /></span>
-                          {isPastDue(x) ? <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span> : null}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
-            </div>
-
-            <div className="flex flex-wrap gap-2 justify-end">
-              {unpricedList.length > 0 ? (
-                <button
-                  type="button"
-                  onClick={openPricingWizard}
-                  className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm font-medium hover:bg-amber-100"
-                  aria-label="إكمال التسعير"
-                >
-                  إكمال التسعير
-                </button>
-              ) : null}
-
-              <button
-                type="button"
-                onClick={() => setSaPricingOpen(true)}
-                className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
-                aria-label="معالج تسعير سعودي"
-              >
-                معالج تسعير سعودي
-              </button>
-            </div>
-
-            {/* Outlook 30/60/90 */}
-            <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-              <div className="p-2 rounded-lg bg-white border border-gray-100">
-                <div className="text-gray-500">30 يوم</div>
-                <div className="font-semibold text-gray-900"><Currency value={outlook.d30.pricedTotal} /></div>
-                <div className="text-gray-500">{outlook.d30.count} • غير مُسعّر {outlook.d30.unpricedCount}</div>
-              </div>
-              <div className="p-2 rounded-lg bg-white border border-gray-100">
-                <div className="text-gray-500">60 يوم</div>
-                <div className="font-semibold text-gray-900"><Currency value={outlook.d60.pricedTotal} /></div>
-                <div className="text-gray-500">{outlook.d60.count} • غير مُسعّر {outlook.d60.unpricedCount}</div>
-              </div>
-              <div className="p-2 rounded-lg bg-white border border-gray-100">
-                <div className="text-gray-500">90 يوم</div>
-                <div className="font-semibold text-gray-900"><Currency value={outlook.d90.pricedTotal} /></div>
-                <div className="text-gray-500">{outlook.d90.count} • غير مُسعّر {outlook.d90.unpricedCount}</div>
-              </div>
-            </div>
-
-            {/* Budget targets */}
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">هدف شهري (اختياري)</label>
-                <input type="text" inputMode="decimal" value={budgetForm.monthlyTarget} onChange={(e) => setBudgetForm(f => ({ ...f, monthlyTarget: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="هدف شهري" placeholder="0" />
-              </div>
-              <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">هدف سنوي (اختياري)</label>
-                <input type="text" inputMode="decimal" value={budgetForm.yearlyTarget} onChange={(e) => setBudgetForm(f => ({ ...f, yearlyTarget: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="هدف سنوي" placeholder="0" />
-              </div>
-            </div>
-
-            <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div className="text-gray-600">
-                الفعلي (شهري/سنوي): <span className="font-semibold text-gray-900"><Currency value={actuals.actualMonthly} /></span> / <span className="font-semibold text-gray-900"><Currency value={actuals.actualYearly} /></span>
-              </div>
-              <div className={`px-2 py-1 rounded-full border ${budgetsHealth.status === 'danger' ? 'bg-red-50 border-red-100 text-red-800' : budgetsHealth.status === 'warn' ? 'bg-yellow-50 border-yellow-100 text-yellow-800' : budgetsHealth.status === 'good' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
-                {budgetsHealth.status === 'danger' ? 'خطر' : budgetsHealth.status === 'warn' ? 'تحذير' : budgetsHealth.status === 'good' ? 'ممتاز' : 'بدون هدف'}
-              </div>
-              <button type="button" onClick={() => {
-                if (!activeId) return;
-                const m = parseRecurringAmount(budgetForm.monthlyTarget);
-                const y = parseRecurringAmount(budgetForm.yearlyTarget);
-                const budgets = normalizeBudgets({ monthlyTarget: Number.isFinite(m) ? m : 0, yearlyTarget: Number.isFinite(y) ? y : 0 });
-                const next = (Array.isArray(ledgers) ? ledgers : []).map(l => l.id === activeId ? { ...l, budgets, updatedAt: new Date().toISOString() } : l);
-                try { setLedgers(next); } catch { toast('تعذر حفظ الميزانية', 'error'); return; }
-                toast('تم حفظ الميزانية');
-                refresh();
-              }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="حفظ الميزانية">حفظ الميزانية</button>
-            </div>
-
-            {/* Alerts */}
-            {ledgerAlerts.length ? (
-              <div className="mt-3 p-3 rounded-lg border border-gray-100 bg-white">
-                <div className="font-semibold text-gray-900 text-sm mb-2">تنبيهات الدفتر</div>
-                <div className="flex flex-col gap-2">
-                  {ledgerAlerts.map(a => (
-                    <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                      <div>
-                        <div className="font-medium text-gray-900">{a.title}</div>
-                        <div className="text-gray-500">{a.reason}</div>
-                      </div>
-                      <button type="button" onClick={() => {
-                        if (a.action === 'open-pricing') { openPricingWizard(); return; }
-                        if (a.action === 'scroll-summary') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-                        if (a.action === 'scroll-overdue') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-                      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب">اذهب</button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="grid md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الالتزام</label>
-                <input value={recForm.title} onChange={(e) => setRecForm(f => ({ ...f, title: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الالتزام" placeholder="مثال: إيجار المكتب" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
-                <input type="text" inputMode="decimal" value={recForm.amount} onChange={(e) => setRecForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الالتزام" placeholder="0" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">التكرار</label>
-                <select value={recForm.frequency} onChange={(e) => setRecForm(f => ({ ...f, frequency: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="تكرار الالتزام">
-                  <option value="monthly">شهري</option>
-                  <option value="quarterly">ربع سنوي</option>
-                  <option value="yearly">سنوي</option>
-                  <option value="adhoc">عند الحاجة</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الاستحقاق القادم</label>
-                <input type="date" value={recForm.nextDueDate} onChange={(e) => setRecForm(f => ({ ...f, nextDueDate: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق القادم" />
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات (اختياري)</label>
-                <textarea value={recForm.notes} onChange={(e) => setRecForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="ملاحظات الالتزام" />
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end mt-4">
-              {recEditingId && (
-                <button type="button" onClick={() => { setRecEditingId(null); resetRecForm(); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء تعديل الالتزام">إلغاء</button>
-              )}
-              <button type="button" onClick={saveRecurring} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ الالتزام">{recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}</button>
-            </div>
-          </div>
-
-          {activeRecurring.length === 0 ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-              <EmptyState message="لا توجد التزامات متكررة لهذا الدفتر" />
-              <div className="mt-3 flex justify-center">
-                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'recurring' } }))} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="افتح المساعدة">افتح المساعدة</button>
-              </div>
-            </div>
-          ) : (
-            (() => {
-              const sections = [
-                { key: 'system', title: 'نظامي' },
-                { key: 'operational', title: 'تشغيلي' },
-                { key: 'maintenance', title: 'صيانة' },
-                { key: 'marketing', title: 'تسويق' },
-                { key: 'adhoc', title: 'عند الحاجة' },
-                { key: 'uncategorized', title: 'أخرى' },
-              ];
-
-              return (
-                <div className="flex flex-col gap-4">
-                  {sections.map((s) => {
-                    const listRaw = recurringSections[s.key] || [];
-                    if (listRaw.length === 0) return null;
-                    const list = sortRecurringInSection(listRaw);
-                    const stats = sectionStats(list);
-
-                    return (
-                      <div key={s.key} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                        <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-gray-900">{s.title}</h4>
-                            <span className="text-xs text-gray-500">({stats.count})</span>
-                            {stats.unpricedCount ? <span className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5">غير مُسعّر: {stats.unpricedCount}</span> : null}
-                          </div>
-                          <div className="text-xs text-gray-600">المجموع: <strong className="text-gray-900"><Currency value={stats.subtotal} /></strong></div>
-                        </div>
-
-                        <div className="divide-y divide-gray-100">
-                          {list.map((r) => (
-                            <div
-                              key={r.id}
-                              id={`rec-${r.id}`}
-                              data-overdue={isPastDue(r) ? '1' : '0'}
-                              data-highrisk={normalizeRecurringRisk(r.riskLevel) === 'high' ? '1' : '0'}
-                              data-critical={(normalizeRecurringRisk(r.riskLevel) === 'high' && (isPastDue(r) || Number(r.amount) === 0)) ? '1' : '0'}
-                              className="p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
-                                  <span className="truncate">{r.title}</span>
-
-                                  {normalizeRecurringCategory(r.category) ? (
-                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-white text-gray-600">{CATEGORY_LABEL[normalizeRecurringCategory(r.category)]}</span>
-                                  ) : null}
-
-                                  {r.required ? (
-                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">إلزامي</span>
-                                  ) : null}
-
-                                  {Number(r.amount) === 0 ? (
-                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-amber-100 bg-amber-50 text-amber-800">بحاجة لتسعير</span>
-                                  ) : null}
-
-                                  {normalizeRecurringRisk(r.riskLevel) === 'high' ? (
-                                    <span className="px-2 py-0.5 rounded-full text-[11px] border border-red-100 bg-red-50 text-red-700">خطر مرتفع</span>
-                                  ) : null}
-                                </div>
-
-                                <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
-                                  <span>{r.frequency}</span>
-                                  <span>•</span>
-                                  <span>{r.nextDueDate}</span>
-                                  <span>•</span>
-                                  <span><Currency value={r.amount} /></span>
-                                  {isPastDue(r) ? <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span> : null}
-                                </div>
-                                {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
-                              </div>
-
-                              <div className="flex flex-wrap gap-2 justify-end">
-                                <button
-                                  type="button"
-                                  disabled={Number(r.amount) === 0}
-                                  title={Number(r.amount) === 0 ? 'حدد المبلغ أولاً' : 'سجّل كدفعة الآن'}
-                                  onClick={() => startPayNow(r)}
-                                  className={`px-3 py-2 rounded-lg text-sm font-medium border ${Number(r.amount) === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-                                  aria-label="سجّل كدفعة الآن"
-                                >
-                                  سجّل كدفعة الآن
-                                </button>
-                                <button type="button" onClick={() => {
-                                  setHistoryModal({ item: r });
-                                }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="سجل">🧾 سجل</button>
-                                <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
-                                <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })()
-          )}
-        </>
+        <LedgerRecurringTab
+          {...{
+            Currency,
+            Badge,
+            EmptyState,
+
+            activeId,
+            activeLedger,
+            recurring,
+            startPayNow,
+            startEditRecurring,
+            deleteRecurring,
+            resetRecForm,
+            saveRecurring,
+            recForm,
+            setRecForm,
+            recEditingId,
+            setRecEditingId,
+
+            authorityOpen,
+            setAuthorityOpen,
+            budgets,
+            saveLedgerBudgets,
+            budgetAuth,
+            compliance,
+            brain,
+            spendByBucket,
+
+            inbox,
+            cashPlan,
+            inboxFilter,
+            setInboxFilter,
+            inboxView,
+            lastPayNowAt,
+            daysSince,
+            addDaysISO,
+            setHistoryModal,
+
+            forecastRunRate,
+            cashGap,
+            assumedInflow,
+            setAssumedInflow,
+            forecastPreset,
+            setForecastPreset,
+            scRent,
+            setScRent,
+            scUtilities,
+            setScUtilities,
+            scMaintenance,
+            setScMaintenance,
+            scMarketing,
+            setScMarketing,
+            scOther,
+            setScOther,
+            forecastInsights,
+
+            brainDetails,
+            setBrainDetails,
+            seededOnlyList,
+            isPastDue,
+            operatorMode,
+            openPricingWizard,
+
+            health,
+            healthHelpOpen,
+            setHealthHelpOpen,
+            projection,
+            simRentPct,
+            setSimRentPct,
+            simBillsPct,
+            setSimBillsPct,
+            simMaintPct,
+            setSimMaintPct,
+            computeScenario,
+
+            pricingOpen,
+            setPricingOpen,
+            pricingIndex,
+            setPricingIndex,
+            pricingAmount,
+            setPricingAmount,
+            pricingDate,
+            setPricingDate,
+            pricingList,
+            applyQuickPricing,
+
+            saPricingOpen,
+            setSaPricingOpen,
+            saCity,
+            setSaCity,
+            saSize,
+            setSaSize,
+            saOnlyUnpriced,
+            setSaOnlyUnpriced,
+            applySaudiAutoPricingForLedger,
+
+            payOpen,
+            setPayOpen,
+            paySource,
+            setPaySource,
+            payForm,
+            setPayForm,
+            submitPayNow,
+
+            toast,
+            refresh,
+            setConfirm,
+            seedRecurringForLedger,
+            filterTransactionsForLedgerByMeta,
+            dataStore,
+            normalizeLedgerType,
+            parseRecurringAmount,
+            normalizeRecurringCategory,
+            normalizeRecurringRisk,
+            sections,
+            sectionStats,
+            grouped,
+            sortRecurringInSection,
+            isSeededRecurring,
+            isSeededOnly,
+            isDueWithinDays,
+            completeness,
+            recurringDashboard,
+            updateRecurringOps,
+          }}
+        />
       )}
-
       {tab === 'performance' && (
-        <>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-bold text-gray-900">📈 أداء الدفتر</h4>
-                <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-                <p className="text-xs text-gray-500 mt-1">إن لم توجد بيانات كافية: جرّب "سجّل كدفعة الآن" من الالتزامات، ثم عد هنا لمشاهدة التباين.</p>
-              </div>
-              {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
-            </div>
-          </div>
-
-          {(!activeId) ? (
-            <EmptyState message="اختر دفترًا نشطًا لعرض الأداء" />
-          ) : (
-            (() => {
-              const incomeModel = {
-                mode: incomeMode,
-                fixedMonthly: Number(parseRecurringAmount(incomeFixed)) || 0,
-                peakMonthly: Number(parseRecurringAmount(incomePeak)) || 0,
-                baseMonthly: Number(parseRecurringAmount(incomeBase)) || 0,
-                peakMonths: (() => {
-                  // 3 peak months: current + next 2
-                  const d = new Date(); d.setDate(1);
-                  const keys=[];
-                  for (let i=0;i<3;i++){ const x=new Date(d.getTime()); x.setMonth(d.getMonth()+i); keys.push(`${x.getFullYear()}-${String(x.getMonth()+1).padStart(2,'0')}`);} 
-                  return keys;
-                })(),
-                manualByMonth: incomeManual,
-              };
-
-              const table = getLast4MonthsTable({ forecast6mOutput: forecast, transactions: dataStore.transactions.list(), ledgerId: activeId, incomeModel });
-
-              const thisMonthKey = table.rows[table.rows.length - 1]?.monthKey;
-              const expectedThisMonth = table.rows[table.rows.length - 1]?.expected;
-              const targets = {
-                operationalMax: Number(parseRecurringAmount(tOperational)) || 0,
-                maintenanceMax: Number(parseRecurringAmount(tMaintenance)) || 0,
-                marketingMax: Number(parseRecurringAmount(tMarketing)) || 0,
-              };
-              const targetStatus = targetsEvaluation(expectedThisMonth?.byCategory || {}, targets);
-
-              const saveIncomeModelToLedger = () => {
-                const nextLedgers = (Array.isArray(ledgers) ? ledgers : []).map(l => {
-                  if (l.id !== activeId) return l;
-                  const copy = { ...l, updatedAt: new Date().toISOString() };
-                  if (incomeSave) copy.incomeModel = incomeModel;
-                  else { try { delete copy.incomeModel; } catch {} }
-                  return copy;
-                });
-                try { setLedgers(nextLedgers); } catch { toast('تعذر حفظ نموذج الدخل', 'error'); return; }
-                toast(incomeSave ? 'تم حفظ نموذج الدخل' : 'تم إلغاء حفظ نموذج الدخل');
-                refresh();
-              };
-
-              return (
-                <div className="flex flex-col gap-4">
-                  {/* Income Model */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <h4 className="font-bold text-gray-900">نموذج الدخل</h4>
-                        <p className="text-xs text-gray-500 mt-1">افتراضيًا Runtime فقط — ويمكن حفظه داخل نفس الدفتر (بدون مفاتيح جديدة).</p>
-                      </div>
-                      <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                        <input type="checkbox" checked={incomeSave} onChange={(e) => { setIncomeSave(e.target.checked); }} />
-                        احفظ النموذج لهذا الدفتر
-                      </label>
-                    </div>
-
-                    <div className="mt-3 grid md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">نوع النموذج</label>
-                        <select value={incomeMode} onChange={(e) => setIncomeMode(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع نموذج الدخل">
-                          <option value="fixed">ثابت شهري</option>
-                          <option value="seasonal">موسمي</option>
-                          <option value="manual">يدوي (6 أشهر)</option>
-                        </select>
-                      </div>
-
-                      {incomeMode === 'fixed' ? (
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">دخل شهري ثابت</label>
-                          <input type="text" inputMode="decimal" value={incomeFixed} onChange={(e) => setIncomeFixed(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل شهري ثابت" placeholder="0" />
-                        </div>
-                      ) : null}
-
-                      {incomeMode === 'seasonal' ? (
-                        <>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">دخل الذروة (3 أشهر)</label>
-                            <input type="text" inputMode="decimal" value={incomePeak} onChange={(e) => setIncomePeak(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل الذروة" placeholder="0" />
-                          </div>
-                          <div>
-                            <label className="block text-xs font-medium text-gray-700 mb-1">دخل باقي السنة</label>
-                            <input type="text" inputMode="decimal" value={incomeBase} onChange={(e) => setIncomeBase(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل باقي السنة" placeholder="0" />
-                          </div>
-                        </>
-                      ) : null}
-
-                      {incomeMode === 'manual' ? (
-                        <div className="md:col-span-3">
-                          <div className="text-xs text-gray-500">أدخل دخل 6 أشهر القادمة:</div>
-                          <div className="mt-2 grid grid-cols-2 md:grid-cols-6 gap-2">
-                            {forecast.map(r => r.monthKey).slice(0,6).map(k => (
-                              <div key={k}>
-                                <label className="block text-[11px] text-gray-600 mb-1">{k}</label>
-                                <input type="text" inputMode="decimal" value={String(incomeManual?.[k] ?? '0')} onChange={(e) => setIncomeManual(p => ({ ...(p||{}), [k]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm" aria-label={`دخل ${k}`} />
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div className="mt-3 flex justify-end">
-                      <button type="button" onClick={saveIncomeModelToLedger} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ نموذج الدخل">حفظ</button>
-                    </div>
-                  </div>
-
-                  {/* Expected vs Actual */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                    <h4 className="font-bold text-gray-900">Expected vs Actual (آخر 3 أشهر + هذا الشهر)</h4>
-                    <p className="text-xs text-gray-500 mt-1">التتبع يعتمد على tx.meta.ledgerId + type (income/expense).</p>
-
-                    <div className="mt-3 overflow-x-auto">
-                      <table className="min-w-full text-xs">
-                        <thead>
-                          <tr className="text-gray-500">
-                            <th className="text-start py-2">Month</th>
-                            <th className="text-start py-2">Exp Inc</th>
-                            <th className="text-start py-2">Act Inc</th>
-                            <th className="text-start py-2">Exp Exp</th>
-                            <th className="text-start py-2">Act Exp</th>
-                            <th className="text-start py-2">Net Var</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {table.rows.map((r) => {
-                            const v = r.variance.varianceNet;
-                            const badge = v >= 0 ? '✅' : (Math.abs(v) < (Number(r.expected.net)||0)*0.05 ? '⚠️' : '🔴');
-                            return (
-                              <tr key={r.monthKey} className="border-t border-gray-100">
-                                <td className="py-2">{r.monthKey}</td>
-                                <td className="py-2"><Currency value={r.expected.income} /></td>
-                                <td className="py-2"><Currency value={r.actual.income} /></td>
-                                <td className="py-2"><Currency value={r.expected.expense} /></td>
-                                <td className="py-2"><Currency value={r.actual.expense} /></td>
-                                <td className={`py-2 ${v < 0 ? 'text-red-700' : 'text-green-700'}`}>{badge} <Currency value={v} /></td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {dataStore.transactions.list().filter(t => String(t?.meta?.ledgerId||'')===String(activeId)).length === 0 ? (
-                      <p className="text-sm text-gray-500 mt-3">لا توجد حركات كافية بعد — جرّب “سجّل كدفعة الآن” من الالتزامات.</p>
-                    ) : null}
-                  </div>
-
-                  {/* Variance Explainer */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                    <h4 className="font-bold text-gray-900">شرح التباين</h4>
-                    <p className="text-xs text-gray-500 mt-1">أسباب محتملة (مبسطة):</p>
-                    <div className="mt-3 text-sm text-gray-700 flex flex-col gap-2">
-                      {(() => {
-                        const latest = table.rows[table.rows.length - 1];
-                        const reasons = latest?.variance?.reasons || [];
-                        return reasons.slice(0,3).map((x, idx) => (
-                          <div key={idx}>• {x}</div>
-                        ));
-                      })()}
-                    </div>
-                  </div>
-
-                  {/* Targets */}
-                  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                    <h4 className="font-bold text-gray-900">Targets (شهري)</h4>
-                    <p className="text-xs text-gray-500 mt-1">ضع حدودًا بسيطة للتشغيلي/الصيانة/التسويق (اختياري).</p>
-
-                    <div className="mt-3 grid md:grid-cols-3 gap-3">
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">حد التشغيلي</label>
-                        <input type="text" inputMode="decimal" value={tOperational} onChange={(e) => setTOperational(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="حد التشغيلي" placeholder="0" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">حد الصيانة</label>
-                        <input type="text" inputMode="decimal" value={tMaintenance} onChange={(e) => setTMaintenance(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="حد الصيانة" placeholder="0" />
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-gray-700 mb-1">حد التسويق</label>
-                        <input type="text" inputMode="decimal" value={tMarketing} onChange={(e) => setTMarketing(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="حد التسويق" placeholder="0" />
-                      </div>
-                    </div>
-
-                    <div className="mt-3 grid md:grid-cols-3 gap-3 text-sm">
-                      {(['operational','maintenance','marketing']).map((k) => {
-                        const s = targetStatus[k];
-                        const label = k === 'operational' ? 'تشغيلي' : k === 'maintenance' ? 'صيانة' : 'تسويق';
-                        const statusLabel = s.status === 'ok' ? 'ضمن الهدف' : s.status === 'warn' ? 'تجاوز بسيط' : s.status === 'bad' ? 'تجاوز' : 'بدون هدف';
-                        const cls = s.status === 'ok' ? 'bg-green-50 border-green-100 text-green-700' : s.status === 'warn' ? 'bg-amber-50 border-amber-100 text-amber-800' : s.status === 'bad' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-gray-50 border-gray-100 text-gray-700';
-                        return (
-                          <div key={k} className={`p-3 rounded-xl border ${cls}`}>
-                            <div className="font-semibold">{label}: {statusLabel}</div>
-                            {s.status !== 'none' ? <div className="text-xs mt-1">تجاوز: <strong><Currency value={s.amountOver || 0} /></strong></div> : <div className="text-xs mt-1">ضع هدفًا لتظهر الحالة</div>}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              );
-            })()
-          )}
-        </>
+        <LedgerPerformanceTab
+          activeId={activeId}
+          activeLedger={activeLedger}
+          Badge={Badge}
+          EmptyState={EmptyState}
+          Currency={Currency}
+          incomeMode={incomeMode}
+          setIncomeMode={setIncomeMode}
+          incomeFixed={incomeFixed}
+          setIncomeFixed={setIncomeFixed}
+          incomePeak={incomePeak}
+          setIncomePeak={setIncomePeak}
+          incomeBase={incomeBase}
+          setIncomeBase={setIncomeBase}
+          incomeManual={incomeManual}
+          setIncomeManual={setIncomeManual}
+          incomeSave={incomeSave}
+          setIncomeSave={setIncomeSave}
+          tOperational={tOperational}
+          setTOperational={setTOperational}
+          tMaintenance={tMaintenance}
+          setTMaintenance={setTMaintenance}
+          tMarketing={tMarketing}
+          setTMarketing={setTMarketing}
+          parseRecurringAmount={parseRecurringAmount}
+          forecast={forecast}
+          dataStore={dataStore}
+          getLast4MonthsTable={getLast4MonthsTable}
+          targetsEvaluation={targetsEvaluation}
+          ledgers={ledgers}
+          setLedgers={setLedgers}
+          toast={toast}
+          refresh={refresh}
+        />
       )}
 
       {tab === 'reports' && (
-        <>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <h4 className="font-bold text-gray-900">تقارير الدفتر</h4>
-                <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-                <p className="text-xs text-gray-500 mt-1">ملاحظة: هذه التقارير تُحسب فقط من الحركات التي تم إنشاؤها عبر "سجّل كدفعة الآن" (لأنها تحمل meta للدفتر).</p>
-              </div>
-              {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
-            </div>
-          </div>
+        <LedgerReportsTab
+          {...{
+            toast,
+            activeId,
+            activeLedger,
+            Badge,
+            EmptyState,
+            Currency,
+            Icons,
 
-          {(!activeId) ? (
-            <EmptyState message="اختر دفترًا نشطًا لعرض التقارير" />
-          ) : (
-            <div className="flex flex-col gap-4">
-              <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <h4 className="font-bold text-gray-900">Mini P&L</h4>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="text-xs text-gray-500">عدد الحركات المصنفة: {ledgerReports?.txCount || 0}</span>
-                    <button type="button" onClick={() => {
-                      if (!activeId) return;
-                      const all = dataStore.transactions.list();
-                      const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+            dataStore,
+            recurring,
+            parseRecurringAmount,
+            forecast,
+            getLast4MonthsTable,
+            targetsEvaluation,
+            normalizeRecurringCategory,
+            normalizeRecurringRisk,
+            seededOnlyList,
+            isPastDue,
+            normalizeLedgerType,
+            filterTransactionsForLedgerByMeta,
+            ledgerTxSummary,
+            setTab,
 
-                      const now = new Date();
-                      const daysAgo = (n) => {
-                        const d = new Date(now.getTime());
-                        d.setDate(d.getDate() - n);
-                        return d;
-                      };
-                      const last30 = txs.filter(t => {
-                        const dt = new Date(String(t.date || '') + 'T00:00:00');
-                        if (Number.isNaN(dt.getTime())) return false;
-                        return dt.getTime() >= daysAgo(30).getTime();
-                      });
-                      const last365 = txs.filter(t => {
-                        const dt = new Date(String(t.date || '') + 'T00:00:00');
-                        if (Number.isNaN(dt.getTime())) return false;
-                        return dt.getTime() >= daysAgo(365).getTime();
-                      });
-
-                      const pl30 = computePL({ transactions: last30 });
-                      const pl365 = computePL({ transactions: last365 });
-
-                      const bucketName = (b) => CATEGORY_LABEL[b] || b || 'other';
-                      const breakdown = computeTopBuckets({ transactions: txs, limit: 50 });
-                      const breakdownStr = breakdown.map(x => `${bucketName(x.bucket)}:${Number(x.total) || 0}`).join(' | ');
-                      const generatedAt = new Date().toISOString();
-
-                      const headers = ['period','income_total','expense_total','net_total','breakdown_by_bucket','generated_at'];
-                      const rows = [
-                        ['30d', pl30.income, pl30.expense, pl30.net, breakdownStr, generatedAt],
-                        ['12m', pl365.income, pl365.expense, pl365.net, breakdownStr, generatedAt],
-                      ];
-
-                      downloadCSV({ filename: `ledger_report_${today()}.csv`, headers, rows });
-                      toast('تم تصدير تقرير الدفتر CSV');
-                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير تقرير الدفتر CSV">تصدير تقرير الدفتر CSV</button>
-
-                    <button type="button" onClick={() => {
-                      const list = activeRecurring;
-                      const headers = ['ledgerId','name','bucket','required','riskLevel','frequency','nextDueDate','amount','saHint'];
-                      const bucketRaw = (r) => getBucketForRecurring(r) || 'other';
-                      const rows = list.map(r => ([
-                        r.ledgerId || '',
-                        r.title || '',
-                        bucketRaw(r),
-                        r.required ? 'true' : 'false',
-                        r.riskLevel || '',
-                        r.frequency || '',
-                        r.nextDueDate || '',
-                        Number(r.amount) || 0,
-                        r.saHint || '',
-                      ]));
-                      downloadCSV({ filename: `ledger_obligations_${today()}.csv`, headers, rows });
-                      toast('تم تصدير الالتزامات CSV');
-                    }} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تصدير الالتزامات CSV">تصدير الالتزامات CSV</button>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-3 mt-3">
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">
-                    <div className="text-xs text-gray-500">آخر 30 يوم</div>
-                    <div className="mt-1 text-sm">دخل: <strong><Currency value={ledgerReports?.pl30?.income || 0} /></strong></div>
-                    <div className="text-sm">مصروف: <strong><Currency value={ledgerReports?.pl30?.expense || 0} /></strong></div>
-                    <div className="text-sm">صافي: <strong><Currency value={ledgerReports?.pl30?.net || 0} /></strong></div>
-                  </div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">
-                    <div className="text-xs text-gray-500">آخر 12 شهر (تقريبي)</div>
-                    <div className="mt-1 text-sm">دخل: <strong><Currency value={ledgerReports?.pl365?.income || 0} /></strong></div>
-                    <div className="text-sm">مصروف: <strong><Currency value={ledgerReports?.pl365?.expense || 0} /></strong></div>
-                    <div className="text-sm">صافي: <strong><Currency value={ledgerReports?.pl365?.net || 0} /></strong></div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                <h4 className="font-bold text-gray-900">Top 5 مصروفات حسب Bucket</h4>
-                {(!ledgerReports?.topBuckets || ledgerReports.topBuckets.length === 0) ? (
-                  <p className="text-sm text-gray-500 mt-2">لا توجد بيانات كافية بعد. استخدم "سجّل كدفعة الآن" لتغذية التقرير.</p>
-                ) : (
-                  <div className="mt-3 flex flex-col gap-2 text-sm">
-                    {ledgerReports.topBuckets.map((b) => (
-                      <div key={b.bucket} className="flex items-center justify-between gap-2">
-                        <span className="text-gray-700">{CATEGORY_LABEL[b.bucket] || b.bucket || 'غير مصنف'}</span>
-                        <strong className="text-gray-900"><Currency value={b.total} /></strong>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-                <h4 className="font-bold text-gray-900">Compliance Score</h4>
-                {ledgerReports?.compliance ? (
-                  <div className="mt-2">
-                    <div className="text-sm">النتيجة: <strong>{ledgerReports.compliance.pct}%</strong></div>
-                    <div className="text-xs text-gray-500 mt-1">{ledgerReports.compliance.note}</div>
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 mt-2">لا توجد عناصر seeded كافية لحساب الانضباط.</p>
-                )}
-              </div>
-            </div>
-          )}
-        </>
+            confirm,
+            setConfirm,
+          }}
+        />
       )}
-
-      {/* Ledger Brain Pro: Details Modal */}
-      <Modal
-        open={!!brainDetails}
-        onClose={() => setBrainDetails(null)}
-        title={brainDetails === 'burn' ? 'تفاصيل Burn Rate' : brainDetails === 'pressure' ? 'تفاصيل ضغط السيولة' : brainDetails === 'risk90' ? 'تفاصيل مخاطر 90 يوم' : brainDetails === 'trend' ? 'تفاصيل الاتجاه التشغيلي' : 'تفاصيل'}
-        wide
-      >
-        {(() => {
-          if (!activeId || !brainDetails) return null;
-          const ctx = brainCtx;
-
-          if (brainDetails === 'burn') {
-            const b = getBurnBreakdown(activeId, ctx);
-            const label = (c) => (c === 'system' ? 'نظامي' : c === 'operational' ? 'تشغيلي' : c === 'maintenance' ? 'صيانة' : c === 'marketing' ? 'تسويق' : 'أخرى');
-            return (
-              <div className="p-1">
-                <div className="text-sm text-gray-700">الإجمالي الشهري (مكافئ): <strong className="text-gray-900"><Currency value={b.totalMonthly} /></strong></div>
-                <div className="mt-3 overflow-x-auto">
-                  <table className="min-w-full text-sm">
-                    <thead>
-                      <tr className="text-gray-500">
-                        <th className="text-start py-2">التصنيف</th>
-                        <th className="text-start py-2">شهري</th>
-                        <th className="text-start py-2">% من الإجمالي</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {b.buckets.map((x) => (
-                        <tr key={x.category} className="border-t border-gray-100">
-                          <td className="py-2">{label(x.category)}</td>
-                          <td className="py-2"><Currency value={x.monthlySum} /></td>
-                          <td className="py-2">{x.percentOfTotal}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            );
-          }
-
-          if (brainDetails === 'pressure') {
-            const p = getPressureBreakdown(activeId, ctx);
-            const parts = p.weightedScoreParts || {};
-            return (
-              <div className="p-1 text-sm">
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">غير مسعّر: <strong>{p.missingPricingCount}</strong></div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">متأخر: <strong>{p.overdueCount}</strong></div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">High-risk غير مسعّر: <strong>{p.highRiskUnpriced}</strong></div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">الانضباط (30 يوم): <strong>{Math.round((p.disciplineRatio || 0) * 100)}%</strong></div>
-                </div>
-
-                <div className="mt-4">
-                  <div className="font-semibold text-gray-900 mb-2">مكونات الوزن (تقريبية)</div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm">
-                      <thead>
-                        <tr className="text-gray-500">
-                          <th className="text-start py-2">البند</th>
-                          <th className="text-start py-2">نقاط</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {Object.keys(parts).map(k => (
-                          <tr key={k} className="border-t border-gray-100">
-                            <td className="py-2">{k}</td>
-                            <td className="py-2">{Math.round(Number(parts[k]) || 0)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <p className="mt-2 text-xs text-gray-500">ملاحظة: هذه التفاصيل لشرح الرقم، بينما الدرجة النهائية تُحسب في calculateCashPressureScore().</p>
-                </div>
-              </div>
-            );
-          }
-
-          if (brainDetails === 'risk90') {
-            const r = getRiskBreakdown90d(activeId, ctx);
-            return (
-              <div className="p-1 text-sm">
-                <div className="grid sm:grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">مجموع المستحق 90 يوم: <strong><Currency value={r.totalDueAmount} /></strong></div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">High-risk (عدد): <strong>{r.highRiskCount}</strong></div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">مبلغ متأخر: <strong><Currency value={r.overdueAmount} /></strong></div>
-                  <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">Burn ratio: <strong>{(r.burnRatio || 0).toFixed(2)}</strong></div>
-                </div>
-                <p className="mt-3 text-xs text-gray-500">computedLevel: {r.computedLevel}</p>
-              </div>
-            );
-          }
-
-          if (brainDetails === 'trend') {
-            return (
-              <div className="p-1 text-sm">
-                <div className="p-3 rounded-lg border border-gray-100 bg-gray-50">
-                  الاتجاه الحالي يُستنتج من عدد الدفعات المسجلة خلال 60 يوم مقابل عدد البنود المستحقة خلال نفس الفترة.
-                </div>
-              </div>
-            );
-          }
-
-          return null;
-        })()}
-      </Modal>
-
-      {/* Saudi Auto-Pricing Wizard v2 */}
-      {saPricingOpen ? (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">معالج تسعير سعودي</h3>
-                <p className="text-sm text-gray-500 mt-1">يملأ مبالغ مقترحة للعناصر seeded حسب المدينة والحجم.</p>
-              </div>
-              <button type="button" onClick={() => setSaPricingOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">المدينة</label>
-                <select value={saCity} onChange={(e) => setSaCity(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="مدينة التسعير">
-                  <option value="riyadh">الرياض</option>
-                  <option value="jeddah">جدة</option>
-                  <option value="dammam">الدمام</option>
-                  <option value="qassim">القصيم</option>
-                  <option value="other">أخرى</option>
-                </select>
-              </div>
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">حجم الكيان</label>
-                <select value={saSize} onChange={(e) => setSaSize(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="حجم الكيان">
-                  <option value="small">صغير</option>
-                  <option value="medium">متوسط</option>
-                  <option value="large">كبير</option>
-                </select>
-              </div>
-              <div className="col-span-2">
-                <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-                  <input type="checkbox" checked={saOnlyUnpriced} onChange={(e) => setSaOnlyUnpriced(e.target.checked)} />
-                  تطبيق على العناصر غير المُسعّرة فقط
-                </label>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end mt-4">
-              <button type="button" onClick={() => setSaPricingOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-              <button type="button" onClick={() => {
-                const r = applySaudiAutoPricing({ city: saCity, size: saSize, onlyUnpriced: saOnlyUnpriced });
-                if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); return; }
-                toast('تم تطبيق التسعير المقترح');
-                setSaPricingOpen(false);
-                refresh();
-              }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تطبيق">تطبيق</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      {/* Quick Pricing Wizard */}
-      {pricingOpen && unpricedList.length > 0 ? (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            {(() => {
-              const item = unpricedList[Math.min(pricingIndex, unpricedList.length - 1)];
-              if (!item) return null;
-
-              return (
-                <>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <h3 className="text-lg font-bold text-gray-900">إكمال التسعير</h3>
-                      <p className="text-sm text-gray-500 mt-1">{pricingIndex + 1} / {unpricedList.length} — {item.title}</p>
-                    </div>
-                    <button type="button" onClick={() => setPricingOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-3 mt-4">
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
-                      <input
-                        type="text"
-                        inputMode="decimal"
-                        value={pricingAmount}
-                        onChange={(e) => setPricingAmount(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                        placeholder="0"
-                        aria-label="مبلغ التسعير"
-                      />
-                    </div>
-                    <div className="col-span-2 sm:col-span-1">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الاستحقاق</label>
-                      <input
-                        type="date"
-                        value={pricingDate}
-                        onChange={(e) => setPricingDate(e.target.value)}
-                        className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm"
-                        aria-label="تاريخ التسعير"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 justify-end mt-4">
-                    <button type="button" onClick={() => {
-                      // Skip
-                      const next = pricingIndex + 1;
-                      if (next >= unpricedList.length) { setPricingOpen(false); refresh(); return; }
-                      setPricingIndex(next);
-                      const nxt = unpricedList[next];
-                      setPricingAmount('');
-                      setPricingDate(ensureDateValue(nxt?.nextDueDate));
-                    }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="تخطي">تخطي</button>
-
-                    <button type="button" onClick={() => {
-                      // Save & next
-                      const amount = parseRecurringAmount(pricingAmount);
-                      if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
-                      const due = String(pricingDate || '').trim();
-                      if (!due) { toast('تاريخ الاستحقاق مطلوب', 'error'); return; }
-                      try {
-                        applyPricingToItem(item.id, { amount, nextDueDate: due });
-                      } catch { toast('تعذر حفظ التسعير', 'error'); return; }
-
-                      const next = pricingIndex + 1;
-                      if (next >= unpricedList.length) {
-                        toast('تم تحديث التسعير');
-                        setPricingOpen(false);
-                        refresh();
-                        return;
-                      }
-                      setPricingIndex(next);
-                      const nxt = unpricedList[next];
-                      setPricingAmount('');
-                      setPricingDate(ensureDateValue(nxt?.nextDueDate));
-                    }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="التالي">التالي</button>
-
-                    <button type="button" onClick={() => {
-                      // Save & finish
-                      const amount = parseRecurringAmount(pricingAmount);
-                      if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
-                      const due = String(pricingDate || '').trim();
-                      if (!due) { toast('تاريخ الاستحقاق مطلوب', 'error'); return; }
-                      try {
-                        applyPricingToItem(item.id, { amount, nextDueDate: due });
-                        toast('تم تحديث التسعير');
-                        setPricingOpen(false);
-                        refresh();
-                      } catch { toast('تعذر حفظ التسعير', 'error'); }
-                    }} className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-700 text-white text-sm font-medium" aria-label="حفظ وإنهاء">حفظ وإنهاء</button>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      ) : null}
-
-      {/* Convert to Transaction */}
-      {payOpen && paySource ? (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4" role="dialog" aria-modal="true">
-          <div className="bg-white rounded-xl shadow-2xl p-5 max-w-md w-full" onClick={e => e.stopPropagation()}>
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">سجّل كدفعة الآن</h3>
-                <p className="text-sm text-gray-500 mt-1">{paySource.title}</p>
-              </div>
-              <button type="button" onClick={() => setPayOpen(false)} className="text-gray-500 hover:text-gray-800" aria-label="إغلاق">×</button>
-            </div>
-
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <div className="col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">الوصف</label>
-                <input value={payForm.description} onChange={(e) => setPayForm(f => ({ ...f, description: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="وصف الدفعة" />
-              </div>
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
-                <input type="text" inputMode="decimal" value={payForm.amount} onChange={(e) => setPayForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الدفعة" />
-              </div>
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
-                <input type="date" value={payForm.date} onChange={(e) => setPayForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الدفعة" />
-              </div>
-
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">النوع</label>
-                <select value={payForm.type} onChange={(e) => setPayForm(f => ({ ...f, type: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع الحركة">
-                  <option value="expense">خرج</option>
-                  <option value="income">دخل</option>
-                </select>
-              </div>
-              <div className="col-span-2 sm:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">طريقة الدفع</label>
-                <select value={payForm.paymentMethod} onChange={(e) => setPayForm(f => ({ ...f, paymentMethod: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="طريقة الدفع">
-                  <option value="cash">كاش</option>
-                  <option value="bank">تحويل</option>
-                  <option value="card">بطاقة</option>
-                  <option value="other">أخرى</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="flex gap-2 justify-end mt-4">
-              <button type="button" onClick={() => setPayOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-              <button type="button" onClick={() => {
-                const amount = parseRecurringAmount(payForm.amount);
-                if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
-                const date = String(payForm.date || '').trim();
-                if (!date) { toast('التاريخ مطلوب', 'error'); return; }
-
-                const type = (payForm.type === 'income' || payForm.type === 'expense') ? payForm.type : 'expense';
-                const paymentMethod = String(payForm.paymentMethod || 'cash');
-                const description = String(payForm.description || '').trim();
-
-                const proceed = () => {
-                  // Minimal safe defaults (do not change transactions logic):
-                  const category = 'other';
-
-                  const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
-                  const dueDateBefore = String(paySource?.nextDueDate || '');
-
-                  const res = dataStore.transactions.create({
-                    type,
-                    category,
-                    amount,
-                    paymentMethod,
-                    date,
-                    description,
-                    meta,
-                  });
-                  if (!res || !res.ok) { toast(res?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
-
-                  toast('تم تسجيل الدفعة');
-
-                  try {
-                    if (paySource?.id) {
-                      updateRecurringOps(
-                        paySource.id,
-                        {
-                          status: 'resolved',
-                          lastPaidAt: new Date().toISOString(),
-                          payState: 'paid',
-                          payStateAt: new Date().toISOString(),
-                        },
-                        {
-                          type: 'pay_now',
-                          amount,
-                          txId: res?.item?.id || res?.data?.id || res?.tx?.id || undefined,
-                          meta: { dueDate: dueDateBefore, method: paymentMethod },
-                        }
-                      );
-                    }
-                  } catch {}
-
-                  setPayOpen(false);
-                  refresh();
-                };
-
-                // HardLock warning (display-only; user can continue)
-                try {
-                  const breach = wouldBreachHardLock({
-                    budgets: budgets,
-                    utilization: budgetAuth,
-                    bucket: paySource?.category,
-                    additionalAmount: amount,
-                  });
-                  if (breach.blocked) {
-                    setConfirm({
-                      title: '⚠️ تجاوز ميزانية التصنيف',
-                      message: breach.reason + '. هل تريد المتابعة رغم ذلك؟',
-                      confirmLabel: 'متابعة رغم ذلك',
-                      onConfirm: () => { setConfirm(null); proceed(); },
-                      onCancel: () => setConfirm(null),
-                      danger: false,
-                    });
-                    return;
-                  }
-                } catch {}
-
-                proceed();
-              }} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل">تسجيل</button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <Modal
-        Icons={Icons}
-        open={!!historyModal}
-        onClose={() => setHistoryModal(null)}
-        title={`🧾 سجل البند${historyModal?.item?.title ? ` — ${historyModal.item.title}` : ''}`}
-        wide={false}
-      >
-        {(() => {
-          const item = historyModal?.item;
-          const h = Array.isArray(item?.history) ? item.history : [];
-          const summary = summarizePayNow(h, { now: new Date() });
-          const latest = h.slice().reverse().slice(0, 10);
-
-          const label = (t) => {
-            if (t === 'pay_now') return 'سجّل كدفعة الآن';
-            if (t === 'state_paid') return 'تم وضعه كمدفوع';
-            if (t === 'state_skipped') return 'تم وضعه كتجاوز';
-            if (t === 'snooze') return 'تأجيل';
-            if (t === 'note') return 'ملاحظة';
-            return String(t || 'حدث');
-          };
-
-          return (
-            <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-3 gap-2">
-                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                  <div className="text-[11px] text-gray-500">Paid last 90d</div>
-                  <div className="font-bold text-gray-900 mt-1"><Currency value={summary.paid90} /></div>
-                </div>
-                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-                  <div className="text-[11px] text-gray-500">Paid last 12m</div>
-                  <div className="font-bold text-gray-900 mt-1"><Currency value={summary.paid12m} /></div>
-                </div>
-                <div className="p-3 rounded-xl border border-gray-100 bg-white">
-                  <div className="text-[11px] text-gray-500">Count pay_now (12m)</div>
-                  <div className="font-bold text-gray-900 mt-1">{summary.count12m}</div>
-                </div>
-              </div>
-
-              {latest.length === 0 ? (
-                <div className="p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-700">لا يوجد سجل بعد.</div>
-              ) : (
-                <div className="max-h-72 overflow-y-auto border border-gray-100 rounded-xl">
-                  {latest.map((e, idx) => (
-                    <div key={idx} className={`p-3 ${idx ? 'border-t border-gray-100' : ''}`}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="font-semibold text-gray-900">{label(e.type)}</div>
-                        <div className="text-[11px] text-gray-500">{String(e.at || '')}</div>
-                      </div>
-                      {Number(e.amount) ? <div className="text-sm text-gray-700 mt-1">المبلغ: <Currency value={Number(e.amount)} /></div> : null}
-                      {e?.meta?.dueDate ? <div className="text-[11px] text-gray-500 mt-1">dueDate: {e.meta.dueDate}</div> : null}
-                      {e?.meta?.snoozeUntil ? <div className="text-[11px] text-gray-500 mt-1">snoozeUntil: {e.meta.snoozeUntil}</div> : null}
-                      {e?.meta?.method ? <div className="text-[11px] text-gray-500 mt-1">method: {e.meta.method}</div> : null}
-                      {e?.meta?.note ? <div className="text-[11px] text-gray-500 mt-1 whitespace-pre-wrap">note: {e.meta.note}</div> : null}
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex justify-end">
-                <button type="button" onClick={() => setHistoryModal(null)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إغلاق">إغلاق</button>
-              </div>
-            </div>
-          );
-        })()}
-      </Modal>
 
       <ConfirmDialog
         open={!!confirm}
