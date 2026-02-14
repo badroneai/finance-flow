@@ -822,7 +822,7 @@ const TrustChecks = () => {
   return null;
 };
 
-/* Modal + ConfirmDialog extracted to src/ui/Modals.jsx */
+// (extracted)
 
 // ============================================
 // FORM FIELD (مستوى الملف — يمنع remount وفقدان التركيز عند الكتابة)
@@ -890,7 +890,7 @@ const NAV_ITEMS = [
   { id:'settings', label:'الإعدادات', icon:Icons.settings },
 ];
 
-/* Sidebar + Topbar extracted to src/ui/Sidebar.jsx */
+// (extracted)
 
 // ============================================
 // HOME PAGE
