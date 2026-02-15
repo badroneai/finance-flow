@@ -1,12 +1,16 @@
-# تشغيل Finance Flow محلياً
+# تشغيل Finance Flow محلياً (خادم Vite مطلوب لتطبيق React)
 # Run: .\start-server.ps1
-# مهم: افتح الرابط في Chrome أو Edge وليس في متصفح Cursor (يسبب خطأ -102)
+# مهم: افتح الرابط في Chrome أو Edge — http://localhost:5173/finance-flow.html
 
-$port = 8765
 $root = $PSScriptRoot
-Write-Host "Finance Flow - جاري التشغيل على http://localhost:$port" -ForegroundColor Cyan
-Write-Host "افتح هذا الرابط في Chrome أو Edge (متصفح Cursor يعطي خطأ -102):" -ForegroundColor Yellow
-Write-Host "http://localhost:$port" -ForegroundColor Green
-Write-Host ""
 Set-Location $root
-python -m http.server $port
+
+Write-Host "Finance Flow - تشغيل خادم التطوير (Vite)..." -ForegroundColor Cyan
+Write-Host "بعد التشغيل افتح في المتصفح:" -ForegroundColor Yellow
+Write-Host "  http://localhost:5173/finance-flow.html" -ForegroundColor Green
+Write-Host "أو: http://localhost:5173/" -ForegroundColor Green
+Write-Host ""
+Write-Host "لإيقاف الخادم: Ctrl+C" -ForegroundColor Gray
+Write-Host ""
+
+npm run dev

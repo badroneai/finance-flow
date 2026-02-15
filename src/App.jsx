@@ -881,6 +881,27 @@ const Badge = ({ children, color='blue' }) => {
   return <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${colors[color]||colors.blue}`}>{children}</span>;
 };
 
+// Error boundary for ledger tabs (e.g. تقارير الدفتر) — avoids white screen
+class LedgerTabErrorBoundary extends React.Component {
+  state = { hasError: false, error: null };
+  static getDerivedStateFromError(err) { return { hasError: true, error: err }; }
+  componentDidCatch(err, info) { console.error('LedgerTabErrorBoundary', err, info); }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+          <h4 className="font-bold text-gray-900 mb-2">حدث خطأ في تحميل هذه الصفحة</h4>
+          <p className="text-sm text-gray-600 mb-4">يمكنك العودة إلى تبويب آخر والمحاولة مرة أخرى.</p>
+          {this.props.onBack && (
+            <button type="button" onClick={this.props.onBack} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="العودة للدفاتر">العودة إلى الدفاتر</button>
+          )}
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 // ============================================
 // NAVIGATION
 // ============================================
@@ -2800,35 +2821,38 @@ const LedgersPage = () => {
       )}
 
       {tab === 'reports' && (
-        <LedgerReportsTab
-          {...{
-            toast,
-            activeId,
-            activeLedger,
-            Badge,
-            EmptyState,
-            Currency,
-            Icons,
+        <LedgerTabErrorBoundary onBack={() => setTab('ledgers')}>
+          <LedgerReportsTab
+            {...{
+              toast,
+              activeId,
+              activeLedger,
+              Badge,
+              EmptyState,
+              Currency,
+              Icons,
 
-            dataStore,
-            recurring,
-            parseRecurringAmount,
-            forecast,
-            getLast4MonthsTable,
-            targetsEvaluation,
-            normalizeRecurringCategory,
-            normalizeRecurringRisk,
-            seededOnlyList,
-            isPastDue,
-            normalizeLedgerType,
-            filterTransactionsForLedgerByMeta,
-            ledgerTxSummary,
-            setTab,
+              dataStore,
+              recurring,
+              parseRecurringAmount,
+              forecast,
+              getLast4MonthsTable,
+              targetsEvaluation,
+              normalizeRecurringCategory,
+              normalizeRecurringRisk,
+              seededOnlyList,
+              isPastDue,
+              normalizeLedgerType,
+              filterTransactionsForLedgerByMeta,
+              ledgerReports,
+              budgetsHealth,
+              setTab,
 
-            confirm,
-            setConfirm,
-          }}
-        />
+              confirm,
+              setConfirm,
+            }}
+          />
+        </LedgerTabErrorBoundary>
       )}
 
       <ConfirmDialog
