@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-analytics.js
 // Ledger budgets helpers (stored inside ff_ledgers objects)
 
 const asNum = (v) => {

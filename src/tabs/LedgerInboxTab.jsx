@@ -78,7 +78,7 @@ function LedgerInboxTab({
   </div>
 
   {inboxView.length === 0 ? (
-    <div className="mt-3 p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-700">صندوق الوارد نظيف ✅</div>
+    <div className="mt-3 p-3 rounded-xl border border-gray-100 bg-gray-50 text-sm text-gray-700">صندوق الوارد نظيف</div>
   ) : (
     <div className="mt-3 flex flex-col gap-2">
       {inboxView.slice(0, 10).map((it) => (
@@ -151,7 +151,7 @@ function LedgerInboxTab({
               updateRecurringOps(it.id, { payState: 'paid', payStateAt: new Date().toISOString() }, { type: 'state_paid' });
               toast('تم وضعه كمدفوع');
               refresh();
-            }} className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700" aria-label="مدفوع">✅ مدفوع</button>
+            }} className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700" aria-label="مدفوع">مدفوع</button>
 
             <button type="button" onClick={() => {
               updateRecurringOps(it.id, { payState: 'skipped', payStateAt: new Date().toISOString() }, { type: 'state_skipped' });

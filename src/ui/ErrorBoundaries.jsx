@@ -31,6 +31,38 @@ export class LedgerTabErrorBoundary extends React.Component {
   }
 }
 
+/** حد أخطاء لتحميل الصفحات المؤجلة (lazy) — يعرض رسالة وزر العودة أو إعادة التحميل */
+export class PageLoadErrorBoundary extends React.Component {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(err, info) {
+    console.error('PageLoadErrorBoundary', err, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="p-6 max-w-md mx-auto text-center" dir="rtl">
+          <p className="text-gray-700 font-medium mb-1">تعذر تحميل هذه الصفحة</p>
+          <p className="text-sm text-gray-500 mb-4">تحقق من الاتصال بالإنترنت وحاول مرة أخرى.</p>
+          <div className="flex flex-wrap gap-2 justify-center">
+            {this.props.onGoHome && (
+              <button type="button" onClick={this.props.onGoHome} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="العودة للنبض المالي">
+                العودة للنبض المالي
+              </button>
+            )}
+            <button type="button" onClick={() => window.location.reload()} className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة تحميل الصفحة">
+              إعادة تحميل الصفحة
+            </button>
+          </div>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 /** حد أخطاء عام مع واجهة استعادة (نسخ تفاصيل الخطأ + إعادة تحميل) */
 export class ErrorBoundary extends React.Component {
   constructor(props) {

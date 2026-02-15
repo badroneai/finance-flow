@@ -1,6 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
-import { computePL, computeTopBuckets } from '../core/ledger-reports.js';
+import { computePL, computeTopBuckets } from '../core/ledger-analytics.js';
 import { downloadCSV } from '../utils/csvExport.js';
 
 /** Minimal, stable Reports tab (Stage 6 stability).
@@ -20,6 +21,12 @@ const BUCKET_LABELS = {
   uncategorized: 'غير مصنف',
 };
 
+const MONTHS_REPORT = [
+  { value: 1, label: 'يناير' }, { value: 2, label: 'فبراير' }, { value: 3, label: 'مارس' }, { value: 4, label: 'أبريل' },
+  { value: 5, label: 'مايو' }, { value: 6, label: 'يونيو' }, { value: 7, label: 'يوليو' }, { value: 8, label: 'أغسطس' },
+  { value: 9, label: 'سبتمبر' }, { value: 10, label: 'أكتوبر' }, { value: 11, label: 'نوفمبر' }, { value: 12, label: 'ديسمبر' },
+];
+
 function LedgerReportsTab(props) {
   const {
     toast,
@@ -34,6 +41,11 @@ function LedgerReportsTab(props) {
     ledgerReports = null,
     budgetsHealth = null,
   } = props;
+
+  const navigate = useNavigate();
+  const now = new Date();
+  const [reportMonth, setReportMonth] = useState(now.getMonth() + 1);
+  const [reportYear, setReportYear] = useState(now.getFullYear());
 
   const txs = useMemo(() => {
     if (!activeId) return [];
@@ -90,6 +102,15 @@ function LedgerReportsTab(props) {
 
   const compliance = ledgerReports?.compliance ?? null;
 
+  const openMonthlyReport = () => {
+    if (!activeId) {
+      toast?.('اختر دفترًا نشطًا أولاً', 'error');
+      return;
+    }
+    const params = new URLSearchParams({ ledgerId: activeId, month: String(reportMonth), year: String(reportYear) });
+    navigate(`/report?${params.toString()}`);
+  };
+
   const exportLedgerTxCSV = () => {
     if (!activeId) return;
     const rows = (txs || []).map(t => [
@@ -133,6 +154,40 @@ function LedgerReportsTab(props) {
         <EmptyState message="اختر دفترًا نشطًا لعرض التقارير" />
       ) : (
         <div className="flex flex-col gap-4">
+          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
+            <h4 className="font-bold text-gray-900 mb-3">التقرير الشهري</h4>
+            <p className="text-sm text-gray-500 mb-3">عرض تقرير شهري للدفتر مع إمكانية تصدير PDF ومشاركته.</p>
+            <div className="flex flex-wrap items-center gap-2">
+              <select
+                value={reportMonth}
+                onChange={(e) => setReportMonth(Number(e.target.value))}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 bg-white"
+                aria-label="شهر التقرير"
+              >
+                {MONTHS_REPORT.map((m) => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+              <select
+                value={reportYear}
+                onChange={(e) => setReportYear(Number(e.target.value))}
+                className="rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-700 bg-white"
+                aria-label="سنة التقرير"
+              >
+                {Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i).map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <button
+                type="button"
+                onClick={openMonthlyReport}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              >
+                عرض التقرير
+              </button>
+            </div>
+          </div>
+
           <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div className="font-bold text-gray-900">ملخص سريع</div>

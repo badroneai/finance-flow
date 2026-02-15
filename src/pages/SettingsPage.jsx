@@ -25,7 +25,7 @@ import { ConfirmDialog } from '../ui/Modals.jsx';
 import { formatNumber } from '../utils/format.jsx';
 import { safeNum } from '../utils/helpers.js';
 
-export function SettingsPage({ onShowOnboarding }) {
+export function SettingsPage({ setPage, onShowOnboarding }) {
   const toast = useToast();
   const [settings, setSettings] = useState(dataStore.settings.get());
   const [uiTheme, setUiTheme] = useState(getSavedTheme() || 'system');
@@ -246,7 +246,14 @@ export function SettingsPage({ onShowOnboarding }) {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto" dir="rtl">
+      {setPage && (
+        <div className="flex justify-end mb-4 no-print">
+          <button type="button" onClick={() => setPage('pulse')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            النبض المالي
+          </button>
+        </div>
+      )}
       {/* Phase 9.1 — Data Warning Notice (LocalStorage) */}
       <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm mb-6 no-print" role="alert" aria-labelledby="data-warning-title">
         <h3 id="data-warning-title" className="font-bold text-amber-800 mb-3">

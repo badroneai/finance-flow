@@ -1,42 +1,12 @@
 import React from 'react';
 
-// Extracted from App.jsx (Stage 5 Close): Sidebar + Topbar
+// Sidebar — برومبت 0.3: يستخدم navItems من config/navigation (يُمرَّر من App مع الأيقونات)
+export const Sidebar = ({ Icons, navItems, page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen, onOpenHelp }) => {
+  const items = Array.isArray(navItems) ? navItems : [];
 
-const NAV_ITEMS = [
-  { id:'home', label:'الرئيسية', icon:'home' },
-  { id:'transactions', label:'الحركات المالية', icon:'list', group:'finance' },
-  { id:'commissions', label:'العمولات', icon:'percent', group:'finance' },
-  { id:'ledgers', label:'الدفاتر', icon:'list', group:'finance' },
-  { id:'templates', label:'قوالب الخطابات', icon:'mail', group:'letters' },
-  { id:'generator', label:'إنشاء خطاب', icon:'fileText', group:'letters' },
-  { id:'drafts', label:'المسودات', icon:'fileText', group:'letters' },
-  { id:'calendar', label:'التقويم', icon:'calendar', group:'notes' },
-  { id:'notes', label:'الملاحظات', icon:'notes', group:'notes' },
-  { id:'help', label:'دليل سريع', icon:'info' },
-  { id:'settings', label:'الإعدادات', icon:'settings' },
-];
-
-export const Sidebar = ({ Icons, page, setPage, collapsed, setCollapsed, mobileOpen, setMobileOpen, onOpenHelp }) => {
-  const groups = { finance: 'التدفقات المالية', letters: 'الخطابات', notes: 'الملاحظات والتقويم' };
   const handleNav = (id) => {
-    if (id === 'help') { typeof onOpenHelp === 'function' && onOpenHelp(); setMobileOpen(false); return; }
-    setPage(id === 'home' ? 'dashboard' : id);
+    setPage(id);
     setMobileOpen(false);
-  };
-
-  const getIcon = (key) => {
-    const map = {
-      home: Icons.home,
-      list: Icons.list,
-      percent: Icons.percent,
-      mail: Icons.mail,
-      fileText: Icons.fileText,
-      calendar: Icons.calendar,
-      notes: Icons.notes,
-      info: Icons.info,
-      settings: Icons.settings,
-    };
-    return map[key] || Icons.list;
   };
 
   const sidebarContent = (
@@ -56,39 +26,8 @@ export const Sidebar = ({ Icons, page, setPage, collapsed, setCollapsed, mobileO
       </div>
 
       <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="القائمة الرئيسية">
-        {NAV_ITEMS.filter(i => !i.group && i.id === 'home').map(item => {
-          const Icon = getIcon(item.icon);
-          return (
-            <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-                (page === item.id || (item.id === 'home' && page === 'dashboard')) ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-              } ${collapsed ? 'justify-center' : ''}`}>
-              <Icon size={18}/>
-              {!collapsed && <span>{item.label}</span>}
-            </button>
-          );
-        })}
-
-        {Object.entries(groups).map(([key, label]) => (
-          <div key={key} className="mb-2">
-            {!collapsed && <p className="px-3 py-1 text-xs text-gray-500 font-medium uppercase tracking-wider">{label}</p>}
-            {NAV_ITEMS.filter(i => i.group === key).map(item => {
-              const Icon = getIcon(item.icon);
-              return (
-                <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
-                    page === item.id ? 'bg-blue-600 text-white' : 'text-gray-300 hover:bg-gray-700/60 hover:text-white'
-                  } ${collapsed ? 'justify-center' : ''}`}>
-                  <Icon size={18}/>
-                  {!collapsed && <span>{item.label}</span>}
-                </button>
-              );
-            })}
-          </div>
-        ))}
-
-        {NAV_ITEMS.filter(i => !i.group && i.id !== 'home').map(item => {
-          const Icon = getIcon(item.icon);
+        {items.map((item) => {
+          const Icon = item.icon || Icons?.list;
           return (
             <button key={item.id} type="button" onClick={() => handleNav(item.id)} aria-label={item.label}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${
@@ -122,17 +61,85 @@ export const Sidebar = ({ Icons, page, setPage, collapsed, setCollapsed, mobileO
   );
 };
 
-export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText }) => {
-  const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', ledgers:'الدفاتر', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
+import { useAlerts, CriticalAlertBanner, AlertCenter } from './alerts/AlertCenter.jsx';
+
+export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText, setPage }) => {
+  const { alerts, fetchTime, criticalFirst, refresh, handleAction, handleDismiss, handleSnooze, handleDismissAll } = useAlerts();
+  const titles = {
+    pulse: 'النبض المالي',
+    inbox: 'المستحقات',
+    ledgers: 'الدفاتر',
+    transactions: 'الحركات',
+    settings: 'الإعدادات',
+  };
   return (
-    <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-start justify-between gap-3 sticky top-0 z-30 no-print">
-      <div className="flex items-center gap-3 min-w-0">
-        <button className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة" aria-expanded={mobileOpen}><Icons.menu size={22}/></button>
-        <h2 className="text-lg font-bold text-gray-900 truncate">{titles[page] || ''}</h2>
-      </div>
-      <div className="text-xs text-gray-500 text-start max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
-        {headerDateText || ''}
+    <header className="bg-white border-b border-gray-100 sticky top-0 z-30 no-print flex flex-col">
+      {criticalFirst && (
+        <CriticalAlertBanner
+          criticalFirst={criticalFirst}
+          onAction={handleAction}
+          onDismiss={(alert) => { handleDismiss(alert); refresh(); }}
+          setPage={setPage}
+        />
+      )}
+      <div className="px-4 py-3 flex items-start justify-between gap-3">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
+          <button className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة" aria-expanded={mobileOpen}><Icons.menu size={22}/></button>
+          <h2 className="text-lg font-bold text-gray-900 truncate">{titles[page] || ''}</h2>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {setPage && (
+            <AlertCenter
+              setPage={setPage}
+              alerts={alerts}
+              fetchTime={fetchTime}
+              criticalFirst={criticalFirst}
+              refresh={refresh}
+              handleAction={handleAction}
+              handleDismiss={handleDismiss}
+              handleSnooze={handleSnooze}
+              handleDismissAll={handleDismissAll}
+            />
+          )}
+          <div className="text-xs text-gray-500 text-start max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
+            {headerDateText || ''}
+          </div>
+        </div>
       </div>
     </header>
+  );
+};
+
+/** شريط تنقل سفلي — موبايل فقط (برومبت 0.3 Mobile-first) */
+export const BottomNav = ({ navItems, page, setPage }) => {
+  const items = Array.isArray(navItems) ? navItems : [];
+  return (
+    <nav
+      className="md:hidden no-print fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 safe-area-pb"
+      aria-label="التنقل الرئيسي"
+      dir="rtl"
+    >
+      <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
+        {items.map((item) => {
+          const Icon = item.icon;
+          const isActive = page === item.id;
+          return (
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setPage(item.id)}
+              aria-label={item.label}
+              aria-current={isActive ? 'page' : undefined}
+              className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 text-xs transition-colors ${
+                isActive ? 'text-blue-600 font-medium' : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              {Icon && <Icon size={22} />}
+              <span className="leading-tight">{item.label}</span>
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
 };

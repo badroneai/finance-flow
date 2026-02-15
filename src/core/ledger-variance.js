@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-analytics.js
 /*
   Ledger Performance v5 — Income model + Expected vs Actual + Variance + Targets (Pure)
 

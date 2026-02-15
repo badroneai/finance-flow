@@ -1,29 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
 
-import { Sidebar, Topbar } from './ui/Sidebar.jsx';
+import { Sidebar, Topbar, BottomNav } from './ui/Sidebar.jsx';
+import { PulseAlertsBanner } from './ui/PulseAlertsBanner.jsx';
 import { ToastProvider } from './contexts/ToastContext.jsx';
 import { UnsavedContext } from './contexts/UnsavedContext.jsx';
 import { TrustChecks } from './ui/TrustChecks.jsx';
+import { PageLoadErrorBoundary } from './ui/ErrorBoundaries.jsx';
 import { WelcomeBanner } from './ui/WelcomeBanner.jsx';
 import { HelpPanel } from './ui/HelpPanel.jsx';
 import { OnboardingModal } from './ui/OnboardingModal.jsx';
 import { Icons } from './ui/ui-common.jsx';
 
-import { HomePage } from './pages/HomePage.jsx';
-import { DashboardPage } from './pages/DashboardPage.jsx';
-import { TemplatesPage } from './pages/TemplatesPage.jsx';
-import { TransactionsPage } from './pages/TransactionsPage.jsx';
-import { CommissionsPage } from './pages/CommissionsPage.jsx';
-import { GeneratorPage } from './pages/GeneratorPage.jsx';
-import { DraftsPage } from './pages/DraftsPage.jsx';
-import NotesCalendar from './pages/NotesCalendar.jsx';
-import { SettingsPage } from './pages/SettingsPage.jsx';
-import LedgersPage from './pages/LedgersPage.jsx';
+import { NAV_ITEMS as NAV_ITEMS_CONFIG, pathToId, idToPath } from './config/navigation.js';
+
+import PulsePage from './pages/PulsePage.jsx';
+import InboxPage from './pages/InboxPage.jsx';
+
+const LedgersPage = lazy(() => import('./pages/LedgersPage.jsx'));
+const TransactionsPage = lazy(() => import('./pages/TransactionsPage.jsx').then((m) => ({ default: m.TransactionsPage })));
+const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx').then((m) => ({ default: m.SettingsPage })));
+const MonthlyReportPage = lazy(() => import('./pages/MonthlyReportPage.jsx'));
 
 import { storageFacade } from './core/storage-facade.js';
-import {
-  NAV_ITEMS as NAV_ITEMS_BASE,
-} from './constants/index.js';
 import {
   getSavedDateHeader,
   getOnboardingSeen,
@@ -38,19 +37,19 @@ import { formatDateHeader } from './utils/dateFormat.js';
 /** للتطوير فقط: ضع true لاختبار شاشة استعادة الأخطاء (Error Boundary) ثم أعد false قبل النشر. */
 const SIMULATE_RENDER_ERROR = false;
 
-// ============================================
-// NAVIGATION (ربط الثوابت بأيقونات الملف)
-// ============================================
-const NAV_ITEMS = NAV_ITEMS_BASE.map((it) => ({ ...it, icon: Icons[it.iconKey] }));
-
-// (extracted)
+// ربط عناصر التنقل بأيقونات الواجهة (برومبت 0.3)
+const NAV_ITEMS = NAV_ITEMS_CONFIG.map((it) => ({ ...it, icon: Icons[it.iconKey] }));
 
 
 // ============================================
-// APP (Main Router)
+// APP (Main Router — برومبت 0.3: مسارات URL)
 // ============================================
 const App = () => {
-  const [page, setPage] = useState('home');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const page = pathToId(location.pathname);
+  const setPage = useCallback((id) => { navigate(idToPath(id)); }, [navigate]);
+
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [letterType, setLetterType] = useState('intro');
@@ -147,22 +146,7 @@ const App = () => {
 
   if (SIMULATE_RENDER_ERROR) throw new Error('Phase 9.3 test error');
 
-  const renderPage = () => {
-    switch (page) {
-      case 'home': return <HomePage setPage={setPage}/>;
-      case 'dashboard': return <DashboardPage/>;
-      case 'transactions': return <TransactionsPage/>;
-      case 'commissions': return <CommissionsPage/>;
-      case 'ledgers': return <LedgersPage/>;
-      case 'templates': return <TemplatesPage setPage={setPage} setLetterType={setLetterType}/>;
-      case 'generator': return <GeneratorPage letterType={letterType} setLetterType={setLetterType}/>;
-      case 'drafts': return <DraftsPage setPage={setPage} setLetterType={setLetterType} setEditDraft={setEditDraft}/>;
-      case 'calendar': return <NotesCalendar mode="calendar"/>;
-      case 'notes': return <NotesCalendar mode="notes"/>;
-      case 'settings': return <SettingsPage onShowOnboarding={() => { try { storageFacade.removeRaw(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); }} />;
-      default: return <HomePage setPage={setPage}/>;
-    }
-  };
+  const settingsProps = { setPage, onShowOnboarding: () => { try { storageFacade.removeRaw(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); } };
 
   return (
     <ToastProvider>
@@ -172,9 +156,10 @@ const App = () => {
           <a href="#main-content" className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-white focus:text-gray-900 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-blue-600 focus:outline-none focus:fixed focus:top-4 focus:start-4">
             تخطي إلى المحتوى الرئيسي
           </a>
-          <Sidebar Icons={Icons} page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
-          <main className="flex-1 min-w-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
-            <Topbar Icons={Icons} page={page} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''}/>
+          <Sidebar Icons={Icons} navItems={NAV_ITEMS} page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
+          <main className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
+            <Topbar Icons={Icons} page={page} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''} setPage={setPage}/>
+            <PulseAlertsBanner page={page} onGoToInbox={() => setPage('inbox')} />
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
               {!showOnboarding && <WelcomeBanner/>}
             </div>
@@ -193,7 +178,21 @@ const App = () => {
                 }}
               />
             )}
-            <div className="print-container">{renderPage()}</div>
+            <div className="print-container flex-1">
+              <PageLoadErrorBoundary key={page} onGoHome={() => setPage('pulse')}>
+                <Suspense fallback={<div className="p-6 text-center text-gray-500" aria-live="polite">جاري التحميل…</div>}>
+                  <Routes>
+                    <Route path="/" element={<PulsePage setPage={setPage} />} />
+                    <Route path="/inbox" element={<InboxPage setPage={setPage} />} />
+                    <Route path="/ledgers" element={<LedgersPage setPage={setPage} />} />
+                    <Route path="/transactions" element={<TransactionsPage setPage={setPage} />} />
+                    <Route path="/settings" element={<SettingsPage {...settingsProps} />} />
+                    <Route path="/report" element={<MonthlyReportPage setPage={setPage} />} />
+                    <Route path="*" element={<PulsePage setPage={setPage} />} />
+                  </Routes>
+                </Suspense>
+              </PageLoadErrorBoundary>
+            </div>
 
             {showHelp && (
               <HelpPanel
@@ -207,6 +206,7 @@ const App = () => {
           <footer className="no-print border-t border-gray-100 py-3 px-4 text-center text-sm text-gray-500" role="contentinfo">
             <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>
           </footer>
+          <BottomNav navItems={NAV_ITEMS} page={page} setPage={setPage} />
           </main>
         </div>
       </UnsavedContext.Provider>

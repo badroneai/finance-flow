@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-health.js
 /*
   Ledger Intelligence v1 (Health + Projection + Scenario)
   Constraints:

@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-planner.js
 /*
   Ledger Cash Plan v7 — Inbox Pro (Pure)
 

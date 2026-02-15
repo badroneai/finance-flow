@@ -47,19 +47,13 @@ export const DASHBOARD_PERIOD_OPTIONS = [
 ];
 
 // ============================================
-// التنقل — مصفوفة بأسماء الأيقونات (يتم ربطها بـ Icons في App)
+// التنقل — النبض المالي (5 عناصر)
 // ============================================
 export const NAV_ITEMS = [
-  { id: 'home', label: 'الرئيسية', iconKey: 'home' },
-  { id: 'transactions', label: 'الحركات المالية', iconKey: 'list', group: 'finance' },
-  { id: 'commissions', label: 'العمولات', iconKey: 'percent', group: 'finance' },
-  { id: 'ledgers', label: 'الدفاتر', iconKey: 'list', group: 'finance' },
-  { id: 'templates', label: 'قوالب الخطابات', iconKey: 'mail', group: 'letters' },
-  { id: 'generator', label: 'إنشاء خطاب', iconKey: 'fileText', group: 'letters' },
-  { id: 'drafts', label: 'المسودات', iconKey: 'fileText', group: 'letters' },
-  { id: 'calendar', label: 'التقويم', iconKey: 'calendar', group: 'notes' },
-  { id: 'notes', label: 'الملاحظات', iconKey: 'notes', group: 'notes' },
-  { id: 'help', label: 'دليل سريع', iconKey: 'info' },
+  { id: 'pulse', label: 'النبض المالي', iconKey: 'pulse' },
+  { id: 'inbox', label: 'المستحقات', iconKey: 'inbox' },
+  { id: 'ledgers', label: 'الدفاتر', iconKey: 'ledgers' },
+  { id: 'transactions', label: 'الحركات', iconKey: 'transactions' },
   { id: 'settings', label: 'الإعدادات', iconKey: 'settings' },
 ];
 

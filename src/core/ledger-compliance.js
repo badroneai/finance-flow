@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-health.js
 /*
   Authority Layer v8 — Compliance Shield (Pure)
 

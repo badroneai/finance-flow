@@ -5,7 +5,8 @@ const LEDGER_TABS = [
   { id: 'ledgers', label: 'دفاتر' },
   { id: 'recurring', label: 'التزامات متكررة' },
   { id: 'reports', label: 'تقارير الدفتر' },
-  { id: 'performance', label: '📈 أداء الدفتر' },
+  { id: 'performance', label: 'أداء الدفتر' },
+  { id: 'compare', label: 'مقارنة الدفاتر' },
 ];
 
 export function LedgerHeader({ tab, onTabSelect }) {

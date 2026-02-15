@@ -182,7 +182,7 @@ function LedgerPerformanceTab(props) {
                 <tbody>
                   {table.rows.map((r) => {
                     const v = r.variance.varianceNet;
-                    const badge = v >= 0 ? '✅' : (Math.abs(v) < (Number(r.expected.net)||0)*0.05 ? '⚠️' : '🔴');
+                    const status = v >= 0 ? '' : (Math.abs(v) < (Number(r.expected.net)||0)*0.05 ? 'انتباه ' : 'تجاوز ');
                     return (
                       <tr key={r.monthKey} className="border-t border-gray-100">
                         <td className="py-2">{r.monthKey}</td>
@@ -190,7 +190,7 @@ function LedgerPerformanceTab(props) {
                         <td className="py-2"><Currency value={r.actual.income} /></td>
                         <td className="py-2"><Currency value={r.expected.expense} /></td>
                         <td className="py-2"><Currency value={r.actual.expense} /></td>
-                        <td className={`py-2 ${v < 0 ? 'text-red-700' : 'text-green-700'}`}>{badge} <Currency value={v} /></td>
+                        <td className={`py-2 ${v < 0 ? 'text-red-700' : 'text-green-700'}`}>{status}<Currency value={v} /></td>
                       </tr>
                     );
                   })}

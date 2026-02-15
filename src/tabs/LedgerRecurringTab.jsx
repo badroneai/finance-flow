@@ -285,7 +285,7 @@ function LedgerRecurringTab(props) {
 
         {/* Month Awareness (display only) */}
         <div className="p-3 rounded-xl border border-gray-100 bg-white">
-          <div className="font-bold text-gray-900">📅 وعي الشهر (عرض فقط)</div>
+          <div className="font-bold text-gray-900">وعي الشهر (عرض فقط)</div>
           {(() => {
             const now = new Date();
             const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
@@ -450,7 +450,7 @@ function LedgerRecurringTab(props) {
       if (!show) return null;
       return (
         <div className="mt-3 p-3 rounded-xl border border-amber-100 bg-amber-50">
-          <div className="font-semibold text-amber-900 text-sm">⚠️ تنبيه تشغيلي</div>
+          <div className="font-semibold text-amber-900 text-sm">تنبيه تشغيلي</div>
           <div className="text-xs text-amber-900 mt-1">دفتر معرض لمخاطر تشغيلية خلال 90 يوم. (ضغط السيولة/تأخر/High-risk/عدم تسعير)</div>
           <div className="mt-2">
             <button type="button" onClick={() => {

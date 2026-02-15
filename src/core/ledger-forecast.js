@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-planner.js
 /*
   Predictive Ledger v4 — 6M Forecast + Scenarios + Cash Gap (Pure)
 

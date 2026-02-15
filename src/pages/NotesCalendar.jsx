@@ -431,7 +431,7 @@ function NotesCalendar({ mode = 'calendar' }) {
             <div style={{ padding: "8px 16px 12px" }}>
               {currentDailyNotes.map(note => (
                 <div key={note.id} style={{ display: "flex", alignItems: "flex-start", gap: 10, padding: "10px 0", borderBottom: `1px solid ${colors.border}33` }}>
-                  <button onClick={() => toggleDailyNote(note.id)} style={{ width: 24, height: 24, borderRadius: 7, border: `2px solid ${note.done ? colors.success : colors.border}`, background: note.done ? colors.success : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, color: "#fff", marginTop: 2 }}>{note.done && "✓"}</button>
+                  <button onClick={() => toggleDailyNote(note.id)} style={{ width: 24, height: 24, borderRadius: 7, border: `2px solid ${note.done ? colors.success : colors.border}`, background: note.done ? colors.success : "transparent", cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", marginTop: 2 }} aria-label={note.done ? "تم" : "غير مكتمل"} />
                   <span style={{ flex: 1, fontSize: 14, lineHeight: 1.6, textDecoration: note.done ? "line-through" : "none", color: note.done ? colors.textMuted : colors.text }}>{note.text}</span>
                   <button onClick={() => deleteDailyNote(note.id)} style={{ background: "none", border: "none", cursor: "pointer", color: colors.textMuted, fontSize: 14, padding: "2px 4px", opacity: 0.5 }} aria-label="حذف">×</button>
                 </div>

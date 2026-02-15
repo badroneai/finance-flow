@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-planner.js
 /*
   Ledger Inbox v6 — Daily Ops Inbox (Pure)
 

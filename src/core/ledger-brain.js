@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-health.js
 /*
   Ledger Brain v2 — Risk Radar Engine (Pure functions)
 

@@ -9,6 +9,7 @@ import { LedgerTabsShell } from '../ui/ledger/LedgerTabsShell.jsx';
 import LedgerRecurringTab from '../tabs/LedgerRecurringTab.jsx';
 import LedgerPerformanceTab from '../tabs/LedgerPerformanceTab.jsx';
 import LedgerReportsTab from '../tabs/LedgerReportsTab.jsx';
+import LedgerCompare from '../ui/ledger/LedgerCompare.jsx';
 import { invariant, assertFn } from '../core/contracts.js';
 import {
   getLedgers,
@@ -31,20 +32,44 @@ import {
   sortRecurringInSection,
   isDueWithinDays,
 } from '../core/recurring-intelligence.js';
-import { normalizeBudgets, computeBudgetHealth } from '../core/ledger-budgets.js';
+import {
+  normalizeBudgets,
+  computeBudgetHealth,
+  buildTxMetaFromRecurring,
+  computeComplianceScore,
+  computePL,
+  computeTopBuckets,
+  filterTransactionsForLedgerByMeta,
+  getBucketForRecurring,
+  getLast4MonthsTable,
+  targetsEvaluation,
+} from '../core/ledger-analytics.js';
 import {
   computeLedgerHealth,
   computeLedgerProjection,
   computeScenario,
   isSeededOnly,
-} from '../core/ledger-intelligence-v1.js';
-import { ledgerBrain, ledgerForecast, ledgerVariance } from '../core/exports-map.js';
+  computeComplianceShield,
+  calculateBurnRateBundle,
+  calculateCashPressureScore,
+  calculateNext90DayRisk,
+  calculateDisciplineTrend,
+  detectHighRiskCluster,
+  getBurnBreakdown,
+  getPressureBreakdown,
+  getRiskBreakdown90d,
+  getDailyPlaybook,
+  getBenchmarkComparison,
+} from '../core/ledger-health.js';
 import {
   buildLedgerInbox,
   addDaysISO,
-} from '../core/ledger-inbox.js';
-
-import { computeCashPlan } from '../core/ledger-cash-plan.js';
+  computeCashPlan,
+  normalizeMonthlyRunRate,
+  forecast6m,
+  cashGapModel,
+  insightsFromForecast,
+} from '../core/ledger-planner.js';
 
 import {
   pushHistoryEntry,
@@ -61,50 +86,14 @@ import {
   normalizeBudgets as normalizeAuthorityBudgets,
 } from '../core/ledger-budget-authority.js';
 
-import { computeComplianceShield } from '../core/ledger-compliance.js';
-
-import {
-  buildTxMetaFromRecurring,
-  computeComplianceScore,
-  computePL,
-  computeTopBuckets,
-  filterTransactionsForLedgerByMeta,
-  getBucketForRecurring,
-} from '../core/ledger-reports.js';
-
 import { dataStore } from '../core/dataStore.js';
 import { KEYS, MSG } from '../constants/index.js';
 import { today, isValidDateStr, safeNum } from '../utils/helpers.js';
 
-const {
-  calculateBurnRateBundle,
-  calculateCashPressureScore,
-  calculateNext90DayRisk,
-  calculateDisciplineTrend,
-  detectHighRiskCluster,
-  getBurnBreakdown,
-  getPressureBreakdown,
-  getRiskBreakdown90d,
-  getDailyPlaybook,
-  getBenchmarkComparison,
-} = ledgerBrain;
-
-const {
-  normalizeMonthlyRunRate,
-  forecast6m,
-  cashGapModel,
-  insightsFromForecast,
-} = ledgerForecast;
-
-const {
-  getLast4MonthsTable,
-  targetsEvaluation,
-} = ledgerVariance;
-
 // ============================================
 // LEDGERS PAGE
 // ============================================
-const LedgersPage = () => {
+const LedgersPage = ({ setPage }) => {
   const toast = useToast();
   const [tab, setTab] = useState('ledgers'); // ledgers | recurring | reports | performance
   const [confirm, setConfirm] = useState(null);
@@ -235,6 +224,17 @@ const LedgersPage = () => {
   }, [toast]);
 
   useEffect(() => { refresh(); }, [refresh]);
+
+  // فتح تبويب محدد من خارج الصفحة (مثلاً من المستحقات: إدارة الالتزامات)
+  useEffect(() => {
+    try {
+      const openTab = sessionStorage.getItem('ff_ledgers_open_tab');
+      if (openTab === 'recurring' || openTab === 'reports' || openTab === 'performance' || openTab === 'compare') {
+        setTab(openTab);
+        sessionStorage.removeItem('ff_ledgers_open_tab');
+      }
+    } catch (_) {}
+  }, []);
 
   // Keep budget form in sync with active ledger
   useEffect(() => {
@@ -833,6 +833,16 @@ const LedgersPage = () => {
   return (
     <LedgerTabsShell>
       <LedgerHeader tab={tab} onTabSelect={handleLedgerTabSelect} />
+      {setPage && (
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50/80 no-print" dir="rtl">
+          <span className="text-gray-500 text-sm">سريع:</span>
+          <button type="button" onClick={() => setPage('pulse')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">النبض المالي</button>
+          <span className="text-gray-300">|</span>
+          <button type="button" onClick={() => setPage('inbox')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">المستحقات</button>
+          <span className="text-gray-300">|</span>
+          <button type="button" onClick={() => setPage('transactions')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">الحركات</button>
+        </div>
+      )}
 
       {tab === 'ledgers' && (
         <div id="tabpanel-ledgers" role="tabpanel" aria-labelledby="tab-ledgers" tabIndex={0}>
@@ -1226,6 +1236,12 @@ const LedgersPage = () => {
           toast={toast}
           refresh={refresh}
         />
+        </div>
+      )}
+
+      {tab === 'compare' && (
+        <div id="tabpanel-compare" role="tabpanel" aria-labelledby="tab-compare" tabIndex={0}>
+          <LedgerCompare />
         </div>
       )}
 

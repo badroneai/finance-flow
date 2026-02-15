@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "echo \"(no tests yet)\""
+    "test": "vitest run"
   },
   "repository": {
     "type": "git",
@@ -26,10 +26,14 @@
   "homepage": "https://github.com/badroneai/finance-flow#readme",
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
-    "vite": "^7.3.1"
+    "jsdom": "^28.1.0",
+    "vite": "^7.3.1",
+    "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.95.3",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "react-router-dom": "^7.13.0"
   }
 }

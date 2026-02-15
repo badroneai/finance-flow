@@ -19,7 +19,7 @@ import { Currency } from '../utils/format.jsx';
 import { today, isValidDateStr, safeNum } from '../utils/helpers.js';
 import { downloadCSV } from '../utils/csvExport.js';
 
-export function TransactionsPage() {
+export function TransactionsPage({ setPage }) {
   const toast = useToast();
   const setDirty = useContext(UnsavedContext);
   const [txs, setTxs] = useState([]);
@@ -31,7 +31,10 @@ export function TransactionsPage() {
   const refresh = useCallback(() => {
     const all = dataStore.transactions.list();
     const activeLedgerId = getActiveLedgerIdSafe();
-    const scoped = activeLedgerId ? all.filter(t => t.ledgerId === activeLedgerId) : all;
+    const lid = (activeLedgerId || '').trim();
+    const scoped = lid
+      ? all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid)
+      : all;
     setTxs(filterTransactions(scoped, filters));
   }, [filters]);
 
@@ -42,6 +45,13 @@ export function TransactionsPage() {
     const onActive = () => refresh();
     window.addEventListener('ledger:activeChanged', onActive);
     return () => window.removeEventListener('ledger:activeChanged', onActive);
+  }, [refresh]);
+
+  // Refresh when window regains focus (e.g. returning from another tab)
+  useEffect(() => {
+    const onFocus = () => refresh();
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
   }, [refresh]);
 
   const { income, expense } = sumTransactions(txs);
@@ -73,7 +83,14 @@ export function TransactionsPage() {
   const resetFilters = () => setFilters({ fromDate:'', toDate:'', type:'', category:'', paymentMethod:'', search:'' });
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto print-container">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto print-container" dir="rtl">
+      {setPage && (
+        <div className="flex justify-end mb-4 no-print">
+          <button type="button" onClick={() => setPage('pulse')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+            عرض النبض المالي
+          </button>
+        </div>
+      )}
       {/* Summary Cards — موبايل: 2+1 (الدليل implementation-guide) */}
       <div className="grid grid-cols-2 gap-3 mb-6">
         <SummaryCard label="إجمالي الدخل" value={<Currency value={income} />} color="green" icon={<Icons.arrowUp size={16}/>}/>

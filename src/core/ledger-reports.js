@@ -1,3 +1,4 @@
+// @deprecated — moved to ledger-analytics.js
 // Ledger reports helpers (read-only analytics)
 
 import { normalizeCategory, normalizeRisk, isSeededRecurring, isPastDue } from './recurring-intelligence.js';
