@@ -32,13 +32,12 @@
   --qa-gray-light: #C8CBD0;
   --qa-gray-bg: #F4F5F6;
 
-  /* ذهبي زيتوني — Soft Olive Gold — Accent
-     HEX: #B8A76A | RGB: 184, 167, 106
-     يُستخدم باعتدال شديد للتمييز والعناصر التفاعلية المهمة فقط. */
-  --qa-gold: #B8A76A;
-  --qa-gold-rgb: 184, 167, 106;
-  --qa-gold-light: rgba(184, 167, 106, 0.15);
-  --qa-gold-subtle: rgba(184, 167, 106, 0.08);
+  /* ذهبي زيتوني — Accent (WCAG AA ≥4.5:1 على أبيض)
+     HEX: #6B5A2E | RGB: 107, 90, 46 */
+  --qa-gold: #6B5A2E;
+  --qa-gold-rgb: 107, 90, 46;
+  --qa-gold-light: rgba(107, 90, 46, 0.15);
+  --qa-gold-subtle: rgba(107, 90, 46, 0.08);
 
   --qa-white: #FFFFFF;
   --qa-off-white: #FAFBFC;

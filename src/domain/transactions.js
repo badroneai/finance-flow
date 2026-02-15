@@ -8,8 +8,9 @@ export function filterTransactions(items, filters) {
   let out = Array.isArray(items) ? items : [];
   const f = filters || {};
 
-  if (f.fromDate) out = out.filter(t => t.date >= f.fromDate);
-  if (f.toDate) out = out.filter(t => t.date <= f.toDate);
+  // Include items without date when filtering by range (do not hide as undefined)
+  if (f.fromDate) out = out.filter(t => t.date == null || t.date === '' || t.date >= f.fromDate);
+  if (f.toDate) out = out.filter(t => t.date == null || t.date === '' || t.date <= f.toDate);
   if (f.type) out = out.filter(t => t.type === f.type);
   if (f.category) out = out.filter(t => t.category === f.category);
   if (f.paymentMethod) out = out.filter(t => t.paymentMethod === f.paymentMethod);
@@ -18,8 +19,15 @@ export function filterTransactions(items, filters) {
     out = out.filter(t => (t.description || '').toLowerCase().includes(s));
   }
 
-  // Keep existing behavior: newest first
-  return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  // Newest first; items without date sort to the end
+  return out.sort((a, b) => {
+    const ad = a.date != null && a.date !== '' ? String(a.date) : '';
+    const bd = b.date != null && b.date !== '' ? String(b.date) : '';
+    if (!bd && !ad) return 0;
+    if (!bd) return -1;
+    if (!ad) return 1;
+    return bd.localeCompare(ad);
+  });
 }
 
 export function sumTransactions(items) {

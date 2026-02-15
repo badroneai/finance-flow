@@ -16,6 +16,11 @@ const genId = () => {
   return `rec_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
 };
 
+function safeAmount(val) {
+  const n = Number(val);
+  return Number.isFinite(n) ? n : 0;
+}
+
 export function createRecurringItem({ ledgerId, title, category, amount, frequency, nextDueDate, notes }) {
   const ts = nowISO();
   return {
@@ -23,7 +28,7 @@ export function createRecurringItem({ ledgerId, title, category, amount, frequen
     ledgerId: String(ledgerId || ''),
     title: String(title || ''),
     category: String(category || ''),
-    amount: Number(amount || 0),
+    amount: safeAmount(amount),
     frequency: String(frequency || ''),
     nextDueDate: String(nextDueDate || ''),
     notes: String(notes || ''),

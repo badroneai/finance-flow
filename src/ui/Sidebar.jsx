@@ -122,15 +122,15 @@ export const Sidebar = ({ Icons, page, setPage, collapsed, setCollapsed, mobileO
   );
 };
 
-export const Topbar = ({ Icons, page, setMobileOpen, headerDateText }) => {
+export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText }) => {
   const titles = { home:'الرئيسية', dashboard:'تحليل الأداء المالي', transactions:'سجل العمليات المالية', commissions:'العمولات', ledgers:'الدفاتر', templates:'قوالب الخطابات', generator:'إنشاء خطاب', drafts:'المسودات', calendar:'التقويم', notes:'الملاحظات', settings:'الإعدادات' };
   return (
     <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-start justify-between gap-3 sticky top-0 z-30 no-print">
       <div className="flex items-center gap-3 min-w-0">
-        <button className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة"><Icons.menu size={22}/></button>
+        <button className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0" onClick={() => setMobileOpen(true)} aria-label="فتح القائمة" aria-expanded={mobileOpen}><Icons.menu size={22}/></button>
         <h2 className="text-lg font-bold text-gray-900 truncate">{titles[page] || ''}</h2>
       </div>
-      <div className="text-xs text-gray-500 text-left max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
+      <div className="text-xs text-gray-500 text-start max-w-[14rem] sm:max-w-none whitespace-normal leading-snug" dir="auto" aria-label="التاريخ">
         {headerDateText || ''}
       </div>
     </header>

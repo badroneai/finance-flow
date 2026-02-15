@@ -12,7 +12,11 @@ import { storage } from '../../assets/js/core/storage.js';
 export const storageFacade = {
   // Raw string API (same semantics as core/storage)
   getRaw: (key) => storage.getRaw(key),
-  setRaw: (key, value) => storage.setRaw(key, value),
+  /** يرجِع true عند النجاح، false عند فشل الكتابة (مثلاً QuotaExceededError). */
+  setRaw: (key, value) => {
+    const r = storage.setRaw(key, value);
+    return !!(r && r.ok);
+  },
   removeRaw: (key) => storage.removeRaw(key),
 
   // JSON convenience (no schema changes; just helpers)
@@ -25,10 +29,11 @@ export const storageFacade = {
       return fallback;
     }
   },
+  /** يرجِع true عند النجاح، false عند فشل الكتابة أو JSON.stringify. */
   setJSON: (key, value) => {
     try {
-      storage.setRaw(key, JSON.stringify(value));
-      return true;
+      const r = storage.setRaw(key, JSON.stringify(value));
+      return !!(r && r.ok);
     } catch {
       return false;
     }

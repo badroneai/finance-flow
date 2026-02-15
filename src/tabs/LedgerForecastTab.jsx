@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function LedgerForecastTab({
+function LedgerForecastTab({
   forecastRunRate,
   cashGap,
   assumedInflow,
@@ -139,3 +139,5 @@ export default function LedgerForecastTab({
     </>
   );
 }
+
+export default React.memo(LedgerForecastTab);

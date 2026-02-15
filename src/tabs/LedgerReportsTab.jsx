@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 
 import { computePL, computeTopBuckets } from '../core/ledger-reports.js';
+import { downloadCSV } from '../utils/csvExport.js';
 
 /** Minimal, stable Reports tab (Stage 6 stability).
  *  هدفه منع أي crash/white-screen وتقديم تقارير أساسية + CSV تصدير.
@@ -19,7 +20,7 @@ const BUCKET_LABELS = {
   uncategorized: 'غير مصنف',
 };
 
-export default function LedgerReportsTab(props) {
+function LedgerReportsTab(props) {
   const {
     toast,
     activeId,
@@ -88,24 +89,6 @@ export default function LedgerReportsTab(props) {
   }, [txs, ledgerReports]);
 
   const compliance = ledgerReports?.compliance ?? null;
-
-  const csvEscape = (v) => {
-    const s = v == null ? '' : String(v);
-    if (/[,\r\n"]/g.test(s)) return '"' + s.replace(/"/g, '""') + '"';
-    return s;
-  };
-
-  const downloadCSV = ({ filename, headers, rows }) => {
-    const BOM = '\uFEFF';
-    const all = [headers, ...rows]
-      .map(r => r.map(csvEscape).join(','))
-      .join('\n');
-    const blob = new Blob([BOM + all], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = filename;
-    link.click();
-  };
 
   const exportLedgerTxCSV = () => {
     if (!activeId) return;
@@ -235,3 +218,5 @@ export default function LedgerReportsTab(props) {
     </>
   );
 }
+
+export default React.memo(LedgerReportsTab);

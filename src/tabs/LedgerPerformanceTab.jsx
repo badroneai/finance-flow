@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function LedgerPerformanceTab(props) {
+function LedgerPerformanceTab(props) {
   const {
     toast,
     refresh,
@@ -260,3 +260,5 @@ export default function LedgerPerformanceTab(props) {
 </>
   );
 }
+
+export default React.memo(LedgerPerformanceTab);

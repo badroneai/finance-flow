@@ -13,14 +13,31 @@
 
 import { STORAGE_KEYS } from './keys.js';
 
+/**
+ * نتيجة الكتابة — للتحقق من QuotaExceededError أو أخطاء التخزين.
+ * @typedef {{ ok: boolean, error?: 'quota'|'storage' }} SetResult
+ */
+
 export const storage = {
   getRaw(key) {
     return localStorage.getItem(key);
   },
+  /** يرجِع SetResult. عند امتلاء التخزين أو SecurityError لا يرمي بل يرجِع { ok: false, error } */
   setRaw(key, val) {
-    localStorage.setItem(key, val);
+    try {
+      localStorage.setItem(key, val);
+      return { ok: true };
+    } catch (e) {
+      const name = e && e.name;
+      const error = name === 'QuotaExceededError' || (e && (e.code === 22 || e.code === 1014)) ? 'quota' : 'storage';
+      return { ok: false, error };
+    }
   },
   remove(key) {
+    localStorage.removeItem(key);
+  },
+  /** نفس remove — للتوافق مع storage-facade (استدعاء removeRaw) */
+  removeRaw(key) {
     localStorage.removeItem(key);
   },
   getJSON(key, fallback = null) {
@@ -32,8 +49,14 @@ export const storage = {
       return fallback;
     }
   },
+  /** يرجِع SetResult. لا يرمي عند امتلاء التخزين. */
   setJSON(key, obj) {
-    localStorage.setItem(key, JSON.stringify(obj));
+    try {
+      const s = JSON.stringify(obj);
+      return this.setRaw(key, s);
+    } catch {
+      return { ok: false, error: 'storage' };
+    }
   },
 };
 

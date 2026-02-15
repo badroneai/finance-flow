@@ -7,9 +7,9 @@
 export function checkStorageQuota(storageFacade) {
   try {
     const test = new Array(1024 * 512).join('a');
-    storageFacade.setRaw('_ff_quota_test', test);
+    const written = storageFacade.setRaw('_ff_quota_test', test);
     storageFacade.removeRaw('_ff_quota_test');
-    return true;
+    return written;
   } catch (e) {
     if (e && (e.name === 'QuotaExceededError' || e.code === 22)) return false;
     return true;

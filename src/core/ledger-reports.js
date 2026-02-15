@@ -1,6 +1,7 @@
 // Ledger reports helpers (read-only analytics)
 
 import { normalizeCategory, normalizeRisk, isSeededRecurring, isPastDue } from './recurring-intelligence.js';
+import { assertArr } from './contracts.js';
 
 const asNum = (v) => {
   const n = Number(v);
@@ -40,12 +41,14 @@ export function buildTxMetaFromRecurring({ activeLedgerId, recurring }) {
 }
 
 export function filterTransactionsForLedgerByMeta({ transactions, ledgerId }) {
-  const lid = String(ledgerId || '');
+  assertArr(transactions, 'transactions');
   const txs = Array.isArray(transactions) ? transactions : [];
+  const lid = String(ledgerId || '');
   return txs.filter(t => t?.meta && String(t.meta.ledgerId || '') === lid);
 }
 
 export function computePL({ transactions }) {
+  assertArr(transactions, 'transactions');
   const txs = Array.isArray(transactions) ? transactions : [];
   const income = txs.filter(t => t.type === 'income').reduce((a, t) => a + asNum(t.amount), 0);
   const expense = txs.filter(t => t.type === 'expense').reduce((a, t) => a + asNum(t.amount), 0);
@@ -53,6 +56,7 @@ export function computePL({ transactions }) {
 }
 
 export function computeTopBuckets({ transactions, limit = 5 }) {
+  assertArr(transactions, 'transactions');
   const txs = Array.isArray(transactions) ? transactions : [];
   const buckets = {};
   for (const t of txs) {

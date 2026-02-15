@@ -3,7 +3,7 @@ import React from 'react';
 import LedgerInboxTab from './LedgerInboxTab.jsx';
 import LedgerForecastTab from './LedgerForecastTab.jsx';
 
-export default function LedgerRecurringTab(props) {
+function LedgerRecurringTab(props) {
   const {
     // Common UI
     Currency,
@@ -787,7 +787,7 @@ export default function LedgerRecurringTab(props) {
     <div className="grid md:grid-cols-2 gap-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">اسم الالتزام</label>
-        <input value={recForm.title} onChange={(e) => setRecForm(f => ({ ...f, title: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الالتزام" placeholder="مثال: إيجار المكتب" />
+        <input value={recForm.title} onChange={(e) => setRecForm(f => ({ ...f, title: e.target.value }))} maxLength={200} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الالتزام" placeholder="مثال: إيجار المكتب" />
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
@@ -928,3 +928,5 @@ export default function LedgerRecurringTab(props) {
   )}
 </>  );
 }
+
+export default React.memo(LedgerRecurringTab);

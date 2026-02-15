@@ -644,7 +644,7 @@ h1[class*="title"],
     content: '';
     position: absolute;
     top: 0;
-    right: 0;
+    inset-inline-end: 0;
     bottom: 0;
     width: 30px;
     background: linear-gradient(to left, rgba(255,255,255,0.9), transparent);
@@ -858,7 +858,7 @@ h1[class*="title"],
     margin-bottom: var(--space-md);
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--color-border);
-    border-right: 4px solid var(--color-accent);
+    border-inline-end: 4px solid var(--color-accent);
   }
 }
 

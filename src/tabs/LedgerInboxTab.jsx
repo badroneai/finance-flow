@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function LedgerInboxTab({
+function LedgerInboxTab({
   inbox,
   cashPlan,
   brain,
@@ -185,3 +185,5 @@ export default function LedgerInboxTab({
     </>
   );
 }
+
+export default React.memo(LedgerInboxTab);

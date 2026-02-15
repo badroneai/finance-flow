@@ -6,9 +6,12 @@
 export function getDashboardDateRange(periodType, fromDate, toDate, nowDate = new Date()) {
   const now = nowDate;
   if (periodType === 'thisMonth') {
+    const y = now.getFullYear();
+    const m = now.getMonth() + 1;
+    const lastDay = new Date(y, m, 0).getDate();
     return {
-      from: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-01`,
-      to: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-31`,
+      from: `${y}-${String(m).padStart(2, '0')}-01`,
+      to: `${y}-${String(m).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`,
     };
   }
   if (periodType === 'last3') {
