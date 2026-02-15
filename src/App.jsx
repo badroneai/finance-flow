@@ -843,6 +843,14 @@ const FormField = ({ label, error, children }) => (
   </div>
 );
 
+/** حقل إعدادات — معرّف خارج المكوّن لتفادي إعادة إنشاء المكوّن وفقدان تركيز الـ input عند الكتابة */
+const SettingsField = ({ label, children }) => (
+  <div className="mb-4">
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    {children}
+  </div>
+);
+
 // ============================================
 // COMMON COMPONENTS
 // ============================================
@@ -3050,13 +3058,6 @@ const SettingsPage = ({ onShowOnboarding }) => {
     reader.readAsText(file, 'UTF-8');
   };
 
-  const Field = ({ label, children }) => (
-    <div className="mb-4">
-      <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-      {children}
-    </div>
-  );
-
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto">
       {/* Phase 9.1 — Data Warning Notice (LocalStorage) */}
@@ -3074,28 +3075,28 @@ const SettingsPage = ({ onShowOnboarding }) => {
 
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">وضع العرض</h3>
-        <Field label="المظهر">
+        <SettingsField label="المظهر">
           <select value={uiTheme} onChange={e => { const v = e.target.value; setUiTheme(v); applyTheme(v); toast('تم تحديث المظهر'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="وضع العرض">
             <option value="system">النظام</option>
             <option value="light">نهاري</option>
             <option value="dim">خافت</option>
             <option value="dark">ليلي</option>
           </select>
-        </Field>
-        <Field label="عرض الأرقام">
+        </SettingsField>
+        <SettingsField label="عرض الأرقام">
           <select value={uiNumerals} onChange={e => { const v = e.target.value; setUiNumerals(v); applyNumerals(v); toast('تم تحديث عرض الأرقام'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض الأرقام">
             <option value="ar">عربي</option>
             <option value="en">إنجليزي</option>
           </select>
-        </Field>
-        <Field label="عرض التاريخ">
+        </SettingsField>
+        <SettingsField label="عرض التاريخ">
           <select value={(getSavedDateHeader() || 'both')} onChange={e => { const v = e.target.value; setDateHeaderPref(v); toast('تم تحديث إعداد التاريخ'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض التاريخ">
             <option value="off">بدون</option>
             <option value="greg">ميلادي</option>
             <option value="hijri">هجري</option>
             <option value="both">ميلادي + هجري</option>
           </select>
-        </Field>
+        </SettingsField>
 
         <div className="mt-3 flex flex-wrap gap-2">
           <button type="button" onClick={() => {
@@ -3117,21 +3118,21 @@ const SettingsPage = ({ onShowOnboarding }) => {
       </div>
       <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
         <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
-        <Field label="اسم المكتب">
+        <SettingsField label="اسم المكتب">
           <input type="text" value={settings.officeName} onChange={e => setSettings(s => ({...s, officeName:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم المكتب"/>
-        </Field>
+        </SettingsField>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="رقم الهاتف">
+          <SettingsField label="رقم الهاتف">
             <input type="tel" value={settings.phone||''} onChange={e => setSettings(s => ({...s, phone:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="رقم الهاتف"/>
-          </Field>
-          <Field label="البريد الإلكتروني">
+          </SettingsField>
+          <SettingsField label="البريد الإلكتروني">
             <input type="email" value={settings.email||''} onChange={e => setSettings(s => ({...s, email:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="البريد الإلكتروني"/>
-          </Field>
+          </SettingsField>
         </div>
-        <Field label="نسبة العمولة الافتراضية للمكتب (%)">
+        <SettingsField label="نسبة العمولة الافتراضية للمكتب (%)">
           <input type="number" min="0" max="100" step="0.5" value={settings.defaultCommissionPercent} onChange={e => setSettings(s => ({...s, defaultCommissionPercent:Number(e.target.value)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نسبة العمولة الافتراضية"/>
           <p className="text-xs text-gray-400 mt-1">تؤثر على العمولات الجديدة فقط</p>
-        </Field>
+        </SettingsField>
         <button onClick={handleSave} className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ الإعدادات">حفظ الإعدادات</button>
       </div>
 
