@@ -61,7 +61,8 @@ export const Sidebar = ({ Icons, navItems, page, setPage, collapsed, setCollapse
   );
 };
 
-import { useAlerts, CriticalAlertBanner, AlertCenter } from './alerts/AlertCenter.jsx';
+import { useAlerts, CriticalAlertBanner } from './alerts/AlertCenter.jsx';
+import AlertCenter from './alerts/AlertCenter.jsx';
 
 export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText, setPage }) => {
   const { alerts, fetchTime, criticalFirst, refresh, handleAction, handleDismiss, handleSnooze, handleDismissAll } = useAlerts();

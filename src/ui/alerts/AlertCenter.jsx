@@ -210,7 +210,6 @@ export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst,
             </ul>
           </div>
         )}
-      </div>
     </div>
   );
 }
