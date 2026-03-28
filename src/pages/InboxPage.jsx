@@ -2,7 +2,7 @@
   المستحقات — صندوق الوارد (برومبت 2.2)
   يستخدم calculateInbox من inbox-engine، أقسام مطوية، فلتر، تسجيل دفعة، ذكّرني غداً، pull-to-refresh.
 */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { calculateInbox } from '../core/inbox-engine.js';
 import {
   getActiveLedgerId,

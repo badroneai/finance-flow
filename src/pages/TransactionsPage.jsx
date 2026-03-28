@@ -1,7 +1,7 @@
 /*
   صفحة الحركات المالية + نموذج الحركة — مستخرجة من App.jsx (الخطوة 4)
 */
-import React, { useState, useEffect, useCallback, useContext } from 'react';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { UnsavedContext } from '../contexts/UnsavedContext.jsx';
 import { useData } from '../contexts/DataContext.jsx';

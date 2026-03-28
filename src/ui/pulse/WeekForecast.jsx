@@ -2,7 +2,7 @@
   نظرة الأسبوع — برومبت 1.3
   رسم أعمدة (SVG) + ملخص رقمي + شارة الحالة (safe/tight/danger)
 */
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const DAY_MS = 24 * 60 * 60 * 1000;

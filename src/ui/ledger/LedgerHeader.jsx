@@ -1,4 +1,3 @@
-import React from 'react';
 
 // Stage 6.2 (1:1 refactor): extracted from LedgersPage header block. P2 #19: تبويبات ثابتة + معالج واحد.
 const LEDGER_TABS = [

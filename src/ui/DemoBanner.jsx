@@ -5,7 +5,6 @@
   يظهر أعلى التطبيق عندما يكون في وضع Demo.
 */
 
-import React from 'react';
 import { useDemo } from '../contexts/DemoContext.jsx';
 
 export const DemoBanner = () => {

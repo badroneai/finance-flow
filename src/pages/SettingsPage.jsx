@@ -1,7 +1,7 @@
 /*
   صفحة الإعدادات — مستخرجة من App.jsx (الخطوة 7)
 */
-import React, { useState, useRef } from 'react';
+import { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';

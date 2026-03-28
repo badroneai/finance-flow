@@ -3,7 +3,7 @@
  * عرض شامل لحالة المكتب العقاري: عقارات، عملاء، عقود، مالية.
  * جميع الألوان تستخدم CSS Variables للتوافق مع Light/Dim/Dark.
  */
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { Icons } from '../ui/ui-common.jsx';

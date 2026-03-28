@@ -2,7 +2,7 @@
   شريط التنبيهات العاجلة — برومبت 1.2
   يعرض pulse.alerts مرتبة حسب الخطورة مع زر إجراء وإمكانية الإخفاء.
 */
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
 const SEVERITY_ORDER = { critical: 0, warning: 1, info: 2 };
 const SEVERITY_DOT = {

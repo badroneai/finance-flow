@@ -1,4 +1,3 @@
-import React from 'react';
 import { useAlerts, CriticalAlertBanner } from './alerts/AlertCenter.jsx';
 import AlertCenter from './alerts/AlertCenter.jsx';
 

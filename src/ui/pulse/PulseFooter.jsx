@@ -2,7 +2,6 @@
   فوتر صفحة النبض — برومبت 1.5
   "آخر تحديث" + زر "تحديث يدوي"
 */
-import React from 'react';
 
 function formatCalculatedAt(iso) {
   if (!iso) return '—';

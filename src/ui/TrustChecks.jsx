@@ -2,7 +2,7 @@
   قيد العقار — تنبيه التصفح الخاص وامتلاء التخزين (مستخرج من App.jsx — الخطوة 2)
 */
 
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { detectPrivateBrowsing } from '../core/dataStore.js';
 import { checkStorageQuota } from '../core/storage-quota.js';

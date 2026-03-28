@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Icons } from './ui-common.jsx';
 
 // Extracted from App.jsx (Stage 5 Close): Modal + ConfirmDialog

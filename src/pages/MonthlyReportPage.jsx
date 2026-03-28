@@ -2,7 +2,7 @@
  * صفحة التقرير الشهري — تقرأ معاملات الرابط وتُعرض MonthlyReportView (برومبت 5.2)
  * إذا لم يُمرَّر ledgerId في الرابط → يستخدم الدفتر النشط من DataContext.
  */
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MonthlyReportView } from '../ui/reports/MonthlyReportView.jsx';
 import { useData } from '../contexts/DataContext.jsx';

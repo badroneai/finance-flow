@@ -2,7 +2,7 @@
   شريط التنبيهات الاستباقية — يظهر عند وجود مستحقات متأخرة أو قريبة ويوجّه إلى المستحقات.
   SPR-006: يستخدم DataContext لتوفير البيانات لـ calculatePulse بدلاً من الاعتماد على localStorage فقط.
 */
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { calculatePulse } from '../core/pulse-engine.js';
 import { useData } from '../contexts/DataContext.jsx';
 

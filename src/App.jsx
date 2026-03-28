@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
+import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
 
 import { Sidebar } from './ui/Sidebar.jsx';

@@ -2,7 +2,7 @@
   هيدر صفحة النبض — برومبت 1.5
   اسم الدفتر النشط + زر تبديل الدفتر (dropdown) + شارة "قيد"
 */
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getLedgers, getActiveLedgerId, setActiveLedgerId } from '../../core/ledger-store.js';
 
 export default function PulseHeader({ onOpenLedgers }) {

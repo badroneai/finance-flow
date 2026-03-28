@@ -2,7 +2,6 @@
   قيد العقار — دوال تنسيق الأرقام والعملة (مستخرجة من App.jsx)
 */
 
-import React from 'react';
 import { getNumeralsMode } from '../core/theme-ui.js';
 
 export const getNumeralLocale = () => (getNumeralsMode() === 'en' ? 'en-US' : 'ar-SA');

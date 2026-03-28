@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 
 /**
  * شريط تنقل سفلي — موبايل فقط (برومبت 0.3 Mobile-first)

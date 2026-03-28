@@ -11,7 +11,7 @@
  *  4. المستحقات — متابعة الالتزامات
  *  5. النبض المالي — مراقبة الصحة المالية
  */
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { storageFacade } from '../core/storage-facade.js';
 
 // مفتاح التخزين

@@ -2,7 +2,7 @@
  * صفحة العقود — SPR-018: النواة العقارية (الخطوة 3: العقود)
  * ربط العقارات بالعملاء مع شروط الإيجار ودورات الدفع.
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';

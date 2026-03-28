@@ -4,7 +4,7 @@
  * الهيكل: نموذج إضافة أولاً → قائمة العقارات → ملخص.
  * responsive: بطاقات على الجوال، جدول على الديسكتوب.
  */
-import React, { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';

@@ -3,7 +3,7 @@
   يستقبل dueItem، onClose، onPostpone (اختياري).
   ينشئ الحركة داخل المودال، يربط بالدفتر والالتزام، يعرض نجاح ثم إغلاق تلقائي بعد 1.5 ثانية.
 */
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { formatCurrency, formatNumber } from '../../utils/format.jsx';
 import {
   getActiveLedgerId,

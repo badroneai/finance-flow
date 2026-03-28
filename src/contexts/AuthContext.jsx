@@ -9,7 +9,7 @@
   إذا لم يكن Supabase مُعدّاً (placeholder)، يعمل التطبيق بدون مصادقة (localStorage فقط).
 */
 
-import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase, isSupabaseConfigured } from '../core/supabase.js';
 import { useDemo } from './DemoContext.jsx';
 

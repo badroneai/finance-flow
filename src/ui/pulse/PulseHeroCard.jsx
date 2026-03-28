@@ -2,7 +2,7 @@
   بطاقة النبض الرئيسية (Hero Card) — برومبت 1.1
   دائرة الصحة + الأرقام الثلاثة + حالة فارغة + جاهز للسحب للتحديث
 */
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { formatCurrency } from '../../utils/format.jsx';
 
 const STATUS_LABELS = {

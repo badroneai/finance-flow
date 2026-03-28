@@ -18,7 +18,7 @@
   - بانر أعلى التطبيق
 */
 
-import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 
 const DemoContext = createContext(null);
 

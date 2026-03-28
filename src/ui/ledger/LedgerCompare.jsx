@@ -2,7 +2,7 @@
   مقارنة الدفاتر — برومبت 4.2
   بطاقات متجاورة (horizontal scroll)، أشرطة صحة ديناميكية، ROI ملون، توصيات، multi-select.
 */
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getLedgers } from '../../core/ledger-store.js';
 import { compareLedgers } from '../../core/ledger-compare.js';
 import { formatNumber } from '../../utils/format.jsx';

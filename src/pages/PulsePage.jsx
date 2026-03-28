@@ -3,7 +3,7 @@
   هيكل: PulseHeader → PulseHeroCard → PulseAlerts → WeekForecast → UpcomingDues → PulseFooter
   مع إدارة حالة، كاش، حدث ledger:activeChanged، تحديث كل 5 دقائق، pull-to-refresh.
 */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { calculatePulse } from '../core/pulse-engine.js';
 import { getActiveLedgerId } from '../core/ledger-store.js';

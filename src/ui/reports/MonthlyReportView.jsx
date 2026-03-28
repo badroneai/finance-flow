@@ -3,7 +3,7 @@
  * عرض التقرير بتصميم A4 عمودي، شعار قيد العقار، أقسام واضحة، تصدير PDF ومشاركة.
  */
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateMonthlyReport } from '../../core/monthly-report-generator.js';
 import { printReport, getReportFilename, shareReport } from '../../utils/report-to-pdf.js';
 // pdf-service يُحمّل ديناميكياً لتقليل حجم الحزمة الأولية

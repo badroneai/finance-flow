@@ -3,7 +3,7 @@
   شارة على أيقونة الجرس، لوحة منبثقة (slide-down)، بانر ثابت للتنبيه الحرج.
   SPR-006: يستخدم DataContext لتوفير البيانات لـ generateSmartAlerts بدلاً من localStorage فقط.
 */
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { generateSmartAlerts } from '../../core/alert-engine.js';
 import { getActiveLedgerId } from '../../core/ledger-store.js';
 import { AlertManager } from '../../core/alert-manager.js';

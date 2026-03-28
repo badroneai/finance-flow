@@ -4,7 +4,7 @@
  * SPR-012: تقارير (حسب الوكيل / الدفتر / شهري) + عرض الوكيل + تصدير CSV.
  * responsive: بطاقات على الموبايل، جدول على الديسكتوب.
  */
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useData } from '../contexts/DataContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';

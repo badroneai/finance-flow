@@ -13,7 +13,6 @@
   - يدعم prop اختياري allowedRoles لتقييد الوصول بحسب الدور (مُعدّ للاستخدام لاحقاً)
 */
 
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 

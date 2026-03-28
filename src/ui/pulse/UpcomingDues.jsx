@@ -2,7 +2,7 @@
   أقرب المستحقات — برومبت 1.4
   قائمة بأقرب 5 مستحقات مع تسمية زمنية وشارة متكرر وزر عرض الكل.
 */
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 const MAX_ITEMS = 5;
 
