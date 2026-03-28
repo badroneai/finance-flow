@@ -30,6 +30,20 @@ const fmt = (n) => {
 
 const todayStr = () => new Date().toISOString().split('T')[0];
 
+/**
+ * تعقيم النصوص قبل حقنها في HTML — يمنع هجمات XSS
+ * يحوّل الأحرف الخطرة لـ HTML entities آمنة
+ */
+const esc = (str) => {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+};
+
 const MONTH_NAMES = ['', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
 
 const STATUS_LABELS = { pending: 'مستحقة', partial: 'مدفوعة جزئياً', paid: 'مدفوعة' };
@@ -137,8 +151,8 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
     <div class="pdf-header">
       <h1>قيد العقار</h1>
       <div class="subtitle">التقرير الشهري</div>
-      <div class="period">${meta?.ledgerName || '—'} — ${monthLabel}</div>
-      <div class="office-name">${officeName}</div>
+      <div class="period">${esc(meta?.ledgerName) || '—'} — ${esc(monthLabel)}</div>
+      <div class="office-name">${esc(officeName)}</div>
     </div>
 
     <div class="summary-grid-4">
@@ -180,7 +194,7 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
     <table>
       <thead><tr><th>المصدر</th><th>المبلغ</th><th>النسبة</th><th>العدد</th></tr></thead>
       <tbody>
-        ${incomeBreakdown.map((r) => `<tr><td>${r.source || '—'}</td><td class="amount-green">${fmt(r.amount)} ر.س</td><td>${fmt(r.percentage)}%</td><td>${r.count || 0}</td></tr>`).join('')}
+        ${incomeBreakdown.map((r) => `<tr><td>${esc(r.source) || '—'}</td><td class="amount-green">${fmt(r.amount)} ر.س</td><td>${fmt(r.percentage)}%</td><td>${r.count || 0}</td></tr>`).join('')}
       </tbody>
     </table>` : ''}
 
@@ -189,7 +203,7 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
     <table>
       <thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th><th>العدد</th></tr></thead>
       <tbody>
-        ${expenseBreakdown.map((r) => `<tr><td>${r.category || '—'}</td><td class="amount-red">${fmt(r.amount)} ر.س</td><td>${fmt(r.percentage)}%</td><td>${r.count || 0}</td></tr>`).join('')}
+        ${expenseBreakdown.map((r) => `<tr><td>${esc(r.category) || '—'}</td><td class="amount-red">${fmt(r.amount)} ر.س</td><td>${fmt(r.percentage)}%</td><td>${r.count || 0}</td></tr>`).join('')}
       </tbody>
     </table>` : ''}
 
@@ -207,7 +221,7 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
       ${highlights.map((h) => {
         const bg = h.type === 'positive' ? '#dcfce7' : h.type === 'negative' ? '#fee2e2' : '#f1f5f9';
         const color = h.type === 'positive' ? '#166534' : h.type === 'negative' ? '#991b1b' : '#334155';
-        return `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:4px;">${h.message}</div>`;
+        return `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:4px;">${esc(h.message)}</div>`;
       }).join('')}
     </div>` : ''}
 
@@ -225,10 +239,10 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
       <thead><tr><th>التاريخ</th><th>النوع</th><th>الفئة</th><th>الوصف</th><th>المبلغ</th></tr></thead>
       <tbody>
         ${transactions.slice(0, 100).map((t) => `<tr>
-          <td>${t.date || '—'}</td>
+          <td>${esc(t.date) || '—'}</td>
           <td>${t.type === 'income' ? 'دخل' : 'مصروف'}</td>
-          <td>${t.category || '—'}</td>
-          <td>${(t.description || '—').substring(0, 40)}</td>
+          <td>${esc(t.category) || '—'}</td>
+          <td>${esc((t.description || '—').substring(0, 40))}</td>
           <td class="${t.type === 'income' ? 'amount-green' : 'amount-red'}">${fmt(t.amount)} ر.س</td>
         </tr>`).join('')}
       </tbody>
@@ -301,8 +315,8 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
     <div class="pdf-header">
       <h1>قيد العقار</h1>
       <div class="subtitle">تقرير العمولات</div>
-      <div class="period">${periodLabel}</div>
-      <div class="office-name">${officeName}</div>
+      <div class="period">${esc(periodLabel)}</div>
+      <div class="office-name">${esc(officeName)}</div>
     </div>
 
     <div class="summary-grid">
@@ -332,8 +346,8 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
           const rem = Math.max(0, amt - paid);
           const st = c.status || 'pending';
           return `<tr>
-            <td>${f(c, 'clientName', 'client_name') || '—'}</td>
-            <td>${f(c, 'agentName', 'agent_name') || '—'}</td>
+            <td>${esc(f(c, 'clientName', 'client_name')) || '—'}</td>
+            <td>${esc(f(c, 'agentName', 'agent_name')) || '—'}</td>
             <td>${fmt(f(c, 'dealValue', 'deal_value'))} ر.س</td>
             <td>${f(c, 'officePercent', 'office_percent') || 0}%</td>
             <td style="font-weight:600">${fmt(amt)} ر.س</td>
@@ -351,7 +365,7 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
       <thead><tr><th>الوكيل</th><th>عدد الصفقات</th><th>إجمالي العمولة</th><th>المدفوع</th><th>المتبقي</th></tr></thead>
       <tbody>
         ${agentSummary.sort((a, b) => b.commission - a.commission).map((a) => `<tr>
-          <td style="font-weight:600">${a.name}</td>
+          <td style="font-weight:600">${esc(a.name)}</td>
           <td>${a.count}</td>
           <td>${fmt(a.commission)} ر.س</td>
           <td class="amount-green">${fmt(a.paid)} ر.س</td>
@@ -428,8 +442,8 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
     <div class="pdf-header">
       <h1>قيد العقار</h1>
       <div class="subtitle">كشف حساب</div>
-      <div class="period">${ledgerName} — ${periodLabel}</div>
-      <div class="office-name">${officeName}</div>
+      <div class="period">${esc(ledgerName)} — ${esc(periodLabel)}</div>
+      <div class="office-name">${esc(officeName)}</div>
     </div>
 
     <div class="summary-grid">
@@ -454,9 +468,9 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
       </tr></thead>
       <tbody>
         ${rows.slice(0, 200).map((r) => `<tr>
-          <td>${r.date}</td>
-          <td>${(r.description).substring(0, 50)}</td>
-          <td>${r.category}</td>
+          <td>${esc(r.date)}</td>
+          <td>${esc(r.description.substring(0, 50))}</td>
+          <td>${esc(r.category)}</td>
           <td class="${r.debit > 0 ? 'amount-red' : ''}">${r.debit > 0 ? fmt(r.debit) + ' ر.س' : '—'}</td>
           <td class="${r.credit > 0 ? 'amount-green' : ''}">${r.credit > 0 ? fmt(r.credit) + ' ر.س' : '—'}</td>
           <td style="font-weight:600;color:${r.balance >= 0 ? '#059669' : '#dc2626'}">${fmt(r.balance)} ر.س</td>

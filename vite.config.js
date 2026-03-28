@@ -13,6 +13,13 @@ export default defineConfig({
     rollupOptions: {
       input: {
         app: 'finance-flow.html',
+        landing: 'landing.html',
+        index: 'index.html',
+      },
+      output: {
+        manualChunks: {
+          'pdf-lib': ['jspdf', 'html2canvas'],
+        },
       },
     },
   },
