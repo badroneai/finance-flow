@@ -92,8 +92,8 @@ function LedgerPerformanceTab(props) {
           else { try { delete copy.incomeModel; } catch {} }
           return copy;
         });
-        try { setLedgers(nextLedgers); } catch { toast('تعذر حفظ نموذج الدخل', 'error'); return; }
-        toast(incomeSave ? 'تم حفظ نموذج الدخل' : 'تم إلغاء حفظ نموذج الدخل');
+        try { setLedgers(nextLedgers); } catch { toast.error('تعذر حفظ نموذج الدخل'); return; }
+        toast.success(incomeSave ? 'تم حفظ نموذج الدخل' : 'تم إلغاء حفظ نموذج الدخل');
         refresh();
       };
 

@@ -129,7 +129,7 @@ function LedgerForecastTab({
           // map to data attribute in list cards (category badges are based on r.category)
           const el = document.querySelector(`[data-overdue="1"], [data-highrisk="1"], [id^="rec-"]`);
           if (el && el.scrollIntoView) el.scrollIntoView({ behavior:'smooth', block:'start' });
-          toast(`ركز على: ${top}`);
+          toast.success(`ركز على: ${top}`);
         }} className="mt-3 px-3 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]" aria-label="اذهب للبنود المؤثرة">اذهب للبنود المؤثرة</button>
       </div>
     </div>

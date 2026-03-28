@@ -259,7 +259,7 @@ const LedgersPage = ({ setPage }) => {
       setLedgersState(ledgersData || []);
     } catch {
       setLedgersState([]);
-      toast('تعذر تحميل قائمة الدفاتر. تحقق من التخزين أو أعد تحميل الصفحة.', 'error');
+      toast.error('تعذر تحميل قائمة الدفاتر. تحقق من التخزين أو أعد تحميل الصفحة.');
     }
     try { setActiveIdState(dataActiveLedgerId || getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
     try {
@@ -330,7 +330,7 @@ const LedgersPage = ({ setPage }) => {
 
   const createLedger = async () => {
     const t = (newName || '').trim();
-    if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
+    if (!t) { toast.error('اسم الدفتر مطلوب'); return; }
 
     const ts = new Date().toISOString();
     const id = (() => {
@@ -352,7 +352,7 @@ const LedgersPage = ({ setPage }) => {
     try {
       await createDataLedger(newLedger);
     } catch {
-      toast('تعذر حفظ الدفتر', 'error');
+      toast.error('تعذر حفظ الدفتر');
       return;
     }
 
@@ -363,7 +363,7 @@ const LedgersPage = ({ setPage }) => {
     setNewName('');
     setNewType('office');
     setNewNote('');
-    toast('تمت إضافة الدفتر');
+    toast.success('تمت إضافة الدفتر');
     refresh();
   };
 
@@ -376,10 +376,10 @@ const LedgersPage = ({ setPage }) => {
 
   const saveEdit = async () => {
     const t = (editingName || '').trim();
-    if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
+    if (!t) { toast.error('اسم الدفتر مطلوب'); return; }
 
     const ledgerToUpdate = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === editingId);
-    if (!ledgerToUpdate) { toast('لم يتم العثور على الدفتر', 'error'); return; }
+    if (!ledgerToUpdate) { toast.error('لم يتم العثور على الدفتر'); return; }
 
     try {
       await updateDataLedger(editingId, {
@@ -389,11 +389,11 @@ const LedgersPage = ({ setPage }) => {
         updatedAt: new Date().toISOString(),
       });
     } catch {
-      toast('تعذر حفظ التعديل', 'error');
+      toast.error('تعذر حفظ التعديل');
       return;
     }
 
-    toast('تم تحديث الدفتر');
+    toast.success('تم تحديث الدفتر');
     setEditingId(null);
     setEditingName('');
     setEditingType('office');
@@ -406,10 +406,10 @@ const LedgersPage = ({ setPage }) => {
       setActiveLedgerId(id);
       setDataActiveLedgerId(id);
     } catch {
-      toast('تعذر تعيين الدفتر النشط', 'error');
+      toast.error('تعذر تعيين الدفتر النشط');
       return;
     }
-    toast('تم تعيين الدفتر النشط');
+    toast.success('تم تعيين الدفتر النشط');
     refresh();
   };
 
@@ -633,7 +633,7 @@ const LedgersPage = ({ setPage }) => {
 
   const applyQuickPricing = () => {
     try {
-      if (!activeId) { toast('اختر دفترًا نشطًا', 'error'); return; }
+      if (!activeId) { toast.error('اختر دفترًا نشطًا'); return; }
       if (!pricingList || pricingList.length === 0) { setPricingOpen(false); return; }
 
       const item = pricingList[pricingIndex];
@@ -641,7 +641,7 @@ const LedgersPage = ({ setPage }) => {
 
       const amount = parseRecurringAmount(pricingAmount);
       if (!Number.isFinite(amount) || amount <= 0) {
-        toast('حدد المبلغ أولاً', 'error');
+        toast.error('حدد المبلغ أولاً');
         return;
       }
 
@@ -651,18 +651,18 @@ const LedgersPage = ({ setPage }) => {
       const nextIndex = pricingIndex + 1;
       if (nextIndex >= pricingList.length) {
         setPricingOpen(false);
-        toast('تم تطبيق التسعير');
+        toast.success('تم تطبيق التسعير');
       } else {
         setPricingIndex(nextIndex);
         const nextItem = pricingList[nextIndex];
         setPricingAmount('');
         setPricingDate(ensureDateValue(nextItem?.nextDueDate));
-        toast('تم حفظ البند');
+        toast.success('تم حفظ البند');
       }
 
       refresh();
     } catch {
-      toast('تعذر تطبيق التسعير', 'error');
+      toast.error('تعذر تطبيق التسعير');
     }
   };
 
@@ -757,7 +757,7 @@ const LedgersPage = ({ setPage }) => {
     try {
       await updateRecurringItem(itemId, updated);
     } catch {
-      toast('تعذر حفظ حالة العنصر', 'error');
+      toast.error('تعذر حفظ حالة العنصر');
       return false;
     }
     setRecurringState(list.map(r => r.id === itemId ? { ...r, ...updated } : r));
@@ -780,14 +780,14 @@ const LedgersPage = ({ setPage }) => {
 
   const submitPayNow = async () => {
     try {
-      if (!activeId) { toast('اختر دفترًا نشطًا', 'error'); return; }
-      if (!paySource?.id) { toast('اختر بندًا أولاً', 'error'); return; }
+      if (!activeId) { toast.error('اختر دفترًا نشطًا'); return; }
+      if (!paySource?.id) { toast.error('اختر بندًا أولاً'); return; }
 
       const amount = parseRecurringAmount(payForm.amount);
-      if (!Number.isFinite(amount) || amount <= 0) { toast('المبلغ غير صالح', 'error'); return; }
+      if (!Number.isFinite(amount) || amount <= 0) { toast.error('المبلغ غير صالح'); return; }
 
       const date = String(payForm.date || '').trim() || today();
-      if (!isValidDateStr(date)) { toast('تاريخ غير صالح', 'error'); return; }
+      if (!isValidDateStr(date)) { toast.error('تاريخ غير صالح'); return; }
       const description = String(payForm.description || paySource.title || '').trim();
       const paymentMethod = String(payForm.paymentMethod || 'cash');
 
@@ -804,7 +804,7 @@ const LedgersPage = ({ setPage }) => {
         meta,
       });
 
-      if (txError) { toast(txError?.message || 'تعذر تسجيل الدفعة', 'error'); return; }
+      if (txError) { toast.error(txError?.message || 'تعذر تسجيل الدفعة'); return; }
 
       // Update recurring item ops + history (no schema change)
       try {
@@ -826,10 +826,10 @@ const LedgersPage = ({ setPage }) => {
       } catch (err) {}
 
       setPayOpen(false);
-      toast('تم تسجيل الدفعة');
+      toast.success('تم تسجيل الدفعة');
       refresh();
     } catch {
-      toast('تعذر تسجيل الدفعة', 'error');
+      toast.error('تعذر تسجيل الدفعة');
     }
   };
 
@@ -837,19 +837,19 @@ const LedgersPage = ({ setPage }) => {
     if (!activeId) return false;
     if (patch.monthlyTarget !== undefined) {
       const s = String(patch.monthlyTarget).trim();
-      if (s !== '' && !Number.isFinite(Number(s))) { toast('قيمة الهدف الشهري غير صالحة. أدخل رقماً.', 'error'); return false; }
+      if (s !== '' && !Number.isFinite(Number(s))) { toast.error('قيمة الهدف الشهري غير صالحة. أدخل رقماً.'); return false; }
     }
     if (patch.yearlyTarget !== undefined) {
       const s = String(patch.yearlyTarget).trim();
-      if (s !== '' && !Number.isFinite(Number(s))) { toast('قيمة الهدف السنوي غير صالحة. أدخل رقماً.', 'error'); return false; }
+      if (s !== '' && !Number.isFinite(Number(s))) { toast.error('قيمة الهدف السنوي غير صالحة. أدخل رقماً.'); return false; }
     }
     const currentLedger = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === activeId);
     if (!currentLedger) return false;
     const ts = new Date().toISOString();
     try {
       await updateDataLedger(activeId, { budgets: { ...(currentLedger.budgets || {}), ...patch }, updatedAt: ts });
-    } catch { toast('تعذر حفظ الميزانيات', 'error'); return false; }
-    toast('تم حفظ الميزانيات');
+    } catch { toast.error('تعذر حفظ الميزانيات'); return false; }
+    toast.success('تم حفظ الميزانيات');
     refresh();
     return true;
   };
@@ -868,18 +868,18 @@ const LedgersPage = ({ setPage }) => {
   };
 
   const saveRecurring = () => {
-    if (!activeId) { toast('اختر دفترًا نشطًا أولًا', 'error'); return; }
+    if (!activeId) { toast.error('اختر دفترًا نشطًا أولًا'); return; }
 
     const title = (recForm.title || '').trim();
-    if (!title) { toast('اسم الالتزام مطلوب', 'error'); return; }
+    if (!title) { toast.error('اسم الالتزام مطلوب'); return; }
 
     const amount = parseRecurringAmount(recForm.amount);
-    if (!Number.isFinite(amount)) { toast('المبلغ غير صالح', 'error'); return; }
+    if (!Number.isFinite(amount)) { toast.error('المبلغ غير صالح'); return; }
 
     const freq = (recForm.frequency === 'monthly' || recForm.frequency === 'quarterly' || recForm.frequency === 'yearly' || recForm.frequency === 'adhoc') ? recForm.frequency : 'monthly';
     const nextDueDate = String(recForm.nextDueDate || '').trim();
-    if (!nextDueDate) { toast('تاريخ الاستحقاق القادم مطلوب', 'error'); return; }
-    if (!isValidDateStr(nextDueDate)) { toast('تاريخ الاستحقاق القادم غير صالح', 'error'); return; }
+    if (!nextDueDate) { toast.error('تاريخ الاستحقاق القادم مطلوب'); return; }
+    if (!isValidDateStr(nextDueDate)) { toast.error('تاريخ الاستحقاق القادم غير صالح'); return; }
 
     const ts = new Date().toISOString();
     const id = recEditingId || (() => {
@@ -895,9 +895,9 @@ const LedgersPage = ({ setPage }) => {
       return list.map(r => (r.id === recEditingId ? { ...r, title, amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), updatedAt: ts } : r));
     })();
 
-    try { setRecurringItems(next); } catch { toast('تعذر حفظ الالتزام', 'error'); return; }
+    try { setRecurringItems(next); } catch { toast.error('تعذر حفظ الالتزام'); return; }
 
-    toast(recEditingId ? 'تم تحديث الالتزام' : 'تمت إضافة الالتزام');
+    toast.success(recEditingId ? 'تم تحديث الالتزام' : 'تمت إضافة الالتزام');
     setRecEditingId(null);
     resetRecForm();
     refresh();
@@ -915,11 +915,11 @@ const LedgersPage = ({ setPage }) => {
         try {
           await deleteRecurringItem(id);
         } catch {
-          toast('تعذر حذف الالتزام', 'error');
+          toast.error('تعذر حذف الالتزام');
           setConfirm(null);
           return;
         }
-        toast('تم حذف الالتزام');
+        toast.success('تم حذف الالتزام');
         setConfirm(null);
         refresh();
       },
@@ -934,11 +934,11 @@ const LedgersPage = ({ setPage }) => {
       {setPage && (
         <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 no-print" dir="rtl">
           <span className="text-[var(--color-muted)] text-sm">سريع:</span>
-          <button type="button" onClick={() => setPage('pulse')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">النبض المالي</button>
+          <button type="button" onClick={() => setPage('pulse')} className="text-sm font-medium transition-opacity duration-200 hover:opacity-80" style={{ color: 'var(--color-info)' }}>النبض المالي</button>
           <span className="text-[var(--color-muted)]">|</span>
-          <button type="button" onClick={() => setPage('inbox')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">المستحقات</button>
+          <button type="button" onClick={() => setPage('inbox')} className="text-sm font-medium transition-opacity duration-200 hover:opacity-80" style={{ color: 'var(--color-info)' }}>المستحقات</button>
           <span className="text-[var(--color-muted)]">|</span>
-          <button type="button" onClick={() => setPage('transactions')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">الحركات</button>
+          <button type="button" onClick={() => setPage('transactions')} className="text-sm font-medium transition-opacity duration-200 hover:opacity-80" style={{ color: 'var(--color-info)' }}>الحركات</button>
         </div>
       )}
 
@@ -1045,7 +1045,7 @@ const LedgersPage = ({ setPage }) => {
                                   try {
                                     const list = Array.isArray(recurring) ? recurring : [];
                                     const already = list.some(r => r.ledgerId === l.id);
-                                    if (already) { toast('تمت إضافة النموذج مسبقًا'); setConfirm(null); return; }
+                                    if (already) { toast.success('تمت إضافة النموذج مسبقًا'); setConfirm(null); return; }
 
                                     const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
                                     // Create each seeded item using the hook
@@ -1067,12 +1067,12 @@ const LedgersPage = ({ setPage }) => {
                                         ...item,
                                       });
                                     }
-                                    toast('تمت إضافة الالتزامات الافتراضية.');
+                                    toast.success('تمت إضافة الالتزامات الافتراضية.');
                                     setConfirm(null);
                                     refresh();
                                   } catch (err) {
                                     console.error('[قيد العقار] Seed error:', err);
-                                    toast('تعذر إضافة النموذج', 'error');
+                                    toast.error('تعذر إضافة النموذج');
                                     setConfirm(null);
                                   }
                                 },
@@ -1110,7 +1110,7 @@ const LedgersPage = ({ setPage }) => {
                                     const already = list.some(r => r.ledgerId === l.id);
                                     // SPR-006: use DataContext transactions
                                     const hasTxNow = filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: l.id }).length > 0;
-                                    if (already || hasTxNow) { toast('تم إعداد الديمو مسبقًا'); setConfirm(null); return; }
+                                    if (already || hasTxNow) { toast.success('تم إعداد الديمو مسبقًا'); setConfirm(null); return; }
 
                                     const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
                                     // Create each seeded item using the hook
@@ -1138,7 +1138,7 @@ const LedgersPage = ({ setPage }) => {
 
                                     // Apply Saudi pricing preset (Riyadh + Medium)
                                     const r = applySaudiAutoPricingForLedger({ ledgerId: l.id, city: 'riyadh', size: 'medium', onlyUnpriced: false });
-                                    if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); setConfirm(null); refresh(); return; }
+                                    if (!r.ok) { toast.error(r.message || 'تعذر تطبيق التسعير'); setConfirm(null); refresh(); return; }
 
                                     // Optional: create 3 demo payments to populate reports
                                     const pick = (title) => createdItems.find(x => String(x.title || '').includes(title));
@@ -1151,11 +1151,11 @@ const LedgersPage = ({ setPage }) => {
                                       await createDataTransaction({ type: 'expense', category: 'other', amount: amt, paymentMethod: 'cash', date: today(), description: it.title, ledgerId: l.id, meta });
                                     }
 
-                                    toast('تم تفعيل الديمو بنجاح');
+                                    toast.success('تم تفعيل الديمو بنجاح');
                                     setConfirm(null);
                                     refresh();
                                   } catch {
-                                    toast('تعذر تفعيل الديمو', 'error');
+                                    toast.error('تعذر تفعيل الديمو');
                                     setConfirm(null);
                                   }
                                 },

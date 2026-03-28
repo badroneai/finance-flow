@@ -115,7 +115,7 @@ function LedgerInboxTab({
 
               <button type="button" onClick={() => {
                 updateRecurringOps(it.id, { status: 'resolved', snoozeUntil: '' }, { type: 'note', meta: { note: 'resolved (done)' } });
-                toast('تم وضعه كمنجز');
+                toast.success('تم وضعه كمنجز');
                 refresh();
               }} className="px-3 py-2 rounded-lg bg-green-50 text-green-700 border border-green-200 text-sm font-medium hover:bg-green-100" aria-label="تم">تم</button>
 
@@ -126,7 +126,7 @@ function LedgerInboxTab({
                 if (/^\d{4}-\d{2}-\d{2}$/.test(days.trim())) until = days.trim();
                 else until = addDaysISO(Number(days));
                 updateRecurringOps(it.id, { status: 'snoozed', snoozeUntil: until }, { type: 'snooze', meta: { snoozeUntil: until } });
-                toast('تم التأجيل');
+                toast.success('تم التأجيل');
                 refresh();
               }} className="px-3 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]" aria-label="أجّل">أجّل</button>
 
@@ -134,7 +134,7 @@ function LedgerInboxTab({
                 const note = prompt('ملاحظة للعنصر:', String(it.note || ''));
                 if (note == null) return;
                 updateRecurringOps(it.id, { note: String(note) }, { type: 'note', meta: { note: String(note) } });
-                toast('تم حفظ الملاحظة');
+                toast.success('تم حفظ الملاحظة');
                 refresh();
               }} className="px-3 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]" aria-label="ملاحظة">ملاحظة</button>
 
@@ -149,13 +149,13 @@ function LedgerInboxTab({
           <div className="flex flex-wrap gap-2 justify-end">
             <button type="button" onClick={() => {
               updateRecurringOps(it.id, { payState: 'paid', payStateAt: new Date().toISOString() }, { type: 'state_paid' });
-              toast('تم وضعه كمدفوع');
+              toast.success('تم وضعه كمدفوع');
               refresh();
             }} className="px-3 py-1.5 rounded-lg bg-green-600 text-white text-xs font-medium hover:bg-green-700" aria-label="مدفوع">مدفوع</button>
 
             <button type="button" onClick={() => {
               updateRecurringOps(it.id, { payState: 'skipped', payStateAt: new Date().toISOString() }, { type: 'state_skipped' });
-              toast('تم وضعه كتجاوز');
+              toast.success('تم وضعه كتجاوز');
               refresh();
             }} className="px-3 py-1.5 rounded-lg bg-[var(--color-bg)] text-[var(--color-text)] text-xs font-medium hover:bg-[var(--color-bg)]" aria-label="تجاوزته">⏭️ تجاوزته</button>
 
@@ -163,7 +163,7 @@ function LedgerInboxTab({
               const n = prompt('ملاحظة لحالة الدفع (اختياري):', String(it.payStateNote || ''));
               if (n == null) return;
               updateRecurringOps(it.id, { payStateNote: String(n), payStateAt: new Date().toISOString() }, { type: 'note', meta: { note: String(n) } });
-              toast('تم حفظ ملاحظة الدفع');
+              toast.success('تم حفظ ملاحظة الدفع');
               refresh();
             }} className="px-3 py-1.5 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-xs font-medium hover:bg-[var(--color-bg)]" aria-label="ملاحظة الدفع">ملاحظة الدفع</button>
           </div>

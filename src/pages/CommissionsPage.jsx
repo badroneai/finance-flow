@@ -245,10 +245,10 @@ export function CommissionsPage({ setPage }) {
       ? await updateCommission(editId, data)
       : await createCommission(data);
     if (error) {
-      toast(error?.message || 'حدث خطأ أثناء الحفظ', 'error');
+      toast.error(error?.message || 'حدث خطأ أثناء الحفظ');
       return;
     }
-    toast(editId ? 'تم تعديل العمولة بنجاح' : 'تم إضافة العمولة بنجاح');
+    toast.success(editId ? 'تم تعديل العمولة بنجاح' : 'تم إضافة العمولة بنجاح');
     setModal(null);
   };
 
@@ -271,10 +271,10 @@ export function CommissionsPage({ setPage }) {
     if (paidDate) updates.paidDate = paidDate;
     const { error } = await updateCommission(commissionId, updates);
     if (error) {
-      toast(error?.message || 'حدث خطأ أثناء تسجيل الدفعة', 'error');
+      toast.error(error?.message || 'حدث خطأ أثناء تسجيل الدفعة');
       return;
     }
-    toast('تم تسجيل الدفعة بنجاح');
+    toast.success('تم تسجيل الدفعة بنجاح');
     setPaymentModal(null);
   };
 
@@ -286,11 +286,11 @@ export function CommissionsPage({ setPage }) {
       onConfirm: async () => {
         const { error } = await deleteCommission(id);
         if (error) {
-          toast(error?.message || 'حدث خطأ أثناء الحذف', 'error');
+          toast.error(error?.message || 'حدث خطأ أثناء الحذف');
           setConfirm(null);
           return;
         }
-        toast('تم حذف العمولة');
+        toast.success('تم حذف العمولة');
         setConfirm(null);
       },
     });
@@ -323,7 +323,7 @@ export function CommissionsPage({ setPage }) {
 
       {/* ═══ عرض الوكيل — شريط تنبيه ═══ */}
       {agentOnly && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 text-sm text-blue-800 flex items-center gap-2">
+        <div className="border rounded-lg p-3 mb-4 text-sm flex items-center gap-2" style={{ background: 'var(--color-info-bg)', borderColor: 'var(--color-info-bg)', color: 'var(--color-info)' }}>
           <Icons.info size={16} />
           <span>أنت تشاهد عمولاتك فقط (وضع الوكيل)</span>
         </div>
@@ -473,9 +473,9 @@ export function CommissionsPage({ setPage }) {
                       try {
                         const { exportCommissionsReport } = await loadPdfService();
                         await exportCommissionsReport(filtered, { name: office?.name || office?.office_name || '' }, filters);
-                        toast('تم تصدير PDF بنجاح');
+                        toast.success('تم تصدير PDF بنجاح');
                       } catch (e) {
-                        toast(e?.message || 'خطأ في التصدير', 'error');
+                        toast.error(e?.message || 'خطأ في التصدير');
                       } finally {
                         setPdfExporting(false);
                       }
@@ -488,7 +488,7 @@ export function CommissionsPage({ setPage }) {
                     {pdfExporting ? 'جاري…' : 'تصدير PDF'}
                   </button>
                   <button
-                    onClick={() => { exportCSV(filtered, ledgerName); toast('تم تصدير الملف بنجاح'); }}
+                    onClick={() => { exportCSV(filtered, ledgerName); toast.success('تم تصدير الملف بنجاح'); }}
                     className="px-4 py-2 rounded-lg bg-[var(--color-surface)] text-[var(--color-text)] text-sm font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg)] flex items-center gap-2"
                     aria-label="تصدير CSV"
                   >
@@ -565,17 +565,17 @@ export function CommissionsPage({ setPage }) {
                             <td className="px-4 py-3 text-[var(--color-text)]">{formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س</td>
                             <td className="px-4 py-3 text-[var(--color-muted)]">{f(c, 'officePercent', 'office_percent') || 0}%</td>
                             <td className="px-4 py-3 font-semibold text-[var(--color-text)]">{formatNumber(amount)} ر.س</td>
-                            <td className="px-4 py-3 text-green-600">{formatNumber(paid)} ر.س</td>
-                            <td className="px-4 py-3 text-red-600">{formatNumber(remaining)} ر.س</td>
+                            <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>{formatNumber(paid)} ر.س</td>
+                            <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>{formatNumber(remaining)} ر.س</td>
                             <td className="px-4 py-3 text-center"><Badge color={st.color}>{st.label}</Badge></td>
                             {canWrite && (
                               <td className="px-4 py-3">
                                 <div className="flex gap-1 justify-center">
                                   <button onClick={() => setModal(c)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-primary)]" aria-label="تعديل" title="تعديل"><Icons.edit size={15} /></button>
                                   {c.status !== 'paid' && (
-                                    <button onClick={() => setPaymentModal(c)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-green-600" aria-label="تسجيل دفعة" title="تسجيل دفعة"><Icons.check size={15} /></button>
+                                    <button onClick={() => setPaymentModal(c)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]" style={{ color: 'var(--color-success)' }} aria-label="تسجيل دفعة" title="تسجيل دفعة"><Icons.check size={15} /></button>
                                   )}
-                                  <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-red-600" aria-label="حذف" title="حذف"><Icons.trash size={15} /></button>
+                                  <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]" style={{ color: 'var(--color-danger)' }} aria-label="حذف" title="حذف"><Icons.trash size={15} /></button>
                                 </div>
                               </td>
                             )}
@@ -614,11 +614,11 @@ export function CommissionsPage({ setPage }) {
                         </div>
                         <div>
                           <span className="text-[var(--color-muted)]">المدفوع: </span>
-                          <span className="text-green-600">{formatNumber(paid)} ر.س</span>
+                          <span style={{ color: 'var(--color-success)' }}>{formatNumber(paid)} ر.س</span>
                         </div>
                         <div>
                           <span className="text-[var(--color-muted)]">المتبقي: </span>
-                          <span className="text-red-600">{formatNumber(remaining)} ر.س</span>
+                          <span style={{ color: 'var(--color-danger)' }}>{formatNumber(remaining)} ر.س</span>
                         </div>
                       </div>
                       {(f(c, 'agentName', 'agent_name')) && (
@@ -628,9 +628,9 @@ export function CommissionsPage({ setPage }) {
                         <div className="flex gap-2 border-t border-[var(--color-border)] pt-2">
                           <button onClick={() => setModal(c)} className="flex-1 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]">تعديل</button>
                           {c.status !== 'paid' && (
-                            <button onClick={() => setPaymentModal(c)} className="flex-1 py-1.5 rounded-lg text-xs font-medium text-green-600 hover:bg-[var(--color-bg)] border border-[var(--color-border)]">دفعة</button>
+                            <button onClick={() => setPaymentModal(c)} className="flex-1 py-1.5 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]" style={{ color: 'var(--color-success)' }}>دفعة</button>
                           )}
-                          <button onClick={() => handleDelete(c.id)} className="py-1.5 px-3 rounded-lg text-xs font-medium text-red-600 hover:bg-[var(--color-bg)] border border-[var(--color-border)]">حذف</button>
+                          <button onClick={() => handleDelete(c.id)} className="py-1.5 px-3 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]" style={{ color: 'var(--color-danger)' }}>حذف</button>
                         </div>
                       )}
                     </div>
@@ -862,12 +862,12 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
                     <td className="px-4 py-3 text-[var(--color-muted)]">{row.count}</td>
                     <td className="px-4 py-3 text-[var(--color-text)]">{formatNumber(row.totalDeal)} ر.س</td>
                     <td className="px-4 py-3 font-semibold text-[var(--color-text)]">{formatNumber(row.totalCommission)} ر.س</td>
-                    <td className="px-4 py-3 text-green-600">{formatNumber(row.totalPaid)} ر.س</td>
-                    <td className="px-4 py-3 text-red-600">{formatNumber(row.totalRemaining)} ر.س</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>{formatNumber(row.totalPaid)} ر.س</td>
+                    <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>{formatNumber(row.totalRemaining)} ر.س</td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <div className="w-full h-4 bg-[var(--color-bg)] rounded-full overflow-hidden relative" title={`العمولة: ${formatNumber(row.totalCommission)} ر.س`}>
-                        <div className="absolute inset-y-0 start-0 bg-blue-200 rounded-full" style={{ width: `${barWidth}%` }} />
-                        <div className="absolute inset-y-0 start-0 bg-green-500 rounded-full" style={{ width: `${Math.min(barWidth, (paidWidth / 100) * barWidth)}%` }} />
+                        <div className="absolute inset-y-0 start-0 rounded-full" style={{ background: 'var(--color-info-bg)', width: `${barWidth}%` }} />
+                        <div className="absolute inset-y-0 start-0 rounded-full" style={{ background: 'var(--color-success)', width: `${Math.min(barWidth, (paidWidth / 100) * barWidth)}%` }} />
                       </div>
                     </td>
                   </tr>
@@ -880,8 +880,8 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
 
       {/* مفتاح الرسم */}
       <div className="flex gap-4 mt-3 text-xs text-[var(--color-muted)]">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-green-500 inline-block" /> المدفوع</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded bg-blue-200 inline-block" /> إجمالي العمولة</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block" style={{ background: 'var(--color-success)' }} /> المدفوع</span>
+        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block" style={{ background: 'var(--color-info-bg)' }} /> إجمالي العمولة</span>
       </div>
     </div>
   );
@@ -1158,11 +1158,11 @@ function PaymentForm({ commission, onSave, onCancel }) {
           </div>
           <div>
             <span className="text-[var(--color-muted)]">المدفوع</span>
-            <p className="font-medium text-green-600">{formatNumber(currentPaid)} ر.س</p>
+            <p className="font-medium" style={{ color: 'var(--color-success)' }}>{formatNumber(currentPaid)} ر.س</p>
           </div>
           <div>
             <span className="text-[var(--color-muted)]">المتبقي</span>
-            <p className="font-bold text-red-600">{formatNumber(remaining)} ر.س</p>
+            <p className="font-bold" style={{ color: 'var(--color-danger)' }}>{formatNumber(remaining)} ر.س</p>
           </div>
         </div>
       </div>
@@ -1195,7 +1195,10 @@ function PaymentForm({ commission, onSave, onCancel }) {
         <button
           type="button"
           onClick={() => setAmount(String(remaining))}
-          className="w-full mb-3 py-2 rounded-lg text-sm font-medium text-green-700 bg-green-50 border border-green-200 hover:bg-green-100"
+          className="w-full mb-3 py-2 rounded-lg text-sm font-medium border"
+          style={{ color: 'var(--color-success)', background: 'var(--color-success-bg)', borderColor: 'var(--color-success)' }}
+          onMouseEnter={(e) => e.target.style.opacity = '0.8'}
+          onMouseLeave={(e) => e.target.style.opacity = '1'}
         >
           دفع المبلغ كاملاً ({formatNumber(remaining)} ر.س)
         </button>
@@ -1211,7 +1214,10 @@ function PaymentForm({ commission, onSave, onCancel }) {
         </button>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700"
+          className="px-4 py-2 rounded-lg text-white text-sm font-medium"
+          style={{ background: 'var(--color-success)' }}
+          onMouseEnter={(e) => e.target.style.opacity = '0.9'}
+          onMouseLeave={(e) => e.target.style.opacity = '1'}
         >
           تسجيل الدفعة
         </button>

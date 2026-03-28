@@ -13,7 +13,7 @@ import {
   MSG,
   STORAGE_ERROR_MESSAGE,
 } from '../constants/index.js';
-import { FormField, SummaryCard, EnhancedEmptyState, Badge, Icons } from '../ui/ui-common.jsx';
+import { FormField, SummaryCard, EnhancedEmptyState, Badge, Icons, MobileFAB } from '../ui/ui-common.jsx';
 import { Modal, ConfirmDialog } from '../ui/Modals.jsx';
 import { Currency } from '../utils/format.jsx';
 import { today, isValidDateStr, safeNum } from '../utils/helpers.js';
@@ -59,16 +59,16 @@ export function TransactionsPage({ setPage }) {
     const { error } = editId
       ? await updateTransaction(editId, data)
       : await createTransaction(data);
-    if (error) { toast(error?.message || STORAGE_ERROR_MESSAGE, 'error'); return; }
-    toast(editId ? MSG.success.updated : MSG.success.transaction);
+    if (error) { toast.error(error?.message || STORAGE_ERROR_MESSAGE); return; }
+    toast.success(editId ? MSG.success.updated : MSG.success.transaction);
     setDirty(false); setModal(null);
   };
 
   const handleDelete = (id) => {
     setConfirm({ title:'حذف الحركة', message: MSG.confirm.deleteAction + ' سيتم حذف هذه الحركة نهائياً.', onConfirm: async () => {
       const { error } = await deleteTransaction(id);
-      if (error) { toast(error?.message || STORAGE_ERROR_MESSAGE, 'error'); setConfirm(null); return; }
-      toast(MSG.success.deleted); setConfirm(null);
+      if (error) { toast.error(error?.message || STORAGE_ERROR_MESSAGE); setConfirm(null); return; }
+      toast.success(MSG.success.deleted); setConfirm(null);
     }});
   };
 
@@ -76,7 +76,7 @@ export function TransactionsPage({ setPage }) {
     const headers = ['النوع', 'التصنيف', 'المبلغ', 'طريقة الدفع', 'التاريخ', 'الوصف'];
     const rows = txs.map(t => [TRANSACTION_TYPES[t.type], TRANSACTION_CATEGORIES[t.category], String(t.amount), PAYMENT_METHODS[t.paymentMethod], t.date, t.description || '']);
     downloadCSV({ filename: `transactions_${today()}.csv`, headers, rows });
-    toast('تم تصدير CSV');
+    toast.success('تم تصدير CSV');
   };
 
   const handlePrint = () => window.print();
@@ -87,7 +87,7 @@ export function TransactionsPage({ setPage }) {
     <div className="p-4 md:p-6 max-w-6xl mx-auto print-container" dir="rtl">
       {setPage && (
         <div className="flex justify-end mb-4 no-print">
-          <button type="button" onClick={() => setPage('pulse')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+          <button type="button" onClick={() => setPage('pulse')} className="text-sm font-medium hover:opacity-80" style={{ color: 'var(--color-info)' }}>
             عرض النبض المالي
           </button>
         </div>
@@ -106,7 +106,7 @@ export function TransactionsPage({ setPage }) {
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[180px]">
             <Icons.search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]"/>
-            <input type="text" placeholder="بحث في الوصف..." value={filters.search} onChange={e => setFilters(f => ({...f, search:e.target.value}))} className="w-full border border-[var(--color-border)] rounded-lg ps-9 pe-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500" aria-label="بحث"/>
+            <input type="text" placeholder="بحث في الوصف..." value={filters.search} onChange={e => setFilters(f => ({...f, search:e.target.value}))} className="w-full border border-[var(--color-border)] rounded-lg ps-9 pe-3 py-2 text-sm focus:ring-1 focus:border-[var(--color-accent)]" style={{ '--color-ring': 'var(--color-accent)' }} aria-label="بحث"/>
           </div>
         </div>
         <button type="button" onClick={() => setShowFilters(s => !s)} className="flex items-center gap-2 text-sm text-[var(--color-muted)] mt-2 md:hidden" aria-expanded={showFilters} aria-label="فلاتر متقدمة">
@@ -132,7 +132,7 @@ export function TransactionsPage({ setPage }) {
           <button onClick={resetFilters} className="px-3 py-2 rounded-lg text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]" aria-label="إعادة تعيين الفلاتر"><Icons.filter size={14}/></button>
         </div>
         <div className="flex gap-2 mt-3 justify-end">
-          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 flex items-center gap-2" aria-label="تسجيل عملية جديدة" title="سجّل عملية دخل أو مصروف جديدة"><Icons.plus size={16}/>إضافة حركة</button>
+          <button onClick={() => setModal('add')} className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 flex items-center gap-2" style={{ backgroundColor: 'var(--color-info)' }} aria-label="تسجيل عملية جديدة" title="سجّل عملية دخل أو مصروف جديدة"><Icons.plus size={16}/>إضافة حركة</button>
           <button onClick={exportCSV} className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)] flex items-center gap-1.5" aria-label="تصدير CSV"><Icons.download size={14}/>CSV</button>
           <button onClick={handlePrint} className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)] flex items-center gap-1.5" aria-label="طباعة"><Icons.printer size={14}/>طباعة</button>
         </div>
@@ -157,39 +157,64 @@ export function TransactionsPage({ setPage }) {
           />
         )
       ) : (
-        <div className="relative overflow-hidden rounded-xl border border-[var(--color-border)] shadow-sm">
-          <div className="overflow-x-auto -webkit-overflow-scrolling-touch">
-            <table className="w-full text-sm min-w-[600px]" aria-describedby="tx-table-desc">
-              <caption id="tx-table-desc" className="sr-only">جدول سجل الحركات المالية: النوع، التصنيف، المبلغ، التاريخ، الوصف، إجراءات</caption>
-              <thead><tr className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
-                <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">النوع</th>
-                <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">التصنيف</th>
-                <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">المبلغ</th>
-                <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">التاريخ</th>
-                <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)] hidden md:table-cell">الوصف</th>
-                <th scope="col" className="px-4 py-3 text-center font-semibold text-[var(--color-muted)] no-print">إجراءات</th>
-              </tr></thead>
-              <tbody>
-                {txs.map(t => (
-                <tr key={t.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50">
-                  <td className="px-4 py-3"><Badge color={t.type==='income'?'green':'red'}>{TRANSACTION_TYPES[t.type]}</Badge></td>
-                  <td className="px-4 py-3 text-[var(--color-text)]">{TRANSACTION_CATEGORIES[t.category]}</td>
-                  <td className={`px-4 py-3 font-semibold ${t.type==='income'?'text-green-600':'text-red-600'}`}>{t.type==='income'?'+':'-'}<Currency value={t.amount} symbolClassName="w-3.5 h-3.5" /></td>
-                  <td className="px-4 py-3 text-[var(--color-muted)]">{t.date}</td>
-                  <td className="px-4 py-3 text-[var(--color-muted)] hidden md:table-cell max-w-[200px] truncate">{t.description}</td>
-                  <td className="px-4 py-3 no-print">
-                    <div className="flex gap-1 justify-center">
-                      <button onClick={() => setModal(t)} className="p-1.5 rounded-lg hover:bg-blue-50 text-blue-600" aria-label="تعديل"><Icons.edit size={15}/></button>
-                      <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-red-600" aria-label="حذف نهائي"><Icons.trash size={15}/></button>
-                    </div>
-                  </td>
-                </tr>
-                ))}
-              </tbody>
-            </table>
+        <>
+          {/* عرض بطاقات — جوال فقط */}
+          <div className="md:hidden flex flex-col gap-3">
+            {txs.map(t => (
+              <div key={t.id} className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+                <div className="flex items-center justify-between mb-2">
+                  <Badge color={t.type==='income'?'green':'red'}>{TRANSACTION_TYPES[t.type]}</Badge>
+                  <span className="text-xs text-[var(--color-muted)]">{t.date}</span>
+                </div>
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm text-[var(--color-text)]">{TRANSACTION_CATEGORIES[t.category]}</span>
+                  <span className="text-base font-bold" style={{ color: t.type==='income' ? 'var(--color-success)' : 'var(--color-danger)' }}>
+                    {t.type==='income'?'+':'-'}<Currency value={t.amount} symbolClassName="w-3.5 h-3.5" />
+                  </span>
+                </div>
+                {t.description && <p className="text-xs text-[var(--color-muted)] mb-2 line-clamp-2">{t.description}</p>}
+                <div className="flex gap-2 justify-end no-print border-t border-[var(--color-border)] pt-2 mt-1">
+                  <button onClick={() => setModal(t)} className="p-2 rounded-lg hover:opacity-75" style={{ color: 'var(--color-info)', backgroundColor: 'transparent' }} aria-label="تعديل"><Icons.edit size={16}/></button>
+                  <button onClick={() => handleDelete(t.id)} className="p-2 rounded-lg hover:opacity-75" style={{ color: 'var(--color-danger)', backgroundColor: 'transparent' }} aria-label="حذف نهائي"><Icons.trash size={16}/></button>
+                </div>
+              </div>
+            ))}
           </div>
-          <p className="text-xs text-[var(--color-muted)] text-center py-2 md:hidden no-print" aria-hidden="true">← اسحب لعرض المزيد →</p>
-        </div>
+
+          {/* عرض جدول — ديسكتوب فقط */}
+          <div className="hidden md:block relative overflow-hidden rounded-xl border border-[var(--color-border)] shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm" aria-describedby="tx-table-desc">
+                <caption id="tx-table-desc" className="sr-only">جدول سجل الحركات المالية: النوع، التصنيف، المبلغ، التاريخ، الوصف، إجراءات</caption>
+                <thead><tr className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
+                  <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">النوع</th>
+                  <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">التصنيف</th>
+                  <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">المبلغ</th>
+                  <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">التاريخ</th>
+                  <th scope="col" className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">الوصف</th>
+                  <th scope="col" className="px-4 py-3 text-center font-semibold text-[var(--color-muted)] no-print">إجراءات</th>
+                </tr></thead>
+                <tbody>
+                  {txs.map(t => (
+                  <tr key={t.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50">
+                    <td className="px-4 py-3"><Badge color={t.type==='income'?'green':'red'}>{TRANSACTION_TYPES[t.type]}</Badge></td>
+                    <td className="px-4 py-3 text-[var(--color-text)]">{TRANSACTION_CATEGORIES[t.category]}</td>
+                    <td className="px-4 py-3 font-semibold" style={{ color: t.type==='income' ? 'var(--color-success)' : 'var(--color-danger)' }}>{t.type==='income'?'+':'-'}<Currency value={t.amount} symbolClassName="w-3.5 h-3.5" /></td>
+                    <td className="px-4 py-3 text-[var(--color-muted)]">{t.date}</td>
+                    <td className="px-4 py-3 text-[var(--color-muted)] max-w-[200px] truncate">{t.description}</td>
+                    <td className="px-4 py-3 no-print">
+                      <div className="flex gap-1 justify-center">
+                        <button onClick={() => setModal(t)} className="p-1.5 rounded-lg hover:opacity-75" style={{ color: 'var(--color-info)', backgroundColor: 'transparent' }} aria-label="تعديل"><Icons.edit size={15}/></button>
+                        <button onClick={() => handleDelete(t.id)} className="p-1.5 rounded-lg hover:opacity-75" style={{ color: 'var(--color-danger)', backgroundColor: 'transparent' }} aria-label="حذف نهائي"><Icons.trash size={15}/></button>
+                      </div>
+                    </td>
+                  </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Transaction Form Modal */}
@@ -198,6 +223,9 @@ export function TransactionsPage({ setPage }) {
       </Modal>
 
       <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger/>
+
+      {/* زر إضافة عائم — جوال فقط */}
+      <MobileFAB onClick={() => setModal('add')} label="إضافة حركة" />
     </div>
   );
 }
@@ -258,7 +286,7 @@ function TransactionForm({ initial, onSave, onCancel }) {
       </FormField>
       <div className="flex gap-3 justify-end mt-4">
         <button type="button" onClick={onCancel} className="px-4 py-2 rounded-lg bg-[var(--color-bg)] hover:bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium" aria-label="تراجع">{MSG.buttons.cancel}</button>
-        <button type="submit" className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل البيانات">{MSG.buttons.save}</button>
+        <button type="submit" className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90" style={{ backgroundColor: 'var(--color-info)' }} aria-label="تسجيل البيانات">{MSG.buttons.save}</button>
       </div>
     </form>
   );

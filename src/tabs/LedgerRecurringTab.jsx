@@ -375,8 +375,8 @@ function LedgerRecurringTab(props) {
               <button type="button" onClick={() => setSaPricingOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
               <button type="button" onClick={() => {
                 const result = applySaudiAutoPricingForLedger({ ledgerId: activeId, city: saCity, size: saSize, onlyUnpriced: saOnlyUnpriced });
-                if (result.ok) { toast('تم تطبيق التسعير'); setSaPricingOpen(false); refresh(); }
-                else toast(result.message || 'تعذر التطبيق', 'error');
+                if (result.ok) { toast.success('تم تطبيق التسعير'); setSaPricingOpen(false); refresh(); }
+                else toast.error(result.message || 'تعذر التطبيق');
               }} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">تطبيق التسعير</button>
             </div>
           </div>
