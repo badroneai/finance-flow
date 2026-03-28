@@ -3,7 +3,7 @@
 */
 
 import { storageFacade } from './storage-facade.js';
-import { STORAGE_KEYS } from '../../assets/js/core/keys.js';
+import { STORAGE_KEYS } from '../constants/index.js';
 
 export const UI_THEME_KEY = STORAGE_KEYS.UI_THEME;
 export const UI_NUMERALS_KEY = STORAGE_KEYS.UI_NUMERALS;

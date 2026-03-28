@@ -1,4 +1,5 @@
 import React from 'react';
+import { useData } from '../contexts/DataContext.jsx';
 
 const HELP_SECTIONS = [
   { k: 'start', label: 'كيف أبدأ؟' },
@@ -10,10 +11,20 @@ const HELP_SECTIONS = [
 ];
 
 /**
- * HelpPanel — دليل سريع (Help/FAQ) مكوّن منفصل.
+ * HelpPanel — دليل سريع مكوّن منفصل.
  * Props: helpSection, setHelpSection, onClose, onOpenSettings (optional)
+ *
+ * SPR-008: نصوص عربية بالكامل + رسالة الخصوصية ديناميكية حسب وضع التخزين.
  */
 export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings }) {
+  let isCloud = false;
+  try {
+    const data = useData();
+    isCloud = !!data?.isCloudMode;
+  } catch {
+    // خارج DataProvider — الافتراضي محلي
+  }
+
   const scrollToSection = (k) => {
     setHelpSection(k);
     setTimeout(() => {
@@ -28,7 +39,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
       <div className="relative w-full max-w-lg rounded-2xl border p-5 shadow-lg" style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text)', maxHeight: '80vh', overflow: 'auto' }}>
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-            <h3 className="text-lg font-bold" style={{ margin: 0 }}>المساعدة (Help / FAQ)</h3>
+            <h3 className="text-lg font-bold" style={{ margin: 0 }}>الأسئلة الشائعة والمساعدة</h3>
             <p className="text-sm" style={{ margin: '0.35rem 0 0', color: 'var(--color-muted)' }}>دليل عملي — بدون تسويق، فقط خطوات واضحة.</p>
           </div>
           <button type="button" className="text-sm" style={{ color: 'var(--color-muted)' }} aria-label="إغلاق" onClick={onClose}>×</button>
@@ -53,8 +64,8 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           <div data-help-section="start">
             <div className="font-semibold">كيف أبدأ؟</div>
             <ol style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
+              <li>اذهب إلى: الدفاتر → أنشئ أول دفتر (عقار) وعيّنه كنشط.</li>
               <li>اذهب إلى: الحركات المالية → اضغط (إضافة) وسجّل أول حركة دخل/مصروف.</li>
-              <li>اذهب إلى: الدفاتر → عيّن دفتر كنشط (لو عندك أكثر من دفتر).</li>
               <li>اذهب إلى: الالتزامات المتكررة → أضف البنود الأساسية (إيجار/كهرباء/صيانة/تسويق...)</li>
               <li>استخدم: "سجّل كدفعة الآن" للبنود المهمة حتى يظهر أثرها في التقارير/الأداء.</li>
             </ol>
@@ -73,8 +84,8 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
             <div className="font-semibold">الالتزامات المتكررة</div>
             <ul style={{ color: 'var(--color-muted)', marginTop: '0.4rem', paddingInlineStart: '1.2rem' }}>
               <li>استخدم "غير مسعّر" عندما يكون مبلغ البند غير واضح بعد.</li>
-              <li>Inbox يساعدك في: المتأخر/القريب/عالي المخاطر/غير المسعّر.</li>
-              <li>زر "سجّل كدفعة الآن" ينشئ حركة (category=other) ويحدّث سجل البند.</li>
+              <li>المستحقات تساعدك في متابعة: المتأخر/القريب/عالي المخاطر/غير المسعّر.</li>
+              <li>زر "سجّل كدفعة الآن" ينشئ حركة مالية (تصنيف: أخرى) ويحدّث سجل البند.</li>
             </ul>
           </div>
 
@@ -97,7 +108,11 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
 
           <div data-help-section="privacy">
             <div className="font-semibold">الخصوصية</div>
-            <div style={{ color: 'var(--color-muted)' }}>بياناتك تُحفظ محليًا داخل المتصفح على جهازك. لا يوجد رفع تلقائي للسحابة.</div>
+            <div style={{ color: 'var(--color-muted)' }}>
+              {isCloud
+                ? 'بياناتك محفوظة بأمان في السحابة ومشفّرة. لا يمكن لأحد غيرك الوصول إليها.'
+                : 'بياناتك تُحفظ على هذا الجهاز فقط داخل المتصفح. لا يوجد رفع تلقائي للسحابة.'}
+            </div>
           </div>
         </div>
 

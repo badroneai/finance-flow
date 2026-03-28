@@ -2,7 +2,10 @@
   صفحة الإعدادات — مستخرجة من App.jsx (الخطوة 7)
 */
 import React, { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext.jsx';
+import { useAuth } from '../contexts/AuthContext.jsx';
+import { useData } from '../contexts/DataContext.jsx';
 import { dataStore, safeGet } from '../core/dataStore.js';
 import { storageFacade } from '../core/storage-facade.js';
 import {
@@ -18,8 +21,7 @@ import {
   getSavedDateHeader,
   setDateHeaderPref,
 } from '../core/theme-ui.js';
-import { KEYS, SEED_SETTINGS, STORAGE_ERROR_MESSAGE, MSG } from '../constants/index.js';
-import { STORAGE_KEYS } from '../../assets/js/core/keys.js';
+import { KEYS, STORAGE_KEYS, SEED_SETTINGS, STORAGE_ERROR_MESSAGE, MSG } from '../constants/index.js';
 import { SettingsField, Icons } from '../ui/ui-common.jsx';
 import { ConfirmDialog } from '../ui/Modals.jsx';
 import { formatNumber } from '../utils/format.jsx';
@@ -27,16 +29,45 @@ import { safeNum } from '../utils/helpers.js';
 
 export function SettingsPage({ setPage, onShowOnboarding }) {
   const toast = useToast();
-  const [settings, setSettings] = useState(dataStore.settings.get());
+  const navigate = useNavigate();
+  const { user, signOut, isSupabaseConfigured, profile, office, role } = useAuth();
+  const { isCloudMode, updateOfficeSettings, transactions, commissions, ledgers, recurringItems } = useData();
+
+  // SPR-010: قراءة الإعدادات — سحابي: من office (Supabase)، محلي: من localStorage
+  const [settings, setSettings] = useState(() => {
+    const local = dataStore.settings.get();
+    if (isCloudMode && office) {
+      return {
+        ...local,
+        officeName: office.name || local.officeName,
+        phone: office.phone || local.phone,
+        email: office.email || local.email,
+        defaultCommissionPercent: office.default_commission_percent ?? local.defaultCommissionPercent,
+      };
+    }
+    return local;
+  });
+  const [signingOut, setSigningOut] = useState(false);
   const [uiTheme, setUiTheme] = useState(getSavedTheme() || 'system');
   const [uiNumerals, setUiNumerals] = useState(getSavedNumerals() || document.documentElement.dataset.numerals || 'ar');
   const [confirm, setConfirm] = useState(null);
   const fileInputRef = useRef(null);
   const importDataRef = useRef(null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    // حفظ محلي دائماً (للتوافق مع المحركات)
     const res = dataStore.settings.update(settings);
     if (!res.ok) { toast(res.message, 'error'); return; }
+    // مزامنة مع Supabase إذا في وضع السحابة
+    if (isCloudMode) {
+      const { error } = await updateOfficeSettings({
+        name: settings.officeName,
+        phone: settings.phone,
+        email: settings.email,
+        default_commission_percent: settings.defaultCommissionPercent,
+      });
+      if (error) { toast('تم الحفظ محلياً لكن فشلت المزامنة السحابية', 'error'); return; }
+    }
     toast(MSG.success.saved);
   };
 
@@ -114,23 +145,44 @@ export function SettingsPage({ setPage, onShowOnboarding }) {
     return `qaydalaqar-backup-${yyyy}${mm}${dd}-${hh}${min}.json`;
   };
 
+  // SPR-010: تصدير ذكي — سحابي يجلب من DataContext، محلي من localStorage
   const handleExportBackup = () => {
     const now = new Date();
-    const keys = getBackupAppKeys();
-    const data = {};
-    keys.forEach((k) => {
-      try {
-        const v = storageFacade.getRaw(k);
-        if (v != null) data[k] = v;
-      } catch {
-        // ignore
-      }
-    });
+    let data;
+
+    if (isCloudMode) {
+      // في الوضع السحابي: نجمع البيانات من DataContext (Supabase) مباشرة
+      data = {
+        [KEYS.transactions]: transactions || [],
+        [KEYS.commissions]: commissions || [],
+        'ff_ledgers': ledgers || [],
+        'ff_recurring_items': recurringItems || [],
+        [KEYS.settings]: settings,
+      };
+      // نضيف أيضاً إعدادات UI المحلية
+      [UI_THEME_KEY, UI_NUMERALS_KEY, UI_DATE_HEADER_KEY].forEach((k) => {
+        try {
+          const v = storageFacade.getRaw(k);
+          if (v != null) data[k] = v;
+        } catch {}
+      });
+    } else {
+      // في الوضع المحلي: نقرأ كل شيء من localStorage
+      data = {};
+      const keys = getBackupAppKeys();
+      keys.forEach((k) => {
+        try {
+          const v = storageFacade.getRaw(k);
+          if (v != null) data[k] = v;
+        } catch {}
+      });
+    }
 
     const envelope = {
       app: 'qaydalaqar-finance-flow',
       schema: 1,
       exported_at: new Date().toISOString(),
+      source: isCloudMode ? 'cloud' : 'local',
       data
     };
 
@@ -254,23 +306,25 @@ export function SettingsPage({ setPage, onShowOnboarding }) {
           </button>
         </div>
       )}
-      {/* Phase 9.1 — Data Warning Notice (LocalStorage) */}
-      <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm mb-6 no-print" role="alert" aria-labelledby="data-warning-title">
-        <h3 id="data-warning-title" className="font-bold text-amber-800 mb-3">
-          ملاحظة مهمة
-        </h3>
-        <ul className="text-sm text-amber-900 space-y-1.5 list-disc list-inside">
-          <li>البيانات محفوظة على هذا الجهاز فقط (LocalStorage)</li>
-          <li>مسح بيانات المتصفح/الموقع يحذف كل شيء</li>
-          <li>لا تستخدم على جهاز مشترك</li>
-          <li>يُنصح بتصدير نسخة احتياطية دوريًا</li>
-        </ul>
-      </div>
+      {/* Phase 9.1 — Data Warning Notice (LocalStorage only) */}
+      {!isCloudMode && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 shadow-sm mb-6 no-print" role="alert" aria-labelledby="data-warning-title">
+          <h3 id="data-warning-title" className="font-bold text-amber-800 mb-3">
+            ملاحظة مهمة
+          </h3>
+          <ul className="text-sm text-amber-900 space-y-1.5 list-disc list-inside">
+            <li>البيانات محفوظة على هذا الجهاز فقط (LocalStorage)</li>
+            <li>مسح بيانات المتصفح/الموقع يحذف كل شيء</li>
+            <li>لا تستخدم على جهاز مشترك</li>
+            <li>يُنصح بتصدير نسخة احتياطية دوريًا</li>
+          </ul>
+        </div>
+      )}
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
-        <h3 className="font-bold text-gray-900 mb-4">وضع العرض</h3>
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
+        <h3 className="font-bold text-[var(--color-text)] mb-4">وضع العرض</h3>
         <SettingsField label="المظهر">
-          <select value={uiTheme} onChange={e => { const v = e.target.value; setUiTheme(v); applyTheme(v); toast('تم تحديث المظهر'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="وضع العرض">
+          <select value={uiTheme} onChange={e => { const v = e.target.value; setUiTheme(v); applyTheme(v); toast('تم تحديث المظهر'); }} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="وضع العرض">
             <option value="system">النظام</option>
             <option value="light">نهاري</option>
             <option value="dim">خافت</option>
@@ -278,13 +332,13 @@ export function SettingsPage({ setPage, onShowOnboarding }) {
           </select>
         </SettingsField>
         <SettingsField label="عرض الأرقام">
-          <select value={uiNumerals} onChange={e => { const v = e.target.value; setUiNumerals(v); applyNumerals(v); toast('تم تحديث عرض الأرقام'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض الأرقام">
+          <select value={uiNumerals} onChange={e => { const v = e.target.value; setUiNumerals(v); applyNumerals(v); toast('تم تحديث عرض الأرقام'); }} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="عرض الأرقام">
             <option value="ar">عربي</option>
             <option value="en">إنجليزي</option>
           </select>
         </SettingsField>
         <SettingsField label="عرض التاريخ">
-          <select value={(getSavedDateHeader() || 'both')} onChange={e => { const v = e.target.value; setDateHeaderPref(v); toast('تم تحديث إعداد التاريخ'); }} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="عرض التاريخ">
+          <select value={(getSavedDateHeader() || 'both')} onChange={e => { const v = e.target.value; setDateHeaderPref(v); toast('تم تحديث إعداد التاريخ'); }} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="عرض التاريخ">
             <option value="off">بدون</option>
             <option value="greg">ميلادي</option>
             <option value="hijri">هجري</option>
@@ -298,69 +352,136 @@ export function SettingsPage({ setPage, onShowOnboarding }) {
             setUiTheme('system');
             applyTheme('system');
             toast('تمت إعادة ضبط المظهر');
-          }} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة ضبط المظهر">
+          }} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]" aria-label="إعادة ضبط المظهر">
             إعادة ضبط المظهر
           </button>
 
           <button type="button" onClick={() => {
             if (typeof onShowOnboarding === 'function') onShowOnboarding();
             toast('سيتم عرض شاشة الترحيب');
-          }} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="إعادة عرض شاشة الترحيب">
+          }} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]" aria-label="إعادة عرض شاشة الترحيب">
             إعادة عرض شاشة الترحيب
           </button>
         </div>
       </div>
-      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
-        <h3 className="font-bold text-gray-900 mb-4">معلومات المكتب</h3>
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
+        <h3 className="font-bold text-[var(--color-text)] mb-4">معلومات المكتب</h3>
         <SettingsField label="اسم المكتب">
-          <input type="text" value={settings.officeName} onChange={e => setSettings(s => ({...s, officeName:e.target.value}))} maxLength={120} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم المكتب"/>
+          <input type="text" value={settings.officeName} onChange={e => setSettings(s => ({...s, officeName:e.target.value}))} maxLength={120} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="اسم المكتب"/>
         </SettingsField>
         <div className="grid grid-cols-2 gap-3">
           <SettingsField label="رقم الهاتف">
-            <input type="tel" value={settings.phone||''} onChange={e => setSettings(s => ({...s, phone:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="رقم الهاتف"/>
+            <input type="tel" value={settings.phone||''} onChange={e => setSettings(s => ({...s, phone:e.target.value}))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="رقم الهاتف"/>
           </SettingsField>
           <SettingsField label="البريد الإلكتروني">
-            <input type="email" value={settings.email||''} onChange={e => setSettings(s => ({...s, email:e.target.value}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="البريد الإلكتروني"/>
+            <input type="email" value={settings.email||''} onChange={e => setSettings(s => ({...s, email:e.target.value}))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="البريد الإلكتروني"/>
           </SettingsField>
         </div>
         <SettingsField label="نسبة العمولة الافتراضية للمكتب (%)">
-          <input type="number" min="0" max="100" step="0.5" value={settings.defaultCommissionPercent} onChange={e => setSettings(s => ({...s, defaultCommissionPercent:safeNum(e.target.value, 50)}))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="نسبة العمولة الافتراضية"/>
-          <p className="text-xs text-gray-400 mt-1">تؤثر على العمولات الجديدة فقط</p>
+          <input type="number" min="0" max="100" step="0.5" value={settings.defaultCommissionPercent} onChange={e => setSettings(s => ({...s, defaultCommissionPercent:safeNum(e.target.value, 50)}))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="نسبة العمولة الافتراضية"/>
+          <p className="text-xs text-[var(--color-muted)] mt-1">تؤثر على العمولات الجديدة فقط</p>
         </SettingsField>
         <button onClick={handleSave} className="px-6 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ الإعدادات">حفظ الإعدادات</button>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm mb-6">
-        <h3 className="font-bold text-gray-900 mb-4">النسخ الاحتياطي</h3>
-        <p className="text-sm text-gray-600 mb-4">صدّر نسخة احتياطية إلى ملف JSON أو استعد نسخة سابقة (استبدال كامل للبيانات الحالية).</p>
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
+        <h3 className="font-bold text-[var(--color-text)] mb-4">النسخ الاحتياطي</h3>
+        <p className="text-sm text-[var(--color-muted)] mb-4">
+          {isCloudMode
+            ? 'بياناتك محفوظة تلقائياً في السحابة. يمكنك تصدير نسخة احتياطية محلية للاحتفاظ بها.'
+            : 'صدّر نسخة احتياطية إلى ملف JSON أو استعد نسخة سابقة (استبدال كامل للبيانات الحالية).'}
+        </p>
         <div className="flex flex-wrap gap-3">
           <button type="button" onClick={handleExportBackup} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50 flex items-center gap-2" aria-label="تنزيل نسخة احتياطية JSON">
-            <Icons.download size={16}/> تنزيل نسخة احتياطية (JSON)
+            <Icons.download size={16}/> {isCloudMode ? 'تصدير نسخة من السحابة (JSON)' : 'تنزيل نسخة احتياطية (JSON)'}
           </button>
-          <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 flex items-center gap-2" aria-label="استعادة نسخة احتياطية">
-            <Icons.fileText size={16}/> استعادة من نسخة احتياطية
-          </button>
+          {!isCloudMode && (
+            <button type="button" onClick={handleImportBackupClick} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)] flex items-center gap-2" aria-label="استعادة نسخة احتياطية">
+              <Icons.fileText size={16}/> استعادة من نسخة احتياطية
+            </button>
+          )}
         </div>
-        <p className="text-xs text-gray-400 mt-2">النسخ الاحتياطي لا يرسل بيانات للسحابة.</p>
+        {isCloudMode ? (
+          <p className="text-xs text-[var(--color-muted)] mt-2">التصدير يحفظ نسخة من بيانات السحابة على جهازك.</p>
+        ) : (
+          <p className="text-xs text-[var(--color-muted)] mt-2">النسخ الاحتياطي لا يرسل بيانات للسحابة.</p>
+        )}
 
-        <div className="mt-4 rounded-xl border border-gray-100 p-4" aria-label="المزامنة السحابية">
-          <div className="flex items-center justify-between gap-3">
-            <div className="font-semibold text-gray-900">المزامنة السحابية (Pro) — قريبًا</div>
-            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">Pro</span>
+        {/* SPR-008: قسم المزامنة ديناميكي حسب وضع التخزين */}
+        {isCloudMode ? (
+          <div className="mt-4 rounded-xl border border-green-200 bg-green-50 p-4" aria-label="المزامنة السحابية">
+            <div className="flex items-center justify-between gap-3">
+              <div className="font-semibold text-green-800">بياناتك متزامنة مع السحابة</div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700 border border-green-300">مُفعّل</span>
+            </div>
+            <p className="text-sm text-green-700 mt-2">بياناتك محفوظة بأمان في السحابة ومتاحة من أي جهاز مسجّل بنفس الحساب.</p>
           </div>
-          <p className="text-sm text-gray-500 mt-2">مزامنة بياناتك بين أكثر من جهاز مع تسجيل دخول آمن.</p>
-        </div>
+        ) : (
+          <div className="mt-4 rounded-xl border border-[var(--color-border)] p-4" aria-label="المزامنة السحابية">
+            <div className="flex items-center justify-between gap-3">
+              <div className="font-semibold text-[var(--color-text)]">المزامنة السحابية</div>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">غير مُفعّل</span>
+            </div>
+            <p className="text-sm text-[var(--color-muted)] mt-2">لتفعيل المزامنة السحابية بين أجهزتك، سجّل حساباً وفعّل الاتصال بالسحابة.</p>
+          </div>
+        )}
 
         <input ref={fileInputRef} type="file" accept=".json,application/json" onChange={handleImportFileChange} className="hidden" aria-hidden="true"/>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-        <h3 className="font-bold text-gray-900 mb-4">إدارة البيانات</h3>
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
+        <h3 className="font-bold text-[var(--color-text)] mb-4">إدارة البيانات</h3>
         <div className="flex flex-wrap gap-3">
           <button onClick={handleResetDemo} className="px-4 py-2 rounded-lg border border-blue-200 text-blue-600 text-sm font-medium hover:bg-blue-50" aria-label="إعادة بيانات الديمو">إعادة بيانات الديمو</button>
           <button onClick={handleClearAll} className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50" aria-label="حذف جميع البيانات">حذف جميع البيانات</button>
         </div>
       </div>
+
+      {/* ── قسم الحساب — يظهر فقط عند تفعيل Supabase (SPR-004d) ── */}
+      {isSupabaseConfigured && (
+        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
+          <h3 className="font-bold text-[var(--color-text)] mb-4">الحساب</h3>
+          <div className="space-y-2 mb-4 text-sm text-[var(--color-muted)]">
+            {profile?.full_name && (
+              <p>الاسم: <span className="font-medium text-[var(--color-text)]">{profile.full_name}</span></p>
+            )}
+            {user?.email && (
+              <p>البريد: <span className="font-medium text-[var(--color-text)]" dir="ltr">{user.email}</span></p>
+            )}
+            {role && (
+              <p>الدور: <span className="font-medium text-[var(--color-text)]">{
+                role === 'super_admin' ? 'مدير المنصة'
+                : role === 'owner' ? 'مالك المكتب'
+                : role === 'manager' ? 'مدير / محاسب'
+                : role === 'agent' ? 'وسيط عقاري'
+                : role
+              }</span></p>
+            )}
+            {office?.name && role !== 'super_admin' && (
+              <p>المكتب: <span className="font-medium text-[var(--color-text)]">{office.name}</span></p>
+            )}
+          </div>
+          <button
+            type="button"
+            disabled={signingOut}
+            onClick={async () => {
+              if (!window.confirm('هل تريد تسجيل الخروج؟')) return;
+              setSigningOut(true);
+              const { error: err } = await signOut();
+              setSigningOut(false);
+              if (err) {
+                toast('حدث خطأ أثناء تسجيل الخروج', 'error');
+              } else {
+                navigate('/auth', { replace: true });
+              }
+            }}
+            className="px-4 py-2 rounded-lg border border-red-200 text-red-600 text-sm font-medium hover:bg-red-50 disabled:opacity-50"
+            aria-label="تسجيل الخروج"
+          >
+            {signingOut ? 'جاري الخروج…' : 'تسجيل الخروج'}
+          </button>
+        </div>
+      )}
 
       <ConfirmDialog open={!!confirm} title={confirm?.title} message={confirm?.message} messageList={confirm?.messageList} dangerText={confirm?.dangerText} confirmLabel={confirm?.confirmLabel} onConfirm={confirm?.onConfirm} onCancel={() => setConfirm(null)} danger={confirm?.danger}/>
     </div>

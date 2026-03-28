@@ -4,18 +4,11 @@
  */
 
 import { getLedgers, getRecurringItems } from './ledger-store.js';
-import { dataStore } from './dataStore.js';
+import { getTransactionsForLedger } from './dataStore.js';
 import { calculateHealthScore } from './pulse-engine.js';
 import { calculateInbox } from './inbox-engine.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
-
-function getTransactionsForLedger(ledgerId) {
-  const lid = String(ledgerId || '').trim();
-  if (!lid) return [];
-  const all = (dataStore.transactions?.list?.() || []).filter(Boolean);
-  return all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
-}
 
 function last30DaysRange() {
   const now = new Date();

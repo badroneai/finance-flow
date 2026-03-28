@@ -58,24 +58,24 @@ export default function LedgerCompare() {
     .join('، ') || 'اختر الدفاتر';
 
   return (
-    <div className="ledger-compare rounded-xl border border-gray-200 bg-white shadow-sm p-4 md:p-5" dir="rtl">
+    <div className="ledger-compare rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm p-4 md:p-5" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h3 className="text-lg font-bold text-gray-900">مقارنة الدفاتر</h3>
+        <h3 className="text-lg font-bold text-[var(--color-text)]">مقارنة الدفاتر</h3>
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setDropdownOpen((v) => !v)}
-            className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 min-w-[160px] text-right"
+            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-bg)] min-w-[160px] text-right"
             aria-haspopup="listbox"
             aria-expanded={dropdownOpen}
           >
             {selectedNames}
-            <span className="inline-block ms-2 text-gray-400">{dropdownOpen ? '\u25B2' : '\u25BC'}</span>
+            <span className="inline-block ms-2 text-[var(--color-muted)]">{dropdownOpen ? '\u25B2' : '\u25BC'}</span>
           </button>
           {dropdownOpen && (
             <div
               role="listbox"
-              className="absolute top-full end-0 mt-1 w-56 max-h-64 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg py-2 z-10"
+              className="absolute top-full end-0 mt-1 w-56 max-h-64 overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-2 z-10"
             >
               {allLedgers.map((l) => {
                 const checked = selectedIds.includes(l.id);
@@ -83,21 +83,21 @@ export default function LedgerCompare() {
                 return (
                   <label
                     key={l.id}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--color-bg)]'}`}
                   >
                     <input
                       type="checkbox"
                       checked={checked}
                       disabled={disabled}
                       onChange={() => toggleLedger(l.id)}
-                      className="rounded border-gray-300"
+                      className="rounded border-[var(--color-border)]"
                     />
                     <span className="truncate">{l.name || l.id}</span>
                   </label>
                 );
               })}
               {allLedgers.length === 0 && (
-                <p className="px-3 py-2 text-sm text-gray-500">لا توجد دفاتر</p>
+                <p className="px-3 py-2 text-sm text-[var(--color-muted)]">لا توجد دفاتر</p>
               )}
             </div>
           )}
@@ -105,7 +105,7 @@ export default function LedgerCompare() {
       </div>
 
       {!compareResult && (
-        <p className="text-sm text-gray-500 py-6 text-center">اختر دفترين على الأقل (وحتى 5) للمقارنة.</p>
+        <p className="text-sm text-[var(--color-muted)] py-6 text-center">اختر دفترين على الأقل (وحتى 5) للمقارنة.</p>
       )}
 
       {compareResult && compareResult.ledgers.length > 0 && (
@@ -118,19 +118,19 @@ export default function LedgerCompare() {
                 return (
                   <div
                     key={l.id}
-                    className="w-44 flex-shrink-0 rounded-xl border border-gray-200 bg-gray-50/50 p-4"
+                    className="w-44 flex-shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/50 p-4"
                   >
-                    <p className="font-bold text-gray-900 truncate mb-3" title={l.name}>{l.name}</p>
-                    <p className="text-sm text-gray-600 mb-1">صحة: {l.healthScore}</p>
-                    <div className="h-2 rounded-full bg-gray-200 overflow-hidden mb-3">
+                    <p className="font-bold text-[var(--color-text)] truncate mb-3" title={l.name}>{l.name}</p>
+                    <p className="text-sm text-[var(--color-muted)] mb-1">صحة: {l.healthScore}</p>
+                    <div className="h-2 rounded-full bg-[var(--color-bg)] overflow-hidden mb-3">
                       <div
                         className={`h-full rounded-full transition-all ${healthBarColor(l.healthScore)}`}
                         style={{ width: `${Math.min(100, Math.max(0, l.healthScore))}%` }}
                       />
                     </div>
                     <div className="space-y-1 text-sm">
-                      <p className="text-gray-700">دخل: {formatShort(l.totalIncome30d)}</p>
-                      <p className="text-gray-700">صرف: {formatShort(l.totalExpense30d)}</p>
+                      <p className="text-[var(--color-text)]">دخل: {formatShort(l.totalIncome30d)}</p>
+                      <p className="text-[var(--color-text)]">صرف: {formatShort(l.totalExpense30d)}</p>
                       <p className={l.netCashflow30d >= 0 ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium'}>
                         صافي: {l.netCashflow30d >= 0 ? '+' : ''}{formatShort(l.netCashflow30d)}
                       </p>

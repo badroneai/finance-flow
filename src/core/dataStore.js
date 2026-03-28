@@ -186,6 +186,14 @@ export const dataStore = {
   },
 };
 
+/** حركات دفتر معيّن — النسخة المركزية الوحيدة (SPR-002) */
+export const getTransactionsForLedger = (ledgerId) => {
+  const lid = String(ledgerId || '').trim();
+  if (!lid) return [];
+  const all = (dataStore.transactions?.list?.() || []).filter(Boolean);
+  return all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
+};
+
 export const detectPrivateBrowsing = () => {
   try {
     storageFacade.setRaw('_ff_private_test', '1');

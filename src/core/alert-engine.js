@@ -6,7 +6,7 @@
  */
 
 import { getLedgers, getActiveLedgerId, getRecurringItems } from './ledger-store.js';
-import { dataStore } from './dataStore.js';
+import { getTransactionsForLedger } from './dataStore.js';
 import { buildLedgerInbox, computeCashPlan } from './ledger-planner.js';
 import { computePL } from './ledger-analytics.js';
 import { calculateHealthScore } from './pulse-engine.js';
@@ -16,20 +16,18 @@ const STORAGE_KEY = 'ff_alert_state';
 const DISMISS_TTL_DAYS = 7;
 const MAX_ALERTS = 10;
 
-function getTransactionsForLedger(ledgerId) {
-  const lid = String(ledgerId || '').trim();
-  if (!lid) return [];
-  const all = (dataStore.transactions?.list?.() || []).filter(Boolean);
-  return all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
-}
-
-function getContext(ledgerId) {
+function getContext(ledgerId, options = {}) {
   const lid = (ledgerId != null ? String(ledgerId).trim() : (getActiveLedgerId() || '').trim()) || '';
-  const ledgers = getLedgers() || [];
+  const ledgers = options.ledgers || getLedgers() || [];
   const ledger = (Array.isArray(ledgers) ? ledgers : []).find((l) => l.id === lid) || null;
-  const recurring = getRecurringItems() || [];
+  const recurring = options.recurringItems || getRecurringItems() || [];
   const recurringList = (Array.isArray(recurring) ? recurring : []).filter((r) => String(r?.ledgerId || '') === lid);
-  const txs = getTransactionsForLedger(lid);
+  const txs = options.transactions
+    ? (Array.isArray(options.transactions) ? options.transactions : []).filter(t => {
+        const tLid = String(t?.ledgerId || t?.ledger_id || t?.meta?.ledgerId || '');
+        return !lid || tLid === lid || tLid === '';
+      })
+    : getTransactionsForLedger(lid);
   const now = new Date();
   return { lid, ledger, recurringList, txs, now };
 }
@@ -77,8 +75,8 @@ function isIncomeCategory(category) {
 }
 
 // ---------- 1. أزمة سيولة متوقعة ----------
-function detectCashflowCrisis(ledgerId) {
-  const ctx = getContext(ledgerId);
+function detectCashflowCrisis(ledgerId, options = {}) {
+  const ctx = getContext(ledgerId, options);
   const { lid, txs, recurringList, now } = ctx;
   if (!lid) return [];
 
@@ -119,8 +117,8 @@ function detectCashflowCrisis(ledgerId) {
 }
 
 // ---------- 2. نمط إنفاق غير طبيعي ----------
-function detectSpendingAnomaly(ledgerId) {
-  const ctx = getContext(ledgerId);
+function detectSpendingAnomaly(ledgerId, options = {}) {
+  const ctx = getContext(ledgerId, options);
   const { txs, now } = ctx;
   const todayStr = todayKey(now);
   const last30 = (txs || []).filter((t) => {
@@ -172,8 +170,8 @@ function nextDueByFrequency(dateStr, frequency) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
-function detectMissedIncome(ledgerId) {
-  const ctx = getContext(ledgerId);
+function detectMissedIncome(ledgerId, options = {}) {
+  const ctx = getContext(ledgerId, options);
   const { lid, txs, recurringList, now } = ctx;
   if (!lid) return [];
   const todayStr = todayKey(now);
@@ -203,10 +201,10 @@ function detectMissedIncome(ledgerId) {
 const HEALTH_STORAGE_PREFIX = 'ff_alert_last_health_';
 const HEALTH_TREND_THRESHOLD = 10;
 
-function detectHealthTrend(ledgerId) {
+function detectHealthTrend(ledgerId, options = {}) {
   const lid = String(ledgerId || '').trim();
   if (!lid) return [];
-  const currentScore = calculateHealthScore(lid);
+  const currentScore = calculateHealthScore(lid, options);
   const key = HEALTH_STORAGE_PREFIX + lid;
   let previousScore = null;
   let previousAt = null;
@@ -262,8 +260,8 @@ function cycleDays(frequency) {
   return 60;
 }
 
-function detectDormantCommitments(ledgerId) {
-  const ctx = getContext(ledgerId);
+function detectDormantCommitments(ledgerId, options = {}) {
+  const ctx = getContext(ledgerId, options);
   const { lid, txs, recurringList, now } = ctx;
   if (!lid) return [];
   const todayMs = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
@@ -301,13 +299,13 @@ function detectDormantCommitments(ledgerId) {
 }
 
 // ---------- تجميع وترتيب ----------
-function detectAllAlerts(ledgerId) {
+function detectAllAlerts(ledgerId, options = {}) {
   const all = [
-    ...detectCashflowCrisis(ledgerId),
-    ...detectSpendingAnomaly(ledgerId),
-    ...detectMissedIncome(ledgerId),
-    ...detectHealthTrend(ledgerId),
-    ...detectDormantCommitments(ledgerId),
+    ...detectCashflowCrisis(ledgerId, options),
+    ...detectSpendingAnomaly(ledgerId, options),
+    ...detectMissedIncome(ledgerId, options),
+    ...detectHealthTrend(ledgerId, options),
+    ...detectDormantCommitments(ledgerId, options),
   ];
   const hidden = getHiddenIds();
   const filtered = all.filter((a) => a && a.id && !hidden.has(a.id));
@@ -317,8 +315,9 @@ function detectAllAlerts(ledgerId) {
 /**
  * يرجع تنبيهات ذكية للدفتر، مرتبة حسب الخطورة ثم التاريخ، بعد استبعاد المُرفضة/المؤجلة، بحد أقصى 10.
  * @param {string} [ledgerId] - معرّف الدفتر (إن غاب يُستخدم النشط)
+ * @param {Object} [options] - Optional data parameters: { ledgers, recurringItems, transactions }
  * @returns {Array<{ id, type, severity, title, amount?, dueDate?, actionLabel, actionType }>}
  */
-export function generateSmartAlerts(ledgerId) {
-  return detectAllAlerts(ledgerId);
+export function generateSmartAlerts(ledgerId, options = {}) {
+  return detectAllAlerts(ledgerId, options);
 }

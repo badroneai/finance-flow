@@ -10,3 +10,11 @@ dist/
 build/
 *.log
 .cache/
+
+# Environment variables (Supabase keys, etc.)
+.env.local
+.env*.local
+
+# Claude Code personal files
+CLAUDE.local.md
+.claude/settings.local.json

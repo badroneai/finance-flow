@@ -18,6 +18,10 @@
   --color-primary: #0b2d4a;     /* Qaydalaqar navy */
   --color-accent: #c9a227;      /* Qaydalaqar gold */
 
+  /* Hover / Alt surfaces */
+  --color-surface-hover: #f1f5f9;  /* hover on cards/rows */
+  --color-input-bg: #ffffff;       /* input fields background */
+
   /* Focus ring */
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(201, 162, 39, 0.25);
@@ -47,6 +51,9 @@
 
   --color-primary: #0b2d4a;
   --color-accent: #c9a227;
+  --color-surface-hover: #f1f5f9;
+  --color-input-bg: #ffffff;
+
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(201, 162, 39, 0.25);
 }
@@ -63,6 +70,9 @@
   /* Accent slightly warmer, to keep identity without feeling "bright" */
   --color-primary: #0b2d4a;
   --color-accent: #d2ad43;
+  --color-surface-hover: #112a45;
+  --color-input-bg: #0c1d33;
+
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(210, 173, 67, 0.26);
 
@@ -84,6 +94,9 @@
 
   --color-primary: #0b2d4a;
   --color-accent: #e0c05a;
+  --color-surface-hover: #0e2035;
+  --color-input-bg: #0a1627;
+
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(224, 192, 90, 0.28);
 }

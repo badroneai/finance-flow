@@ -49,9 +49,9 @@ export default function PulseHeader({ onOpenLedgers }) {
   return (
     <header className="flex items-center justify-between gap-3 flex-wrap mb-4" dir="rtl" aria-label="هيدر النبض المالي">
       <div className="flex items-center gap-2 min-w-0 flex-1">
-        <h1 className="text-xl font-bold text-gray-900 truncate">النبض المالي</h1>
+        <h1 className="text-xl font-bold text-[var(--color-text)] truncate">النبض المالي</h1>
         {hasLedgers && (
-          <span className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600" aria-hidden="true">
+          <span className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-bg)] text-[var(--color-muted)]" aria-hidden="true">
             قيد
           </span>
         )}
@@ -63,20 +63,20 @@ export default function PulseHeader({ onOpenLedgers }) {
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-gray-200 bg-white text-gray-800 text-sm font-medium hover:bg-gray-50 min-w-0 max-w-[180px]"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)] min-w-0 max-w-[180px]"
               aria-haspopup="listbox"
               aria-expanded={open}
               aria-label={`الدفتر النشط: ${name || 'غير محدد'}. اختر دفتراً آخر`}
             >
               <span className="truncate">{name || 'اختر دفتراً'}</span>
-              <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-gray-400" aria-hidden="true">
+              <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[var(--color-muted)]" aria-hidden="true">
                 {open ? '\u25B2' : '\u25BC'}
               </span>
             </button>
             {open && (
               <ul
                 role="listbox"
-                className="absolute top-full right-0 mt-1 min-w-[160px] max-h-56 overflow-auto rounded-lg border border-gray-200 bg-white shadow-lg py-1 z-10"
+                className="absolute top-full right-0 mt-1 min-w-[160px] max-h-56 overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-1 z-10"
                 aria-label="قائمة الدفاتر"
               >
                 {list.map((l) => (
@@ -84,7 +84,7 @@ export default function PulseHeader({ onOpenLedgers }) {
                     <button
                       type="button"
                       onClick={() => handleSelect(l.id)}
-                      className={`w-full text-right px-3 py-2 text-sm ${l.id === activeId ? 'bg-blue-50 text-blue-800 font-medium' : 'text-gray-700 hover:bg-gray-50'}`}
+                      className={`w-full text-right px-3 py-2 text-sm ${l.id === activeId ? 'bg-blue-50 text-blue-800 font-medium' : 'text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
                     >
                       {l.name || 'بدون اسم'}
                     </button>

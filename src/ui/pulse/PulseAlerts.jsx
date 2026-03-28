@@ -64,7 +64,7 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
   if (sorted.length === 0) {
     return (
       <div
-        className="rounded-xl border border-gray-100 bg-gray-50/80 p-5 text-center text-gray-600"
+        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/80 p-5 text-center text-[var(--color-muted)]"
         dir="rtl"
       >
         <p className="font-medium">كل شيء على ما يرام</p>
@@ -74,14 +74,14 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden" dir="rtl">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden" dir="rtl">
       <style>{slideInStyles}</style>
-      <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-        <h2 className="font-semibold text-gray-900">
+      <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+        <h2 className="font-semibold text-[var(--color-text)]">
           تنبيهات عاجلة ({sorted.length})
         </h2>
       </div>
-      <ul className="divide-y divide-gray-100" aria-label="قائمة التنبيهات">
+      <ul className="divide-y divide-[var(--color-border)]" aria-label="قائمة التنبيهات">
         {displayList.map((alert, index) => (
           <AlertRow
             key={alert.id}
@@ -93,7 +93,7 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
         ))}
       </ul>
       {hasMore && (
-        <div className="px-4 py-2 border-t border-gray-100 bg-gray-50/50">
+        <div className="px-4 py-2 border-t border-[var(--color-border)] bg-[var(--color-bg)]/50">
           {onShowAll ? (
             <button
               type="button"
@@ -103,7 +103,7 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
               عرض الكل ({sorted.length})
             </button>
           ) : (
-            <span className="text-sm text-gray-500">عرض الكل ({sorted.length})</span>
+            <span className="text-sm text-[var(--color-muted)]">عرض الكل ({sorted.length})</span>
           )}
         </div>
       )}
@@ -119,15 +119,15 @@ function AlertRow({ alert, index, onAction, onDismiss }) {
 
   return (
     <li
-      className={`pulse-alert-row px-4 py-3 flex flex-col gap-2 ${isCritical ? 'bg-red-50' : 'bg-white'}`}
+      className={`pulse-alert-row px-4 py-3 flex flex-col gap-2 ${isCritical ? 'bg-red-50' : 'bg-[var(--color-surface)]'}`}
       style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 flex items-center gap-2">
           <span className={`flex-shrink-0 w-2 h-2 rounded-full ${dotClass}`} aria-hidden="true" />
           <div className="min-w-0">
-            <p className="font-medium text-gray-900 truncate">{alert.title}</p>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-gray-600 mt-0.5">
+            <p className="font-medium text-[var(--color-text)] truncate">{alert.title}</p>
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-[var(--color-muted)] mt-0.5">
               {daysStr && <span>{daysStr}</span>}
               {amountStr && <span className="font-medium">{amountStr}</span>}
             </div>
@@ -136,7 +136,7 @@ function AlertRow({ alert, index, onAction, onDismiss }) {
         <button
           type="button"
           onClick={() => onDismiss(alert.id)}
-          className="flex-shrink-0 p-1 rounded text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+          className="flex-shrink-0 p-1 rounded text-[var(--color-muted)] hover:text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
           aria-label="إخفاء التنبيه"
         >
           <span className="text-lg leading-none">×</span>

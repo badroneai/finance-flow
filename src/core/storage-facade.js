@@ -1,39 +1,46 @@
 /*
   قيد العقار (Finance Flow)
-  Stage 3.1 — storage facade
+  storage-facade.js — طبقة التخزين الموحدة (SPR-003: مكتفية ذاتياً داخل src/)
 
   الهدف:
-  - طبقة موحدة للوصول للتخزين (بدون تغيير سلوك).
-  - في هذه المرحلة نُبقي التنفيذ فوق core/storage الحالي.
+  - واجهة موحّدة للتعامل مع localStorage.
+  - لا تستورد من خارج src/.
 */
 
-import { storage } from '../../assets/js/core/storage.js';
-
 export const storageFacade = {
-  // Raw string API (same semantics as core/storage)
-  getRaw: (key) => storage.getRaw(key),
+  // Raw string API
+  getRaw: (key) => localStorage.getItem(key),
+
   /** يرجِع true عند النجاح، false عند فشل الكتابة (مثلاً QuotaExceededError). */
   setRaw: (key, value) => {
-    const r = storage.setRaw(key, value);
-    return !!(r && r.ok);
+    try {
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
+      return false;
+    }
   },
-  removeRaw: (key) => storage.removeRaw(key),
+
+  removeRaw: (key) => {
+    localStorage.removeItem(key);
+  },
 
   // JSON convenience (no schema changes; just helpers)
   getJSON: (key, fallback = null) => {
     try {
-      const raw = storage.getRaw(key);
+      const raw = localStorage.getItem(key);
       if (raw == null) return fallback;
       return JSON.parse(raw);
     } catch {
       return fallback;
     }
   },
+
   /** يرجِع true عند النجاح، false عند فشل الكتابة أو JSON.stringify. */
   setJSON: (key, value) => {
     try {
-      const r = storage.setRaw(key, JSON.stringify(value));
-      return !!(r && r.ok);
+      localStorage.setItem(key, JSON.stringify(value));
+      return true;
     } catch {
       return false;
     }
@@ -42,7 +49,7 @@ export const storageFacade = {
   // Small helper for batch operations (used in clear/export)
   removeMany: (keys = []) => {
     for (const k of keys) {
-      try { storage.removeRaw(k); } catch {}
+      try { localStorage.removeItem(k); } catch {}
     }
   },
 };

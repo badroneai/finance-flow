@@ -3,10 +3,26 @@
   الخطوة 1: استخراج الثوابت والدوال المساعدة
 */
 
-import { STORAGE_KEYS } from '../../assets/js/core/keys.js';
+// ============================================
+// STORAGE_KEYS — مفاتيح localStorage الموحّدة (SPR-003: نُقلت من assets/js/core/keys.js)
+// ============================================
+export const STORAGE_KEYS = {
+  // Financial
+  TRANSACTIONS: 'ff_transactions',
+  COMMISSIONS: 'ff_commissions',
+  DRAFTS: 'ff_drafts',
+  SETTINGS: 'ff_settings',
+  SEEDED: 'ff_seeded',
+  // UI
+  UI_THEME: 'ui_theme',
+  UI_NUMERALS: 'ui_numerals',
+  UI_DATE_HEADER: 'ui_date_header',
+  UI_ONBOARDING: 'ui_onboarding_seen',
+  UI_WELCOME: 'hasSeenWelcomeBanner',
+};
 
 // ============================================
-// KEYS (مفاتيح التخزين)
+// KEYS (اختصار — متوافق مع dataStore.js)
 // ============================================
 export const KEYS = {
   transactions: STORAGE_KEYS.TRANSACTIONS,

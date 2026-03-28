@@ -1,7 +1,42 @@
-import React from 'react';
+import React, { useState } from 'react';
 
-import LedgerInboxTab from './LedgerInboxTab.jsx';
-import LedgerForecastTab from './LedgerForecastTab.jsx';
+/**
+ * تبويب الالتزامات — إعادة تصميم جذرية
+ * ════════════════════════════════════════
+ * الهيكل الجديد (4 أقسام واضحة):
+ *   1. نموذج إضافة/تعديل التزام (أول شيء يراه المستخدم)
+ *   2. قائمة الالتزامات الحالية (مرتّبة: متأخر → قريب → باقي)
+ *   3. ملخص شهري بسيط (بطاقة واحدة)
+ *   4. تفاصيل متقدمة (مطوية افتراضياً)
+ *
+ * المبدأ: المستخدم صاحب مكتب عقاري — لا يعرف Burn Rate أو Compliance.
+ * يريد: "كم لازم أدفع؟" + "أضيف التزام" + "تقرير بسيط".
+ */
+
+const CATEGORY_LABELS_AR = {
+  system: 'إيجار ورسوم',
+  operational: 'تشغيل ومرافق',
+  maintenance: 'صيانة',
+  marketing: 'تسويق وإعلان',
+  adhoc: 'عند الحاجة',
+  uncategorized: 'أخرى',
+  other: 'أخرى',
+};
+
+const FREQUENCY_LABELS = {
+  monthly: 'شهري',
+  quarterly: 'ربع سنوي',
+  yearly: 'سنوي',
+  adhoc: 'عند الحاجة',
+};
+
+const CATEGORY_OPTIONS = [
+  { value: 'system', label: 'إيجار ورسوم' },
+  { value: 'operational', label: 'تشغيل ومرافق' },
+  { value: 'maintenance', label: 'صيانة' },
+  { value: 'marketing', label: 'تسويق وإعلان' },
+  { value: 'adhoc', label: 'أخرى' },
+];
 
 function LedgerRecurringTab(props) {
   const {
@@ -24,7 +59,7 @@ function LedgerRecurringTab(props) {
     recEditingId,
     setRecEditingId,
 
-    // Authority layer
+    // Authority layer (moved to advanced)
     authorityOpen,
     setAuthorityOpen,
     budgets,
@@ -34,7 +69,7 @@ function LedgerRecurringTab(props) {
     brain,
     spendByBucket,
 
-    // Inbox + forecast (computed outside)
+    // Inbox + forecast (moved to advanced)
     inbox,
     cashPlan,
     inboxFilter,
@@ -63,7 +98,7 @@ function LedgerRecurringTab(props) {
     setScOther,
     forecastInsights,
 
-    // Brain dashboard / intel / operator mode
+    // Brain dashboard
     brainDetails,
     setBrainDetails,
     seededOnlyList,
@@ -137,7 +172,6 @@ function LedgerRecurringTab(props) {
     recurringDashboard,
     updateRecurringOps,
 
-    // Vars referenced in extracted JSX (must be passed from LedgersPage)
     unpricedList,
     outlook,
     actuals,
@@ -153,780 +187,583 @@ function LedgerRecurringTab(props) {
     CATEGORY_LABEL,
   } = props;
 
-  return (
-<>
-  {/* Pay-now modal (Stage 6 stability: restore UI for submitPayNow) */}
-  {payOpen ? (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" role="dialog" aria-label="تسجيل دفعة الآن">
-      <div className="w-full max-w-lg bg-white rounded-2xl border border-gray-100 shadow-xl p-4">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <div className="font-bold text-gray-900">تسجيل دفعة الآن</div>
-            <div className="text-xs text-gray-500 mt-1">{paySource?.title || '—'}</div>
-          </div>
-          <button type="button" onClick={() => setPayOpen(false)} className="px-3 py-1.5 rounded-lg border border-gray-200 text-gray-700 text-sm" aria-label="إغلاق">إغلاق</button>
-        </div>
+  // State: advanced section collapsed by default
+  const [advancedOpen, setAdvancedOpen] = useState(false);
+  // State: list filter
+  const [listFilter, setListFilter] = useState('all'); // all | overdue | soon | paid
 
-        <div className="mt-3 grid grid-cols-2 gap-2">
-          <div className="col-span-2">
-            <label className="block text-xs text-gray-600 mb-1">المبلغ</label>
-            <input type="text" inputMode="decimal" value={payForm.amount} onChange={(e) => setPayForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="المبلغ" />
+  // ══════════════════════════════════════════
+  // Computed data
+  // ══════════════════════════════════════════
+  const allItems = Array.isArray(activeRecurring) ? activeRecurring : [];
+
+  // Sort: overdue first → due within 14 days → rest
+  const sortedItems = [...allItems].sort((a, b) => {
+    const aOverdue = isPastDue(a) ? 0 : 1;
+    const bOverdue = isPastDue(b) ? 0 : 1;
+    if (aOverdue !== bOverdue) return aOverdue - bOverdue;
+    const aSoon = isDueWithinDays(a, 14) ? 0 : 1;
+    const bSoon = isDueWithinDays(b, 14) ? 0 : 1;
+    if (aSoon !== bSoon) return aSoon - bSoon;
+    const da = new Date(String(a?.nextDueDate || '') + 'T00:00:00').getTime() || 0;
+    const db = new Date(String(b?.nextDueDate || '') + 'T00:00:00').getTime() || 0;
+    return da - db;
+  });
+
+  // Filter
+  const filteredItems = (() => {
+    if (listFilter === 'overdue') return sortedItems.filter(r => isPastDue(r));
+    if (listFilter === 'soon') return sortedItems.filter(r => !isPastDue(r) && isDueWithinDays(r, 14));
+    if (listFilter === 'paid') return sortedItems.filter(r => r.payState === 'paid');
+    return sortedItems;
+  })();
+
+  const overdueCount = allItems.filter(r => isPastDue(r)).length;
+  const soonCount = allItems.filter(r => !isPastDue(r) && isDueWithinDays(r, 14)).length;
+
+  // Monthly summary
+  const monthlyTotal = allItems
+    .filter(r => String(r.frequency || '').toLowerCase() === 'monthly' && Number(r.amount) > 0)
+    .reduce((s, r) => s + Number(r.amount), 0);
+  const yearlyEstimate = allItems.reduce((s, r) => {
+    const amt = Number(r.amount) || 0;
+    if (amt <= 0) return s;
+    const f = String(r.frequency || '').toLowerCase();
+    if (f === 'monthly') return s + amt * 12;
+    if (f === 'quarterly') return s + amt * 4;
+    if (f === 'yearly') return s + amt;
+    return s + amt;
+  }, 0);
+  const overdueTotal = allItems
+    .filter(r => isPastDue(r) && Number(r.amount) > 0)
+    .reduce((s, r) => s + Number(r.amount), 0);
+  const thisMonthDue = allItems
+    .filter(r => isDueWithinDays(r, 30) && Number(r.amount) > 0)
+    .reduce((s, r) => s + Number(r.amount), 0);
+
+  // Category distribution for advanced section
+  const categoryDist = (() => {
+    const map = {};
+    let total = 0;
+    allItems.forEach(r => {
+      const amt = Number(r.amount) || 0;
+      if (amt <= 0) return;
+      const cat = normalizeRecurringCategory(r.category) || 'uncategorized';
+      map[cat] = (map[cat] || 0) + amt;
+      total += amt;
+    });
+    return { map, total };
+  })();
+
+  // Status helper
+  const getStatusInfo = (item) => {
+    if (isPastDue(item)) return { label: 'متأخر', color: 'bg-red-50 border-red-200 text-red-700' };
+    if (isDueWithinDays(item, 7)) return { label: 'مستحق قريباً', color: 'bg-amber-50 border-amber-200 text-amber-700' };
+    if (item.payState === 'paid') return { label: 'مدفوع', color: 'bg-green-50 border-green-200 text-green-700' };
+    return { label: 'نشط', color: 'bg-blue-50 border-blue-200 text-blue-700' };
+  };
+
+  return (
+    <>
+      {/* ════════════════════════════════════════ */}
+      {/* مودال تسجيل الدفعة */}
+      {/* ════════════════════════════════════════ */}
+      {payOpen && paySource && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setPayOpen(false)}>
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <h4 className="font-bold text-[var(--color-text)] mb-3">تسجيل دفعة — {paySource.title}</h4>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المبلغ</label>
+                <input type="text" inputMode="decimal" value={payForm.amount} onChange={(e) => setPayForm(p => ({ ...p, amount: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="المبلغ" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">التاريخ</label>
+                <input type="date" value={payForm.date} onChange={(e) => setPayForm(p => ({ ...p, date: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="التاريخ" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">طريقة الدفع</label>
+                <select value={payForm.paymentMethod} onChange={(e) => setPayForm(p => ({ ...p, paymentMethod: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="طريقة الدفع">
+                  <option value="cash">نقدي</option>
+                  <option value="bank_transfer">تحويل بنكي</option>
+                  <option value="check">شيك</option>
+                  <option value="card">بطاقة</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">الوصف</label>
+                <input type="text" value={payForm.description} onChange={(e) => setPayForm(p => ({ ...p, description: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="الوصف" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setPayOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
+              <button type="button" onClick={submitPayNow} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">تسجيل الدفعة</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════ */}
+      {/* معالج التسعير السريع */}
+      {/* ════════════════════════════════════════ */}
+      {pricingOpen && pricingList && pricingList.length > 0 && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setPricingOpen(false)}>
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <h4 className="font-bold text-[var(--color-text)] mb-1">معالج التسعير</h4>
+            <p className="text-xs text-[var(--color-muted)] mb-3">بند {pricingIndex + 1} من {pricingList.length}</p>
+            <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] mb-3">
+              <div className="font-semibold text-[var(--color-text)]">{pricingList[pricingIndex]?.title || '—'}</div>
+              {pricingList[pricingIndex]?.priceBand && (
+                <div className="text-xs text-[var(--color-muted)] mt-1">
+                  نطاق السعر: <Currency value={pricingList[pricingIndex].priceBand.min || 0} /> — <Currency value={pricingList[pricingIndex].priceBand.max || 0} />
+                  {pricingList[pricingIndex].priceBand.typical > 0 && <> (المتوسط: <Currency value={pricingList[pricingIndex].priceBand.typical} />)</>}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المبلغ (ر.س)</label>
+                <input type="text" inputMode="decimal" value={pricingAmount} onChange={(e) => setPricingAmount(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="المبلغ" placeholder="0" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">تاريخ الاستحقاق القادم</label>
+                <input type="date" value={pricingDate} onChange={(e) => setPricingDate(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق" />
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setPricingOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
+              <button type="button" onClick={applyQuickPricing} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">حفظ وانتقل للتالي</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════ */}
+      {/* معالج التسعير السعودي */}
+      {/* ════════════════════════════════════════ */}
+      {saPricingOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setSaPricingOpen(false)}>
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md" dir="rtl" onClick={(e) => e.stopPropagation()}>
+            <h4 className="font-bold text-[var(--color-text)] mb-1">تسعير تلقائي (أسعار السوق السعودي)</h4>
+            <p className="text-xs text-[var(--color-muted)] mb-3">يطبّق أسعاراً مقترحة بناءً على المدينة وحجم المكتب.</p>
+            <div className="flex flex-col gap-3">
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المدينة</label>
+                <select value={saCity} onChange={(e) => setSaCity(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="المدينة">
+                  <option value="riyadh">الرياض</option>
+                  <option value="jeddah">جدة</option>
+                  <option value="dammam">الدمام</option>
+                  <option value="qassim">القصيم</option>
+                  <option value="other">أخرى</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">حجم المكتب</label>
+                <select value={saSize} onChange={(e) => setSaSize(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="حجم المكتب">
+                  <option value="small">صغير</option>
+                  <option value="medium">متوسط</option>
+                  <option value="large">كبير</option>
+                </select>
+              </div>
+              <label className="inline-flex items-center gap-2 text-sm text-[var(--color-text)]">
+                <input type="checkbox" checked={saOnlyUnpriced} onChange={(e) => setSaOnlyUnpriced(e.target.checked)} />
+                فقط البنود غير المسعّرة
+              </label>
+            </div>
+            <div className="flex gap-2 justify-end mt-4">
+              <button type="button" onClick={() => setSaPricingOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
+              <button type="button" onClick={() => {
+                const result = applySaudiAutoPricingForLedger({ ledgerId: activeId, city: saCity, size: saSize, onlyUnpriced: saOnlyUnpriced });
+                if (result.ok) { toast('تم تطبيق التسعير'); setSaPricingOpen(false); refresh(); }
+                else toast(result.message || 'تعذر التطبيق', 'error');
+              }} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">تطبيق التسعير</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* القسم 1: نموذج إضافة / تعديل التزام (أول شيء يراه المستخدم) */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
+        <h4 className="font-bold text-[var(--color-text)] mb-3">
+          {recEditingId ? 'تعديل الالتزام' : 'إضافة التزام جديد'}
+        </h4>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">اسم الالتزام</label>
+            <input
+              type="text"
+              value={recForm.title}
+              onChange={(e) => setRecForm(p => ({ ...p, title: e.target.value }))}
+              maxLength={200}
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              aria-label="اسم الالتزام"
+              placeholder="مثال: إيجار المكتب"
+            />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">التاريخ</label>
-            <input type="date" value={payForm.date} onChange={(e) => setPayForm(f => ({ ...f, date: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="التاريخ" />
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المبلغ (ر.س)</label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={recForm.amount}
+              onChange={(e) => setRecForm(p => ({ ...p, amount: e.target.value }))}
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              aria-label="المبلغ"
+              placeholder="0"
+            />
           </div>
           <div>
-            <label className="block text-xs text-gray-600 mb-1">طريقة الدفع</label>
-            <select value={payForm.paymentMethod} onChange={(e) => setPayForm(f => ({ ...f, paymentMethod: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="طريقة الدفع">
-              <option value="cash">نقدي</option>
-              <option value="bank_transfer">تحويل بنكي</option>
-              <option value="check">شيك</option>
-              <option value="electronic">بطاقة إلكترونية</option>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">التكرار</label>
+            <select
+              value={recForm.frequency}
+              onChange={(e) => setRecForm(p => ({ ...p, frequency: e.target.value }))}
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+              aria-label="التكرار"
+            >
+              <option value="monthly">شهري</option>
+              <option value="quarterly">ربع سنوي</option>
+              <option value="yearly">سنوي</option>
+              <option value="adhoc">عند الحاجة</option>
             </select>
           </div>
-          <div className="col-span-2">
-            <label className="block text-xs text-gray-600 mb-1">الوصف</label>
-            <input type="text" value={payForm.description} onChange={(e) => setPayForm(f => ({ ...f, description: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="الوصف" />
+          <div>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">تاريخ الاستحقاق القادم</label>
+            <input
+              type="date"
+              value={recForm.nextDueDate}
+              onChange={(e) => setRecForm(p => ({ ...p, nextDueDate: e.target.value }))}
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              aria-label="تاريخ الاستحقاق القادم"
+            />
+          </div>
+          <div className="md:col-span-2 lg:col-span-2">
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">ملاحظات (اختياري)</label>
+            <input
+              type="text"
+              value={recForm.notes || ''}
+              onChange={(e) => setRecForm(p => ({ ...p, notes: e.target.value }))}
+              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              aria-label="ملاحظات"
+              placeholder="ملاحظة اختيارية"
+            />
           </div>
         </div>
-
-        <div className="mt-4 flex justify-end gap-2">
-          <button type="button" onClick={() => setPayOpen(false)} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-          <button type="button" onClick={submitPayNow} className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium" aria-label="تسجيل">تسجيل</button>
+        <div className="flex gap-2 justify-end mt-3">
+          {recEditingId && (
+            <button
+              type="button"
+              onClick={() => { setRecEditingId(null); resetRecForm(); }}
+              className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+            >
+              إلغاء
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={saveRecurring}
+            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            aria-label={recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
+          >
+            {recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
+          </button>
         </div>
       </div>
-    </div>
-  ) : null}
 
-  {/* Authority Layer (v8) */}
-  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h4 className="font-bold text-gray-900">Authority Layer</h4>
-        <p className="text-xs text-gray-500 mt-1">Budget Control • Compliance • Month Awareness (عرض فقط)</p>
-      </div>
-      <button type="button" onClick={() => setAuthorityOpen(v => !v)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="طي/فتح">{authorityOpen ? 'طي' : 'فتح'}</button>
-    </div>
 
-    {authorityOpen ? (
-      <div className="mt-3 grid md:grid-cols-3 gap-3">
-        {/* Budget Authority */}
-        <div className="p-3 rounded-xl border border-gray-100 bg-white">
-          <div className="flex items-center justify-between">
-            <div className="font-bold text-gray-900">🛑 سلطة الميزانية</div>
-            <label className="inline-flex items-center gap-2 text-xs text-gray-700">
-              <input type="checkbox" checked={!!budgets.hardLock} onChange={(e) => saveLedgerBudgets({ hardLock: e.target.checked })} />
-              قفل صارم
-            </label>
-          </div>
-
-          <div className="mt-2 grid grid-cols-2 gap-2">
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* القسم 2: قائمة الالتزامات الحالية                           */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h4 className="font-bold text-[var(--color-text)]">الالتزامات الحالية</h4>
+          <div className="flex flex-wrap gap-1.5">
             {[
-              { k: 'system', label: 'System' },
-              { k: 'operational', label: 'Operational' },
-              { k: 'maintenance', label: 'Maintenance' },
-              { k: 'marketing', label: 'Marketing' },
-            ].map(x => (
-              <div key={x.k}>
-                <label className="block text-[11px] text-gray-600 mb-1">{x.label}</label>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  value={budgets[x.k] == null ? '' : String(budgets[x.k])}
-                  onChange={(e) => {
-                    const v = e.target.value;
-                    const n = v === '' ? null : (Number(parseRecurringAmount(v)) || 0);
-                    saveLedgerBudgets({ [x.k]: n });
-                  }}
-                  className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm"
-                  placeholder="—"
-                  aria-label={`Budget ${x.label}`}
-                />
-              </div>
+              { key: 'all', label: 'الكل', count: allItems.length },
+              { key: 'overdue', label: 'متأخر', count: overdueCount },
+              { key: 'soon', label: 'قريب', count: soonCount },
+            ].map(f => (
+              <button
+                key={f.key}
+                type="button"
+                onClick={() => setListFilter(f.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${listFilter === f.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] text-[var(--color-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+              >
+                {f.label} {f.count > 0 && <span className="opacity-75">({f.count})</span>}
+              </button>
             ))}
           </div>
+        </div>
 
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            {['system','operational','maintenance','marketing'].map(k => {
-              const row = budgetAuth?.perBucket?.[k];
-              if (!row || !row.target) return (
-                <div key={k} className="text-[11px] text-gray-400">{k}: —</div>
-              );
-              const badge = row.breach ? 'bg-red-50 border-red-100 text-red-700' : row.warn ? 'bg-amber-50 border-amber-100 text-amber-800' : 'bg-green-50 border-green-100 text-green-700';
+        {/* أزرار التسعير السريع */}
+        {unpricedList && unpricedList.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-xl border border-amber-200 bg-amber-50">
+            <span className="text-sm text-amber-800">{unpricedList.length} التزام بدون مبلغ</span>
+            <button type="button" onClick={openPricingWizard} className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700">معالج التسعير</button>
+            <button type="button" onClick={() => setSaPricingOpen(true)} className="px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 text-xs font-medium hover:bg-amber-100">تسعير تلقائي (سعودي)</button>
+          </div>
+        )}
+
+        {filteredItems.length === 0 ? (
+          <div className="py-10 text-center">
+            <p className="text-[var(--color-text)] font-medium">لا توجد التزامات{listFilter !== 'all' ? ` (${listFilter === 'overdue' ? 'متأخرة' : 'قريبة'})` : ''}</p>
+            {allItems.length === 0 && (
+              <p className="text-sm text-[var(--color-muted)] mt-2">أضف أول التزام (مثل: إيجار المكتب، فاتورة الكهرباء، رسوم البلدية)</p>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {filteredItems.map((item) => {
+              const status = getStatusInfo(item);
+              const catLabel = CATEGORY_LABELS_AR[normalizeRecurringCategory(item.category)] || CATEGORY_LABELS_AR.other;
+              const freqLabel = FREQUENCY_LABELS[String(item.frequency || '').toLowerCase()] || 'شهري';
               return (
-                <div key={k} className={`p-2 rounded-lg border ${badge}`}>
-                  <div className="text-[11px] font-semibold">{k}: {row.utilizationPct}%</div>
-                  <div className="text-[11px]">{row.spent} / {row.target}</div>
+                <div
+                  key={item.id}
+                  id={`rec-${item.id}`}
+                  className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] hover:shadow-sm transition-shadow"
+                  data-overdue={isPastDue(item) ? '1' : '0'}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                    {/* Info */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="font-semibold text-[var(--color-text)] truncate">{item.title || '—'}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] border ${status.color}`}>{status.label}</span>
+                        <span className="px-2 py-0.5 rounded-full text-[11px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)]">{catLabel}</span>
+                      </div>
+                      <div className="flex flex-wrap gap-3 mt-1 text-xs text-[var(--color-muted)]">
+                        <span>{freqLabel}</span>
+                        {item.nextDueDate && <span>الاستحقاق: {item.nextDueDate}</span>}
+                        <span className="font-semibold text-[var(--color-text)]">
+                          {Number(item.amount) > 0 ? <Currency value={item.amount} /> : <span className="text-amber-600">غير مسعّر</span>}
+                        </span>
+                      </div>
+                      {item.notes?.trim() && <div className="text-xs text-[var(--color-muted)] mt-1">{item.notes}</div>}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex flex-wrap gap-1.5 justify-end shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const r = (Array.isArray(recurring) ? recurring : []).find(x => x.id === item.id);
+                          if (r) startPayNow(r);
+                        }}
+                        disabled={Number(item.amount) === 0}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${Number(item.amount) === 0 ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-green-600 text-white border-green-600 hover:bg-green-700'}`}
+                        aria-label="سجّل دفعة"
+                      >
+                        سجّل دفعة
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => startEditRecurring(item)}
+                        className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-xs font-medium hover:bg-[var(--color-bg)]"
+                        aria-label="تعديل"
+                      >
+                        تعديل
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteRecurring(item.id)}
+                        className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50"
+                        aria-label="حذف"
+                      >
+                        حذف
+                      </button>
+                    </div>
+                  </div>
                 </div>
               );
             })}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Compliance Shield */}
-        <div className="p-3 rounded-xl border border-gray-100 bg-white">
-          <div className="font-bold text-gray-900">🛡️ درع الامتثال</div>
-          <div className="mt-2 flex items-center justify-between">
-            <div className="text-2xl font-bold text-gray-900">{compliance?.score ?? '—'}</div>
-            <span className={`px-2 py-0.5 rounded-full text-[11px] border ${String(compliance?.status).includes('خطر') ? 'border-red-100 bg-red-50 text-red-700' : String(compliance?.status).includes('انتباه') ? 'border-amber-100 bg-amber-50 text-amber-800' : 'border-green-100 bg-green-50 text-green-700'}`}>{compliance?.status || '—'}</span>
+
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* القسم 3: ملخص شهري بسيط (بطاقة واحدة)                     */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
+        <h4 className="font-bold text-[var(--color-text)] mb-3">الملخص المالي</h4>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
+            <div className="text-xs text-[var(--color-muted)]">إجمالي شهري</div>
+            <div className="mt-1 text-lg font-bold text-[var(--color-text)]"><Currency value={monthlyTotal} /></div>
           </div>
-          <div className="mt-2 text-xs text-gray-500">أبرز 3 أسباب:</div>
-          {(!compliance?.drivers || compliance.drivers.length === 0) ? (
-            <div className="text-sm text-gray-600 mt-1">لا يوجد مخالفات واضحة.</div>
-          ) : (
-            <div className="mt-1 text-sm text-gray-700 flex flex-col gap-1">
-              {compliance.drivers.map((d, idx) => (
-                <div key={`${d.id}-${idx}`}>• {d.reason}: {d.title}</div>
-              ))}
+          {overdueTotal > 0 && (
+            <div className="p-3 rounded-xl border border-red-200 bg-red-50">
+              <div className="text-xs text-red-600">متأخر</div>
+              <div className="mt-1 text-lg font-bold text-red-700"><Currency value={overdueTotal} /></div>
             </div>
           )}
+          <div className="p-3 rounded-xl border border-amber-200 bg-amber-50">
+            <div className="text-xs text-amber-700">مستحق هذا الشهر</div>
+            <div className="mt-1 text-lg font-bold text-amber-800"><Currency value={thisMonthDue} /></div>
+          </div>
+          <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
+            <div className="text-xs text-[var(--color-muted)]">تقدير سنوي</div>
+            <div className="mt-1 text-lg font-bold text-[var(--color-text)]"><Currency value={yearlyEstimate} /></div>
+          </div>
+          <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
+            <div className="text-xs text-[var(--color-muted)]">عدد الالتزامات</div>
+            <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{allItems.length}</div>
+          </div>
         </div>
 
-        {/* Month Awareness (display only) */}
-        <div className="p-3 rounded-xl border border-gray-100 bg-white">
-          <div className="font-bold text-gray-900">وعي الشهر (عرض فقط)</div>
-          {(() => {
-            const now = new Date();
-            const daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-            const day = now.getDate();
-            const left = Math.max(0, daysInMonth - day);
-
-            const monthlyBurn = Number(brain?.burn?.monthly) || 0;
-            const spentThisMonth = Object.values(spendByBucket || {}).reduce((a, x) => a + (Number(x)||0), 0);
-            const expectedRemaining = monthlyBurn > 0 ? (monthlyBurn * (left / daysInMonth)) : 0;
-            const projected = spentThisMonth + expectedRemaining;
-
-            const risk = (monthlyBurn > 0 && projected > monthlyBurn * 1.05);
-            return (
-              <>
-                <div className="mt-2 text-sm text-gray-700">أيام متبقية: <strong>{left}</strong></div>
-                <div className="text-sm text-gray-700 mt-1">Burn متوقع حتى نهاية الشهر: <strong><Currency value={expectedRemaining} /></strong></div>
-                <div className={`mt-2 p-2 rounded-lg border text-sm ${risk ? 'bg-amber-50 border-amber-100 text-amber-900' : 'bg-green-50 border-green-100 text-green-800'}`}>{risk ? 'احتمال تجاوز' : 'الشهر في منطقة آمنة'}</div>
-              </>
-            );
-          })()}
-        </div>
-      </div>
-    ) : null}
-  </div>
-
-            <LedgerInboxTab
-    inbox={inbox}
-    cashPlan={cashPlan}
-    brain={brain}
-    Currency={Currency}
-    inboxFilter={inboxFilter}
-    setInboxFilter={setInboxFilter}
-    inboxView={inboxView}
-    recurring={recurring}
-    startPayNow={startPayNow}
-    updateRecurringOps={updateRecurringOps}
-    toast={toast}
-    refresh={refresh}
-    lastPayNowAt={lastPayNowAt}
-    daysSince={daysSince}
-    addDaysISO={addDaysISO}
-    setHistoryModal={setHistoryModal}
-  />
-
-{/* Ledger Brain Dashboard */}
-  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-    <div className="flex flex-wrap items-start justify-between gap-2">
-      <div>
-        <h4 className="font-bold text-gray-900">🧠 لوحة الذكاء المالي</h4>
-        <p className="text-xs text-gray-500 mt-1">عرض فقط • بدون أي تغيير على البيانات</p>
-      </div>
-    </div>
-
-    {/* Pro: Daily Playbook */}
-    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
-      <div className="flex items-center justify-between gap-2">
-        <h5 className="font-bold text-gray-900">🎯 خطة اليوم</h5>
-        <span className="text-xs text-gray-500">Top 5</span>
-      </div>
-      {(!brain?.playbook || brain.playbook.length === 0) ? (
-        <p className="text-sm text-gray-500 mt-2">دفترك منضبط اليوم.</p>
-      ) : (
-        <div className="mt-3 flex flex-col gap-2">
-          {brain.playbook.map((t) => (
-            <div key={t.recurringId} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-gray-100 bg-gray-50">
-              <div className="min-w-0">
-                <div className="font-semibold text-gray-900 truncate">{t.title}</div>
-                <div className="text-xs text-gray-500 mt-1">{t.reason}</div>
-              </div>
-              <button type="button" onClick={() => {
-                const el = document.getElementById(`rec-${t.recurringId}`);
-                if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب للبند">اذهب للبند</button>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-
-    {/* Pro: Saudi Benchmarks */}
-    <div className="mt-3 bg-white rounded-xl border border-gray-100 p-4">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h5 className="font-bold text-gray-900">📊 مقارنة بالسوق (تقديري)</h5>
-          <p className="text-xs text-gray-500 mt-1">نِسَب من Burn الشهري (عناصر مسعّرة فقط)</p>
-        </div>
-      </div>
-
-      {brain?.benchmarks ? (
-        <>
-          <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-            {brain.benchmarks.flags.map((f) => (
-              <div key={f.type} className="p-2 rounded-lg border border-gray-100 bg-gray-50">
-                <div className="text-gray-500">{f.type === 'rent' ? 'إيجار' : f.type === 'utilities' ? 'مرافق' : 'تسويق'}</div>
-                <div className="mt-1 font-semibold text-gray-900">{Math.round((f.ratio || 0) * 100)}%</div>
-                <div className={`mt-1 inline-flex px-2 py-0.5 rounded-full border text-[11px] ${f.status === 'high' ? 'border-red-100 bg-red-50 text-red-700' : 'border-green-100 bg-green-50 text-green-700'}`}>{f.status === 'high' ? 'أعلى من الشائع' : 'ضمن الشائع'}</div>
+        {/* تنبيهات بسيطة */}
+        {ledgerAlerts && ledgerAlerts.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2">
+            {ledgerAlerts.map(a => (
+              <div key={a.id} className="p-3 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-800">
+                <span className="font-semibold">{a.title}</span>: {a.reason}
               </div>
             ))}
           </div>
-          <p className="mt-3 text-xs text-gray-600">{brain.benchmarks.commentary}</p>
-        </>
-      ) : (
-        <p className="text-sm text-gray-500 mt-2">—</p>
-      )}
-    </div>
-
-    <div className="mt-3 grid gap-3 md:grid-cols-4">
-      <div className={`p-3 rounded-xl border bg-gray-50 ${brain?.benchmarks?.flags?.some(f => f.type==='rent' && f.status==='high') ? 'border-amber-200' : 'border-gray-100'}`}>
-        <div className="flex items-start justify-between gap-2">
-          <div className="text-xs text-gray-500">Burn Rate</div>
-          <button type="button" onClick={() => setBrainDetails('burn')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-        </div>
-        <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.burn?.monthly || 0} /> / شهر</div>
-        <div className="mt-1 text-xs text-gray-600">90 يوم: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.d90 || 0} /></span></div>
-        <div className="text-xs text-gray-600">سنة: <span className="font-semibold text-gray-900"><Currency value={brain?.burn?.yearly || 0} /></span></div>
+        )}
       </div>
 
-      <div className={`p-3 rounded-xl border bg-gray-50 ${Number(brain?.pressure?.score||0) > 75 ? 'border-red-200' : 'border-gray-100'}`}>
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-gray-500">ضغط السيولة</div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setBrainDetails('pressure')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-            <span className="text-xs font-semibold text-gray-900">{brain?.pressure?.score ?? 0}/100</span>
-          </div>
-        </div>
-        <div className="mt-2 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط ضغط السيولة">
-          <div className={`h-full ${Number(brain?.pressure?.score||0) >= 70 ? 'bg-red-600' : Number(brain?.pressure?.score||0) >= 40 ? 'bg-amber-500' : 'bg-green-600'}`} style={{ width: `${Math.min(100, Number(brain?.pressure?.score||0))}%` }} />
-        </div>
-        <div className="mt-2 text-xs text-gray-700">{brain?.pressure?.band || '—'}</div>
-      </div>
 
-      <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-gray-500">مخاطر 90 يوم</div>
-          <div className="flex items-center gap-2">
-            <button type="button" onClick={() => setBrainDetails('risk90')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-            <span className={`text-xs px-2 py-0.5 rounded-full border ${brain?.risk90?.level === 'critical' ? 'border-red-100 bg-red-50 text-red-700' : brain?.risk90?.level === 'high' ? 'border-amber-100 bg-amber-50 text-amber-800' : brain?.risk90?.level === 'medium' ? 'border-blue-100 bg-blue-50 text-blue-700' : 'border-gray-200 bg-white text-gray-600'}`}>{brain?.risk90?.label || '—'}</span>
-          </div>
-        </div>
-        <div className="mt-1 text-sm font-semibold text-gray-900"><Currency value={brain?.risk90?.due90Total || 0} /></div>
-        <div className="mt-1 text-xs text-gray-600">عدد البنود: <span className="font-semibold text-gray-900">{brain?.risk90?.due90Count ?? 0}</span></div>
-      </div>
+      {/* ════════════════════════════════════════════════════════════ */}
+      {/* القسم 4: تفاصيل متقدمة (مطوية افتراضياً)                   */}
+      {/* ════════════════════════════════════════════════════════════ */}
+      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-sm mb-4">
+        <button
+          type="button"
+          onClick={() => setAdvancedOpen(!advancedOpen)}
+          className="w-full flex items-center justify-between p-4 md:p-5 text-[var(--color-text)] font-bold hover:bg-[var(--color-bg)] rounded-xl transition-colors"
+          aria-expanded={advancedOpen}
+        >
+          <span>عرض التحليلات المتقدمة</span>
+          <span className="text-lg">{advancedOpen ? '▲' : '▼'}</span>
+        </button>
 
-      <div className="p-3 rounded-xl border border-gray-100 bg-gray-50">
-        <div className="flex items-center justify-between gap-2">
-          <div className="text-xs text-gray-500">الاتجاه التشغيلي</div>
-          <button type="button" onClick={() => setBrainDetails('trend')} className="text-xs text-blue-700 hover:underline" aria-label="تفاصيل الحساب">تفاصيل الحساب</button>
-        </div>
-        <div className="mt-1 flex items-center gap-2">
-          <span className="text-sm font-semibold text-gray-900">{brain?.trend?.trend || '—'}</span>
-          <span className="text-sm text-gray-500">{brain?.trend?.trend === 'يتحسن' ? '↑' : brain?.trend?.trend === 'يتراجع' ? '↓' : '→'}</span>
-        </div>
-        <div className="mt-1 text-xs text-gray-600">60 يوم: دفعات <span className="font-semibold text-gray-900">{brain?.trend?.paid60 ?? 0}</span> / مستحق <span className="font-semibold text-gray-900">{brain?.trend?.due60 ?? 0}</span></div>
-      </div>
-    </div>
+        {advancedOpen && (
+          <div className="p-4 md:p-5 pt-0 flex flex-col gap-4">
 
-    {(() => {
-      const pressure = Number(brain?.pressure?.score || 0);
-      const unpricedRatio = Number(brain?.pressure?.unpricedRatio || 0);
-      const criticalNow = seededOnlyList.some(r => String(r?.riskLevel || '').toLowerCase() === 'high' && (isPastDue(r) || Number(r.amount) === 0));
-      const show = (brain?.cluster === true) || criticalNow || pressure > 70 || unpricedRatio > 0.40;
-      if (!show) return null;
-      return (
-        <div className="mt-3 p-3 rounded-xl border border-amber-100 bg-amber-50">
-          <div className="font-semibold text-amber-900 text-sm">تنبيه تشغيلي</div>
-          <div className="text-xs text-amber-900 mt-1">دفتر معرض لمخاطر تشغيلية خلال 90 يوم. (ضغط السيولة/تأخر/High-risk/عدم تسعير)</div>
-          <div className="mt-2">
-            <button type="button" onClick={() => {
-              const el = document.querySelector('[data-critical="1"], [data-overdue="1"]');
-              if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }} className="px-3 py-2 rounded-lg bg-white border border-amber-200 text-amber-900 text-sm font-medium hover:bg-amber-100" aria-label="انتقل للبنود الحرجة">انتقل للبنود الحرجة</button>
-          </div>
-        </div>
-      );
-    })()}
-  </div>
-
-            <LedgerForecastTab
-    forecastRunRate={forecastRunRate}
-    cashGap={cashGap}
-    assumedInflow={assumedInflow}
-    setAssumedInflow={setAssumedInflow}
-    Currency={Currency}
-    forecastPreset={forecastPreset}
-    setForecastPreset={setForecastPreset}
-    scRent={scRent}
-    setScRent={setScRent}
-    scUtilities={scUtilities}
-    setScUtilities={setScUtilities}
-    scMaintenance={scMaintenance}
-    setScMaintenance={setScMaintenance}
-    scMarketing={scMarketing}
-    setScMarketing={setScMarketing}
-    scOther={scOther}
-    setScOther={setScOther}
-    forecastInsights={forecastInsights}
-    toast={toast}
-  />
-
-{/* Ledger Intelligence v1 */}
-  <div className="grid gap-3 md:grid-cols-3 mb-4">
-    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h4 className="font-bold text-gray-900">صحة الدفتر</h4>
-          <p className="text-xs text-gray-500 mt-1">عرض فقط • تعتمد على البنود seeded وحركات الدفتر (meta)</p>
-        </div>
-        <span className="px-2 py-1 rounded-full text-xs border border-gray-200 bg-gray-50 text-gray-700">{health?.score ?? 0}/100</span>
-      </div>
-
-      <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة التسعير</span><span className="font-semibold text-gray-900">{health ? `${health.pricedCount}/${health.totalSeeded}` : '—'}</span></div>
-        <div className="flex items-center justify-between gap-2"><span className="text-gray-600">نسبة الانضباط (30 يوم)</span><span className="font-semibold text-gray-900">{health ? `${Math.round((health.disciplineRatio || 0) * 100)}%` : '—'}</span></div>
-        <div className="flex items-center justify-between gap-2"><span className="text-gray-600">مخاطر</span><span className="font-semibold text-gray-900">{health ? `High ${health.highRiskCount} • متأخر ${health.overdueCount} • قادم ${health.dueSoon14Count}` : '—'}</span></div>
-      </div>
-
-      <button type="button" onClick={() => setHealthHelpOpen(v => !v)} className="mt-3 text-xs text-blue-700 hover:underline" aria-label="كيف نحسبها؟">كيف نحسبها؟</button>
-      {healthHelpOpen ? (
-        <div className="mt-2 text-xs text-gray-600 p-3 rounded-lg bg-gray-50 border border-gray-100">
-          score = (التسعير×50) + (١-نسبة التأخر)×30 + (١-نسبة High-risk غير المسعّر)×20. ويتم قصّه بين 0 و100.
-        </div>
-      ) : null}
-    </div>
-
-    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h4 className="font-bold text-gray-900">توقعات السنة</h4>
-          <p className="text-xs text-gray-500 mt-1">التوقعات تُحسب من البنود المسعّرة فقط</p>
-        </div>
-      </div>
-
-      <div className="mt-3 text-xs text-gray-700 flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2"><span className="text-gray-600">Annual Run-rate</span><span className="font-semibold text-gray-900"><Currency value={projection.annualRunRate} /></span></div>
-        <div className="flex items-center justify-between gap-2"><span className="text-gray-600">الحد الأدنى</span><span className="font-semibold text-gray-900"><Currency value={projection.annualMin} /></span></div>
-        <div className="flex items-center justify-between gap-2"><span className="text-gray-600">الحد الأعلى</span><span className="font-semibold text-gray-900"><Currency value={projection.annualMax} /></span></div>
-      </div>
-      <p className="mt-2 text-xs text-gray-500">(min/max تظهر فقط إذا كان للبند priceBand)</p>
-    </div>
-
-    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-      <div className="flex items-start justify-between gap-2">
-        <div>
-          <h4 className="font-bold text-gray-900">محاكاة سريعة</h4>
-          <p className="text-xs text-gray-500 mt-1">لا تغيّر البيانات • حساب لحظي</p>
-        </div>
-      </div>
-
-      <div className="mt-3 flex flex-col gap-2 text-xs">
-        <div>
-          <div className="flex items-center justify-between"><span>زيادة الإيجارات %</span><strong>{simRentPct}%</strong></div>
-          <input type="range" min="0" max="30" value={simRentPct} onChange={(e) => setSimRentPct(Number(e.target.value))} className="w-full" aria-label="زيادة الإيجارات" />
-        </div>
-        <div>
-          <div className="flex items-center justify-between"><span>زيادة الفواتير %</span><strong>{simBillsPct}%</strong></div>
-          <input type="range" min="0" max="30" value={simBillsPct} onChange={(e) => setSimBillsPct(Number(e.target.value))} className="w-full" aria-label="زيادة الفواتير" />
-        </div>
-        <div>
-          <div className="flex items-center justify-between"><span>ضغط الصيانة %</span><strong>{simMaintPct}%</strong></div>
-          <input type="range" min="0" max="30" value={simMaintPct} onChange={(e) => setSimMaintPct(Number(e.target.value))} className="w-full" aria-label="ضغط الصيانة" />
-        </div>
-
-        <div className="flex flex-wrap gap-2 mt-1">
-          <button type="button" onClick={() => { setSimRentPct(0); setSimBillsPct(0); setSimMaintPct(0); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="متفائل">متفائل</button>
-          <button type="button" onClick={() => { setSimRentPct(8); setSimBillsPct(6); setSimMaintPct(5); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="واقعي">واقعي</button>
-          <button type="button" onClick={() => { setSimRentPct(20); setSimBillsPct(18); setSimMaintPct(15); }} className="px-3 py-2 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50" aria-label="ضاغط">ضاغط</button>
-        </div>
-
-        {(() => {
-          const scenario = computeScenario({ recurringItems: seededOnlyList, rentPct: simRentPct, billsPct: simBillsPct, maintPct: simMaintPct });
-          return (
-            <div className="mt-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
-              <div className="flex items-center justify-between gap-2"><span className="text-gray-600">New Annual Forecast</span><span className="font-semibold text-gray-900"><Currency value={scenario.newAnnual} /></span></div>
-              <div className="flex items-center justify-between gap-2 mt-1"><span className="text-gray-600">الفرق</span><span className={`font-semibold ${scenario.delta >= 0 ? 'text-red-700' : 'text-green-700'}`}>{scenario.delta >= 0 ? '+' : ''}<Currency value={scenario.delta} /></span></div>
-            </div>
-          );
-        })()}
-      </div>
-    </div>
-  </div>
-
-  {/* Ledger Operator Mode */}
-  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h4 className="font-bold text-gray-900">لوحة تشغيل الدفتر</h4>
-        <p className="text-sm text-gray-500 mt-1">الأولوية الآن (متأخر ثم أقرب 14 يوم) • دفتر: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-
-        <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700">
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري (مسعّر): <strong className="text-gray-900"><Currency value={operatorMode.monthlyTotal} /></strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">مسعّر: <strong className="text-gray-900">{operatorMode.pricedCount}</strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">غير مسعّر: <strong className="text-gray-900">{operatorMode.unpricedCount}</strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">متأخر: <strong className="text-gray-900">{operatorMode.overdueCount}</strong></span>
-        </div>
-
-        <div className="mt-3 flex flex-col gap-2">
-          {operatorMode.priorityNow.length === 0 ? (
-            <div className="text-sm text-gray-500">لا توجد مهام تشغيلية قريبة.</div>
-          ) : (
-            operatorMode.priorityNow.map((r) => (
-              <div key={r.id} className="flex flex-wrap items-center justify-between gap-2 p-3 rounded-lg border border-gray-100 bg-white">
-                <div className="min-w-0">
-                  <div className="font-semibold text-gray-900 truncate">{r.title || '—'}</div>
-                  <div className="text-xs text-gray-500 mt-1 flex flex-wrap items-center gap-2">
-                    <span>{r.nextDueDate || '—'}</span>
-                    <span className="text-gray-300">•</span>
-                    <span><Currency value={Number(r.amount) || 0} /></span>
-                    {isPastDue(r) ? (
-                      <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">قادم</span>
+            {/* توقعات 30/60/90 يوم */}
+            <div>
+              <h5 className="font-semibold text-[var(--color-text)] mb-2">توقعات الاستحقاق</h5>
+              <div className="grid grid-cols-3 gap-3">
+                {[
+                  { label: '30 يوم', data: outlook?.d30 },
+                  { label: '60 يوم', data: outlook?.d60 },
+                  { label: '90 يوم', data: outlook?.d90 },
+                ].map(({ label, data }) => (
+                  <div key={label} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">{label}</div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={data?.pricedTotal || 0} /></div>
+                    {(data?.unpricedCount || 0) > 0 && (
+                      <div className="text-[11px] text-amber-600 mt-1">{data.unpricedCount} غير مسعّر</div>
                     )}
                   </div>
-                </div>
-                <div className="flex flex-wrap gap-2 justify-end">
-                  <button
-                    type="button"
-                    disabled={Number(r.amount) === 0}
-                    title={Number(r.amount) === 0 ? 'حدد المبلغ أولاً' : 'سجّل كدفعة الآن'}
-                    onClick={() => startPayNow(r)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border ${Number(r.amount) === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-                    aria-label="سجّل كدفعة الآن"
-                  >
-                    سجّل كدفعة الآن
-                  </button>
-                </div>
+                ))}
               </div>
-            ))
-          )}
-        </div>
-
-        <p className="text-xs text-gray-500 mt-3">الأرقام المقترحة تقديرية لمساعدتك على الانضباط، ويمكن تعديلها.</p>
-      </div>
-
-      <div className="flex flex-col items-end gap-2">
-        {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
-        <button
-          type="button"
-          onClick={openPricingWizard}
-          className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
-          aria-label="مرّرني على غير المسعّر"
-        >
-          مرّرني على غير المسعّر
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-    <div className="flex items-start justify-between gap-3">
-      <div>
-        <h4 className="font-bold text-gray-900">التزامات متكررة</h4>
-        <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-
-        {/* Summary (display-only) */}
-        <div className="mt-3 grid grid-cols-2 sm:flex sm:flex-wrap gap-2 items-stretch text-xs text-gray-700" id="ledger-summary">
-          {/* Aggregations */}
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي شهري: <strong className="text-gray-900"><Currency value={recurringDashboard.monthlyTotal} /></strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي سنوي: <strong className="text-gray-900"><Currency value={recurringDashboard.yearlyTotal} /></strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إجمالي 30 يوم: <strong className="text-gray-900"><Currency value={recurringDashboard.within30Total} /></strong></span>
-
-          {/* Compliance */}
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">الكل: <strong className="text-gray-900">{recurringDashboard.totalCount}</strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">إلزامي: <strong className="text-gray-900">{recurringDashboard.requiredCount}</strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">غير مُسعّر: <strong className="text-gray-900">{recurringDashboard.unpricedCount}</strong></span>
-          <span className="px-2 py-1 rounded-md bg-gray-50 border border-gray-100">خطر مرتفع: <strong className="text-gray-900">{recurringDashboard.highRiskCount}</strong></span>
-
-          {/* Completeness */}
-          {completeness ? (
-            <span className="col-span-2 sm:col-span-1 px-2 py-1 rounded-md bg-gray-50 border border-gray-100">
-              اكتمال الدفتر: <strong className="text-gray-900">{completeness.pct}%</strong>
-              <span className="block mt-1 h-2 rounded bg-gray-200 overflow-hidden" aria-label="شريط اكتمال">
-                <span className="block h-full bg-blue-600" style={{ width: `${completeness.pct}%` }} />
-              </span>
-            </span>
-          ) : null}
-        </div>
-
-        {/* Next 3 dues */}
-        <div className="mt-3 text-xs text-gray-600">
-          <div className="font-medium text-gray-800 mb-1">القادم (أقرب 3):</div>
-          {recurringDashboard.next3.length === 0 ? (
-            <div>—</div>
-          ) : (
-            <div className="flex flex-col gap-1">
-              {recurringDashboard.next3.map((x) => (
-                <div key={x.id} className="flex flex-wrap items-center gap-2">
-                  <span className="text-gray-900">{x.title}</span>
-                  <span className="text-gray-400">•</span>
-                  <span>{x.nextDueDate || '—'}</span>
-                  <span className="text-gray-400">•</span>
-                  <span><Currency value={Number(x.amount) || 0} /></span>
-                  {isPastDue(x) ? <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span> : null}
-                </div>
-              ))}
             </div>
-          )}
-        </div>
-      </div>
-      {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
-    </div>
 
-    <div className="flex flex-wrap gap-2 justify-end">
-      {unpricedList.length > 0 ? (
-        <button
-          type="button"
-          onClick={openPricingWizard}
-          className="px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-amber-900 text-sm font-medium hover:bg-amber-100"
-          aria-label="إكمال التسعير"
-        >
-          إكمال التسعير
-        </button>
-      ) : null}
-
-      <button
-        type="button"
-        onClick={() => setSaPricingOpen(true)}
-        className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50"
-        aria-label="معالج تسعير سعودي"
-      >
-        معالج تسعير سعودي
-      </button>
-    </div>
-
-    {/* Outlook 30/60/90 */}
-    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-      <div className="p-2 rounded-lg bg-white border border-gray-100">
-        <div className="text-gray-500">30 يوم</div>
-        <div className="font-semibold text-gray-900"><Currency value={outlook.d30.pricedTotal} /></div>
-        <div className="text-gray-500">{outlook.d30.count} • غير مُسعّر {outlook.d30.unpricedCount}</div>
-      </div>
-      <div className="p-2 rounded-lg bg-white border border-gray-100">
-        <div className="text-gray-500">60 يوم</div>
-        <div className="font-semibold text-gray-900"><Currency value={outlook.d60.pricedTotal} /></div>
-        <div className="text-gray-500">{outlook.d60.count} • غير مُسعّر {outlook.d60.unpricedCount}</div>
-      </div>
-      <div className="p-2 rounded-lg bg-white border border-gray-100">
-        <div className="text-gray-500">90 يوم</div>
-        <div className="font-semibold text-gray-900"><Currency value={outlook.d90.pricedTotal} /></div>
-        <div className="text-gray-500">{outlook.d90.count} • غير مُسعّر {outlook.d90.unpricedCount}</div>
-      </div>
-    </div>
-
-    {/* Budget targets */}
-    <div className="mt-3 grid grid-cols-2 gap-2">
-      <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">هدف شهري (اختياري)</label>
-        <input type="text" inputMode="decimal" value={budgetForm.monthlyTarget} onChange={(e) => setBudgetForm(f => ({ ...f, monthlyTarget: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="هدف شهري" placeholder="0" />
-      </div>
-      <div>
-        <label className="block text-xs font-medium text-gray-700 mb-1">هدف سنوي (اختياري)</label>
-        <input type="text" inputMode="decimal" value={budgetForm.yearlyTarget} onChange={(e) => setBudgetForm(f => ({ ...f, yearlyTarget: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="هدف سنوي" placeholder="0" />
-      </div>
-    </div>
-
-    <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs">
-      <div className="text-gray-600">
-        الفعلي (شهري/سنوي): <span className="font-semibold text-gray-900"><Currency value={actuals.actualMonthly} /></span> / <span className="font-semibold text-gray-900"><Currency value={actuals.actualYearly} /></span>
-      </div>
-      <div className={`px-2 py-1 rounded-full border ${budgetsHealth.status === 'danger' ? 'bg-red-50 border-red-100 text-red-800' : budgetsHealth.status === 'warn' ? 'bg-yellow-50 border-yellow-100 text-yellow-800' : budgetsHealth.status === 'good' ? 'bg-green-50 border-green-100 text-green-800' : 'bg-gray-50 border-gray-100 text-gray-700'}`}>
-        {budgetsHealth.status === 'danger' ? 'خطر' : budgetsHealth.status === 'warn' ? 'تحذير' : budgetsHealth.status === 'good' ? 'ممتاز' : 'بدون هدف'}
-      </div>
-      <button type="button" onClick={() => {
-        if (!activeId) return;
-        const m = parseRecurringAmount(budgetForm.monthlyTarget);
-        const y = parseRecurringAmount(budgetForm.yearlyTarget);
-        const budgets = normalizeBudgets({ monthlyTarget: Number.isFinite(m) ? m : 0, yearlyTarget: Number.isFinite(y) ? y : 0 });
-        const next = (Array.isArray(ledgers) ? ledgers : []).map(l => l.id === activeId ? { ...l, budgets, updatedAt: new Date().toISOString() } : l);
-        try { setLedgers(next); } catch { toast('تعذر حفظ الميزانية', 'error'); return; }
-        toast('تم حفظ الميزانية');
-        refresh();
-      }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="حفظ الميزانية">حفظ الميزانية</button>
-    </div>
-
-    {/* Alerts */}
-    {ledgerAlerts.length ? (
-      <div className="mt-3 p-3 rounded-lg border border-gray-100 bg-white">
-        <div className="font-semibold text-gray-900 text-sm mb-2">تنبيهات الدفتر</div>
-        <div className="flex flex-col gap-2">
-          {ledgerAlerts.map(a => (
-            <div key={a.id} className="flex flex-wrap items-center justify-between gap-2 text-xs">
+            {/* توزيع حسب التصنيف */}
+            {categoryDist.total > 0 && (
               <div>
-                <div className="font-medium text-gray-900">{a.title}</div>
-                <div className="text-gray-500">{a.reason}</div>
+                <h5 className="font-semibold text-[var(--color-text)] mb-2">توزيع الالتزامات حسب التصنيف</h5>
+                <div className="flex flex-col gap-2">
+                  {Object.entries(categoryDist.map)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, amt]) => {
+                      const pct = categoryDist.total > 0 ? Math.round((amt / categoryDist.total) * 100) : 0;
+                      return (
+                        <div key={cat} className="flex items-center gap-3">
+                          <span className="text-sm text-[var(--color-text)] w-28 shrink-0">{CATEGORY_LABELS_AR[cat] || 'أخرى'}</span>
+                          <div className="flex-1 h-4 bg-[var(--color-bg)] rounded-full overflow-hidden border border-[var(--color-border)]">
+                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />
+                          </div>
+                          <span className="text-xs text-[var(--color-muted)] w-16 text-end">{pct}%</span>
+                          <span className="text-xs font-semibold text-[var(--color-text)] w-24 text-end"><Currency value={amt} /></span>
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
-              <button type="button" onClick={() => {
-                if (a.action === 'open-pricing') { openPricingWizard(); return; }
-                if (a.action === 'scroll-summary') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-                if (a.action === 'scroll-overdue') { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
-              }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50" aria-label="اذهب">اذهب</button>
+            )}
+
+            {/* الميزانية */}
+            <div>
+              <h5 className="font-semibold text-[var(--color-text)] mb-2">أهداف الميزانية</h5>
+              <div className="grid md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">هدف شهري (ر.س)</label>
+                  <input type="text" inputMode="decimal" value={budgetForm.monthlyTarget} onChange={(e) => setBudgetForm(p => ({ ...p, monthlyTarget: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="هدف شهري" placeholder="0" />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">هدف سنوي (ر.س)</label>
+                  <input type="text" inputMode="decimal" value={budgetForm.yearlyTarget} onChange={(e) => setBudgetForm(p => ({ ...p, yearlyTarget: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="هدف سنوي" placeholder="0" />
+                </div>
+              </div>
+              <div className="flex justify-end mt-2">
+                <button type="button" onClick={() => saveLedgerBudgets({ monthlyTarget: budgetForm.monthlyTarget, yearlyTarget: budgetForm.yearlyTarget })} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">حفظ الميزانية</button>
+              </div>
+              {budgetsHealth && (budgetsHealth.monthlyTarget > 0 || budgetsHealth.yearlyTarget > 0) && (
+                <div className={`mt-2 p-3 rounded-xl border text-sm ${budgetsHealth.status === 'danger' ? 'border-red-200 bg-red-50 text-red-700' : budgetsHealth.status === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
+                  {budgetsHealth.status === 'danger' ? 'تجاوز الميزانية' : budgetsHealth.status === 'warn' ? 'قريب من حد الميزانية' : 'ضمن الميزانية'}
+                  {budgetsHealth.monthlyTarget > 0 && <> — الشهري: <Currency value={actuals.actualMonthly} /> من <Currency value={budgetsHealth.monthlyTarget} /></>}
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      </div>
-    ) : null}
-  </div>
 
-  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
-    <div className="grid md:grid-cols-2 gap-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">اسم الالتزام</label>
-        <input value={recForm.title} onChange={(e) => setRecForm(f => ({ ...f, title: e.target.value }))} maxLength={200} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الالتزام" placeholder="مثال: إيجار المكتب" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ</label>
-        <input type="text" inputMode="decimal" value={recForm.amount} onChange={(e) => setRecForm(f => ({ ...f, amount: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="مبلغ الالتزام" placeholder="0" />
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">التكرار</label>
-        <select value={recForm.frequency} onChange={(e) => setRecForm(f => ({ ...f, frequency: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="تكرار الالتزام">
-          <option value="monthly">شهري</option>
-          <option value="quarterly">ربع سنوي</option>
-          <option value="yearly">سنوي</option>
-          <option value="adhoc">عند الحاجة</option>
-        </select>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الاستحقاق القادم</label>
-        <input type="date" value={recForm.nextDueDate} onChange={(e) => setRecForm(f => ({ ...f, nextDueDate: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق القادم" />
-      </div>
-      <div className="md:col-span-2">
-        <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات (اختياري)</label>
-        <textarea value={recForm.notes} onChange={(e) => setRecForm(f => ({ ...f, notes: e.target.value }))} rows={3} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="ملاحظات الالتزام" />
-      </div>
-    </div>
-
-    <div className="flex gap-2 justify-end mt-4">
-      {recEditingId && (
-        <button type="button" onClick={() => { setRecEditingId(null); resetRecForm(); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء تعديل الالتزام">إلغاء</button>
-      )}
-      <button type="button" onClick={saveRecurring} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ الالتزام">{recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}</button>
-    </div>
-  </div>
-
-  {activeRecurring.length === 0 ? (
-    <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
-      <EmptyState message="لا توجد التزامات متكررة لهذا الدفتر" />
-      <div className="mt-3 flex justify-center">
-        <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'recurring' } }))} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="افتح المساعدة">افتح المساعدة</button>
-      </div>
-    </div>
-  ) : (
-    (() => {
-      const sections = [
-        { key: 'system', title: 'نظامي' },
-        { key: 'operational', title: 'تشغيلي' },
-        { key: 'maintenance', title: 'صيانة' },
-        { key: 'marketing', title: 'تسويق' },
-        { key: 'adhoc', title: 'عند الحاجة' },
-        { key: 'uncategorized', title: 'أخرى' },
-      ];
-
-      return (
-        <div className="flex flex-col gap-4">
-          {sections.map((s) => {
-            const listRaw = recurringSections[s.key] || [];
-            if (listRaw.length === 0) return null;
-            const list = sortRecurringInSection(listRaw);
-            const stats = sectionStats(list);
-
-            return (
-              <div key={s.key} className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
-                <div className="p-4 border-b border-gray-100 flex flex-wrap items-center justify-between gap-2">
-                  <div className="flex items-center gap-2">
-                    <h4 className="font-bold text-gray-900">{s.title}</h4>
-                    <span className="text-xs text-gray-500">({stats.count})</span>
-                    {stats.unpricedCount ? <span className="text-xs text-amber-800 bg-amber-50 border border-amber-100 rounded-full px-2 py-0.5">غير مُسعّر: {stats.unpricedCount}</span> : null}
+            {/* صحة الدفتر (مبسّطة) */}
+            {health && (
+              <div>
+                <h5 className="font-semibold text-[var(--color-text)] mb-2">صحة الدفتر</h5>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">الدرجة</div>
+                    <div className={`mt-1 text-2xl font-bold ${health.score >= 70 ? 'text-green-700' : health.score >= 40 ? 'text-amber-700' : 'text-red-700'}`}>{health.score || 0}</div>
                   </div>
-                  <div className="text-xs text-gray-600">المجموع: <strong className="text-gray-900"><Currency value={stats.subtotal} /></strong></div>
-                </div>
-
-                <div className="divide-y divide-gray-100">
-                  {list.map((r) => (
-                    <div
-                      key={r.id}
-                      id={`rec-${r.id}`}
-                      data-overdue={isPastDue(r) ? '1' : '0'}
-                      data-highrisk={normalizeRecurringRisk(r.riskLevel) === 'high' ? '1' : '0'}
-                      data-critical={(normalizeRecurringRisk(r.riskLevel) === 'high' && (isPastDue(r) || Number(r.amount) === 0)) ? '1' : '0'}
-                      className="p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="font-semibold text-gray-900 truncate flex flex-wrap gap-2 items-center">
-                          <span className="truncate">{r.title}</span>
-
-                          {normalizeRecurringCategory(r.category) ? (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] border border-gray-200 bg-white text-gray-600">{CATEGORY_LABEL[normalizeRecurringCategory(r.category)]}</span>
-                          ) : null}
-
-                          {r.required ? (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] border border-blue-100 bg-blue-50 text-blue-700">إلزامي</span>
-                          ) : null}
-
-                          {Number(r.amount) === 0 ? (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] border border-amber-100 bg-amber-50 text-amber-800">بحاجة لتسعير</span>
-                          ) : null}
-
-                          {normalizeRecurringRisk(r.riskLevel) === 'high' ? (
-                            <span className="px-2 py-0.5 rounded-full text-[11px] border border-red-100 bg-red-50 text-red-700">خطر مرتفع</span>
-                          ) : null}
-                        </div>
-
-                        <div className="text-xs text-gray-500 mt-1 flex flex-wrap gap-1 items-center">
-                          <span>{r.frequency}</span>
-                          <span>•</span>
-                          <span>{r.nextDueDate}</span>
-                          <span>•</span>
-                          <span><Currency value={r.amount} /></span>
-                          {isPastDue(r) ? <span className="px-2 py-0.5 rounded-full text-[11px] border border-yellow-100 bg-yellow-50 text-yellow-800">متأخر</span> : null}
-                        </div>
-                        {r.notes?.trim() ? <div className="text-xs text-gray-500 mt-1 whitespace-pre-wrap">{r.notes}</div> : null}
-                      </div>
-
-                      <div className="flex flex-wrap gap-2 justify-end">
-                        <button
-                          type="button"
-                          disabled={Number(r.amount) === 0}
-                          title={Number(r.amount) === 0 ? 'حدد المبلغ أولاً' : 'سجّل كدفعة الآن'}
-                          onClick={() => startPayNow(r)}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium border ${Number(r.amount) === 0 ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
-                          aria-label="سجّل كدفعة الآن"
-                        >
-                          سجّل كدفعة الآن
-                        </button>
-                        <button type="button" onClick={() => {
-                          setHistoryModal({ item: r });
-                        }} className="px-3 py-2 rounded-lg bg-white border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="سجل">🧾 سجل</button>
-                        <button type="button" onClick={() => startEditRecurring(r)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الالتزام">تعديل</button>
-                        <button type="button" onClick={() => deleteRecurring(r.id)} className="px-3 py-2 rounded-lg bg-red-50 text-red-700 border border-red-200 text-sm font-medium hover:bg-red-100" aria-label="حذف الالتزام">حذف</button>
-                      </div>
-                    </div>
-                  ))}
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">التسعير</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{health.pricingRatio != null ? `${Math.round(health.pricingRatio * 100)}%` : '—'}</div>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">الانضباط</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{health.disciplineRatio != null ? `${Math.round(health.disciplineRatio * 100)}%` : '—'}</div>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">اكتمال الدفتر</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{completeness?.pct ?? 0}%</div>
+                  </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-      );
-    })()
-  )}
-</>  );
+            )}
+
+            {/* معدل الإنفاق — مبسّط */}
+            {brain?.burn && (
+              <div>
+                <h5 className="font-semibold text-[var(--color-text)] mb-2">معدل الإنفاق</h5>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">شهري</div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={brain.burn.monthly || 0} /></div>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">90 يوم</div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={brain.burn.d90 || 0} /></div>
+                  </div>
+                  <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                    <div className="text-xs text-[var(--color-muted)]">سنوي</div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={brain.burn.yearly || 0} /></div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+      </div>
+    </>
+  );
 }
 
 export default React.memo(LedgerRecurringTab);

@@ -35,8 +35,8 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-gray-50/80 p-5 text-center text-gray-500" dir="rtl">
-        <h2 className="font-semibold text-gray-700 mb-1">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/80 p-5 text-center text-[var(--color-muted)]" dir="rtl">
+        <h2 className="font-semibold text-[var(--color-text)] mb-1">
           أقرب المستحقات
         </h2>
         <p className="text-sm">لا توجد مستحقات قريبة.</p>
@@ -45,13 +45,13 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
   }
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden" dir="rtl">
-      <div className="px-4 py-3 border-b border-gray-100">
-        <h2 className="font-semibold text-gray-900">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden" dir="rtl">
+      <div className="px-4 py-3 border-b border-[var(--color-border)]">
+        <h2 className="font-semibold text-[var(--color-text)]">
           أقرب المستحقات
         </h2>
       </div>
-      <ul className="divide-y divide-gray-100">
+      <ul className="divide-y divide-[var(--color-border)]">
         {sorted.map((due) => (
           <li key={due.id || due.dueDate + due.name} className="px-4 py-3">
             <div className="flex items-center justify-between gap-3">
@@ -61,13 +61,13 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
                   aria-hidden="true"
                 />
                 <div className="min-w-0">
-                  <p className="font-medium text-gray-900 truncate">{due.name || '—'}</p>
+                  <p className="font-medium text-[var(--color-text)] truncate">{due.name || '—'}</p>
                   <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-[var(--color-muted)]">
                       {getTimeLabel(due.daysRemaining)}
                     </span>
                     {due.recurring && (
-                      <span className="inline-flex px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-600">
+                      <span className="inline-flex px-1.5 py-0.5 rounded text-xs bg-[var(--color-bg)] text-[var(--color-muted)]">
                         متكرر
                       </span>
                     )}
@@ -86,7 +86,7 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
         ))}
       </ul>
       {onShowAll && (
-        <div className="px-4 py-3 border-t border-gray-100 bg-gray-50/50 text-center">
+        <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg)]/50 text-center">
           <button
             type="button"
             onClick={onShowAll}

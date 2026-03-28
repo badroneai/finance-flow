@@ -69,8 +69,8 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
   const svgWidth = Math.max(280, dayData.length * 48);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden p-4" dir="rtl">
-      <h2 className="font-semibold text-gray-900 mb-4">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden p-4" dir="rtl">
+      <h2 className="font-semibold text-[var(--color-text)] mb-4">
         نظرة الأسبوع
       </h2>
 
@@ -152,17 +152,17 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
       </div>
 
       {/* ملخص رقمي */}
-      <div className="mt-4 pt-4 border-t border-gray-100 space-y-1 text-sm">
+      <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-1 text-sm">
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">متوقع الدخل:</span>
+          <span className="text-[var(--color-muted)]">متوقع الدخل:</span>
           <span className="font-medium text-emerald-600">{formatFull(expectedIncome)} ر.س</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="text-gray-600">متوقع المصروف:</span>
+          <span className="text-[var(--color-muted)]">متوقع المصروف:</span>
           <span className="font-medium text-rose-600">{formatFull(expectedExpenses)} ر.س</span>
         </div>
-        <div className="flex justify-between items-center pt-1 border-t border-gray-100">
-          <span className="text-gray-700 font-medium">صافي:</span>
+        <div className="flex justify-between items-center pt-1 border-t border-[var(--color-border)]">
+          <span className="text-[var(--color-text)] font-medium">صافي:</span>
           <span className={`font-bold ${netCashflow >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
             {netCashflow >= 0 ? '' : '-'}{formatFull(Math.abs(netCashflow))} ر.س
           </span>

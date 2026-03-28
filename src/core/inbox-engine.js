@@ -9,7 +9,7 @@
  */
 
 import { getRecurringItems } from './ledger-store.js';
-import { dataStore } from './dataStore.js';
+import { getTransactionsForLedger } from './dataStore.js';
 
 const TZ = 'Asia/Riyadh';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -113,14 +113,6 @@ function duePriority(dueDateStr, todayStr, riskLevel) {
   return 'medium';
 }
 
-/** حركات الدفتر فقط */
-function getTransactionsForLedger(ledgerId) {
-  const lid = String(ledgerId || '').trim();
-  if (!lid) return [];
-  const all = (dataStore.transactions?.list?.() || []).filter(Boolean);
-  return all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
-}
-
 /** هل استحقاق معيّن (recurringId + dueDate) مدفوع؟ يطابق حركة بنفس recurringId وتاريخ الدفعة = dueDate أو بعدها ضمن نفس الدورة */
 function isDuePaid(transactions, recurringId, dueDateStr, nextDueStr) {
   const rid = String(recurringId || '');
@@ -216,12 +208,15 @@ export function expandRecurringToDues(recurringItems, fromDate, toDate, transact
  * حساب صندوق الوارد للدفتر
  *
  * @param {string} ledgerId - معرّف الدفتر
+ * @param {Object} [options={}] - خيارات اختيارية
+ * @param {Array} [options.transactions] - مصفوفة الحركات (يستخدم localStorage كبديل إن لم تُمرَّر)
+ * @param {Array} [options.recurringItems] - مصفوفة الالتزامات المتكررة (يستخدم localStorage كبديل إن لم تُمرَّر)
  * @returns {Object} { overdue, thisWeek, thisMonth, summary }
  */
-export function calculateInbox(ledgerId) {
+export function calculateInbox(ledgerId, options = {}) {
   const lid = String(ledgerId || '').trim();
-  const recurringItems = (getRecurringItems() || []).filter((r) => String(r?.ledgerId || '') === lid);
-  const transactions = getTransactionsForLedger(lid);
+  const recurringItems = (options.recurringItems || getRecurringItems() || []).filter((r) => String(r?.ledgerId || '') === lid);
+  const transactions = options.transactions || getTransactionsForLedger(lid);
 
   const todayStr = dateStrRiyadh();
   const todayMs = parseDateStr(todayStr) || 0;

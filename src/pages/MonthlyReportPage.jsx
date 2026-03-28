@@ -1,15 +1,25 @@
 /**
  * صفحة التقرير الشهري — تقرأ معاملات الرابط وتُعرض MonthlyReportView (برومبت 5.2)
+ * إذا لم يُمرَّر ledgerId في الرابط → يستخدم الدفتر النشط من DataContext.
  */
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MonthlyReportView } from '../ui/reports/MonthlyReportView.jsx';
+import { useData } from '../contexts/DataContext.jsx';
 
 function MonthlyReportPage({ setPage }) {
   const [searchParams] = useSearchParams();
-  const ledgerId = searchParams.get('ledgerId') || '';
+  const { transactions, recurringItems, ledgers, activeLedgerId } = useData();
+  // أولوية: الرابط → الدفتر النشط
+  const ledgerId = searchParams.get('ledgerId') || activeLedgerId || '';
   const month = searchParams.get('month') || '';
   const year = searchParams.get('year') || '';
+
+  const dataOptions = useMemo(() => ({
+    transactions,
+    recurringItems,
+    ledgers,
+  }), [transactions, recurringItems, ledgers]);
 
   const handleBack = () => setPage?.('ledgers');
 
@@ -21,6 +31,7 @@ function MonthlyReportPage({ setPage }) {
         year={year || undefined}
         onBack={handleBack}
         setPage={setPage}
+        dataOptions={dataOptions}
       />
     </div>
   );

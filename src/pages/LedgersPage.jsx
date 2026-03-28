@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext.jsx';
+import { useData } from '../contexts/DataContext.jsx';
 import { ConfirmDialog } from '../ui/Modals.jsx';
 import { EmptyState, Badge, Icons } from '../ui/ui-common.jsx';
 import { Currency } from '../utils/format.jsx';
@@ -95,7 +97,29 @@ import { today, isValidDateStr, safeNum } from '../utils/helpers.js';
 // ============================================
 const LedgersPage = ({ setPage }) => {
   const toast = useToast();
-  const [tab, setTab] = useState('ledgers'); // ledgers | recurring | reports | performance
+  const location = useLocation();
+  const {
+    ledgers: dataLedgers,
+    activeLedgerId: dataActiveLedgerId,
+    setActiveLedgerId: setDataActiveLedgerId,
+    transactions: dataTransactions,
+    recurringItems: dataRecurringItems,
+    createLedger: createDataLedger,
+    updateLedger: updateDataLedger,
+    deleteLedger: deleteDataLedger,
+    createRecurringItem,
+    updateRecurringItem,
+    deleteRecurringItem,
+    fetchLedgers: fetchDataLedgers,
+    fetchRecurringItems: fetchDataRecurringItems,
+    fetchTransactions: fetchDataTransactions,
+    createTransaction: createDataTransaction,
+    isCloudMode,
+  } = useData();
+
+  // SPR-009: قراءة تبويب من URL parameter (مثلاً #/ledgers?tab=recurring)
+  const urlTab = new URLSearchParams(location.search).get('tab');
+  const [tab, setTab] = useState(urlTab || 'ledgers'); // ledgers | recurring | reports | performance
   const [confirm, setConfirm] = useState(null);
 
   const [ledgers, setLedgersState] = useState([]);
@@ -212,29 +236,57 @@ const LedgersPage = ({ setPage }) => {
     return Number.isFinite(n) ? n : NaN;
   };
 
-  const refresh = useCallback(() => {
+  // SPR-008: فصل الجلب عن مزامنة الحالة المحلية لمنع حلقة لا نهائية.
+  // سابقاً: refresh كانت تجلب + تقرأ حالة DataContext في نفس useCallback
+  // مما جعل البيانات المُحدّثة تُعيد إنشاء refresh → تُشغّل الـ effect → جلب مرة أخرى → حلقة.
+
+  // (1) جلب البيانات فقط — بدون قراءة حالة DataContext
+  const refresh = useCallback(async () => {
     try {
-      setLedgersState(getLedgers());
+      await fetchDataLedgers();
+      await fetchDataRecurringItems();
+      await fetchDataTransactions();
+    } catch {}
+  }, [fetchDataLedgers, fetchDataRecurringItems, fetchDataTransactions]);
+
+  // جلب أولي عند التحميل
+  useEffect(() => { refresh(); }, [refresh]);
+
+  // (2) مزامنة الحالة المحلية عند تغيّر بيانات DataContext
+  useEffect(() => {
+    try {
+      const ledgersData = (Array.isArray(dataLedgers) && dataLedgers.length > 0) ? dataLedgers : getLedgers();
+      setLedgersState(ledgersData || []);
     } catch {
       setLedgersState([]);
       toast('تعذر تحميل قائمة الدفاتر. تحقق من التخزين أو أعد تحميل الصفحة.', 'error');
     }
-    try { setActiveIdState(getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
-    try { setRecurringState(getRecurringItems() || []); } catch { setRecurringState([]); }
-  }, [toast]);
-
-  useEffect(() => { refresh(); }, [refresh]);
+    try { setActiveIdState(dataActiveLedgerId || getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
+    try {
+      const recData = (Array.isArray(dataRecurringItems) && dataRecurringItems.length > 0) ? dataRecurringItems : (getRecurringItems() || []);
+      setRecurringState(recData);
+    } catch { setRecurringState([]); }
+  }, [dataLedgers, dataActiveLedgerId, dataRecurringItems, toast]);
 
   // فتح تبويب محدد من خارج الصفحة (مثلاً من المستحقات: إدارة الالتزامات)
+  // SPR-009: يدعم أيضاً URL parameter مثل #/ledgers?tab=recurring
   useEffect(() => {
+    const validTabs = ['recurring', 'reports', 'performance', 'compare'];
+    // أولوية 1: URL query param
+    const qTab = new URLSearchParams(location.search).get('tab');
+    if (qTab && validTabs.includes(qTab)) {
+      setTab(qTab);
+      return;
+    }
+    // أولوية 2: sessionStorage (التوافق مع الكود القديم)
     try {
       const openTab = sessionStorage.getItem('ff_ledgers_open_tab');
-      if (openTab === 'recurring' || openTab === 'reports' || openTab === 'performance' || openTab === 'compare') {
+      if (openTab && validTabs.includes(openTab)) {
         setTab(openTab);
         sessionStorage.removeItem('ff_ledgers_open_tab');
       }
     } catch (_) {}
-  }, []);
+  }, [location.search]);
 
   // Keep budget form in sync with active ledger
   useEffect(() => {
@@ -276,7 +328,7 @@ const LedgersPage = ({ setPage }) => {
     });
   }, [activeId]);
 
-  const createLedger = () => {
+  const createLedger = async () => {
     const t = (newName || '').trim();
     if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
 
@@ -286,7 +338,7 @@ const LedgersPage = ({ setPage }) => {
       return `ledg_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
     })();
 
-    const next = [...(Array.isArray(ledgers) ? ledgers : []), {
+    const newLedger = {
       id,
       name: t,
       type: normalizeLedgerType(newType),
@@ -295,10 +347,18 @@ const LedgersPage = ({ setPage }) => {
       createdAt: ts,
       updatedAt: ts,
       archived: false,
-    }];
+    };
 
-    try { setLedgers(next); } catch { toast('تعذر حفظ الدفتر', 'error'); return; }
-    try { if (!getActiveLedgerId()) setActiveLedgerId(id); } catch {}
+    try {
+      await createDataLedger(newLedger);
+    } catch {
+      toast('تعذر حفظ الدفتر', 'error');
+      return;
+    }
+
+    try {
+      if (!getActiveLedgerId()) setDataActiveLedgerId(id);
+    } catch {}
 
     setNewName('');
     setNewType('office');
@@ -314,22 +374,25 @@ const LedgersPage = ({ setPage }) => {
     setEditingNote(String(ledger.note ?? ''));
   };
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     const t = (editingName || '').trim();
     if (!t) { toast('اسم الدفتر مطلوب', 'error'); return; }
 
-    const next = (Array.isArray(ledgers) ? ledgers : []).map(l => {
-      if (l.id !== editingId) return l;
-      return {
-        ...l,
+    const ledgerToUpdate = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === editingId);
+    if (!ledgerToUpdate) { toast('لم يتم العثور على الدفتر', 'error'); return; }
+
+    try {
+      await updateDataLedger(editingId, {
         name: t,
         type: normalizeLedgerType(editingType),
         note: normalizeNote(editingNote),
         updatedAt: new Date().toISOString(),
-      };
-    });
+      });
+    } catch {
+      toast('تعذر حفظ التعديل', 'error');
+      return;
+    }
 
-    try { setLedgers(next); } catch { toast('تعذر حفظ التعديل', 'error'); return; }
     toast('تم تحديث الدفتر');
     setEditingId(null);
     setEditingName('');
@@ -339,7 +402,13 @@ const LedgersPage = ({ setPage }) => {
   };
 
   const setActive = (id) => {
-    try { setActiveLedgerId(id); } catch { toast('تعذر تعيين الدفتر النشط', 'error'); return; }
+    try {
+      setActiveLedgerId(id);
+      setDataActiveLedgerId(id);
+    } catch {
+      toast('تعذر تعيين الدفتر النشط', 'error');
+      return;
+    }
     toast('تم تعيين الدفتر النشط');
     refresh();
   };
@@ -348,10 +417,10 @@ const LedgersPage = ({ setPage }) => {
   const activeRecurringRaw = (Array.isArray(recurring) ? recurring : []).filter(r => r.ledgerId === activeId);
 
   const CATEGORY_LABEL = {
-    system: 'نظامي',
-    operational: 'تشغيلي',
+    system: 'إيجار ورسوم',
+    operational: 'تشغيل ومرافق',
     maintenance: 'صيانة',
-    marketing: 'تسويق',
+    marketing: 'تسويق وإعلان',
     adhoc: 'عند الحاجة',
   };
 
@@ -374,11 +443,17 @@ const LedgersPage = ({ setPage }) => {
   const seededOnlyList = activeRecurring.filter(isSeededOnly);
 
   // P0 #4 و P0 #8 — useMemo لتقليل إعادة الحساب (ledgerTxs + brain)
+  // SPR-006: prefer DataContext transactions, fallback to localStorage
+  const allTransactionsRef = useMemo(() => {
+    return (Array.isArray(dataTransactions) && dataTransactions.length > 0)
+      ? dataTransactions
+      : (dataStore.transactions.list() || []);
+  }, [dataTransactions]);
+
   const ledgerTxs = useMemo(() => {
     if (!activeId) return [];
-    const all = dataStore.transactions.list();
-    return filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
-  }, [activeId]);
+    return filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: activeId });
+  }, [activeId, allTransactionsRef]);
 
   const health = useMemo(() => {
     if (!activeId) return null;
@@ -505,8 +580,8 @@ const LedgersPage = ({ setPage }) => {
 
   const ledgerReports = (() => {
     if (!activeId) return null;
-    const all = dataStore.transactions.list();
-    const txs = filterTransactionsForLedgerByMeta({ transactions: all, ledgerId: activeId });
+    // SPR-006: use DataContext transactions via allTransactionsRef
+    const txs = filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: activeId });
 
     const now = new Date();
     const daysAgo = (n) => {
@@ -535,7 +610,8 @@ const LedgersPage = ({ setPage }) => {
   })();
 
   // P0 #5 — قائمة الحركات مرة واحدة لكل render بدل استدعاء list() داخل map البطاقات
-  const allTxsForLedgerCards = dataStore.transactions.list();
+  // SPR-006: use DataContext transactions via allTransactionsRef
+  const allTxsForLedgerCards = allTransactionsRef;
 
   const ensureDateValue = (d) => {
     const x = String(d || '').trim();
@@ -668,19 +744,23 @@ const LedgersPage = ({ setPage }) => {
     setRecurringState(next);
   };
 
-  const updateRecurringOps = (itemId, patch = {}, historyEntry = null) => {
+  const updateRecurringOps = async (itemId, patch = {}, historyEntry = null) => {
     const list = Array.isArray(recurring) ? recurring : [];
     const ts = new Date().toISOString();
-    const next = list.map(r => {
-      if (r.id !== itemId) return r;
-      let updated = { ...r, ...patch, updatedAt: ts };
-      if (historyEntry) {
-        updated = pushHistoryEntry(updated, { ...historyEntry, at: historyEntry.at || ts });
+    let updated = { ...patch, updatedAt: ts };
+    if (historyEntry) {
+      const item = list.find(r => r.id === itemId);
+      if (item) {
+        updated = pushHistoryEntry({ ...item, ...updated }, { ...historyEntry, at: historyEntry.at || ts });
       }
-      return updated;
-    });
-    try { setRecurringItems(next); } catch { toast('تعذر حفظ حالة العنصر', 'error'); return false; }
-    setRecurringState(next);
+    }
+    try {
+      await updateRecurringItem(itemId, updated);
+    } catch {
+      toast('تعذر حفظ حالة العنصر', 'error');
+      return false;
+    }
+    setRecurringState(list.map(r => r.id === itemId ? { ...r, ...updated } : r));
     return true;
   };
 
@@ -698,7 +778,7 @@ const LedgersPage = ({ setPage }) => {
     setPayOpen(true);
   };
 
-  const submitPayNow = () => {
+  const submitPayNow = async () => {
     try {
       if (!activeId) { toast('اختر دفترًا نشطًا', 'error'); return; }
       if (!paySource?.id) { toast('اختر بندًا أولاً', 'error'); return; }
@@ -712,21 +792,23 @@ const LedgersPage = ({ setPage }) => {
       const paymentMethod = String(payForm.paymentMethod || 'cash');
 
       const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring: paySource });
-      const res = dataStore.transactions.create({
+      // SPR-006: use DataContext createTransaction (works with Supabase + localStorage)
+      const { data: txData, error: txError } = await createDataTransaction({
         type: 'expense',
         category: 'other',
         amount: safeNum(amount),
         paymentMethod,
         date,
         description,
+        ledgerId: activeId,
         meta,
       });
 
-      if (!res || !res.ok) { toast(res?.message || 'تعذر تسجيل الدفعة', 'error'); return; }
+      if (txError) { toast(txError?.message || 'تعذر تسجيل الدفعة', 'error'); return; }
 
       // Update recurring item ops + history (no schema change)
       try {
-        updateRecurringOps(
+        await updateRecurringOps(
           paySource.id,
           {
             status: 'resolved',
@@ -737,11 +819,11 @@ const LedgersPage = ({ setPage }) => {
           {
             type: 'pay_now',
             amount,
-            txId: res?.item?.id || res?.data?.id || res?.tx?.id || undefined,
+            txId: txData?.id || undefined,
             meta: { dueDate: paySource?.nextDueDate, method: paymentMethod },
           }
         );
-      } catch {}
+      } catch (err) {}
 
       setPayOpen(false);
       toast('تم تسجيل الدفعة');
@@ -751,7 +833,7 @@ const LedgersPage = ({ setPage }) => {
     }
   };
 
-  const saveLedgerBudgets = (patch = {}) => {
+  const saveLedgerBudgets = async (patch = {}) => {
     if (!activeId) return false;
     if (patch.monthlyTarget !== undefined) {
       const s = String(patch.monthlyTarget).trim();
@@ -761,12 +843,12 @@ const LedgersPage = ({ setPage }) => {
       const s = String(patch.yearlyTarget).trim();
       if (s !== '' && !Number.isFinite(Number(s))) { toast('قيمة الهدف السنوي غير صالحة. أدخل رقماً.', 'error'); return false; }
     }
+    const currentLedger = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === activeId);
+    if (!currentLedger) return false;
     const ts = new Date().toISOString();
-    const next = (Array.isArray(ledgers) ? ledgers : []).map(l => {
-      if (l.id !== activeId) return l;
-      return { ...l, budgets: { ...(l.budgets || {}), ...patch }, updatedAt: ts };
-    });
-    try { setLedgers(next); } catch { toast('تعذر حفظ الميزانيات', 'error'); return false; }
+    try {
+      await updateDataLedger(activeId, { budgets: { ...(currentLedger.budgets || {}), ...patch }, updatedAt: ts });
+    } catch { toast('تعذر حفظ الميزانيات', 'error'); return false; }
     toast('تم حفظ الميزانيات');
     refresh();
     return true;
@@ -822,10 +904,26 @@ const LedgersPage = ({ setPage }) => {
   };
 
   const deleteRecurring = (id) => {
-    const next = (Array.isArray(recurring) ? recurring : []).filter(r => r.id !== id);
-    try { setRecurringItems(next); } catch { toast('تعذر حذف الالتزام', 'error'); return; }
-    toast('تم حذف الالتزام');
-    refresh();
+    const item = (Array.isArray(recurring) ? recurring : []).find((r) => r.id === id);
+    const itemName = item?.title || 'الالتزام';
+    setConfirm({
+      title: 'حذف الالتزام',
+      message: `هل أنت متأكد من حذف "${itemName}"؟ لا يمكن التراجع عن هذا الإجراء.`,
+      confirmLabel: 'نعم، احذف',
+      danger: true,
+      onConfirm: async () => {
+        try {
+          await deleteRecurringItem(id);
+        } catch {
+          toast('تعذر حذف الالتزام', 'error');
+          setConfirm(null);
+          return;
+        }
+        toast('تم حذف الالتزام');
+        setConfirm(null);
+        refresh();
+      },
+    });
   };
 
   const handleLedgerTabSelect = useCallback((tabId) => setTab(tabId), []);
@@ -834,27 +932,27 @@ const LedgersPage = ({ setPage }) => {
     <LedgerTabsShell>
       <LedgerHeader tab={tab} onTabSelect={handleLedgerTabSelect} />
       {setPage && (
-        <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-gray-100 bg-gray-50/80 no-print" dir="rtl">
-          <span className="text-gray-500 text-sm">سريع:</span>
+        <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 no-print" dir="rtl">
+          <span className="text-[var(--color-muted)] text-sm">سريع:</span>
           <button type="button" onClick={() => setPage('pulse')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">النبض المالي</button>
-          <span className="text-gray-300">|</span>
+          <span className="text-[var(--color-muted)]">|</span>
           <button type="button" onClick={() => setPage('inbox')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">المستحقات</button>
-          <span className="text-gray-300">|</span>
+          <span className="text-[var(--color-muted)]">|</span>
           <button type="button" onClick={() => setPage('transactions')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">الحركات</button>
         </div>
       )}
 
       {tab === 'ledgers' && (
         <div id="tabpanel-ledgers" role="tabpanel" aria-labelledby="tab-ledgers" tabIndex={0}>
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
             <div className="grid md:grid-cols-3 gap-3 items-end">
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">اسم الدفتر الجديد</label>
-                <input value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={120} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">اسم الدفتر الجديد</label>
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={120} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">اختر نوع الدفتر</label>
-                <select value={newType} onChange={(e) => setNewType(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع الدفتر">
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">اختر نوع الدفتر</label>
+                <select value={newType} onChange={(e) => setNewType(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="نوع الدفتر">
                   <option value="office">🏢 مكتب</option>
                   <option value="chalet">🏡 شاليه</option>
                   <option value="apartment">🏠 شقة</option>
@@ -865,48 +963,48 @@ const LedgersPage = ({ setPage }) => {
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-gray-700 mb-1">وصف مختصر (اختياري)</label>
-                <input value={newNote} onChange={(e) => setNewNote(e.target.value)} maxLength={200} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="وصف مختصر" placeholder="وصف مختصر (اختياري)" />
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">وصف مختصر (اختياري)</label>
+                <input value={newNote} onChange={(e) => setNewNote(e.target.value)} maxLength={200} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="وصف مختصر" placeholder="وصف مختصر (اختياري)" />
               </div>
             </div>
             <div className="flex justify-end mt-3">
-              <button type="button" onClick={createLedger} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
+              <button type="button" onClick={() => createLedger()} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
             </div>
           </div>
 
           {(!ledgers || ledgers.length === 0) ? (
-            <div className="bg-white rounded-xl border border-gray-100 p-6 shadow-sm">
+            <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
               <EmptyState message="لا توجد دفاتر" />
               <div className="mt-3 flex justify-center">
-                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'ledgers' } }))} className="px-4 py-2 rounded-lg border border-gray-200 text-sm text-gray-700 hover:bg-gray-50" aria-label="افتح المساعدة">افتح المساعدة</button>
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'ledgers' } }))} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]" aria-label="افتح المساعدة">افتح المساعدة</button>
               </div>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {ledgers.filter(l => !l.archived).map((l) => (
-                <div key={l.id} className={`bg-white rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-gray-100'}`}>
+                <div key={l.id} className={`bg-[var(--color-surface)] rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-[var(--color-border)]'}`}>
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <h4 className="font-bold text-gray-900 truncate">{l.name}</h4>
+                      <h4 className="font-bold text-[var(--color-text)] truncate">{l.name}</h4>
                       <div className="flex flex-wrap gap-2 mt-1">
-                        <span className="text-xs text-gray-500">{LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || '🏢 مكتب'}</span>
-                        <span className="text-xs text-gray-400">•</span>
-                        <span className="text-xs text-gray-500">{l.currency}</span>
+                        <span className="text-xs text-[var(--color-muted)]">{LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || '🏢 مكتب'}</span>
+                        <span className="text-xs text-[var(--color-muted)]">•</span>
+                        <span className="text-xs text-[var(--color-muted)]">{l.currency}</span>
                       </div>
-                      {String(l.note || '').trim() ? <p className="text-xs text-gray-500 mt-2">{l.note}</p> : null}
+                      {String(l.note || '').trim() ? <p className="text-xs text-[var(--color-muted)] mt-2">{l.note}</p> : null}
                     </div>
                     {l.id === activeId && <Badge color="blue">نشط</Badge>}
                   </div>
 
                   {editingId === l.id ? (
                     <div className="mt-4">
-                      <label className="block text-sm font-medium text-gray-700 mb-1">تعديل الاسم</label>
-                      <input value={editingName} onChange={(e) => setEditingName(e.target.value)} maxLength={120} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
+                      <label className="block text-sm font-medium text-[var(--color-text)] mb-1">تعديل الاسم</label>
+                      <input value={editingName} onChange={(e) => setEditingName(e.target.value)} maxLength={120} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
 
                       <div className="grid md:grid-cols-2 gap-3 mt-3">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">اختر نوع الدفتر</label>
-                          <select value={editingType} onChange={(e) => setEditingType(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="تعديل نوع الدفتر">
+                          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">اختر نوع الدفتر</label>
+                          <select value={editingType} onChange={(e) => setEditingType(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="تعديل نوع الدفتر">
                             <option value="office">🏢 مكتب</option>
                             <option value="chalet">🏡 شاليه</option>
                             <option value="apartment">🏠 شقة</option>
@@ -917,13 +1015,13 @@ const LedgersPage = ({ setPage }) => {
                           </select>
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 mb-1">وصف مختصر (اختياري)</label>
-                          <input value={editingNote} onChange={(e) => setEditingNote(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="تعديل الوصف" placeholder="وصف مختصر (اختياري)" />
+                          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">وصف مختصر (اختياري)</label>
+                          <input value={editingNote} onChange={(e) => setEditingNote(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="تعديل الوصف" placeholder="وصف مختصر (اختياري)" />
                         </div>
                       </div>
                       <div className="flex gap-2 justify-end mt-3">
-                        <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-                        <button type="button" onClick={saveEdit} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
+                        <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-[var(--color-bg)] hover:bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium" aria-label="إلغاء">إلغاء</button>
+                        <button type="button" onClick={() => saveEdit()} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
                       </div>
                     </div>
                   ) : (
@@ -943,26 +1041,44 @@ const LedgersPage = ({ setPage }) => {
                                 title: 'إضافة نموذج الالتزامات',
                                 message: 'سيتم إضافة التزامات افتراضية لهذا الدفتر. هل تريد المتابعة؟',
                                 confirmLabel: 'نعم، أضف النموذج',
-                                onConfirm: () => {
+                                onConfirm: async () => {
                                   try {
                                     const list = Array.isArray(recurring) ? recurring : [];
                                     const already = list.some(r => r.ledgerId === l.id);
                                     if (already) { toast('تمت إضافة النموذج مسبقًا'); setConfirm(null); return; }
 
                                     const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
-                                    const next = [...list, ...seeded];
-                                    setRecurringItems(next);
+                                    // Create each seeded item using the hook
+                                    for (const item of seeded) {
+                                      const ts = new Date().toISOString();
+                                      const id = `rec_${crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+                                      await createRecurringItem({
+                                        id,
+                                        ledgerId: l.id,
+                                        title: item.title || '',
+                                        amount: item.amount || 0,
+                                        frequency: item.frequency || 'monthly',
+                                        nextDueDate: item.nextDueDate || today(),
+                                        notes: item.notes || '',
+                                        category: item.category || '',
+                                        createdAt: ts,
+                                        updatedAt: ts,
+                                        // Include template metadata
+                                        ...item,
+                                      });
+                                    }
                                     toast('تمت إضافة الالتزامات الافتراضية.');
                                     setConfirm(null);
                                     refresh();
-                                  } catch {
+                                  } catch (err) {
+                                    console.error('[قيد العقار] Seed error:', err);
                                     toast('تعذر إضافة النموذج', 'error');
                                     setConfirm(null);
                                   }
                                 },
                               });
                             }}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
                             aria-label="إضافة نموذج الالتزامات"
                           >
                             إضافة نموذج الالتزامات
@@ -988,32 +1104,51 @@ const LedgersPage = ({ setPage }) => {
                                 title: 'تفعيل نموذج مكتب كامل (Demo)',
                                 message: 'سيتم زرع التزامات المكتب وتطبيق تسعير مقترح. هل تريد المتابعة؟',
                                 confirmLabel: 'نعم، فعّل الديمو',
-                                onConfirm: () => {
+                                onConfirm: async () => {
                                   try {
                                     const list = Array.isArray(recurring) ? recurring : [];
                                     const already = list.some(r => r.ledgerId === l.id);
-                                    const txsNow = dataStore.transactions.list();
-                                    const hasTxNow = filterTransactionsForLedgerByMeta({ transactions: txsNow, ledgerId: l.id }).length > 0;
+                                    // SPR-006: use DataContext transactions
+                                    const hasTxNow = filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: l.id }).length > 0;
                                     if (already || hasTxNow) { toast('تم إعداد الديمو مسبقًا'); setConfirm(null); return; }
 
                                     const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
-                                    const next = [...list, ...seeded];
-                                    setRecurringItems(next);
-                                    setRecurringState(next);
+                                    // Create each seeded item using the hook
+                                    const createdItems = [];
+                                    for (const item of seeded) {
+                                      const ts = new Date().toISOString();
+                                      const id = `rec_${crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+                                      const fullItem = {
+                                        id,
+                                        ledgerId: l.id,
+                                        title: item.title || '',
+                                        amount: item.amount || 0,
+                                        frequency: item.frequency || 'monthly',
+                                        nextDueDate: item.nextDueDate || today(),
+                                        notes: item.notes || '',
+                                        category: item.category || '',
+                                        createdAt: ts,
+                                        updatedAt: ts,
+                                        // Include template metadata
+                                        ...item,
+                                      };
+                                      await createRecurringItem(fullItem);
+                                      createdItems.push(fullItem);
+                                    }
 
                                     // Apply Saudi pricing preset (Riyadh + Medium)
                                     const r = applySaudiAutoPricingForLedger({ ledgerId: l.id, city: 'riyadh', size: 'medium', onlyUnpriced: false });
                                     if (!r.ok) { toast(r.message || 'تعذر تطبيق التسعير', 'error'); setConfirm(null); refresh(); return; }
 
                                     // Optional: create 3 demo payments to populate reports
-                                    const updated = (Array.isArray(getRecurringItems()) ? getRecurringItems() : []).filter(x => x.ledgerId === l.id);
-                                    const pick = (title) => updated.find(x => String(x.title || '').includes(title));
+                                    const pick = (title) => createdItems.find(x => String(x.title || '').includes(title));
                                     const itemsToPay = [pick('إيجار'), pick('كهرباء'), pick('ماء'), pick('ترخيص'), pick('فال')].filter(Boolean).slice(0,3);
                                     for (const it of itemsToPay) {
                                       const amt = safeNum(it.amount);
                                       if (amt <= 0) continue;
                                       const meta = buildTxMetaFromRecurring({ activeLedgerId: l.id, recurring: it });
-                                      dataStore.transactions.create({ type: 'expense', category: 'other', amount: amt, paymentMethod: 'cash', date: today(), description: it.title, meta });
+                                      // SPR-006: use DataContext createTransaction
+                                      await createDataTransaction({ type: 'expense', category: 'other', amount: amt, paymentMethod: 'cash', date: today(), description: it.title, ledgerId: l.id, meta });
                                     }
 
                                     toast('تم تفعيل الديمو بنجاح');
@@ -1026,7 +1161,7 @@ const LedgersPage = ({ setPage }) => {
                                 },
                               });
                             }}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-gray-50 text-gray-400 border-gray-200 cursor-not-allowed' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'}`}
+                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
                             aria-label="تفعيل نموذج مكتب كامل (Demo)"
                           >
                             تفعيل نموذج مكتب كامل (Demo)
@@ -1034,7 +1169,7 @@ const LedgersPage = ({ setPage }) => {
                         );
                       })()}
 
-                      <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50" aria-label="تعديل الاسم">تعديل الاسم</button>
+                      <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)]" aria-label="تعديل الاسم">تعديل الاسم</button>
                       <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
                     </div>
                   )}
@@ -1047,8 +1182,19 @@ const LedgersPage = ({ setPage }) => {
 
       {tab === 'recurring' && (
         (() => {
+          // Guard: if activeId isn't loaded yet, show a friendly message instead of crashing
+          if (!activeId) {
+            return (
+              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-sm">
+                <p className="text-[var(--color-text)] font-medium">اختر دفتراً نشطاً أولاً</p>
+                <p className="text-sm text-[var(--color-muted)] mt-1">يجب تحديد دفتر نشط لعرض الالتزامات.</p>
+                <button type="button" onClick={() => setTab('ledgers')} className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                  عرض الدفاتر
+                </button>
+              </div>
+            );
+          }
           // Stage 7B: runtime contract guards (dev-only throw, prod warn)
-          invariant(!!activeId, 'LedgerRecurringTab requires activeId');
           assertFn(startPayNow, 'startPayNow');
           assertFn(submitPayNow, 'submitPayNow');
           assertFn(applyQuickPricing, 'applyQuickPricing');

@@ -1,11 +1,13 @@
 /*
   مركز التنبيهات — برومبت 3.2
   شارة على أيقونة الجرس، لوحة منبثقة (slide-down)، بانر ثابت للتنبيه الحرج.
+  SPR-006: يستخدم DataContext لتوفير البيانات لـ generateSmartAlerts بدلاً من localStorage فقط.
 */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { generateSmartAlerts } from '../../core/alert-engine.js';
 import { getActiveLedgerId } from '../../core/ledger-store.js';
 import { AlertManager } from '../../core/alert-manager.js';
+import { useData } from '../../contexts/DataContext.jsx';
 
 const ICON_BY_TYPE = {
   cashflow_crisis: 'cashflow',
@@ -36,15 +38,23 @@ function formatHoursAgo(ms) {
 }
 
 export function useAlerts() {
+  const {
+    transactions,
+    recurringItems,
+    ledgers,
+    activeLedgerId: ctxActiveLedgerId,
+  } = useData();
+
   const [alerts, setAlerts] = useState([]);
   const [fetchTime, setFetchTime] = useState(() => Date.now());
   const refresh = useCallback(() => {
     AlertManager.cleanup();
-    const lid = getActiveLedgerId() || '';
-    const list = lid ? generateSmartAlerts(lid) : [];
+    // DataContext first, fallback to localStorage
+    const lid = ctxActiveLedgerId || getActiveLedgerId() || '';
+    const list = lid ? generateSmartAlerts(lid, { transactions, recurringItems, ledgers }) : [];
     setAlerts(Array.isArray(list) ? list : []);
     setFetchTime(Date.now());
-  }, []);
+  }, [ctxActiveLedgerId, transactions, recurringItems, ledgers]);
   useEffect(() => {
     refresh();
   }, [refresh]);
@@ -82,10 +92,10 @@ export function CriticalAlertBanner({ criticalFirst, onAction, onDismiss, setPag
     >
       <p className="text-sm font-medium truncate flex-1 min-w-0">{criticalFirst.title}</p>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button type="button" onClick={() => { onAction(criticalFirst, setPage); }} className="px-3 py-1 rounded bg-white/20 text-white text-xs font-medium hover:bg-white/30">
+        <button type="button" onClick={() => { onAction(criticalFirst, setPage); }} className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30">
           {criticalFirst.actionLabel || 'اتخذ إجراء'}
         </button>
-        <button type="button" onClick={() => onDismiss(criticalFirst)} className="px-3 py-1 rounded bg-white/20 text-white text-xs font-medium hover:bg-white/30" aria-label="رفض">رفض</button>
+        <button type="button" onClick={() => onDismiss(criticalFirst)} className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30" aria-label="رفض">رفض</button>
       </div>
     </div>
   );
@@ -136,7 +146,7 @@ export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst,
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className={`relative p-2 rounded-lg text-gray-600 hover:bg-gray-100 hover:text-gray-900 ${hasCritical ? 'animate-pulse' : ''}`}
+          className={`relative p-2 rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] ${hasCritical ? 'animate-pulse' : ''}`}
           aria-label={count ? `${count} تنبيه` : 'مركز التنبيهات'}
           aria-expanded={open}
         >
@@ -151,24 +161,24 @@ export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst,
         {/* اللوحة المنبثقة */}
         {open && (
           <div
-            className="absolute top-full end-0 mt-1 w-[min(360px,100vw-2rem)] max-h-[70vh] overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl z-50 flex flex-col"
+            className="absolute top-full end-0 mt-1 w-[min(360px,100vw-2rem)] max-h-[70vh] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl z-50 flex flex-col"
             dir="rtl"
           >
-            <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
-              <h3 className="font-semibold text-gray-900">التنبيهات</h3>
+            <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+              <h3 className="font-semibold text-[var(--color-text)]">التنبيهات</h3>
               {count > 0 && (
                 <button
                   type="button"
                   onClick={onDismissAll}
-                  className="text-xs text-gray-500 hover:text-rose-600 font-medium"
+                  className="text-xs text-[var(--color-muted)] hover:text-rose-600 font-medium"
                 >
                   مسح الكل
                 </button>
               )}
             </div>
-            <ul className="overflow-y-auto flex-1 divide-y divide-gray-100">
+            <ul className="overflow-y-auto flex-1 divide-y divide-[var(--color-border)]">
               {count === 0 ? (
-                <li className="px-4 py-6 text-center text-sm text-gray-500">لا توجد تنبيهات</li>
+                <li className="px-4 py-6 text-center text-sm text-[var(--color-muted)]">لا توجد تنبيهات</li>
               ) : (
                 alerts.map((alert) => (
                   <li key={alert.id} className="px-4 py-3">
@@ -182,8 +192,8 @@ export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst,
                         {ICON_BY_TYPE[alert.type] ? String(alert.type).slice(0, 1) : '•'}
                       </span>
                       <div className="min-w-0 flex-1">
-                        <p className="font-medium text-gray-900 text-sm">{alert.title}</p>
-                        <p className="text-xs text-gray-500 mt-0.5">
+                        <p className="font-medium text-[var(--color-text)] text-sm">{alert.title}</p>
+                        <p className="text-xs text-[var(--color-muted)] mt-0.5">
                           {formatHoursAgo(Date.now() - fetchTime)}
                           {alert.amount > 0 && ` · ${Number(alert.amount).toLocaleString('ar-SA')} ر.س`}
                         </p>
@@ -195,10 +205,10 @@ export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst,
                           >
                             {alert.actionLabel || 'اتخذ إجراء'}
                           </button>
-                          <button type="button" onClick={() => onDismiss(alert)} className="text-xs font-medium text-gray-500 hover:text-gray-700">
+                          <button type="button" onClick={() => onDismiss(alert)} className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]">
                             رفض
                           </button>
-                          <button type="button" onClick={() => onSnooze(alert)} className="text-xs font-medium text-gray-500 hover:text-gray-700">
+                          <button type="button" onClick={() => onSnooze(alert)} className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]">
                             تأجيل
                           </button>
                         </div>

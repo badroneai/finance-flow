@@ -124,7 +124,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
       }}
       dir="rtl"
     >
-      <h2 className="text-center text-gray-700 font-medium mb-4">صحة مكتبك المالية</h2>
+      <h2 className="text-center text-[var(--color-text)] font-medium mb-4">صحة مكتبك المالية</h2>
 
       {/* دائرة الصحة */}
       <div className="flex justify-center mb-3">
@@ -137,7 +137,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
               fill="none"
               stroke="currentColor"
               strokeWidth="10"
-              className="text-gray-100"
+              className="text-[var(--color-border)]"
             />
             <circle
               cx="70"
@@ -156,7 +156,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
             <span className="text-4xl md:text-5xl font-bold tabular-nums" style={{ color: circleColor }}>
               {displayScore}
             </span>
-            <span className="text-sm text-gray-500">/100</span>
+            <span className="text-sm text-[var(--color-muted)]">/100</span>
           </div>
         </div>
       </div>
@@ -171,27 +171,27 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
           />
         ))}
       </div>
-      <p className="text-center text-sm text-gray-600 mb-6">
+      <p className="text-center text-sm text-[var(--color-muted)] mb-6">
         {STATUS_LABELS[pulse.healthStatus] || pulse.healthStatus}
       </p>
 
       {/* البطاقات الثلاث */}
       <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="bg-white/80 rounded-xl p-3 border border-gray-100 shadow-sm">
-          <p className="text-xs text-gray-500 mb-0.5">دخل اليوم</p>
+        <div className="bg-[var(--color-surface)]/80 rounded-xl p-3 border border-[var(--color-border)] shadow-sm">
+          <p className="text-xs text-[var(--color-muted)] mb-0.5">دخل اليوم</p>
           <p className="text-base font-bold text-emerald-700 truncate" title={formatAmount(pulse.todayIncome)}>
             {formatAmount(pulse.todayIncome)}
           </p>
         </div>
-        <div className="bg-white/80 rounded-xl p-3 border border-gray-100 shadow-sm">
-          <p className="text-xs text-gray-500 mb-0.5">مصروف الأسبوع</p>
+        <div className="bg-[var(--color-surface)]/80 rounded-xl p-3 border border-[var(--color-border)] shadow-sm">
+          <p className="text-xs text-[var(--color-muted)] mb-0.5">مصروف الأسبوع</p>
           <p className="text-base font-bold text-rose-700 truncate" title={formatAmount(pulse.weekExpenses)}>
             {formatAmount(pulse.weekExpenses)}
           </p>
         </div>
-        <div className="bg-white/80 rounded-xl p-3 border border-gray-100 shadow-sm">
-          <p className="text-xs text-gray-500 mb-0.5">الرصيد الحالي</p>
-          <p className="text-base font-bold text-gray-900 truncate flex items-center justify-end gap-1" title={formatAmount(pulse.currentBalance)}>
+        <div className="bg-[var(--color-surface)]/80 rounded-xl p-3 border border-[var(--color-border)] shadow-sm">
+          <p className="text-xs text-[var(--color-muted)] mb-0.5">الرصيد الحالي</p>
+          <p className="text-base font-bold text-[var(--color-text)] truncate flex items-center justify-end gap-1" title={formatAmount(pulse.currentBalance)}>
             {formatAmount(pulse.currentBalance)}
             {trendUp && <span className="text-emerald-600 text-lg" aria-hidden="true">↑</span>}
             {trendDown && <span className="text-rose-600 text-lg" aria-hidden="true">↓</span>}
@@ -200,7 +200,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
       </div>
 
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs text-gray-500">
+        <p className="text-xs text-[var(--color-muted)]">
           آخر تحديث: {formatCalculatedAt(pulse.calculatedAt) || '—'}
         </p>
         {onRefresh && (

@@ -24,7 +24,7 @@ export const ToastProvider = ({ children }) => {
           <div
             key={t.id}
             className={`px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all animate-slideIn ${
-              t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-gray-900'
+              t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-[var(--color-text)]'
             }`}
             role="status"
           >

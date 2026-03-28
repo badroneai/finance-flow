@@ -11,7 +11,7 @@
  */
 
 import { getLedgers, getActiveLedgerId, getRecurringItems } from './ledger-store.js';
-import { dataStore } from './dataStore.js';
+import { dataStore, getTransactionsForLedger } from './dataStore.js';
 import { buildLedgerInbox, computeCashPlan } from './ledger-planner.js';
 import { computeLedgerHealth, computeComplianceShield } from './ledger-health.js';
 import { computePL } from './ledger-analytics.js';
@@ -36,21 +36,27 @@ function endOfWeekMs(now = new Date()) {
   return startOfWeekMs(now) + 7 * DAY_MS - 1;
 }
 
-function getTransactionsForLedger(ledgerId) {
-  const lid = String(ledgerId || '').trim();
-  if (!lid) return [];
-  const all = dataStore.transactions.list() || [];
-  return all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
-}
-
 /** تجميع سياق الدفتر (للاستخدام الداخلي والدوال المُصدَّرة) */
-function getContext(ledgerId) {
+function getContext(ledgerId, options = {}) {
   const lid = (ledgerId != null ? String(ledgerId).trim() : (getActiveLedgerId() || '').trim()) || '';
-  const ledgers = getLedgers();
-  const ledger = (Array.isArray(ledgers) ? ledgers : []).find((l) => l.id === lid) || null;
-  const recurring = getRecurringItems();
-  const recurringList = (Array.isArray(recurring) ? recurring : []).filter((r) => String(r?.ledgerId || '') === lid);
-  const txs = getTransactionsForLedger(lid);
+
+  // Ledgers: use options.ledgers if provided, otherwise read from localStorage
+  const ledgersData = options.ledgers != null ? options.ledgers : getLedgers();
+  const ledger = (Array.isArray(ledgersData) ? ledgersData : []).find((l) => l.id === lid) || null;
+
+  // Recurring items: use options.recurringItems if provided, otherwise read from localStorage
+  const recurringData = options.recurringItems != null ? options.recurringItems : getRecurringItems();
+  const recurringList = (Array.isArray(recurringData) ? recurringData : []).filter((r) => String(r?.ledgerId || '') === lid);
+
+  // Transactions: use options.transactions if provided and filter by ledgerId, otherwise read from localStorage
+  let txs;
+  if (options.transactions != null) {
+    const allTxs = Array.isArray(options.transactions) ? options.transactions : [];
+    txs = allTxs.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
+  } else {
+    txs = getTransactionsForLedger(lid);
+  }
+
   return { lid, ledger, recurringList, txs, now: new Date() };
 }
 
@@ -67,8 +73,8 @@ function healthToStatusAndColor(score) {
  * حساب درجة الصحة (0–100)
  * المعايير: التزامات مدفوعة في وقتها 40%، نسبة دخل/مصروف 20%، التنبيهات الحرجة 20%، استقرار التدفق 3 أشهر 20%
  */
-export function calculateHealthScore(ledgerId) {
-  const ctx = getContext(ledgerId);
+export function calculateHealthScore(ledgerId, options = {}) {
+  const ctx = getContext(ledgerId, options);
   const { lid, txs, recurringList } = ctx;
   if (!lid) return 0;
 
@@ -122,8 +128,8 @@ export function calculateHealthScore(ledgerId) {
  * اكتشاف التنبيهات: overdue، upcoming، anomaly، cashflow_risk
  * يرجع مصفوفة بالشكل { id, type, severity, title, amount, dueDate, actionLabel, actionType }
  */
-export function detectAlerts(ledgerId) {
-  return detectAlertsInternal(getContext(ledgerId));
+export function detectAlerts(ledgerId, options = {}) {
+  return detectAlertsInternal(getContext(ledgerId, options));
 }
 
 function detectAlertsInternal(ctx) {
@@ -209,8 +215,8 @@ function detectAlertsInternal(ctx) {
 /**
  * توقعات الأسبوع: دخل متوقع، مصروفات، صافي التدفق، مستوى المخاطرة
  */
-export function calculateWeekForecast(ledgerId) {
-  return calculateWeekForecastInternal(getContext(ledgerId));
+export function calculateWeekForecast(ledgerId, options = {}) {
+  return calculateWeekForecastInternal(getContext(ledgerId, options));
 }
 
 function calculateWeekForecastInternal(ctx) {
@@ -246,8 +252,8 @@ function calculateWeekForecastInternal(ctx) {
  * يحسب ويرجع كائن النبض (Pulse Object) للواجهة
  * @param {string} [ledgerId] - معرّف الدفتر (إن غاب يُستخدم النشط)
  */
-export function calculatePulse(ledgerId) {
-  const ctx = getContext(ledgerId);
+export function calculatePulse(ledgerId, options = {}) {
+  const ctx = getContext(ledgerId, options);
   const { lid, ledger, recurringList, txs, now } = ctx;
   const calculatedAt = now.toISOString();
 
@@ -307,11 +313,11 @@ export function calculatePulse(ledgerId) {
   if (thisWeekNet > lastWeekNet) balanceTrend = 'up';
   else if (thisWeekNet < lastWeekNet) balanceTrend = 'down';
 
-  const healthScore = calculateHealthScore(lid);
+  const healthScore = calculateHealthScore(lid, options);
   const { status: healthStatus, color: healthColor } = healthToStatusAndColor(healthScore);
 
-  const alerts = detectAlerts(lid);
-  const weekForecast = calculateWeekForecast(lid);
+  const alerts = detectAlerts(lid, options);
+  const weekForecast = calculateWeekForecast(lid, options);
 
   const inbox = buildLedgerInbox({ ledgerId: lid, recurringItems: recurringList, now });
   const upcomingDues = (inbox || []).slice(0, 5).map((item) => {

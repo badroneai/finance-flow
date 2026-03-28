@@ -9,6 +9,7 @@ import { getActiveLedgerId, getRecurringItems, setRecurringItems } from '../../c
 import { buildTxMetaFromRecurring } from '../../core/ledger-analytics.js';
 import { pushHistoryEntry } from '../../core/ledger-item-history.js';
 import { dataStore } from '../../core/dataStore.js';
+import { useData } from '../../contexts/DataContext.jsx';
 
 function todayISO() {
   const d = new Date();
@@ -18,6 +19,14 @@ function todayISO() {
 const SUCCESS_AUTO_CLOSE_MS = 1500;
 
 export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
+  const {
+    createTransaction,
+    activeLedgerId: ctxActiveLedgerId,
+    recurringItems: ctxRecurringItems,
+    updateRecurringItem: ctxUpdateRecurringItem,
+    fetchRecurringItems,
+  } = useData();
+
   const amount = Number(dueItem?.amount) || 0;
   const [paidAmount, setPaidAmount] = useState(() => (amount > 0 ? String(amount) : ''));
   const [date, setDate] = useState(todayISO());
@@ -42,15 +51,19 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
     return () => clearTimeout(t);
   }, [success, onClose]);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const num = Number(String(paidAmount).replace(/,/g, '').replace(/٬/g, '')) || 0;
     if (num <= 0) return;
-    const activeId = getActiveLedgerId() || '';
+
+    // DataContext first, fallback to localStorage
+    const activeId = ctxActiveLedgerId || getActiveLedgerId() || '';
     if (!activeId || !dueItem?.recurringItemId) {
       setSubmitting(false);
       return;
     }
-    const recurringList = getRecurringItems() || [];
+    const recurringList = (Array.isArray(ctxRecurringItems) && ctxRecurringItems.length > 0)
+      ? ctxRecurringItems
+      : (getRecurringItems() || []);
     const recurring = recurringList.find((r) => r.id === dueItem.recurringItemId);
     if (!recurring) {
       setSubmitting(false);
@@ -59,48 +72,72 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
     setSubmitting(true);
     try {
       const meta = buildTxMetaFromRecurring({ activeLedgerId: activeId, recurring });
+      // P2 fix: use the recurring item's actual type instead of always 'expense'
       const txType = dueItem.type === 'income' ? 'income' : 'expense';
-      const res = dataStore.transactions.create({
+
+      // Use DataContext createTransaction (works with both Supabase and localStorage)
+      const { data: txData, error: txError } = await createTransaction({
         type: txType,
         category: 'other',
         amount: num,
         paymentMethod: 'cash',
         date: date || todayISO(),
         description: (note || dueItem.name || '').trim(),
+        ledgerId: activeId,
         meta,
       });
-      if (!res?.ok) {
+
+      if (txError) {
+        console.error('[قيد العقار] QuickPaymentModal createTransaction:', txError);
         setSubmitting(false);
         return;
       }
+
       const ts = new Date().toISOString();
-      const list = Array.isArray(recurringList) ? recurringList : [];
-      const next = list.map((r) => {
-        if (r.id !== recurring.id) return r;
-        let updated = {
-          ...r,
-          status: 'resolved',
-          lastPaidAt: ts,
-          payState: 'paid',
-          payStateAt: ts,
-          updatedAt: ts,
-        };
-        updated = pushHistoryEntry(updated, {
+      const recurringUpdate = {
+        status: 'resolved',
+        lastPaidAt: ts,
+        payState: 'paid',
+        payStateAt: ts,
+        updatedAt: ts,
+      };
+
+      // Build history entry
+      let historyPatch = recurringUpdate;
+      try {
+        const itemWithPatch = { ...recurring, ...recurringUpdate };
+        historyPatch = pushHistoryEntry(itemWithPatch, {
           type: 'pay_now',
           amount: num,
-          txId: res?.item?.id,
+          txId: txData?.id,
           meta: { dueDate: dueItem.dueDate, method: 'cash' },
         });
-        return updated;
-      });
-      try {
-        setRecurringItems(next);
+        // Extract only the changed fields (history + status fields)
+        const { history, ...statusFields } = historyPatch;
+        historyPatch = { ...recurringUpdate, history };
       } catch {}
+
+      // Update recurring item via DataContext
+      try {
+        await ctxUpdateRecurringItem(recurring.id, historyPatch);
+      } catch {
+        // Fallback: update localStorage directly
+        try {
+          const list = Array.isArray(recurringList) ? recurringList : [];
+          const next = list.map((r) => {
+            if (r.id !== recurring.id) return r;
+            return { ...r, ...historyPatch };
+          });
+          setRecurringItems(next);
+        } catch {}
+      }
+
       try {
         window.dispatchEvent(new CustomEvent('ledger:activeChanged'));
       } catch {}
       setSuccess(true);
-    } catch {
+    } catch (err) {
+      console.error('[قيد العقار] QuickPaymentModal handleSubmit:', err);
       setSubmitting(false);
     }
   };
@@ -119,15 +156,15 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
       aria-modal="true"
       aria-labelledby="quick-payment-title"
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h2 id="quick-payment-title" className="text-lg font-bold text-gray-900">
+      <div className="bg-[var(--color-surface)] rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
+        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
+          <h2 id="quick-payment-title" className="text-lg font-bold text-[var(--color-text)]">
             تسجيل دفعة سريع
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 rounded-lg text-gray-500 hover:bg-gray-100"
+            className="p-2 rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
             aria-label="إغلاق"
           >
             <span className="text-xl leading-none">×</span>
@@ -135,8 +172,8 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
         </div>
         <div className="p-4 space-y-4">
           <div>
-            <p className="font-medium text-gray-900">{name}</p>
-            <p className="text-sm text-gray-500 mt-0.5">
+            <p className="font-medium text-[var(--color-text)]">{name}</p>
+            <p className="text-sm text-[var(--color-muted)] mt-0.5">
               المبلغ المستحق: {formatCurrency(dueItem.amount)} ر.س
             </p>
           </div>
@@ -144,38 +181,38 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
           {success ? (
             <div className="py-6 text-center">
               <p className="text-emerald-600 font-semibold">تم التسجيل</p>
-              <p className="text-sm text-gray-500 mt-1">يُغلق تلقائياً خلال لحظات</p>
+              <p className="text-sm text-[var(--color-muted)] mt-1">يُغلق تلقائياً خلال لحظات</p>
             </div>
           ) : (
             <>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">المبلغ المدفوع (ر.س)</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">المبلغ المدفوع (ر.س)</label>
                 <input
                   type="text"
                   inputMode="decimal"
                   value={paidAmount}
                   onChange={(e) => setPaidAmount(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
                   placeholder={formatNumber(amount)}
                 />
-                <p className="text-xs text-gray-500 mt-1">يمكن تعديله للدفع الجزئي</p>
+                <p className="text-xs text-[var(--color-muted)] mt-1">يمكن تعديله للدفع الجزئي</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الدفع</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">تاريخ الدفع</label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظة (اختياري)</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">ملاحظة (اختياري)</label>
                 <input
                   type="text"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg text-gray-900"
+                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
                   placeholder="ملاحظة"
                 />
               </div>
@@ -188,7 +225,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                 {submitting ? 'جاري التسجيل…' : 'تسجيل الدفعة'}
               </button>
               {onPostpone && (
-                <p className="text-center text-sm text-gray-500">
+                <p className="text-center text-sm text-[var(--color-muted)]">
                   أو:{' '}
                   <button
                     type="button"

@@ -43,12 +43,12 @@ function LedgerPerformanceTab(props) {
 
   return (
 <>
-  <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm mb-4">
+  <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
     <div className="flex items-start justify-between gap-3">
       <div>
-        <h4 className="font-bold text-gray-900">📈 أداء الدفتر</h4>
-        <p className="text-sm text-gray-500 mt-1">دفتر نشط: <span className="font-medium text-gray-700">{activeLedger?.name || '—'}</span></p>
-        <p className="text-xs text-gray-500 mt-1">إن لم توجد بيانات كافية: جرّب "سجّل كدفعة الآن" من الالتزامات، ثم عد هنا لمشاهدة التباين.</p>
+        <h4 className="font-bold text-[var(--color-text)]">📈 أداء الدفتر</h4>
+        <p className="text-sm text-[var(--color-muted)] mt-1">دفتر نشط: <span className="font-medium text-[var(--color-text)]">{activeLedger?.name || '—'}</span></p>
+        <p className="text-xs text-[var(--color-muted)] mt-1">إن لم توجد بيانات كافية: جرّب "سجّل كدفعة الآن" من الالتزامات، ثم عد هنا لمشاهدة التباين.</p>
       </div>
       {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
     </div>
@@ -100,13 +100,13 @@ function LedgerPerformanceTab(props) {
       return (
         <div className="flex flex-col gap-4">
           {/* Income Model */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <h4 className="font-bold text-gray-900">نموذج الدخل</h4>
-                <p className="text-xs text-gray-500 mt-1">افتراضيًا Runtime فقط — ويمكن حفظه داخل نفس الدفتر (بدون مفاتيح جديدة).</p>
+                <h4 className="font-bold text-[var(--color-text)]">نموذج الدخل</h4>
+                <p className="text-xs text-[var(--color-muted)] mt-1">يمكن حفظ النموذج داخل الدفتر لاستخدامه في التحليلات.</p>
               </div>
-              <label className="inline-flex items-center gap-2 text-sm text-gray-700">
+              <label className="inline-flex items-center gap-2 text-sm text-[var(--color-text)]">
                 <input type="checkbox" checked={incomeSave} onChange={(e) => { setIncomeSave(e.target.checked); }} />
                 احفظ النموذج لهذا الدفتر
               </label>
@@ -114,8 +114,8 @@ function LedgerPerformanceTab(props) {
 
             <div className="mt-3 grid md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">نوع النموذج</label>
-                <select value={incomeMode} onChange={(e) => setIncomeMode(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white" aria-label="نوع نموذج الدخل">
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">نوع النموذج</label>
+                <select value={incomeMode} onChange={(e) => setIncomeMode(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="نوع نموذج الدخل">
                   <option value="fixed">ثابت شهري</option>
                   <option value="seasonal">موسمي</option>
                   <option value="manual">يدوي (6 أشهر)</option>
@@ -124,32 +124,32 @@ function LedgerPerformanceTab(props) {
 
               {incomeMode === 'fixed' ? (
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1">دخل شهري ثابت</label>
-                  <input type="text" inputMode="decimal" value={incomeFixed} onChange={(e) => setIncomeFixed(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل شهري ثابت" placeholder="0" />
+                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">دخل شهري ثابت</label>
+                  <input type="text" inputMode="decimal" value={incomeFixed} onChange={(e) => setIncomeFixed(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="دخل شهري ثابت" placeholder="0" />
                 </div>
               ) : null}
 
               {incomeMode === 'seasonal' ? (
                 <>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">دخل الذروة (3 أشهر)</label>
-                    <input type="text" inputMode="decimal" value={incomePeak} onChange={(e) => setIncomePeak(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل الذروة" placeholder="0" />
+                    <label className="block text-xs font-medium text-[var(--color-text)] mb-1">دخل الذروة (3 أشهر)</label>
+                    <input type="text" inputMode="decimal" value={incomePeak} onChange={(e) => setIncomePeak(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="دخل الذروة" placeholder="0" />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">دخل باقي السنة</label>
-                    <input type="text" inputMode="decimal" value={incomeBase} onChange={(e) => setIncomeBase(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="دخل باقي السنة" placeholder="0" />
+                    <label className="block text-xs font-medium text-[var(--color-text)] mb-1">دخل باقي السنة</label>
+                    <input type="text" inputMode="decimal" value={incomeBase} onChange={(e) => setIncomeBase(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="دخل باقي السنة" placeholder="0" />
                   </div>
                 </>
               ) : null}
 
               {incomeMode === 'manual' ? (
                 <div className="md:col-span-3">
-                  <div className="text-xs text-gray-500">أدخل دخل 6 أشهر القادمة:</div>
+                  <div className="text-xs text-[var(--color-muted)]">أدخل دخل 6 أشهر القادمة:</div>
                   <div className="mt-2 grid grid-cols-2 md:grid-cols-6 gap-2">
                     {forecast.map(r => r.monthKey).slice(0,6).map(k => (
                       <div key={k}>
-                        <label className="block text-[11px] text-gray-600 mb-1">{k}</label>
-                        <input type="text" inputMode="decimal" value={String(incomeManual?.[k] ?? '0')} onChange={(e) => setIncomeManual(p => ({ ...(p||{}), [k]: e.target.value }))} className="w-full border border-gray-200 rounded-lg px-2 py-1.5 text-sm" aria-label={`دخل ${k}`} />
+                        <label className="block text-[11px] text-[var(--color-muted)] mb-1">{k}</label>
+                        <input type="text" inputMode="decimal" value={String(incomeManual?.[k] ?? '0')} onChange={(e) => setIncomeManual(p => ({ ...(p||{}), [k]: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-2 py-1.5 text-sm" aria-label={`دخل ${k}`} />
                       </div>
                     ))}
                   </div>
@@ -163,20 +163,20 @@ function LedgerPerformanceTab(props) {
           </div>
 
           {/* Expected vs Actual */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-            <h4 className="font-bold text-gray-900">Expected vs Actual (آخر 3 أشهر + هذا الشهر)</h4>
-            <p className="text-xs text-gray-500 mt-1">التتبع يعتمد على tx.meta.ledgerId + type (income/expense).</p>
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
+            <h4 className="font-bold text-[var(--color-text)]">المتوقع مقابل الفعلي (آخر 3 أشهر + هذا الشهر)</h4>
+            <p className="text-xs text-[var(--color-muted)] mt-1">مقارنة بين المصروفات والإيرادات المتوقعة والفعلية.</p>
 
             <div className="mt-3 overflow-x-auto">
               <table className="min-w-full text-xs">
                 <thead>
-                  <tr className="text-gray-500">
-                    <th className="text-start py-2">Month</th>
-                    <th className="text-start py-2">Exp Inc</th>
-                    <th className="text-start py-2">Act Inc</th>
-                    <th className="text-start py-2">Exp Exp</th>
-                    <th className="text-start py-2">Act Exp</th>
-                    <th className="text-start py-2">Net Var</th>
+                  <tr className="text-[var(--color-muted)]">
+                    <th className="text-start py-2">الشهر</th>
+                    <th className="text-start py-2">دخل متوقع</th>
+                    <th className="text-start py-2">دخل فعلي</th>
+                    <th className="text-start py-2">مصروف متوقع</th>
+                    <th className="text-start py-2">مصروف فعلي</th>
+                    <th className="text-start py-2">فرق الصافي</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -184,7 +184,7 @@ function LedgerPerformanceTab(props) {
                     const v = r.variance.varianceNet;
                     const status = v >= 0 ? '' : (Math.abs(v) < (Number(r.expected.net)||0)*0.05 ? 'انتباه ' : 'تجاوز ');
                     return (
-                      <tr key={r.monthKey} className="border-t border-gray-100">
+                      <tr key={r.monthKey} className="border-t border-[var(--color-border)]">
                         <td className="py-2">{r.monthKey}</td>
                         <td className="py-2"><Currency value={r.expected.income} /></td>
                         <td className="py-2"><Currency value={r.actual.income} /></td>
@@ -199,15 +199,15 @@ function LedgerPerformanceTab(props) {
             </div>
 
             {dataStore.transactions.list().filter(t => String(t?.meta?.ledgerId||'')===String(activeId)).length === 0 ? (
-              <p className="text-sm text-gray-500 mt-3">لا توجد حركات كافية بعد — جرّب “سجّل كدفعة الآن” من الالتزامات.</p>
+              <p className="text-sm text-[var(--color-muted)] mt-3">لا توجد حركات كافية بعد — جرّب “سجّل كدفعة الآن” من الالتزامات.</p>
             ) : null}
           </div>
 
           {/* Variance Explainer */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-            <h4 className="font-bold text-gray-900">شرح التباين</h4>
-            <p className="text-xs text-gray-500 mt-1">أسباب محتملة (مبسطة):</p>
-            <div className="mt-3 text-sm text-gray-700 flex flex-col gap-2">
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
+            <h4 className="font-bold text-[var(--color-text)]">شرح التباين</h4>
+            <p className="text-xs text-[var(--color-muted)] mt-1">أسباب محتملة (مبسطة):</p>
+            <div className="mt-3 text-sm text-[var(--color-text)] flex flex-col gap-2">
               {(() => {
                 const latest = table.rows[table.rows.length - 1];
                 const reasons = latest?.variance?.reasons || [];
@@ -219,22 +219,22 @@ function LedgerPerformanceTab(props) {
           </div>
 
           {/* Targets */}
-          <div className="bg-white rounded-xl border border-gray-100 p-4 md:p-5 shadow-sm">
-            <h4 className="font-bold text-gray-900">Targets (شهري)</h4>
-            <p className="text-xs text-gray-500 mt-1">ضع حدودًا بسيطة للتشغيلي/الصيانة/التسويق (اختياري).</p>
+          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
+            <h4 className="font-bold text-[var(--color-text)]">الأهداف الشهرية</h4>
+            <p className="text-xs text-[var(--color-muted)] mt-1">ضع حدودًا بسيطة للتشغيلي/الصيانة/التسويق (اختياري).</p>
 
             <div className="mt-3 grid md:grid-cols-3 gap-3">
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">حد التشغيلي</label>
-                <input type="text" inputMode="decimal" value={tOperational} onChange={(e) => setTOperational(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="حد التشغيلي" placeholder="0" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">حد التشغيلي</label>
+                <input type="text" inputMode="decimal" value={tOperational} onChange={(e) => setTOperational(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="حد التشغيلي" placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">حد الصيانة</label>
-                <input type="text" inputMode="decimal" value={tMaintenance} onChange={(e) => setTMaintenance(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="حد الصيانة" placeholder="0" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">حد الصيانة</label>
+                <input type="text" inputMode="decimal" value={tMaintenance} onChange={(e) => setTMaintenance(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="حد الصيانة" placeholder="0" />
               </div>
               <div>
-                <label className="block text-xs font-medium text-gray-700 mb-1">حد التسويق</label>
-                <input type="text" inputMode="decimal" value={tMarketing} onChange={(e) => setTMarketing(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm" aria-label="حد التسويق" placeholder="0" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">حد التسويق</label>
+                <input type="text" inputMode="decimal" value={tMarketing} onChange={(e) => setTMarketing(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="حد التسويق" placeholder="0" />
               </div>
             </div>
 
@@ -243,7 +243,7 @@ function LedgerPerformanceTab(props) {
                 const s = targetStatus[k];
                 const label = k === 'operational' ? 'تشغيلي' : k === 'maintenance' ? 'صيانة' : 'تسويق';
                 const statusLabel = s.status === 'ok' ? 'ضمن الهدف' : s.status === 'warn' ? 'تجاوز بسيط' : s.status === 'bad' ? 'تجاوز' : 'بدون هدف';
-                const cls = s.status === 'ok' ? 'bg-green-50 border-green-100 text-green-700' : s.status === 'warn' ? 'bg-amber-50 border-amber-100 text-amber-800' : s.status === 'bad' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-gray-50 border-gray-100 text-gray-700';
+                const cls = s.status === 'ok' ? 'bg-green-50 border-green-100 text-green-700' : s.status === 'warn' ? 'bg-amber-50 border-amber-100 text-amber-800' : s.status === 'bad' ? 'bg-red-50 border-red-100 text-red-700' : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text)]';
                 return (
                   <div key={k} className={`p-3 rounded-xl border ${cls}`}>
                     <div className="font-semibold">{label}: {statusLabel}</div>

@@ -4,15 +4,75 @@
   مع إدارة حالة، كاش، حدث ledger:activeChanged، تحديث كل 5 دقائق، pull-to-refresh.
 */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { calculatePulse } from '../core/pulse-engine.js';
 import { getActiveLedgerId } from '../core/ledger-store.js';
+import { useData } from '../contexts/DataContext.jsx';
 import { formatCurrency } from '../utils/format.jsx';
+import { Icons } from '../ui/ui-common.jsx';
 import PulseHeader from '../ui/pulse/PulseHeader.jsx';
 import PulseHeroCard from '../ui/pulse/PulseHeroCard.jsx';
 import PulseAlerts from '../ui/pulse/PulseAlerts.jsx';
 import WeekForecast from '../ui/pulse/WeekForecast.jsx';
 import UpcomingDues from '../ui/pulse/UpcomingDues.jsx';
 import PulseFooter from '../ui/pulse/PulseFooter.jsx';
+
+/**
+ * SPR-009: اختصارات سريعة — تظهر في صفحة النبض لتوفير وصول مباشر
+ * للميزات المدفونة (التقارير، الالتزامات، إضافة حركة).
+ */
+function QuickActions({ navigate }) {
+  const actions = [
+    {
+      label: 'إضافة حركة',
+      icon: Icons.plus,
+      onClick: () => navigate('/transactions'),
+      bg: 'var(--color-primary)',
+      color: '#fff',
+    },
+    {
+      label: 'التقرير الشهري',
+      icon: Icons.report,
+      onClick: () => navigate('/report'),
+      bg: 'var(--color-surface)',
+      color: 'var(--color-text)',
+    },
+    {
+      label: 'العمولات',
+      icon: Icons.commissions,
+      onClick: () => navigate('/commissions'),
+      bg: 'var(--color-surface)',
+      color: 'var(--color-text)',
+    },
+    {
+      label: 'الالتزامات',
+      icon: Icons.ledgers,
+      onClick: () => navigate('/ledgers?tab=recurring'),
+      bg: 'var(--color-surface)',
+      color: 'var(--color-text)',
+    },
+  ];
+
+  return (
+    <section aria-label="اختصارات سريعة" className="grid grid-cols-4 gap-3">
+      {actions.map((a) => {
+        const ActionIcon = a.icon;
+        return (
+          <button
+            key={a.label}
+            type="button"
+            onClick={a.onClick}
+            className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--color-border)] p-3 text-xs font-medium transition-colors hover:shadow-sm"
+            style={{ background: a.bg, color: a.color }}
+          >
+            {ActionIcon && <ActionIcon size={20} />}
+            <span className="leading-tight">{a.label}</span>
+          </button>
+        );
+      })}
+    </section>
+  );
+}
 
 const CACHE_KEY = 'ff_pulse_cache';
 const CACHE_MAX_AGE_MS = 5 * 60 * 1000;
@@ -44,14 +104,36 @@ function writeCache(activeId, pulse) {
 }
 
 export default function PulsePage({ setPage }) {
+  const navigate = useNavigate();
+  const {
+    transactions,
+    recurringItems,
+    ledgers,
+    activeLedgerId: dataActiveLedgerId,
+    transactionsLoading,
+    isCloudMode,
+  } = useData();
+
   const [pulse, setPulse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeLedgerId, setActiveLedgerId] = useState(() => getActiveLedgerId() || '');
+  const [activeLedgerId, setActiveLedgerId] = useState(() => dataActiveLedgerId || getActiveLedgerId() || '');
   const [pullY, setPullY] = useState(0);
   const touchStartY = useRef(0);
   const autoRefreshTimer = useRef(null);
+
+  // مزامنة الدفتر النشط من DataContext
+  useEffect(() => {
+    if (dataActiveLedgerId) setActiveLedgerId(dataActiveLedgerId);
+  }, [dataActiveLedgerId]);
+
+  // بناء options من DataContext لتمريرها إلى المحرك
+  const dataOptions = useCallback(() => ({
+    transactions,
+    recurringItems,
+    ledgers,
+  }), [transactions, recurringItems, ledgers]);
 
   const runCalculate = useCallback((ledgerId, skipCache = false) => {
     const id = (ledgerId != null ? String(ledgerId) : getActiveLedgerId() || '').trim();
@@ -66,7 +148,7 @@ export default function PulsePage({ setPage }) {
     const schedule = typeof requestIdleCallback !== 'undefined' ? requestIdleCallback : (fn) => setTimeout(fn, 0);
     schedule(() => {
       try {
-        const result = calculatePulse(id || undefined);
+        const result = calculatePulse(id || undefined, dataOptions());
         setPulse(result);
         setError(null);
         if (id) writeCache(id, result);
@@ -77,7 +159,7 @@ export default function PulsePage({ setPage }) {
         setRefreshing(false);
       }
     }, { timeout: 500 });
-  }, []);
+  }, [dataOptions]);
 
   const refresh = useCallback(
     (skipCache = true) => {
@@ -149,10 +231,10 @@ export default function PulsePage({ setPage }) {
       >
         <div className="p-4 md:p-6 max-w-[640px] mx-auto">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
-          <div className="animate-pulse rounded-xl bg-gray-100 h-10 w-48 mb-4" />
-          <div className="animate-pulse rounded-xl bg-gray-100 h-32 w-full mb-6" />
-          <div className="animate-pulse rounded-xl bg-gray-100 h-24 w-full mb-4" />
-          <div className="animate-pulse rounded-xl bg-gray-100 h-20 w-full" />
+          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-10 w-48 mb-4" />
+          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-32 w-full mb-6" />
+          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-24 w-full mb-4" />
+          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-20 w-full" />
         </div>
       </div>
     );
@@ -167,9 +249,9 @@ export default function PulsePage({ setPage }) {
       >
         <div className="p-4 md:p-6 max-w-[640px] mx-auto">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
-          <div className="rounded-xl border border-gray-200 bg-white p-6 text-center shadow-sm">
-            <p className="text-gray-700 font-medium">حدث خطأ أثناء تحميل النبض</p>
-            <p className="text-sm text-gray-500 mt-1">{error}</p>
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center shadow-sm">
+            <p className="text-[var(--color-text)] font-medium">حدث خطأ أثناء تحميل النبض</p>
+            <p className="text-sm text-[var(--color-muted)] mt-1">{error}</p>
             <button
               type="button"
               onClick={() => refresh(true)}
@@ -192,9 +274,9 @@ export default function PulsePage({ setPage }) {
       >
         <div className="p-4 md:p-6 max-w-[640px] mx-auto flex flex-col gap-6">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
-          <div className="rounded-xl border border-gray-100 bg-white p-8 text-center shadow-sm">
-            <p className="text-gray-800 font-medium">أنشئ أول دفتر</p>
-            <p className="text-sm text-gray-500 mt-1">اختر دفتراً نشطاً من الدفاتر لرؤية النبض المالي</p>
+          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-sm">
+            <p className="text-[var(--color-text)] font-medium">أنشئ أول دفتر</p>
+            <p className="text-sm text-[var(--color-muted)] mt-1">اختر دفتراً نشطاً من الدفاتر لرؤية النبض المالي</p>
             {setPage && (
               <button
                 type="button"
@@ -222,7 +304,7 @@ export default function PulsePage({ setPage }) {
     >
       {pullY > 0 && (
         <div
-          className="fixed top-0 left-0 right-0 h-12 flex items-center justify-center bg-gray-100/90 text-gray-600 text-sm z-10"
+          className="fixed top-0 left-0 right-0 h-12 flex items-center justify-center bg-[var(--color-bg)]/90 text-[var(--color-muted)] text-sm z-10"
           style={{ transform: pullY >= PULL_THRESHOLD ? 'scale(1)' : 'scale(0.95)' }}
           aria-live="polite"
         >
@@ -238,6 +320,9 @@ export default function PulsePage({ setPage }) {
           onRefresh={noLedger ? undefined : refresh}
           onAddTransaction={setPage ? () => setPage('transactions') : undefined}
         />
+
+        {/* SPR-009: اختصارات سريعة */}
+        <QuickActions navigate={navigate} />
 
         {noTransactions && (
           <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-4 text-center">
@@ -282,7 +367,7 @@ export default function PulsePage({ setPage }) {
             />
 
             {summary && (summary.totalTransactions > 0 || summary.activeRecurringItems > 0) && (
-              <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-gray-600 border-t border-gray-100 pt-4">
+              <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[var(--color-muted)] border-t border-[var(--color-border)] pt-4">
                 <div className="flex flex-wrap gap-4">
                   <span>{summary.totalTransactions} حركة</span>
                   <span>{summary.activeRecurringItems} التزام نشط</span>

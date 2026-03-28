@@ -1,10 +1,32 @@
 import React from 'react';
+import { useData } from '../contexts/DataContext.jsx';
 
 /**
  * OnboardingModal — ترحيب أول تشغيل.
  * Props: onClose (required), onOpenSettings (optional — عند النقر على "افتح الإعدادات")
+ *
+ * SPR-008: الرسائل ديناميكية حسب وضع التخزين (سحابي / محلي).
+ *          الخطوات مُحدّثة: دفتر → حركة → التزامات → نبض.
+ *          الزر الرئيسي يوجّه لصفحة الدفاتر.
  */
 export function OnboardingModal({ onClose, onOpenSettings }) {
+  let isCloud = false;
+  try {
+    const data = useData();
+    isCloud = !!data?.isCloudMode;
+  } catch {
+    // خارج DataProvider — الافتراضي محلي
+  }
+
+  const storageMessage = isCloud
+    ? 'بياناتك محفوظة بأمان في السحابة ومتاحة من أي جهاز.'
+    : 'بياناتك تُحفظ على هذا الجهاز فقط — ننصح بعمل نسخ احتياطي دوري.';
+
+  const goToLedgers = () => {
+    onClose();
+    window.location.hash = '#/ledgers';
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label="مرحبًا بك">
       <div className="absolute inset-0" style={{ background: 'rgba(0,0,0,0.45)' }} onClick={onClose} />
@@ -17,11 +39,16 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
           <button type="button" className="text-sm" style={{ color: 'var(--color-muted)' }} aria-label="إغلاق" onClick={onClose}>×</button>
         </div>
 
-        <ul className="mt-4 text-sm space-y-2" style={{ paddingInlineStart: '1.2rem', margin: '1rem 0 0', color: 'var(--color-text)' }}>
-          <li>بياناتك تُحفظ محليًا داخل المتصفح.</li>
-          <li>ابدأ بإضافة أول حركة مالية من زر (إضافة).</li>
-          <li>يمكنك التصدير CSV في أي وقت.</li>
-        </ul>
+        <ol className="mt-4 text-sm space-y-2" style={{ paddingInlineStart: '1.2rem', margin: '1rem 0 0', color: 'var(--color-text)' }}>
+          <li>أنشئ أول دفتر (عقار) — لتجميع حركاتك المالية في مكان واحد.</li>
+          <li>أضف أول حركة مالية (دخل أو مصروف).</li>
+          <li>أضف التزاماتك المتكررة (إيجار، صيانة، كهرباء...).</li>
+          <li>راقب صحتك المالية من النبض.</li>
+        </ol>
+
+        <p className="mt-3 text-xs" style={{ color: 'var(--color-muted)' }}>
+          {storageMessage}
+        </p>
 
         <button
           type="button"
@@ -40,9 +67,9 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
             type="button"
             className="btn-primary w-full"
             style={{ padding: '0.9rem 1rem', borderRadius: 'var(--radius)', background: 'var(--color-primary)', color: '#fff' }}
-            onClick={onClose}
+            onClick={goToLedgers}
           >
-            ابدأ الآن
+            أنشئ أول دفتر
           </button>
           <button
             type="button"

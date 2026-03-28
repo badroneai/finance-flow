@@ -1,16 +1,29 @@
 /*
   شريط التنبيهات الاستباقية — يظهر عند وجود مستحقات متأخرة أو قريبة ويوجّه إلى المستحقات.
+  SPR-006: يستخدم DataContext لتوفير البيانات لـ calculatePulse بدلاً من الاعتماد على localStorage فقط.
 */
 import React, { useState, useEffect, useCallback } from 'react';
 import { calculatePulse } from '../core/pulse-engine.js';
+import { useData } from '../contexts/DataContext.jsx';
 
 export function PulseAlertsBanner({ page, onGoToInbox, className = '' }) {
+  const {
+    transactions,
+    recurringItems,
+    ledgers,
+    activeLedgerId,
+  } = useData();
+
   const [alerts, setAlerts] = useState([]);
   const [hasLedger, setHasLedger] = useState(false);
 
   const refresh = useCallback(() => {
     try {
-      const pulse = calculatePulse();
+      const pulse = calculatePulse(activeLedgerId || undefined, {
+        transactions,
+        recurringItems,
+        ledgers,
+      });
       const list = Array.isArray(pulse?.alerts) ? pulse.alerts : [];
       setAlerts(list);
       setHasLedger(pulse?.healthStatus !== 'unknown');
@@ -18,7 +31,7 @@ export function PulseAlertsBanner({ page, onGoToInbox, className = '' }) {
       setAlerts([]);
       setHasLedger(false);
     }
-  }, []);
+  }, [activeLedgerId, transactions, recurringItems, ledgers]);
 
   useEffect(() => {
     refresh();

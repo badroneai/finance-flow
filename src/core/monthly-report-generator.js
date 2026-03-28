@@ -4,17 +4,10 @@
  */
 
 import { getLedgers, getRecurringItems } from './ledger-store.js';
-import { dataStore } from './dataStore.js';
+import { getTransactionsForLedger } from './dataStore.js';
 import { calculateHealthScore } from './pulse-engine.js';
 import { computePL } from './ledger-analytics.js';
 import { buildLedgerInbox } from './ledger-planner.js';
-
-function getTransactionsForLedger(ledgerId) {
-  const lid = String(ledgerId || '').trim();
-  if (!lid) return [];
-  const all = (dataStore.transactions?.list?.() || []).filter(Boolean);
-  return all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid);
-}
 
 function monthRange(year, month) {
   const y = Number(year) || new Date().getFullYear();
@@ -68,14 +61,18 @@ function breakdownByKey(txs, keyField, typeFilter) {
  * @param {string} ledgerId - معرّف الدفتر
  * @param {number|string} month - الشهر (1–12)
  * @param {number|string} year - السنة
+ * @param {Object} [options={}] - خيارات اختيارية
+ * @param {Array} [options.transactions] - مصفوفة الحركات (fallback إلى getTransactionsForLedger)
+ * @param {Array} [options.recurringItems] - مصفوفة الالتزامات (fallback إلى getRecurringItems)
+ * @param {Array} [options.ledgers] - مصفوفة الدفاتر (fallback إلى getLedgers)
  * @returns {Promise<Object>} كائن التقرير
  */
-export async function generateMonthlyReport(ledgerId, month, year) {
+export async function generateMonthlyReport(ledgerId, month, year, options = {}) {
   const lid = String(ledgerId || '').trim();
-  const allLedgers = getLedgers() || [];
+  const allLedgers = options.ledgers || getLedgers() || [];
   const ledger = allLedgers.find((l) => l.id === lid) || null;
-  const recurringList = (getRecurringItems() || []).filter((r) => String(r?.ledgerId || '') === lid);
-  const txs = getTransactionsForLedger(lid);
+  const recurringList = (options.recurringItems || getRecurringItems() || []).filter((r) => String(r?.ledgerId || '') === lid);
+  const txs = options.transactions ? (Array.isArray(options.transactions) ? options.transactions : []).filter(t => { const tLid = String(t?.ledgerId || t?.ledger_id || t?.meta?.ledgerId || ''); return !lid || tLid === lid || tLid === ''; }) : getTransactionsForLedger(lid);
   const { firstDay, lastDay } = monthRange(year, month);
   const monthTxs = filterTxInMonth(txs, firstDay, lastDay);
 
@@ -86,7 +83,7 @@ export async function generateMonthlyReport(ledgerId, month, year) {
   const netCashflow = totalIncome - totalExpense;
   const closingBalance = openingBalance + netCashflow;
 
-  const healthScore = lid ? calculateHealthScore(lid) : 0;
+  const healthScore = lid ? calculateHealthScore(lid, options) : 0;
   let healthTrend = 'مستقر';
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;

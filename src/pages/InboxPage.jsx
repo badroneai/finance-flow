@@ -9,6 +9,7 @@ import {
   setActiveLedgerId as setActiveLedgerIdStore,
   getLedgers,
 } from '../core/ledger-store.js';
+import { useData } from '../contexts/DataContext.jsx';
 import { formatCurrency } from '../utils/format.jsx';
 import QuickPaymentModal from '../ui/inbox/QuickPaymentModal.jsx';
 
@@ -59,18 +60,18 @@ function priorityDot(priority) {
 function InboxSection({ title, count, total, amountLabel, open, onToggle, children }) {
   const isOpen = open !== false;
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden mb-4">
+    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden mb-4">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-right border-b border-gray-100 hover:bg-gray-50"
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-right border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
         aria-expanded={isOpen}
       >
-        <span className="font-semibold text-gray-900">{title} ({count})</span>
-        <span className="text-sm text-gray-600">{amountLabel}</span>
-        <span className="text-gray-400">{isOpen ? '\u25B2' : '\u25BC'}</span>
+        <span className="font-semibold text-[var(--color-text)]">{title} ({count})</span>
+        <span className="text-sm text-[var(--color-muted)]">{amountLabel}</span>
+        <span className="text-[var(--color-muted)]">{isOpen ? '\u25B2' : '\u25BC'}</span>
       </button>
-      {isOpen && <div className="divide-y divide-gray-100">{children}</div>}
+      {isOpen && <div className="divide-y divide-[var(--color-border)]">{children}</div>}
     </div>
   );
 }
@@ -83,12 +84,12 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
         <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${dotClass}`} aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium text-gray-900">{due.name}</span>
+            <span className="font-medium text-[var(--color-text)]">{due.name}</span>
             <span className={due.type === 'income' ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium'}>
               {formatCurrency(due.amount)}
             </span>
           </div>
-          <p className="text-sm text-gray-500 mt-0.5">{daysLabel(due)}</p>
+          <p className="text-sm text-[var(--color-muted)] mt-0.5">{daysLabel(due)}</p>
           <div className="flex flex-wrap gap-2 mt-2">
             <button
               type="button"
@@ -101,7 +102,7 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
               <button
                 type="button"
                 onClick={() => onSnoozeTomorrow(due)}
-                className="text-sm font-medium text-gray-600 hover:text-gray-800"
+                className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]"
               >
                 ذكّرني غدًا
               </button>
@@ -111,7 +112,7 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
         <button
           type="button"
           onClick={() => onRecordPayment(due)}
-          className="flex-shrink-0 w-5 h-5 rounded border-2 border-gray-300 hover:border-blue-500"
+          className="flex-shrink-0 w-5 h-5 rounded border-2 border-[var(--color-border)] hover:border-blue-500"
           aria-label="تسجيل دفعة"
         />
       </div>
@@ -120,8 +121,16 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
 }
 
 export default function InboxPage({ setPage }) {
+  const {
+    transactions,
+    recurringItems,
+    ledgers: dataLedgers,
+    activeLedgerId: dataActiveLedgerId,
+    setActiveLedgerId: setDataActiveLedgerId,
+  } = useData();
+
   const [inbox, setInbox] = useState(null);
-  const [activeLedgerId, setActiveLedgerId] = useState(() => getActiveLedgerId() || '');
+  const [activeLedgerId, setActiveLedgerId] = useState(() => dataActiveLedgerId || getActiveLedgerId() || '');
   const [filter, setFilter] = useState('all');
   const [openOverdue, setOpenOverdue] = useState(true);
   const [openThisWeek, setOpenThisWeek] = useState(true);
@@ -131,25 +140,26 @@ export default function InboxPage({ setPage }) {
   const [pullY, setPullY] = useState(0);
   const touchStartY = useRef(0);
 
+  // مزامنة الدفتر النشط من DataContext
+  useEffect(() => {
+    if (dataActiveLedgerId) setActiveLedgerId(dataActiveLedgerId);
+  }, [dataActiveLedgerId]);
+
   const refresh = useCallback(() => {
-    const id = getActiveLedgerId() || '';
+    const id = dataActiveLedgerId || getActiveLedgerId() || '';
     setActiveLedgerId(id);
     setSnoozeMap(getSnoozeMap());
     if (!id) {
       setInbox(null);
       return;
     }
-    setInbox(calculateInbox(id));
-  }, []);
+    setInbox(calculateInbox(id, { transactions, recurringItems }));
+  }, [dataActiveLedgerId, transactions, recurringItems]);
 
+  // SPR-008: أصلح stale closure — كان [] يمنع إعادة الحساب عند تحديث البيانات.
+  // الآن refresh تُعاد الحساب تلقائياً عند تغيّر transactions/recurringItems/activeLedgerId.
   useEffect(() => {
     refresh();
-  }, []);
-
-  useEffect(() => {
-    const onChanged = () => refresh();
-    window.addEventListener('ledger:activeChanged', onChanged);
-    return () => window.removeEventListener('ledger:activeChanged', onChanged);
   }, [refresh]);
 
   const filterDues = useCallback(
@@ -194,7 +204,7 @@ export default function InboxPage({ setPage }) {
   };
 
   const noLedger = !activeLedgerId;
-  const ledgers = getLedgers() || [];
+  const ledgers = (dataLedgers && dataLedgers.length > 0) ? dataLedgers : (getLedgers() || []);
   const overdue = filterDues(inbox?.overdue || []);
   const thisWeek = filterDues(inbox?.thisWeek || []);
   const thisMonth = filterDues(inbox?.thisMonth || []);
@@ -211,7 +221,7 @@ export default function InboxPage({ setPage }) {
 
   return (
     <div
-      className="inbox-page min-h-screen bg-gray-50 p-4 md:p-6 max-w-2xl mx-auto"
+      className="inbox-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-2xl mx-auto"
       dir="rtl"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -220,7 +230,7 @@ export default function InboxPage({ setPage }) {
     >
       {pullY > 0 && (
         <div
-          className="fixed top-0 left-0 right-0 h-12 flex items-center justify-center bg-gray-100/90 text-gray-600 text-sm z-10"
+          className="fixed top-0 left-0 right-0 h-12 flex items-center justify-center bg-[var(--color-bg)]/90 text-[var(--color-muted)] text-sm z-10"
           aria-live="polite"
         >
           {pullY >= PULL_THRESHOLD ? 'أفلت للتحديث' : 'اسحب للتحديث'}
@@ -228,7 +238,7 @@ export default function InboxPage({ setPage }) {
       )}
 
       <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
-        <h1 className="text-xl font-bold text-gray-900">المستحقات</h1>
+        <h1 className="text-xl font-bold text-[var(--color-text)]">المستحقات</h1>
         <div className="flex items-center gap-2">
           {ledgers.length > 0 && (
             <select
@@ -238,7 +248,7 @@ export default function InboxPage({ setPage }) {
                 if (id) setActiveLedgerIdStore(id);
                 refresh();
               }}
-              className="px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-800 min-w-[140px]"
+              className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] min-w-[140px]"
               aria-label="الدفتر"
             >
               {ledgers.map((l) => (
@@ -280,7 +290,7 @@ export default function InboxPage({ setPage }) {
           )}
         </div>
       ) : totalCount === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-600">
+        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-8 text-center text-[var(--color-muted)]">
           <p className="font-medium">لا توجد مستحقات — استمتع بيومك!</p>
           <p className="text-sm mt-2">لا توجد بنود متأخرة أو مستحقة هذا الأسبوع أو الشهر.</p>
         </div>
@@ -297,7 +307,7 @@ export default function InboxPage({ setPage }) {
                 type="button"
                 onClick={() => setFilter(f.key)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium border ${
-                  filter === f.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+                  filter === f.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'
                 }`}
               >
                 {f.label}
@@ -368,8 +378,8 @@ export default function InboxPage({ setPage }) {
             </InboxSection>
           )}
 
-          <div className="mt-4 pt-4 border-t border-gray-200 text-sm text-gray-600">
-            <p className="font-medium text-gray-800">الإجمالي المتوقع هذا الشهر</p>
+          <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-sm text-[var(--color-muted)]">
+            <p className="font-medium text-[var(--color-text)]">الإجمالي المتوقع هذا الشهر</p>
             <p className="mt-1">
               دخل: {formatCurrency(totalIncomeMonth)} ر.س | مصروف: {formatCurrency(totalExpenseMonth)} ر.س
             </p>
