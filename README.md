@@ -5,18 +5,26 @@
 
 ## المتطلبات
 
-- Node.js 22 أو أحدث
+- **Node.js 22** (الموصى — مُحدد في `.nvmrc`)
 - npm
+
+> Node 20.19+ و Node 23+ يشتغلون أيضاً، لكن Node 22 LTS هو الأكثر استقراراً مع هذا المشروع.
+
+إذا عندك `nvm`:
+```bash
+nvm install 22
+nvm use 22
+```
 
 ## التشغيل
 
 ```bash
-rm -f package-lock.json   # مهم: يضمن تثبيت المكتبات المناسبة لنظامك (macOS/Linux)
+rm -rf node_modules package-lock.json   # مهم عند أول تثبيت أو تبديل نسخة Node
 npm install
 npm run dev
 ```
 
-> إذا ظهر خطأ يتعلق بـ `@rollup/rollup-*`، احذف `package-lock.json` و `node_modules` ثم أعد `npm install`.
+> إذا ظهر خطأ يتعلق بـ `esbuild` أو `@rollup/rollup-*`، تأكد أنك على Node 22 ثم احذف `node_modules` و `package-lock.json` وأعد `npm install`.
 
 ثم افتح الرابط الذي يظهر في Terminal (عادةً `http://localhost:5173/finance-flow.html`).
 
