@@ -11,9 +11,12 @@
 ## التشغيل
 
 ```bash
+rm -f package-lock.json   # مهم: يضمن تثبيت المكتبات المناسبة لنظامك (macOS/Linux)
 npm install
 npm run dev
 ```
+
+> إذا ظهر خطأ يتعلق بـ `@rollup/rollup-*`، احذف `package-lock.json` و `node_modules` ثم أعد `npm install`.
 
 ثم افتح الرابط الذي يظهر في Terminal (عادةً `http://localhost:5173/finance-flow.html`).
 
