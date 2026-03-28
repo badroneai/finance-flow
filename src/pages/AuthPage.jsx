@@ -7,7 +7,7 @@
   تعمل مع الثيمات الثلاث (light/dim/dark) عبر CSS variables.
 */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
@@ -69,10 +69,12 @@ const AuthPage = () => {
   const [loading, setLoading] = useState(false);
 
   // إذا كان مسجّلاً بالفعل، حوّل للصفحة الرئيسية
-  if (isAuthenticated) {
-    navigate('/', { replace: true });
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) navigate('/', { replace: true });
+  }, [isAuthenticated, navigate]);
+
+  // لا نعرض النموذج إذا المستخدم مسجّل بالفعل
+  if (isAuthenticated) return null;
 
   const resetMessages = () => { setError(''); setSuccessMsg(''); };
 
