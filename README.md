@@ -1,30 +1,75 @@
-# قيد العقار — Finance Flow (Static)
+# قيد العقار — Finance Flow
 
-نسخة Static تعمل على GitHub Pages (بدون باك-إند) لإدارة التدفقات المالية والعمولات بشكل بسيط.
+نظام إدارة التدفقات المالية العقارية للمكاتب الصغيرة والمستثمرين الأفراد في السعودية.
+يتيح تتبع العقود، الإيرادات، المصروفات، العمولات، والتنبيهات المالية بواجهة عربية بالكامل (RTL).
 
-## الروابط (Production)
-- App: https://app.qaydalaqar.com/finance-flow.html
-- Landing: https://app.qaydalaqar.com/landing.html
+## المتطلبات
 
-## تشغيل محلي (Local)
-> مهم: افتح عبر HTTP server (وليس file://) لتجنب مشاكل التحميل.
+- Node.js 22 أو أحدث
+- npm
+
+## التشغيل
 
 ```bash
-python -m http.server 4173
+npm install
+npm run dev
 ```
-ثم افتح:
-- http://127.0.0.1:4173/finance-flow.html
-- http://127.0.0.1:4173/landing.html
 
-## نظام الثيم (Design Tokens + Themes)
-- Tokens + Themes: `assets/css/theme.tokens.css`
-- App styles: `assets/css/app.css`
-- التفعيل في HTML:
-  - `finance-flow.html` يربط الملفين داخل `<head>` بعد `assets/qaydalaqar-theme.css`.
-  - الثيم يُطبّق عبر: `document.documentElement.dataset.theme = "light|dim|dark"`
-  - يتم حفظ اختيار المستخدم في LocalStorage key: `ui_theme`
+ثم افتح الرابط الذي يظهر في Terminal (عادةً `http://localhost:5173/finance-flow.html`).
 
-## Docs
-- Theme system: `docs/theme-system.md`
-- Acceptance tests: `docs/acceptance-tests.md`
-- Changelog: `docs/CHANGELOG.md`
+### أوامر إضافية
+
+```bash
+npm run build     # بناء نسخة الإنتاج
+npm run preview   # معاينة البناء محلياً
+npm run test      # تشغيل الاختبارات (Vitest)
+```
+
+## وضعيّ التشغيل
+
+### وضع Demo (بدون backend)
+
+يعمل التطبيق تلقائياً بوضع localStorage إذا لم تكن مفاتيح Supabase موجودة.
+كل البيانات تُحفظ محلياً في المتصفح — مناسب للتجربة والعرض.
+
+### وضع Supabase (مع backend)
+
+أنشئ ملف `.env` في جذر المشروع:
+
+```env
+VITE_SUPABASE_URL=https://[project-id].supabase.co
+VITE_SUPABASE_ANON_KEY=eyJ...
+```
+
+عند وجود القيم، يتصل التطبيق بـ Supabase للمصادقة وتخزين البيانات سحابياً.
+
+## هيكل المشروع
+
+```
+src/
+├── App.jsx              # المكون الرئيسي والمسارات
+├── main.jsx             # نقطة الدخول
+├── config/              # إعدادات التنقل
+├── constants/           # الثوابت
+├── contexts/            # React Contexts (Auth, Data, Demo, Toast, Unsaved)
+├── core/                # المحركات والخدمات الأساسية
+├── domain/              # منطق الأعمال النقي (بدون React)
+├── pages/               # الصفحات (lazy loaded)
+├── tabs/                # تبويبات داخل الصفحات
+├── ui/                  # مكونات الواجهة المشتركة
+└── utils/               # أدوات مساعدة (تنسيق، تصدير)
+```
+
+## Tech Stack
+
+- **React 19** — واجهة المستخدم
+- **Vite 7** — البناء والتطوير
+- **React Router DOM 7** — التنقل
+- **Supabase** — المصادقة وقاعدة البيانات
+- **jsPDF + html2canvas** — تصدير PDF
+- **Vitest** — الاختبارات
+- **CSS Variables** — نظام تنسيق مخصص (بدون Tailwind)
+
+## الترخيص
+
+ISC
