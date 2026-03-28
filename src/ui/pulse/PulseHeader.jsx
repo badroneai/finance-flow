@@ -47,11 +47,18 @@ export default function PulseHeader({ onOpenLedgers }) {
   };
 
   return (
-    <header className="flex items-center justify-between gap-3 flex-wrap mb-4" dir="rtl" aria-label="هيدر النبض المالي">
+    <header
+      className="flex items-center justify-between gap-3 flex-wrap mb-4"
+      dir="rtl"
+      aria-label="هيدر النبض المالي"
+    >
       <div className="flex items-center gap-2 min-w-0 flex-1">
         <h1 className="text-xl font-bold text-[var(--color-text)] truncate">النبض المالي</h1>
         {hasLedgers && (
-          <span className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-bg)] text-[var(--color-muted)]" aria-hidden="true">
+          <span
+            className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-bg)] text-[var(--color-muted)]"
+            aria-hidden="true"
+          >
             قيد
           </span>
         )}
@@ -69,7 +76,10 @@ export default function PulseHeader({ onOpenLedgers }) {
               aria-label={`الدفتر النشط: ${name || 'غير محدد'}. اختر دفتراً آخر`}
             >
               <span className="truncate">{name || 'اختر دفتراً'}</span>
-              <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[var(--color-muted)]" aria-hidden="true">
+              <span
+                className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[var(--color-muted)]"
+                aria-hidden="true"
+              >
                 {open ? '\u25B2' : '\u25BC'}
               </span>
             </button>
@@ -84,7 +94,11 @@ export default function PulseHeader({ onOpenLedgers }) {
                     <button
                       type="button"
                       onClick={() => handleSelect(l.id)}
-                      className={`w-full text-right px-3 py-2 text-sm ${l.id === activeId ? 'bg-blue-50 text-blue-800 font-medium' : 'text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
+                      className="w-full text-right px-3 py-2 text-sm"
+                      style={{
+                        background: l.id === activeId ? 'var(--color-info-bg)' : 'transparent',
+                        color: l.id === activeId ? 'var(--color-info)' : 'var(--color-text)',
+                      }}
                     >
                       {l.name || 'بدون اسم'}
                     </button>
@@ -98,7 +112,8 @@ export default function PulseHeader({ onOpenLedgers }) {
           <button
             type="button"
             onClick={onOpenLedgers}
-            className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+            className="text-sm font-medium"
+            style={{ color: 'var(--color-info)' }}
           >
             {hasLedgers ? 'إدارة الدفتر' : 'فتح الدفاتر'}
           </button>

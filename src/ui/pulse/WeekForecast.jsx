@@ -27,7 +27,12 @@ function formatFull(n) {
 }
 
 export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
-  const { expectedIncome = 0, expectedExpenses = 0, netCashflow = 0, riskLevel = 'safe' } = weekForecast || {};
+  const {
+    expectedIncome = 0,
+    expectedExpenses = 0,
+    netCashflow = 0,
+    riskLevel = 'safe',
+  } = weekForecast || {};
 
   const dayData = useMemo(() => {
     const now = new Date();
@@ -69,10 +74,11 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
   const svgWidth = Math.max(280, dayData.length * 48);
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden p-4" dir="rtl">
-      <h2 className="font-semibold text-[var(--color-text)] mb-4">
-        نظرة الأسبوع
-      </h2>
+    <div
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden p-4"
+      dir="rtl"
+    >
+      <h2 className="font-semibold text-[var(--color-text)] mb-4">نظرة الأسبوع</h2>
 
       {/* رسم الأعمدة */}
       <div className="w-full overflow-x-auto">
@@ -155,16 +161,24 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
       <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-1 text-sm">
         <div className="flex justify-between items-center">
           <span className="text-[var(--color-muted)]">متوقع الدخل:</span>
-          <span className="font-medium text-emerald-600">{formatFull(expectedIncome)} ر.س</span>
+          <span className="font-medium" style={{ color: 'var(--color-success)' }}>
+            {formatFull(expectedIncome)} ر.س
+          </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-[var(--color-muted)]">متوقع المصروف:</span>
-          <span className="font-medium text-rose-600">{formatFull(expectedExpenses)} ر.س</span>
+          <span className="font-medium" style={{ color: 'var(--color-danger)' }}>
+            {formatFull(expectedExpenses)} ر.س
+          </span>
         </div>
         <div className="flex justify-between items-center pt-1 border-t border-[var(--color-border)]">
           <span className="text-[var(--color-text)] font-medium">صافي:</span>
-          <span className={`font-bold ${netCashflow >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-            {netCashflow >= 0 ? '' : '-'}{formatFull(Math.abs(netCashflow))} ر.س
+          <span
+            className="font-bold"
+            style={{ color: netCashflow >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}
+          >
+            {netCashflow >= 0 ? '' : '-'}
+            {formatFull(Math.abs(netCashflow))} ر.س
           </span>
         </div>
       </div>
@@ -180,13 +194,21 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
       `}</style>
       <div className="mt-3 flex justify-center">
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-            riskLevel === 'safe'
-              ? 'bg-emerald-100 text-emerald-800'
-              : riskLevel === 'tight'
-                ? 'bg-amber-100 text-amber-800'
-                : 'bg-rose-100 text-rose-800'
-          } ${riskLevel === 'danger' ? 'week-forecast-danger' : ''}`}
+          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${riskLevel === 'danger' ? 'week-forecast-danger' : ''}`}
+          style={{
+            background:
+              riskLevel === 'safe'
+                ? 'var(--color-success-bg)'
+                : riskLevel === 'tight'
+                  ? 'var(--color-warning-bg)'
+                  : 'var(--color-danger-bg)',
+            color:
+              riskLevel === 'safe'
+                ? 'var(--color-success)'
+                : riskLevel === 'tight'
+                  ? 'var(--color-warning)'
+                  : 'var(--color-danger)',
+          }}
         >
           {riskLevel === 'safe' && 'الحالة: سيولة مريحة'}
           {riskLevel === 'tight' && 'الحالة: سيولة ضيقة'}

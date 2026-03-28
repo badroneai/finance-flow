@@ -7,12 +7,7 @@ import { calculatePulse } from '../core/pulse-engine.js';
 import { useData } from '../contexts/DataContext.jsx';
 
 export function PulseAlertsBanner({ page, onGoToInbox, className = '' }) {
-  const {
-    transactions,
-    recurringItems,
-    ledgers,
-    activeLedgerId,
-  } = useData();
+  const { transactions, recurringItems, ledgers, activeLedgerId } = useData();
 
   const [alerts, setAlerts] = useState([]);
   const [hasLedger, setHasLedger] = useState(false);
@@ -57,16 +52,20 @@ export function PulseAlertsBanner({ page, onGoToInbox, className = '' }) {
 
   return (
     <div
-      className={`no-print border-b border-amber-200 bg-amber-50 px-4 py-2 flex items-center justify-between gap-3 flex-wrap ${className}`}
+      className={`no-print border-b px-4 py-2 flex items-center justify-between gap-3 flex-wrap ${className}`}
+      style={{ borderColor: 'var(--color-warning-bg)', background: 'var(--color-warning-bg)' }}
       role="alert"
       aria-live="polite"
     >
-      <p className="text-amber-900 text-sm font-medium">{msg}</p>
+      <p className="text-sm font-medium" style={{ color: 'var(--color-warning)' }}>
+        {msg}
+      </p>
       {typeof onGoToInbox === 'function' && (
         <button
           type="button"
           onClick={onGoToInbox}
-          className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700 transition-colors"
+          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-colors"
+          style={{ background: 'var(--color-warning)' }}
         >
           عرض المستحقات
         </button>

@@ -49,17 +49,17 @@ export function buildLast6MonthsIncomeExpenseChart(allTxs, nowDate = new Date(),
     months.push({ key, label, income: 0, expense: 0 });
   }
 
-  list.forEach(t => {
+  list.forEach((t) => {
     const mk = getMonthKey(t.date);
     if (!mk) return;
-    const m = months.find(mm => mm.key === mk);
+    const m = months.find((mm) => mm.key === mk);
     if (m) {
       if (t.type === 'income') m.income += t.amount;
       else m.expense += t.amount;
     }
   });
 
-  const maxVal = Math.max(...months.map(m => Math.max(m.income, m.expense)), 1);
+  const maxVal = Math.max(...months.map((m) => Math.max(m.income, m.expense)), 1);
   return { months, maxVal };
 }
 
@@ -75,13 +75,20 @@ export function buildChartDataForRangeOnlyMonthsWithData(allTxs, locale = 'ar-SA
     if (!byMonth.has(mk)) {
       const [y, m] = mk.split('-').map(Number);
       const d = new Date(y, m - 1, 1);
-      byMonth.set(mk, { key: mk, label: d.toLocaleDateString(locale, { month: 'short' }), income: 0, expense: 0 });
+      byMonth.set(mk, {
+        key: mk,
+        label: d.toLocaleDateString(locale, { month: 'short' }),
+        income: 0,
+        expense: 0,
+      });
     }
     const row = byMonth.get(mk);
     if (t.type === 'income') row.income += t.amount;
     else row.expense += t.amount;
   });
-  const months = Array.from(byMonth.keys()).sort().map((k) => byMonth.get(k));
+  const months = Array.from(byMonth.keys())
+    .sort()
+    .map((k) => byMonth.get(k));
   const maxVal = Math.max(...months.map((m) => Math.max(m.income, m.expense)), 1);
   return { months, maxVal };
 }
@@ -109,15 +116,15 @@ export function buildChartDataForRange(allTxs, fromDate, toDate, locale = 'ar-SA
     months.push({ key, label, income: 0, expense: 0 });
     cur.setMonth(cur.getMonth() + 1);
   }
-  list.forEach(t => {
+  list.forEach((t) => {
     const mk = getMonthKey(t.date);
     if (!mk) return;
-    const m = months.find(mm => mm.key === mk);
+    const m = months.find((mm) => mm.key === mk);
     if (m) {
       if (t.type === 'income') m.income += t.amount;
       else m.expense += t.amount;
     }
   });
-  const maxVal = Math.max(...months.map(m => Math.max(m.income, m.expense)), 1);
+  const maxVal = Math.max(...months.map((m) => Math.max(m.income, m.expense)), 1);
   return { months, maxVal };
 }

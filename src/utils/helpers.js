@@ -3,7 +3,10 @@
 */
 
 /** توليد معرف فريد */
-export const genId = () => (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substr(2));
+export const genId = () =>
+  crypto.randomUUID
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).substr(2);
 
 /** تاريخ/وقت ISO الحالي */
 export const now = () => new Date().toISOString();

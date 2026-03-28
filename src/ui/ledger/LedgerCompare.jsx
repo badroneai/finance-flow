@@ -15,10 +15,10 @@ function formatShort(value) {
 }
 
 function healthBarColor(score) {
-  if (score >= 80) return 'bg-emerald-500';
-  if (score >= 60) return 'bg-blue-500';
-  if (score >= 40) return 'bg-amber-500';
-  return 'bg-rose-500';
+  if (score >= 80) return 'var(--color-success)';
+  if (score >= 60) return 'var(--color-info)';
+  if (score >= 40) return 'var(--color-warning)';
+  return 'var(--color-danger)';
 }
 
 export default function LedgerCompare() {
@@ -53,12 +53,15 @@ export default function LedgerCompare() {
     });
   };
 
-  const selectedNames = selectedIds
-    .map((id) => (allLedgers.find((l) => l.id === id) || {}).name || id)
-    .join('، ') || 'اختر الدفاتر';
+  const selectedNames =
+    selectedIds.map((id) => (allLedgers.find((l) => l.id === id) || {}).name || id).join('، ') ||
+    'اختر الدفاتر';
 
   return (
-    <div className="ledger-compare rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm p-4 md:p-5" dir="rtl">
+    <div
+      className="ledger-compare rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm p-4 md:p-5"
+      dir="rtl"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h3 className="text-lg font-bold text-[var(--color-text)]">مقارنة الدفاتر</h3>
         <div className="relative" ref={dropdownRef}>
@@ -70,7 +73,9 @@ export default function LedgerCompare() {
             aria-expanded={dropdownOpen}
           >
             {selectedNames}
-            <span className="inline-block ms-2 text-[var(--color-muted)]">{dropdownOpen ? '\u25B2' : '\u25BC'}</span>
+            <span className="inline-block ms-2 text-[var(--color-muted)]">
+              {dropdownOpen ? '\u25B2' : '\u25BC'}
+            </span>
           </button>
           {dropdownOpen && (
             <div
@@ -105,7 +110,9 @@ export default function LedgerCompare() {
       </div>
 
       {!compareResult && (
-        <p className="text-sm text-[var(--color-muted)] py-6 text-center">اختر دفترين على الأقل (وحتى 5) للمقارنة.</p>
+        <p className="text-sm text-[var(--color-muted)] py-6 text-center">
+          اختر دفترين على الأقل (وحتى 5) للمقارنة.
+        </p>
       )}
 
       {compareResult && compareResult.ledgers.length > 0 && (
@@ -114,38 +121,75 @@ export default function LedgerCompare() {
             <div className="flex gap-4 min-w-max px-1">
               {compareResult.ledgers.map((l) => {
                 const isBest = compareResult.bestPerformer?.ledgerId === l.id;
-                const isWorst = compareResult.worstPerformer?.ledgerId === l.id && (l.roi < 1 || l.overdueCount > 0);
+                const isWorst =
+                  compareResult.worstPerformer?.ledgerId === l.id &&
+                  (l.roi < 1 || l.overdueCount > 0);
                 return (
                   <div
                     key={l.id}
                     className="w-44 flex-shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/50 p-4"
                   >
-                    <p className="font-bold text-[var(--color-text)] truncate mb-3" title={l.name}>{l.name}</p>
+                    <p className="font-bold text-[var(--color-text)] truncate mb-3" title={l.name}>
+                      {l.name}
+                    </p>
                     <p className="text-sm text-[var(--color-muted)] mb-1">صحة: {l.healthScore}</p>
                     <div className="h-2 rounded-full bg-[var(--color-bg)] overflow-hidden mb-3">
                       <div
-                        className={`h-full rounded-full transition-all ${healthBarColor(l.healthScore)}`}
-                        style={{ width: `${Math.min(100, Math.max(0, l.healthScore))}%` }}
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${Math.min(100, Math.max(0, l.healthScore))}%`,
+                          background: healthBarColor(l.healthScore),
+                        }}
                       />
                     </div>
                     <div className="space-y-1 text-sm">
-                      <p className="text-[var(--color-text)]">دخل: {formatShort(l.totalIncome30d)}</p>
-                      <p className="text-[var(--color-text)]">صرف: {formatShort(l.totalExpense30d)}</p>
-                      <p className={l.netCashflow30d >= 0 ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium'}>
-                        صافي: {l.netCashflow30d >= 0 ? '+' : ''}{formatShort(l.netCashflow30d)}
+                      <p className="text-[var(--color-text)]">
+                        دخل: {formatShort(l.totalIncome30d)}
+                      </p>
+                      <p className="text-[var(--color-text)]">
+                        صرف: {formatShort(l.totalExpense30d)}
+                      </p>
+                      <p
+                        style={{
+                          color:
+                            l.netCashflow30d >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
+                          fontWeight: 500,
+                        }}
+                      >
+                        صافي: {l.netCashflow30d >= 0 ? '+' : ''}
+                        {formatShort(l.netCashflow30d)}
                       </p>
                     </div>
-                    <p className={`mt-2 text-sm font-medium ${l.roi >= 1 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    <p
+                      style={{
+                        marginTop: '0.5rem',
+                        fontSize: '0.875rem',
+                        fontWeight: 500,
+                        color: l.roi >= 1 ? 'var(--color-success)' : 'var(--color-danger)',
+                      }}
+                    >
                       ROI: {l.roi.toFixed(1)}x
                     </p>
                     <div className="mt-3">
                       {isBest && (
-                        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">
+                        <span
+                          className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                          style={{
+                            background: 'var(--color-success-bg)',
+                            color: 'var(--color-success)',
+                          }}
+                        >
                           الأفضل
                         </span>
                       )}
                       {isWorst && !isBest && (
-                        <span className="inline-block px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-800">
+                        <span
+                          className="inline-block px-2 py-0.5 rounded text-xs font-medium"
+                          style={{
+                            background: 'var(--color-warning-bg)',
+                            color: 'var(--color-warning)',
+                          }}
+                        >
                           يحتاج مراجعة
                         </span>
                       )}
@@ -157,9 +201,14 @@ export default function LedgerCompare() {
           </div>
 
           {compareResult.recommendations && compareResult.recommendations.length > 0 && (
-            <div className="mt-4 p-4 rounded-xl bg-amber-50/80 border border-amber-100">
-              <p className="text-sm font-medium text-amber-900 mb-1">توصية</p>
-              <ul className="text-sm text-amber-800 space-y-1">
+            <div
+              className="mt-4 p-4 rounded-xl border"
+              style={{ background: 'var(--color-warning-bg)', borderColor: 'var(--color-warning)' }}
+            >
+              <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-warning)' }}>
+                توصية
+              </p>
+              <ul className="text-sm space-y-1" style={{ color: 'var(--color-warning)' }}>
                 {compareResult.recommendations.map((r, i) => (
                   <li key={i}>{r.message}</li>
                 ))}

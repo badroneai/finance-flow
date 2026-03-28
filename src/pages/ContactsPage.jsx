@@ -35,7 +35,9 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
         {editMode ? 'تعديل جهة الاتصال' : 'إضافة جهة اتصال جديدة'}
       </h3>
       <p className="text-sm text-[var(--color-muted)] mb-4">
-        {editMode ? 'عدّل البيانات واحفظ التغييرات' : 'سجّل عملاءك ومستأجريك لتتبع العقود والمدفوعات'}
+        {editMode
+          ? 'عدّل البيانات واحفظ التغييرات'
+          : 'سجّل عملاءك ومستأجريك لتتبع العقود والمدفوعات'}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -59,7 +61,9 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {CONTACT_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.icon} {opt.label}
+              </option>
             ))}
           </select>
         </FormField>
@@ -108,7 +112,9 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {CONTACT_ID_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </FormField>
@@ -134,7 +140,9 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           >
             <option value="">اختر المدينة</option>
             {SAUDI_CITIES.map((city) => (
-              <option key={city} value={city}>{city}</option>
+              <option key={city} value={city}>
+                {city}
+              </option>
             ))}
           </select>
         </FormField>
@@ -227,13 +235,18 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
   const icon = getContactTypeIcon(contact.type);
   const typeLabel = getContactTypeLabel(contact.type);
 
-  const tags = (contact.tags || '').split(',').map((t) => t.trim()).filter(Boolean);
+  const tags = (contact.tags || '')
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean);
 
   return (
     <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl flex-shrink-0" aria-hidden="true">{icon}</span>
+          <span className="text-2xl flex-shrink-0" aria-hidden="true">
+            {icon}
+          </span>
           <div className="min-w-0 flex-1">
             <h4 className="font-bold text-[var(--color-text)] truncate">{contact.name}</h4>
             <p className="text-sm text-[var(--color-muted)] mt-0.5">
@@ -245,7 +258,11 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
         {tags.length > 0 && (
           <div className="flex flex-wrap gap-1 flex-shrink-0">
             {tags.map((tag) => (
-              <span key={tag} className="px-2 py-0.5 rounded-full text-xs font-medium" style={{ background: 'var(--color-info-bg)', color: 'var(--color-info)' }}>
+              <span
+                key={tag}
+                className="px-2 py-0.5 rounded-full text-xs font-medium"
+                style={{ background: 'var(--color-info-bg)', color: 'var(--color-info)' }}
+              >
                 {tag}
               </span>
             ))}
@@ -261,11 +278,20 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
           </a>
         )}
         {contact.email && (
-          <a href={`mailto:${contact.email}`} className="transition-colors hover:opacity-80" dir="ltr">
+          <a
+            href={`mailto:${contact.email}`}
+            className="transition-colors hover:opacity-80"
+            dir="ltr"
+          >
             {contact.email}
           </a>
         )}
-        {contact.city && <span>{contact.city}{contact.district ? `، ${contact.district}` : ''}</span>}
+        {contact.city && (
+          <span>
+            {contact.city}
+            {contact.district ? `، ${contact.district}` : ''}
+          </span>
+        )}
       </div>
 
       {contact.idNumber && (
@@ -282,14 +308,16 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
         <button
           type="button"
           onClick={() => onEdit(contact)}
-          className="text-sm font-medium hover:opacity-80" style={{ color: 'var(--color-info)' }}
+          className="text-sm font-medium hover:opacity-80"
+          style={{ color: 'var(--color-info)' }}
         >
           تعديل
         </button>
         <button
           type="button"
           onClick={() => onDelete(contact)}
-          className="text-sm font-medium hover:opacity-80" style={{ color: 'var(--color-danger)' }}
+          className="text-sm font-medium hover:opacity-80"
+          style={{ color: 'var(--color-danger)' }}
         >
           حذف
         </button>
@@ -297,7 +325,8 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
           <button
             type="button"
             onClick={() => onViewContracts(contact)}
-            className="text-sm font-medium hover:opacity-80 mr-auto" style={{ color: 'var(--color-success)' }}
+            className="text-sm font-medium hover:opacity-80 mr-auto"
+            style={{ color: 'var(--color-success)' }}
           >
             {contractCount} عقد
           </button>
@@ -312,14 +341,8 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
 // ═══════════════════════════════════════
 export default function ContactsPage({ setPage }) {
   const navigate = useNavigate();
-  const {
-    contacts,
-    contactsLoading,
-    createContact,
-    updateContact,
-    deleteContact,
-    contracts,
-  } = useData();
+  const { contacts, contactsLoading, createContact, updateContact, deleteContact, contracts } =
+    useData();
   const toast = useToast();
 
   // نموذج إضافة/تعديل
@@ -352,7 +375,7 @@ export default function ContactsPage({ setPage }) {
   // فلترة
   const filtered = useMemo(
     () => filterContacts(contacts, { type: filterType, search: searchQuery }),
-    [contacts, filterType, searchQuery],
+    [contacts, filterType, searchQuery]
   );
 
   // حفظ (إضافة أو تعديل)
@@ -422,7 +445,12 @@ export default function ContactsPage({ setPage }) {
         {!showForm && (
           <button
             type="button"
-            onClick={() => { setForm(defaultContact()); setEditMode(false); setEditId(null); setShowForm(true); }}
+            onClick={() => {
+              setForm(defaultContact());
+              setEditMode(false);
+              setEditId(null);
+              setShowForm(true);
+            }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
           >
             <Icons.plus size={16} />
@@ -447,9 +475,21 @@ export default function ContactsPage({ setPage }) {
       {contacts.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
           <SummaryCard label="الإجمالي" value={summary.total} icon={<Icons.contacts size={20} />} />
-          <SummaryCard label="مستأجرين" value={summary.tenantCount} icon={<span className="text-lg">🏠</span>} />
-          <SummaryCard label="ملاك" value={summary.ownerCount} icon={<span className="text-lg">👤</span>} />
-          <SummaryCard label="مشترين" value={summary.buyerCount} icon={<span className="text-lg">🤝</span>} />
+          <SummaryCard
+            label="مستأجرين"
+            value={summary.tenantCount}
+            icon={<span className="text-lg">🏠</span>}
+          />
+          <SummaryCard
+            label="ملاك"
+            value={summary.ownerCount}
+            icon={<span className="text-lg">👤</span>}
+          />
+          <SummaryCard
+            label="مشترين"
+            value={summary.buyerCount}
+            icon={<span className="text-lg">🤝</span>}
+          />
         </div>
       )}
 
@@ -472,7 +512,9 @@ export default function ContactsPage({ setPage }) {
           >
             <option value="">كل الأنواع</option>
             {CONTACT_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.icon} {opt.label}
+              </option>
             ))}
           </select>
         </div>
@@ -489,7 +531,10 @@ export default function ContactsPage({ setPage }) {
           title="لا توجد جهات اتصال"
           description="أضف عملاءك ومستأجريك لتتبع العقود والمدفوعات والصيانة."
           actionLabel="إضافة أول عميل"
-          onAction={() => { setForm(defaultContact()); setShowForm(true); }}
+          onAction={() => {
+            setForm(defaultContact());
+            setShowForm(true);
+          }}
         />
       )}
 
@@ -526,7 +571,15 @@ export default function ContactsPage({ setPage }) {
       )}
 
       {/* زر إضافة عائم — جوال فقط */}
-      <MobileFAB onClick={() => { setForm(defaultContact()); setEditMode(false); setEditId(null); setShowForm(true); }} label="إضافة جهة اتصال" />
+      <MobileFAB
+        onClick={() => {
+          setForm(defaultContact());
+          setEditMode(false);
+          setEditId(null);
+          setShowForm(true);
+        }}
+        label="إضافة جهة اتصال"
+      />
     </div>
   );
 }

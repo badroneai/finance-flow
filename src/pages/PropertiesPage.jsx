@@ -64,7 +64,9 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.icon} {opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.icon} {opt.label}
+              </option>
             ))}
           </select>
         </FormField>
@@ -77,7 +79,9 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {PROPERTY_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </FormField>
@@ -91,7 +95,9 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           >
             <option value="">اختر المدينة</option>
             {SAUDI_CITIES.map((city) => (
-              <option key={city} value={city}>{city}</option>
+              <option key={city} value={city}>
+                {city}
+              </option>
             ))}
           </select>
         </FormField>
@@ -233,7 +239,9 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onViewContrac
     <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl flex-shrink-0" aria-hidden="true">{icon}</span>
+          <span className="text-2xl flex-shrink-0" aria-hidden="true">
+            {icon}
+          </span>
           <div className="min-w-0 flex-1">
             <h4 className="font-bold text-[var(--color-text)] truncate">{property.name}</h4>
             <p className="text-sm text-[var(--color-muted)] mt-0.5">
@@ -243,7 +251,10 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onViewContrac
             </p>
           </div>
         </div>
-        <span className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium" style={colorMap[statusColor] || colorMap.gray}>
+        <span
+          className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium"
+          style={colorMap[statusColor] || colorMap.gray}
+        >
           {statusLabel}
         </span>
       </div>
@@ -431,15 +442,20 @@ export default function PropertiesPage() {
   }, [confirmDelete, deleteProperty, editingId, toast]);
 
   return (
-    <div className="properties-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-4xl mx-auto" dir="rtl">
-
+    <div
+      className="properties-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-4xl mx-auto"
+      dir="rtl"
+    >
       {/* العنوان + زر إضافة */}
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-[var(--color-text)]">العقارات</h1>
         {editingId === null && (
           <button
             type="button"
-            onClick={() => { setForm(defaultProperty()); setEditingId(null); }}
+            onClick={() => {
+              setForm(defaultProperty());
+              setEditingId(null);
+            }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 md:hidden"
           >
             <Icons.plus size={16} />
@@ -466,15 +482,21 @@ export default function PropertiesPage() {
             <p className="text-xs text-[var(--color-muted)]">إجمالي العقارات</p>
           </div>
           <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-info)' }}>{summary.rentedCount}</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--color-info)' }}>
+              {summary.rentedCount}
+            </p>
             <p className="text-xs text-[var(--color-muted)]">مؤجر</p>
           </div>
           <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>{summary.availableCount}</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
+              {summary.availableCount}
+            </p>
             <p className="text-xs text-[var(--color-muted)]">متاح</p>
           </div>
           <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>{formatCurrency(summary.totalMonthlyRent)}</p>
+            <p className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
+              {formatCurrency(summary.totalMonthlyRent)}
+            </p>
             <p className="text-xs text-[var(--color-muted)]">إيراد شهري (ر.س)</p>
           </div>
         </div>
@@ -497,7 +519,9 @@ export default function PropertiesPage() {
           >
             <option value="">كل الأنواع</option>
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
           <select
@@ -507,7 +531,9 @@ export default function PropertiesPage() {
           >
             <option value="">كل الحالات</option>
             {PROPERTY_STATUS_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
             ))}
           </select>
         </div>
@@ -519,9 +545,11 @@ export default function PropertiesPage() {
       ) : filtered.length === 0 ? (
         <EmptyState
           title={properties.length === 0 ? 'لم تُضف أي عقارات بعد' : 'لا توجد نتائج مطابقة'}
-          description={properties.length === 0
-            ? 'أضف أول عقار لبدء إدارة ممتلكاتك — عمارة سكنية، فيلا، أو مكتب تجاري.'
-            : 'جرّب تغيير الفلتر أو البحث بكلمة مختلفة.'}
+          description={
+            properties.length === 0
+              ? 'أضف أول عقار لبدء إدارة ممتلكاتك — عمارة سكنية، فيلا، أو مكتب تجاري.'
+              : 'جرّب تغيير الفلتر أو البحث بكلمة مختلفة.'
+          }
           icon={<span className="text-3xl">🏢</span>}
         />
       ) : (
@@ -554,7 +582,13 @@ export default function PropertiesPage() {
 
       {/* زر إضافة عائم — جوال فقط */}
       {editingId === null && (
-        <MobileFAB onClick={() => { setForm(defaultProperty()); setEditingId(null); }} label="إضافة عقار" />
+        <MobileFAB
+          onClick={() => {
+            setForm(defaultProperty());
+            setEditingId(null);
+          }}
+          label="إضافة عقار"
+        />
       )}
     </div>
   );

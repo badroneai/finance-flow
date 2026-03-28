@@ -36,8 +36,11 @@ export const DemoBanner = () => {
       }}
     >
       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        <span style={{ fontSize: '16px' }} aria-hidden="true">&#9888;</span>
-        أنت في <strong style={{ margin: '0 4px' }}>الوضع التجريبي</strong> — البيانات لن تُحفظ بعد إغلاق المتصفح
+        <span style={{ fontSize: '16px' }} aria-hidden="true">
+          &#9888;
+        </span>
+        أنت في <strong style={{ margin: '0 4px' }}>الوضع التجريبي</strong> — البيانات لن تُحفظ بعد
+        إغلاق المتصفح
       </span>
       <button
         type="button"
@@ -55,8 +58,12 @@ export const DemoBanner = () => {
           transition: 'background 0.2s',
           whiteSpace: 'nowrap',
         }}
-        onMouseEnter={(e) => { e.target.style.background = '#7d6b38'; }}
-        onMouseLeave={(e) => { e.target.style.background = '#6B5A2E'; }}
+        onMouseEnter={(e) => {
+          e.target.style.background = '#7d6b38';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.background = '#6B5A2E';
+        }}
       >
         سجّل حسابك الآن
       </button>

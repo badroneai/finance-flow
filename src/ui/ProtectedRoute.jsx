@@ -18,7 +18,8 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 export const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { isAuthenticated, loading, profileLoading, profile, role, isSupabaseConfigured, isDemo } = useAuth();
+  const { isAuthenticated, loading, profileLoading, profile, role, isSupabaseConfigured, isDemo } =
+    useAuth();
 
   // وضع Demo التجريبي — يسمح بالمرور بدون مصادقة
   if (isDemo) {

@@ -23,7 +23,13 @@ const toMs = (iso) => {
 
 export function normalizeBudgets(budgets) {
   const b = budgets && typeof budgets === 'object' ? budgets : {};
-  const out = { system: null, operational: null, maintenance: null, marketing: null, hardLock: false };
+  const out = {
+    system: null,
+    operational: null,
+    maintenance: null,
+    marketing: null,
+    hardLock: false,
+  };
   for (const k of BUCKETS) {
     const v = b[k];
     if (v == null || v === '') out[k] = null;
@@ -89,7 +95,7 @@ export function computeBudgetUtilization({ budgets, spendByBucket, softThreshold
   for (const k of BUCKETS) {
     const target = b[k];
     const spent = Number(s[k]) || 0;
-    const util = (target && target > 0) ? (spent / target) : 0;
+    const util = target && target > 0 ? spent / target : 0;
 
     const warn = !!(target && target > 0 && util >= softThreshold && util < 1);
     const breach = !!(target && target > 0 && util >= 1);

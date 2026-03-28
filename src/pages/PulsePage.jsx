@@ -54,7 +54,7 @@ function QuickActions({ navigate }) {
   ];
 
   return (
-    <section aria-label="اختصارات سريعة" className="grid grid-cols-4 gap-3">
+    <section aria-label="اختصارات سريعة" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       {actions.map((a) => {
         const ActionIcon = a.icon;
         return (
@@ -118,7 +118,9 @@ export default function PulsePage({ setPage }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [activeLedgerId, setActiveLedgerId] = useState(() => dataActiveLedgerId || getActiveLedgerId() || '');
+  const [activeLedgerId, setActiveLedgerId] = useState(
+    () => dataActiveLedgerId || getActiveLedgerId() || ''
+  );
   const [pullY, setPullY] = useState(0);
   const touchStartY = useRef(0);
   const autoRefreshTimer = useRef(null);
@@ -129,37 +131,49 @@ export default function PulsePage({ setPage }) {
   }, [dataActiveLedgerId]);
 
   // بناء options من DataContext لتمريرها إلى المحرك
-  const dataOptions = useCallback(() => ({
-    transactions,
-    recurringItems,
-    ledgers,
-  }), [transactions, recurringItems, ledgers]);
+  const dataOptions = useCallback(
+    () => ({
+      transactions,
+      recurringItems,
+      ledgers,
+    }),
+    [transactions, recurringItems, ledgers]
+  );
 
-  const runCalculate = useCallback((ledgerId, skipCache = false) => {
-    const id = (ledgerId != null ? String(ledgerId) : getActiveLedgerId() || '').trim();
-    if (!skipCache) {
-      const cached = readCache(id);
-      if (cached) {
-        setPulse(cached);
-        setLoading(false);
-        setError(null);
+  const runCalculate = useCallback(
+    (ledgerId, skipCache = false) => {
+      const id = (ledgerId != null ? String(ledgerId) : getActiveLedgerId() || '').trim();
+      if (!skipCache) {
+        const cached = readCache(id);
+        if (cached) {
+          setPulse(cached);
+          setLoading(false);
+          setError(null);
+        }
       }
-    }
-    const schedule = typeof requestIdleCallback !== 'undefined' ? requestIdleCallback : (fn) => setTimeout(fn, 0);
-    schedule(() => {
-      try {
-        const result = calculatePulse(id || undefined, dataOptions());
-        setPulse(result);
-        setError(null);
-        if (id) writeCache(id, result);
-      } catch (e) {
-        setError(e?.message || 'حدث خطأ أثناء حساب النبض');
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    }, { timeout: 500 });
-  }, [dataOptions]);
+      const schedule =
+        typeof requestIdleCallback !== 'undefined'
+          ? requestIdleCallback
+          : (fn) => setTimeout(fn, 0);
+      schedule(
+        () => {
+          try {
+            const result = calculatePulse(id || undefined, dataOptions());
+            setPulse(result);
+            setError(null);
+            if (id) writeCache(id, result);
+          } catch (e) {
+            setError(e?.message || 'حدث خطأ أثناء حساب النبض');
+          } finally {
+            setLoading(false);
+            setRefreshing(false);
+          }
+        },
+        { timeout: 500 }
+      );
+    },
+    [dataOptions]
+  );
 
   const refresh = useCallback(
     (skipCache = true) => {
@@ -220,15 +234,13 @@ export default function PulsePage({ setPage }) {
 
   const noLedger = !activeLedgerId || pulse?.healthStatus === 'unknown';
   const summary = pulse?.ledgerSummary || {};
-  const noTransactions = !noLedger && summary.totalTransactions === 0 && summary.activeRecurringItems === 0;
+  const noTransactions =
+    !noLedger && summary.totalTransactions === 0 && summary.activeRecurringItems === 0;
 
   // Loading: skeleton
   if (loading && pulse == null && !error) {
     return (
-      <div
-        className="pulse-page min-h-screen bg-gradient-to-b from-gray-50 to-white overflow-y-auto"
-        dir="rtl"
-      >
+      <div className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto" dir="rtl">
         <div className="p-4 md:p-6 max-w-[640px] mx-auto">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
           <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-10 w-48 mb-4" />
@@ -243,10 +255,7 @@ export default function PulsePage({ setPage }) {
   // Error
   if (error) {
     return (
-      <div
-        className="pulse-page min-h-screen bg-gradient-to-b from-gray-50 to-white overflow-y-auto"
-        dir="rtl"
-      >
+      <div className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto" dir="rtl">
         <div className="p-4 md:p-6 max-w-[640px] mx-auto">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center shadow-sm">
@@ -255,7 +264,8 @@ export default function PulsePage({ setPage }) {
             <button
               type="button"
               onClick={() => refresh(true)}
-              className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
+              style={{ backgroundColor: 'var(--color-info)' }}
             >
               إعادة المحاولة
             </button>
@@ -268,20 +278,20 @@ export default function PulsePage({ setPage }) {
   // Empty: لا يوجد دفتر
   if (noLedger && (pulse == null || pulse.healthStatus === 'unknown')) {
     return (
-      <div
-        className="pulse-page min-h-screen bg-gradient-to-b from-gray-50 to-white overflow-y-auto"
-        dir="rtl"
-      >
+      <div className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto" dir="rtl">
         <div className="p-4 md:p-6 max-w-[640px] mx-auto flex flex-col gap-6">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-sm">
             <p className="text-[var(--color-text)] font-medium">أنشئ أول دفتر</p>
-            <p className="text-sm text-[var(--color-muted)] mt-1">اختر دفتراً نشطاً من الدفاتر لرؤية النبض المالي</p>
+            <p className="text-sm text-[var(--color-muted)] mt-1">
+              اختر دفتراً نشطاً من الدفاتر لرؤية النبض المالي
+            </p>
             {setPage && (
               <button
                 type="button"
                 onClick={() => setPage('ledgers')}
-                className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
+                style={{ backgroundColor: 'var(--color-info)' }}
               >
                 فتح الدفاتر
               </button>
@@ -295,7 +305,7 @@ export default function PulsePage({ setPage }) {
 
   return (
     <div
-      className="pulse-page min-h-screen bg-gradient-to-b from-gray-50 to-white overflow-y-auto"
+      className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto"
       dir="rtl"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -325,14 +335,25 @@ export default function PulsePage({ setPage }) {
         <QuickActions navigate={navigate} />
 
         {noTransactions && (
-          <div className="rounded-xl border border-amber-100 bg-amber-50/80 p-4 text-center">
-            <p className="text-amber-800 font-medium">أضف أول حركة</p>
-            <p className="text-sm text-amber-700 mt-1">سجّل دخل أو مصروف لرؤية النبض والتوقعات</p>
+          <div
+            className="rounded-xl p-4 text-center"
+            style={{
+              background: 'var(--color-warning-bg)',
+              border: '1px solid var(--color-warning)',
+            }}
+          >
+            <p className="font-medium" style={{ color: 'var(--color-warning)' }}>
+              أضف أول حركة
+            </p>
+            <p className="text-sm mt-1" style={{ color: 'var(--color-warning)' }}>
+              سجّل دخل أو مصروف لرؤية النبض والتوقعات
+            </p>
             {setPage && (
               <button
                 type="button"
                 onClick={() => setPage('transactions')}
-                className="mt-3 px-3 py-1.5 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700"
+                className="mt-3 px-3 py-1.5 rounded-lg text-white text-sm font-medium hover:opacity-90"
+                style={{ background: 'var(--color-warning)' }}
               >
                 سجّل حركة
               </button>
@@ -341,11 +362,18 @@ export default function PulsePage({ setPage }) {
         )}
 
         {!noLedger && (
-          <section aria-live="polite" aria-label="ملخص النبض المالي" className="flex flex-col gap-6">
+          <section
+            aria-live="polite"
+            aria-label="ملخص النبض المالي"
+            className="flex flex-col gap-6"
+          >
             <PulseAlerts
               alerts={pulse?.alerts || []}
               onAlertAction={(alert) => {
-                if (alert?.actionType === 'record_payment' || alert?.actionType === 'prepare_payment')
+                if (
+                  alert?.actionType === 'record_payment' ||
+                  alert?.actionType === 'prepare_payment'
+                )
                   setPage?.('inbox');
                 else if (alert?.actionType === 'review_transaction') setPage?.('transactions');
                 else if (alert?.actionType === 'review_forecast') setPage?.('ledgers');
@@ -382,7 +410,8 @@ export default function PulsePage({ setPage }) {
                   <button
                     type="button"
                     onClick={() => setPage('transactions')}
-                    className="text-blue-600 hover:text-blue-700 font-medium no-print"
+                    className="font-medium no-print hover:opacity-80"
+                    style={{ color: 'var(--color-info)' }}
                   >
                     عرض الحركات
                   </button>

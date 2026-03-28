@@ -56,7 +56,9 @@ const risk = (r) => String(r || '').toLowerCase();
 
 export function computeComplianceShield({ ledgerId, recurringItems = [], now = new Date() } = {}) {
   const lid = String(ledgerId || '').trim();
-  const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(r => String(r?.ledgerId || '') === lid);
+  const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
 
   const todayMsVal = startOfDayMs(now);
 
@@ -69,14 +71,19 @@ export function computeComplianceShield({ ledgerId, recurringItems = [], now = n
     const cat = String(r?.category || 'other').toLowerCase();
     const amt = Number(r?.amount) || 0;
     const dueMs = toMs(r?.nextDueDate);
-    const overdue = (dueMs != null) ? (dueMs < todayMsVal) : false;
+    const overdue = dueMs != null ? dueMs < todayMsVal : false;
 
     const highRisk = risk(r?.riskLevel) === 'high';
 
     if (cat === 'system') {
       if (amt <= 0) {
         score -= 20;
-        drivers.push({ id: r.id, title: r.title || '—', reason: 'بند نظامي غير مسعّر', weight: 20 });
+        drivers.push({
+          id: r.id,
+          title: r.title || '—',
+          reason: 'بند نظامي غير مسعّر',
+          weight: 20,
+        });
       }
       if (overdue) {
         score -= 25;
@@ -87,7 +94,12 @@ export function computeComplianceShield({ ledgerId, recurringItems = [], now = n
 
     if (highRisk && amt <= 0) {
       score -= 15;
-      drivers.push({ id: r.id, title: r.title || '—', reason: 'عالي المخاطر غير مسعّر', weight: 15 });
+      drivers.push({
+        id: r.id,
+        title: r.title || '—',
+        reason: 'عالي المخاطر غير مسعّر',
+        weight: 15,
+      });
     }
   }
 
@@ -97,7 +109,7 @@ export function computeComplianceShield({ ledgerId, recurringItems = [], now = n
 
   score = Math.max(0, Math.min(100, Math.round(score)));
 
-  drivers.sort((a, b) => (b.weight - a.weight));
+  drivers.sort((a, b) => b.weight - a.weight);
 
   const status = score >= 85 ? 'متوافق' : score >= 60 ? 'يحتاج انتباه' : 'خطر نظامي';
 
@@ -131,17 +143,17 @@ export const freqMultiplier = (freq) => {
 export function computeLedgerHealth({ recurringItems = [], transactions = [] } = {}) {
   const seeded = (Array.isArray(recurringItems) ? recurringItems : []).filter(isSeededOnly);
   const total = seeded.length;
-  const priced = seeded.filter(r => Number(r?.amount) > 0);
+  const priced = seeded.filter((r) => Number(r?.amount) > 0);
   const pricedCount = priced.length;
 
-  const overdue = priced.filter(r => {
+  const overdue = priced.filter((r) => {
     const ms = toDateMs(r.nextDueDate);
     if (ms == null) return false;
     return ms < todayMs();
   });
   const overdueCount = overdue.length;
 
-  const dueSoon14 = priced.filter(r => {
+  const dueSoon14 = priced.filter((r) => {
     const ms = toDateMs(r.nextDueDate);
     if (ms == null) return false;
     const t = todayMs();
@@ -150,28 +162,32 @@ export function computeLedgerHealth({ recurringItems = [], transactions = [] } =
   });
   const dueSoon14Count = dueSoon14.length;
 
-  const highRisk = seeded.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRisk = seeded.filter((r) => String(r?.riskLevel || '').toLowerCase() === 'high');
   const highRiskCount = highRisk.length;
-  const highRiskUnpriced = highRisk.filter(r => Number(r?.amount) === 0);
+  const highRiskUnpriced = highRisk.filter((r) => Number(r?.amount) === 0);
 
-  const pricedRatio = total ? (pricedCount / total) : 0;
-  const overdueRatio = pricedCount ? (overdueCount / pricedCount) : 0;
-  const highRiskRatio = highRiskCount ? (highRiskUnpriced.length / highRiskCount) : 0;
+  const pricedRatio = total ? pricedCount / total : 0;
+  const overdueRatio = pricedCount ? overdueCount / pricedCount : 0;
+  const highRiskRatio = highRiskCount ? highRiskUnpriced.length / highRiskCount : 0;
 
-  const base = (pricedRatio * 50) + ((1 - overdueRatio) * 30) + ((1 - highRiskRatio) * 20);
+  const base = pricedRatio * 50 + (1 - overdueRatio) * 30 + (1 - highRiskRatio) * 20;
   const score = Math.round(clamp(base, 0, 100));
 
-  const dueThis30d = priced.filter(r => {
-    const ms = toDateMs(r.nextDueDate);
-    if (ms == null) return false;
-    return ms >= daysAgoMs(30) && ms <= todayMs();
-  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const dueThis30d = priced
+    .filter((r) => {
+      const ms = toDateMs(r.nextDueDate);
+      if (ms == null) return false;
+      return ms >= daysAgoMs(30) && ms <= todayMs();
+    })
+    .reduce((a, r) => a + (Number(r.amount) || 0), 0);
 
-  const paidThis30d = (Array.isArray(transactions) ? transactions : []).filter(t => {
-    const ms = toDateMs(t?.date);
-    if (ms == null) return false;
-    return ms >= daysAgoMs(30) && ms <= todayMs();
-  }).reduce((a, t) => a + (Number(t?.amount) || 0), 0);
+  const paidThis30d = (Array.isArray(transactions) ? transactions : [])
+    .filter((t) => {
+      const ms = toDateMs(t?.date);
+      if (ms == null) return false;
+      return ms >= daysAgoMs(30) && ms <= todayMs();
+    })
+    .reduce((a, t) => a + (Number(t?.amount) || 0), 0);
 
   const disciplineRatio = dueThis30d > 0 ? clamp(paidThis30d / dueThis30d, 0, 2) : 0;
 
@@ -194,13 +210,24 @@ export function computeLedgerHealth({ recurringItems = [], transactions = [] } =
 
 export function computeLedgerProjection({ recurringItems = [] } = {}) {
   const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(isSeededOnly);
-  const priced = list.filter(r => Number(r?.amount) > 0);
+  const priced = list.filter((r) => Number(r?.amount) > 0);
 
-  const runRate = priced.reduce((a, r) => a + (Number(r.amount) || 0) * freqMultiplier(r.frequency), 0);
+  const runRate = priced.reduce(
+    (a, r) => a + (Number(r.amount) || 0) * freqMultiplier(r.frequency),
+    0
+  );
 
-  const withBand = priced.filter(r => r?.priceBand && (Number(r.priceBand?.min) > 0 || Number(r.priceBand?.max) > 0));
-  const minTotal = withBand.reduce((a, r) => a + (Number(r.priceBand?.min) || 0) * freqMultiplier(r.frequency), 0);
-  const maxTotal = withBand.reduce((a, r) => a + (Number(r.priceBand?.max) || 0) * freqMultiplier(r.frequency), 0);
+  const withBand = priced.filter(
+    (r) => r?.priceBand && (Number(r.priceBand?.min) > 0 || Number(r.priceBand?.max) > 0)
+  );
+  const minTotal = withBand.reduce(
+    (a, r) => a + (Number(r.priceBand?.min) || 0) * freqMultiplier(r.frequency),
+    0
+  );
+  const maxTotal = withBand.reduce(
+    (a, r) => a + (Number(r.priceBand?.max) || 0) * freqMultiplier(r.frequency),
+    0
+  );
 
   return {
     annualRunRate: runRate,
@@ -221,7 +248,14 @@ const isRentLikeIntel = (r) => {
 
 const isBillsLike = (r) => {
   const hint = String(r?.saHint || '').toLowerCase();
-  return hint.includes('كهرب') || hint.includes('ماء') || hint.includes('اتصال') || hint.includes('إنترنت') || hint.includes('انترنت') || hint.includes('هاتف');
+  return (
+    hint.includes('كهرب') ||
+    hint.includes('ماء') ||
+    hint.includes('اتصال') ||
+    hint.includes('إنترنت') ||
+    hint.includes('انترنت') ||
+    hint.includes('هاتف')
+  );
 };
 
 const isMaintenanceLike = (r) => {
@@ -229,11 +263,19 @@ const isMaintenanceLike = (r) => {
   return cat === 'maintenance';
 };
 
-export function computeScenario({ recurringItems = [], rentPct = 0, billsPct = 0, maintPct = 0 } = {}) {
+export function computeScenario({
+  recurringItems = [],
+  rentPct = 0,
+  billsPct = 0,
+  maintPct = 0,
+} = {}) {
   const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(isSeededOnly);
-  const priced = list.filter(r => Number(r?.amount) > 0);
+  const priced = list.filter((r) => Number(r?.amount) > 0);
 
-  const baseAnnual = priced.reduce((a, r) => a + (Number(r.amount) || 0) * freqMultiplier(r.frequency), 0);
+  const baseAnnual = priced.reduce(
+    (a, r) => a + (Number(r.amount) || 0) * freqMultiplier(r.frequency),
+    0
+  );
 
   const bump = (r) => {
     const base = Number(r.amount) || 0;
@@ -252,7 +294,11 @@ export function computeScenario({ recurringItems = [], rentPct = 0, billsPct = 0
     baseAnnual,
     newAnnual,
     delta,
-    inputs: { rentPct: Number(rentPct) || 0, billsPct: Number(billsPct) || 0, maintPct: Number(maintPct) || 0 },
+    inputs: {
+      rentPct: Number(rentPct) || 0,
+      billsPct: Number(billsPct) || 0,
+      maintPct: Number(maintPct) || 0,
+    },
   };
 }
 
@@ -263,19 +309,20 @@ const isSeeded = (r) => isSeededOnly(r);
 const filterLedgerRecurring = (ledgerId, recurringItems = []) => {
   const lid = String(ledgerId || '').trim();
   return (Array.isArray(recurringItems) ? recurringItems : [])
-    .filter(r => String(r?.ledgerId || '') === lid)
+    .filter((r) => String(r?.ledgerId || '') === lid)
     .filter(isSeeded);
 };
 
 const filterLedgerTransactions = (ledgerId, transactions = []) => {
   const lid = String(ledgerId || '').trim();
-  return (Array.isArray(transactions) ? transactions : [])
-    .filter(t => String(t?.meta?.ledgerId || '') === lid);
+  return (Array.isArray(transactions) ? transactions : []).filter(
+    (t) => String(t?.meta?.ledgerId || '') === lid
+  );
 };
 
 const countOverdue = (items = []) => {
   const t = startOfTodayMs();
-  return items.filter(r => {
+  return items.filter((r) => {
     if (Number(r?.amount) <= 0) return false;
     const ms = toDateMs(r?.nextDueDate);
     if (ms == null) return false;
@@ -286,18 +333,20 @@ const countOverdue = (items = []) => {
 const sumDueWithinDays = (items = [], days) => {
   const t0 = startOfTodayMs();
   const t1 = daysFromNowMs(days);
-  return items.filter(r => {
-    if (Number(r?.amount) <= 0) return false;
-    const ms = toDateMs(r?.nextDueDate);
-    if (ms == null) return false;
-    return ms >= t0 && ms <= t1;
-  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  return items
+    .filter((r) => {
+      if (Number(r?.amount) <= 0) return false;
+      const ms = toDateMs(r?.nextDueDate);
+      if (ms == null) return false;
+      return ms >= t0 && ms <= t1;
+    })
+    .reduce((a, r) => a + (Number(r.amount) || 0), 0);
 };
 
 const countDueWithinDays = (items = [], days) => {
   const t0 = startOfTodayMs();
   const t1 = daysFromNowMs(days);
-  return items.filter(r => {
+  return items.filter((r) => {
     if (Number(r?.amount) <= 0) return false;
     const ms = toDateMs(r?.nextDueDate);
     if (ms == null) return false;
@@ -308,8 +357,8 @@ const countDueWithinDays = (items = [], days) => {
 export function calculateBurnRate(ledgerId, ctx = {}) {
   const items = filterLedgerRecurring(ledgerId, ctx.recurringItems);
   const monthly = items
-    .filter(r => String(r?.frequency || '').toLowerCase() === 'monthly')
-    .filter(r => Number(r?.amount) > 0);
+    .filter((r) => String(r?.frequency || '').toLowerCase() === 'monthly')
+    .filter((r) => Number(r?.amount) > 0);
   const total = monthly.reduce((a, r) => a + (Number(r.amount) || 0), 0);
   return { monthlyTotal: total, count: monthly.length };
 }
@@ -326,29 +375,38 @@ export function calculateNext90DayRisk(ledgerId, ctx = {}) {
   const due90Count = countDueWithinDays(items, 90);
 
   const baseline90 = (Number(burn) || 0) * 3;
-  const ratio = baseline90 > 0 ? due90Total / baseline90 : (due90Total > 0 ? 9 : 0);
+  const ratio = baseline90 > 0 ? due90Total / baseline90 : due90Total > 0 ? 9 : 0;
 
   let level = 'low';
   if (ratio >= 1.5) level = 'critical';
   else if (ratio >= 1.15) level = 'high';
   else if (ratio >= 0.85) level = 'medium';
 
-  const label = level === 'critical' ? 'حرج' : level === 'high' ? 'مرتفع' : level === 'medium' ? 'متوسط' : 'منخفض';
+  const label =
+    level === 'critical'
+      ? 'حرج'
+      : level === 'high'
+        ? 'مرتفع'
+        : level === 'medium'
+          ? 'متوسط'
+          : 'منخفض';
 
   return { due90Total, due90Count, ratio, level, label };
 }
 
 export function calculateDisciplineTrend(ledgerId, ctx = {}) {
-  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(r => Number(r?.amount) > 0);
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(
+    (r) => Number(r?.amount) > 0
+  );
   const txs = filterLedgerTransactions(ledgerId, ctx.transactions);
 
-  const due60 = items.filter(r => {
+  const due60 = items.filter((r) => {
     const ms = toDateMs(r?.nextDueDate);
     if (ms == null) return false;
     return ms >= daysAgoMs(60) && ms <= startOfTodayMs();
   }).length;
 
-  const paid60 = txs.filter(t => {
+  const paid60 = txs.filter((t) => {
     const ms = toDateMs(t?.date);
     if (ms == null) return false;
     return ms >= daysAgoMs(60) && ms <= startOfTodayMs();
@@ -362,9 +420,9 @@ export function calculateDisciplineTrend(ledgerId, ctx = {}) {
 
 export function detectHighRiskCluster(ledgerId, ctx = {}) {
   const items = filterLedgerRecurring(ledgerId, ctx.recurringItems);
-  const highRisk = items.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
-  const highRiskUnpriced = highRisk.filter(r => Number(r?.amount) === 0);
-  const highRiskOverdue = highRisk.filter(r => {
+  const highRisk = items.filter((r) => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRiskUnpriced = highRisk.filter((r) => Number(r?.amount) === 0);
+  const highRiskOverdue = highRisk.filter((r) => {
     if (Number(r?.amount) <= 0) return false;
     const ms = toDateMs(r?.nextDueDate);
     if (ms == null) return false;
@@ -381,40 +439,47 @@ export function calculateCashPressureScore(ledgerId, ctx = {}) {
   const txs = filterLedgerTransactions(ledgerId, ctx.transactions);
 
   const total = items.length;
-  const unpricedCount = items.filter(r => Number(r?.amount) === 0).length;
-  const unpricedRatio = total ? (unpricedCount / total) : 0;
+  const unpricedCount = items.filter((r) => Number(r?.amount) === 0).length;
+  const unpricedRatio = total ? unpricedCount / total : 0;
 
-  const priced = items.filter(r => Number(r?.amount) > 0);
+  const priced = items.filter((r) => Number(r?.amount) > 0);
   const overdueCount = countOverdue(priced);
 
-  const highRisk = items.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
-  const highRiskUnpriced = highRisk.filter(r => Number(r?.amount) === 0).length;
+  const highRisk = items.filter((r) => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRiskUnpriced = highRisk.filter((r) => Number(r?.amount) === 0).length;
 
-  const dueThis30 = priced.filter(r => {
-    const ms = toDateMs(r?.nextDueDate);
-    if (ms == null) return false;
-    return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
-  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const dueThis30 = priced
+    .filter((r) => {
+      const ms = toDateMs(r?.nextDueDate);
+      if (ms == null) return false;
+      return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
+    })
+    .reduce((a, r) => a + (Number(r.amount) || 0), 0);
 
-  const paidThis30 = txs.filter(t => {
-    const ms = toDateMs(t?.date);
-    if (ms == null) return false;
-    return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
-  }).reduce((a, t) => a + (Number(t?.amount) || 0), 0);
+  const paidThis30 = txs
+    .filter((t) => {
+      const ms = toDateMs(t?.date);
+      if (ms == null) return false;
+      return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
+    })
+    .reduce((a, t) => a + (Number(t?.amount) || 0), 0);
 
   const disciplineRatio = dueThis30 > 0 ? clamp(paidThis30 / dueThis30, 0, 2) : 0;
 
-  const overdueRatio = priced.length ? (overdueCount / priced.length) : 0;
+  const overdueRatio = priced.length ? overdueCount / priced.length : 0;
   const highRiskUnpricedFlag = highRiskUnpriced > 0 ? 1 : 0;
   const disciplinePenalty = 1 - clamp(disciplineRatio, 0, 1);
 
-  const score = Math.round(clamp(
-    (unpricedRatio * 40) + (overdueRatio * 30) + (highRiskUnpricedFlag * 20) + (disciplinePenalty * 10),
-    0,
-    100,
-  ) * 1);
+  const score = Math.round(
+    clamp(
+      unpricedRatio * 40 + overdueRatio * 30 + highRiskUnpricedFlag * 20 + disciplinePenalty * 10,
+      0,
+      100
+    ) * 1
+  );
 
-  const band = score >= 80 ? 'خطر تشغيلي' : score >= 70 ? 'ضغط عالي' : score >= 40 ? 'ضغط متوسط' : 'مستقر';
+  const band =
+    score >= 80 ? 'خطر تشغيلي' : score >= 70 ? 'ضغط عالي' : score >= 40 ? 'ضغط متوسط' : 'مستقر';
 
   return {
     score,
@@ -439,7 +504,9 @@ export function calculateBurnRateBundle(ledgerId, ctx = {}) {
 
 const normalizeCategoryBrain = (c) => {
   const x = String(c || '').toLowerCase();
-  return (x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing') ? x : 'other';
+  return x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing'
+    ? x
+    : 'other';
 };
 
 const monthlyEquivalent = (r) => {
@@ -451,18 +518,22 @@ const monthlyEquivalent = (r) => {
 };
 
 export function getBurnBreakdown(ledgerId, ctx = {}) {
-  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(r => Number(r?.amount) > 0);
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(
+    (r) => Number(r?.amount) > 0
+  );
   const buckets = {};
   for (const r of items) {
     const cat = normalizeCategoryBrain(r?.category);
     buckets[cat] = (buckets[cat] || 0) + monthlyEquivalent(r);
   }
   const totalMonthly = Object.values(buckets).reduce((a, n) => a + (Number(n) || 0), 0);
-  const list = Object.keys(buckets).map((category) => {
-    const monthlySum = Number(buckets[category]) || 0;
-    const percentOfTotal = totalMonthly > 0 ? Math.round((monthlySum / totalMonthly) * 100) : 0;
-    return { category, monthlySum, percentOfTotal };
-  }).sort((a, b) => b.monthlySum - a.monthlySum);
+  const list = Object.keys(buckets)
+    .map((category) => {
+      const monthlySum = Number(buckets[category]) || 0;
+      const percentOfTotal = totalMonthly > 0 ? Math.round((monthlySum / totalMonthly) * 100) : 0;
+      return { category, monthlySum, percentOfTotal };
+    })
+    .sort((a, b) => b.monthlySum - a.monthlySum);
   return { totalMonthly, buckets: list };
 }
 
@@ -471,29 +542,33 @@ export function getPressureBreakdown(ledgerId, ctx = {}) {
   const txs = filterLedgerTransactions(ledgerId, ctx.transactions);
 
   const total = items.length;
-  const missingPricingCount = items.filter(r => Number(r?.amount) === 0).length;
-  const priced = items.filter(r => Number(r?.amount) > 0);
+  const missingPricingCount = items.filter((r) => Number(r?.amount) === 0).length;
+  const priced = items.filter((r) => Number(r?.amount) > 0);
   const overdueCount = countOverdue(priced);
 
-  const highRisk = items.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
-  const highRiskUnpriced = highRisk.filter(r => Number(r?.amount) === 0).length;
+  const highRisk = items.filter((r) => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRiskUnpriced = highRisk.filter((r) => Number(r?.amount) === 0).length;
 
-  const dueThis30 = priced.filter(r => {
-    const ms = toDateMs(r?.nextDueDate);
-    if (ms == null) return false;
-    return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
-  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const dueThis30 = priced
+    .filter((r) => {
+      const ms = toDateMs(r?.nextDueDate);
+      if (ms == null) return false;
+      return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
+    })
+    .reduce((a, r) => a + (Number(r.amount) || 0), 0);
 
-  const paidThis30 = txs.filter(t => {
-    const ms = toDateMs(t?.date);
-    if (ms == null) return false;
-    return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
-  }).reduce((a, t) => a + (Number(t?.amount) || 0), 0);
+  const paidThis30 = txs
+    .filter((t) => {
+      const ms = toDateMs(t?.date);
+      if (ms == null) return false;
+      return ms >= daysAgoMs(30) && ms <= startOfTodayMs();
+    })
+    .reduce((a, t) => a + (Number(t?.amount) || 0), 0);
 
   const disciplineRatio = dueThis30 > 0 ? clamp(paidThis30 / dueThis30, 0, 2) : 0;
 
-  const unpricedRatio = total ? (missingPricingCount / total) : 0;
-  const overdueRatio = priced.length ? (overdueCount / priced.length) : 0;
+  const unpricedRatio = total ? missingPricingCount / total : 0;
+  const overdueRatio = priced.length ? overdueCount / priced.length : 0;
   const highRiskUnpricedFlag = highRiskUnpriced > 0 ? 1 : 0;
   const disciplinePenalty = 1 - clamp(disciplineRatio, 0, 1);
 
@@ -517,16 +592,18 @@ export function getRiskBreakdown90d(ledgerId, ctx = {}) {
   const items = filterLedgerRecurring(ledgerId, ctx.recurringItems);
   const due90 = sumDueWithinDays(items, 90);
   const burn = calculateBurnRate(ledgerId, ctx).monthlyTotal;
-  const burnRatio = burn > 0 ? due90 / (burn * 3) : (due90 > 0 ? 9 : 0);
+  const burnRatio = burn > 0 ? due90 / (burn * 3) : due90 > 0 ? 9 : 0;
 
-  const highRiskItems = items.filter(r => String(r?.riskLevel || '').toLowerCase() === 'high');
+  const highRiskItems = items.filter((r) => String(r?.riskLevel || '').toLowerCase() === 'high');
   const highRiskCount = highRiskItems.length;
-  const overdueAmount = items.filter(r => {
-    if (Number(r?.amount) <= 0) return false;
-    const ms = toDateMs(r?.nextDueDate);
-    if (ms == null) return false;
-    return ms < startOfTodayMs();
-  }).reduce((a, r) => a + (Number(r.amount) || 0), 0);
+  const overdueAmount = items
+    .filter((r) => {
+      if (Number(r?.amount) <= 0) return false;
+      const ms = toDateMs(r?.nextDueDate);
+      if (ms == null) return false;
+      return ms < startOfTodayMs();
+    })
+    .reduce((a, r) => a + (Number(r.amount) || 0), 0);
 
   const risk = calculateNext90DayRisk(ledgerId, ctx);
   return {
@@ -551,9 +628,11 @@ export function getDailyPlaybook(ledgerId, ctx = {}) {
     const dueSoon14 = priced && ms != null && ms >= t && ms <= d14;
     const missingPricing = Number(r?.amount) === 0;
 
-    if (high && overdue) return { p: 100, type: 'highrisk_overdue', reason: 'بند عالي المخاطر ومتأخر.' };
+    if (high && overdue)
+      return { p: 100, type: 'highrisk_overdue', reason: 'بند عالي المخاطر ومتأخر.' };
     if (overdue) return { p: 80, type: 'overdue', reason: 'بند متأخر ويحتاج إجراء.' };
-    if (high && missingPricing) return { p: 70, type: 'highrisk_unpriced', reason: 'عالي المخاطر بدون تسعير.' };
+    if (high && missingPricing)
+      return { p: 70, type: 'highrisk_unpriced', reason: 'عالي المخاطر بدون تسعير.' };
     if (dueSoon14) return { p: 60, type: 'due_soon', reason: 'قادم خلال 14 يوم.' };
     if (missingPricing) return { p: 40, type: 'missing_pricing', reason: 'بدون تسعير.' };
     return null;
@@ -577,10 +656,10 @@ export function getDailyPlaybook(ledgerId, ctx = {}) {
 
 export const SAUDI_BENCHMARKS = {
   office: { rentRatioMax: 0.45, utilitiesRatioMax: 0.12, marketingRatioMax: 0.15 },
-  chalet: { rentRatioMax: 0.55, utilitiesRatioMax: 0.15, marketingRatioMax: 0.10 },
-  building: { rentRatioMax: 0.35, utilitiesRatioMax: 0.10, marketingRatioMax: 0.12 },
-  villa: { rentRatioMax: 0.50, utilitiesRatioMax: 0.14, marketingRatioMax: 0.08 },
-  personal: { rentRatioMax: 0.50, utilitiesRatioMax: 0.15, marketingRatioMax: 0.05 },
+  chalet: { rentRatioMax: 0.55, utilitiesRatioMax: 0.15, marketingRatioMax: 0.1 },
+  building: { rentRatioMax: 0.35, utilitiesRatioMax: 0.1, marketingRatioMax: 0.12 },
+  villa: { rentRatioMax: 0.5, utilitiesRatioMax: 0.14, marketingRatioMax: 0.08 },
+  personal: { rentRatioMax: 0.5, utilitiesRatioMax: 0.15, marketingRatioMax: 0.05 },
 };
 
 const isRentLikeBrain = (r) => {
@@ -594,12 +673,26 @@ const isRentLikeBrain = (r) => {
 const isUtilitiesLike = (r) => {
   const hint = String(r?.saHint || '').toLowerCase();
   const title = String(r?.title || '').toLowerCase();
-  return hint.includes('كهرب') || hint.includes('ماء') || hint.includes('اتصال') || hint.includes('إنترنت') || hint.includes('انترنت') || hint.includes('هاتف') ||
-    title.includes('كهرب') || title.includes('ماء') || title.includes('اتصال') || title.includes('إنترنت') || title.includes('انترنت') || title.includes('هاتف');
+  return (
+    hint.includes('كهرب') ||
+    hint.includes('ماء') ||
+    hint.includes('اتصال') ||
+    hint.includes('إنترنت') ||
+    hint.includes('انترنت') ||
+    hint.includes('هاتف') ||
+    title.includes('كهرب') ||
+    title.includes('ماء') ||
+    title.includes('اتصال') ||
+    title.includes('إنترنت') ||
+    title.includes('انترنت') ||
+    title.includes('هاتف')
+  );
 };
 
 export function getBenchmarkComparison(ledgerId, ctx = {}) {
-  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(r => Number(r?.amount) > 0);
+  const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(
+    (r) => Number(r?.amount) > 0
+  );
 
   const ledgerType = String(ctx.ledgerType || ctx.ledger?.type || '').toLowerCase();
   const bench = SAUDI_BENCHMARKS[ledgerType] || SAUDI_BENCHMARKS.office;
@@ -607,16 +700,33 @@ export function getBenchmarkComparison(ledgerId, ctx = {}) {
   const totalBurn = items.reduce((a, r) => a + monthlyEquivalent(r), 0);
   const rent = items.filter(isRentLikeBrain).reduce((a, r) => a + monthlyEquivalent(r), 0);
   const utilities = items.filter(isUtilitiesLike).reduce((a, r) => a + monthlyEquivalent(r), 0);
-  const marketing = items.filter(r => normalizeCategoryBrain(r?.category) === 'marketing').reduce((a, r) => a + monthlyEquivalent(r), 0);
+  const marketing = items
+    .filter((r) => normalizeCategoryBrain(r?.category) === 'marketing')
+    .reduce((a, r) => a + monthlyEquivalent(r), 0);
 
   const rentRatio = totalBurn > 0 ? rent / totalBurn : 0;
   const utilitiesRatio = totalBurn > 0 ? utilities / totalBurn : 0;
   const marketingRatio = totalBurn > 0 ? marketing / totalBurn : 0;
 
   const flags = [];
-  flags.push({ type: 'rent', status: rentRatio > bench.rentRatioMax ? 'high' : 'ok', ratio: rentRatio, max: bench.rentRatioMax });
-  flags.push({ type: 'utilities', status: utilitiesRatio > bench.utilitiesRatioMax ? 'high' : 'ok', ratio: utilitiesRatio, max: bench.utilitiesRatioMax });
-  flags.push({ type: 'marketing', status: marketingRatio > bench.marketingRatioMax ? 'high' : 'ok', ratio: marketingRatio, max: bench.marketingRatioMax });
+  flags.push({
+    type: 'rent',
+    status: rentRatio > bench.rentRatioMax ? 'high' : 'ok',
+    ratio: rentRatio,
+    max: bench.rentRatioMax,
+  });
+  flags.push({
+    type: 'utilities',
+    status: utilitiesRatio > bench.utilitiesRatioMax ? 'high' : 'ok',
+    ratio: utilitiesRatio,
+    max: bench.utilitiesRatioMax,
+  });
+  flags.push({
+    type: 'marketing',
+    status: marketingRatio > bench.marketingRatioMax ? 'high' : 'ok',
+    ratio: marketingRatio,
+    max: bench.marketingRatioMax,
+  });
 
   const pct = (x) => `${Math.round((x || 0) * 100)}%`;
   const commentary = [

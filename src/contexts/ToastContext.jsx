@@ -18,22 +18,35 @@ export const ToastProvider = ({ children }) => {
   }, []);
 
   // كائن موحّد يدعم toast.success() و toast.error() و toast.warn() و toast.info()
-  const toast = React.useMemo(() => ({
-    success: (msg) => showToast(msg, 'success'),
-    error: (msg) => showToast(msg, 'error'),
-    warn: (msg) => showToast(msg, 'warning'),
-    info: (msg) => showToast(msg, 'info'),
-  }), [showToast]);
+  const toast = React.useMemo(
+    () => ({
+      success: (msg) => showToast(msg, 'success'),
+      error: (msg) => showToast(msg, 'error'),
+      warn: (msg) => showToast(msg, 'warning'),
+      info: (msg) => showToast(msg, 'info'),
+    }),
+    [showToast]
+  );
 
   return (
     <ToastContext.Provider value={toast}>
       {children}
-      <div className="fixed top-4 left-4 z-50 flex flex-col gap-2 no-print" style={{ maxWidth: '360px' }} role="region" aria-label="إشعارات" aria-live="polite">
+      <div
+        className="fixed top-4 left-4 z-50 flex flex-col gap-2 no-print"
+        style={{ maxWidth: '360px' }}
+        role="region"
+        aria-label="إشعارات"
+        aria-live="polite"
+      >
         {toasts.map((t) => (
           <div
             key={t.id}
             className={`px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all animate-slideIn ${
-              t.type === 'success' ? 'bg-green-600' : t.type === 'error' ? 'bg-red-600' : 'bg-yellow-500 text-[var(--color-text)]'
+              t.type === 'success'
+                ? 'bg-green-600'
+                : t.type === 'error'
+                  ? 'bg-red-600'
+                  : 'bg-yellow-500 text-[var(--color-text)]'
             }`}
             role="status"
           >

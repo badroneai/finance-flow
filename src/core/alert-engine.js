@@ -6,6 +6,7 @@
  */
 
 import { getLedgers, getActiveLedgerId, getRecurringItems } from './ledger-store.js';
+import { generateContractAlerts } from '../domain/contract-alerts.js';
 import { getTransactionsForLedger } from './dataStore.js';
 import { buildLedgerInbox, computeCashPlan } from './ledger-planner.js';
 import { computePL } from './ledger-analytics.js';
@@ -17,13 +18,16 @@ const DISMISS_TTL_DAYS = 7;
 const MAX_ALERTS = 10;
 
 function getContext(ledgerId, options = {}) {
-  const lid = (ledgerId != null ? String(ledgerId).trim() : (getActiveLedgerId() || '').trim()) || '';
+  const lid =
+    (ledgerId != null ? String(ledgerId).trim() : (getActiveLedgerId() || '').trim()) || '';
   const ledgers = options.ledgers || getLedgers() || [];
   const ledger = (Array.isArray(ledgers) ? ledgers : []).find((l) => l.id === lid) || null;
   const recurring = options.recurringItems || getRecurringItems() || [];
-  const recurringList = (Array.isArray(recurring) ? recurring : []).filter((r) => String(r?.ledgerId || '') === lid);
+  const recurringList = (Array.isArray(recurring) ? recurring : []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
   const txs = options.transactions
-    ? (Array.isArray(options.transactions) ? options.transactions : []).filter(t => {
+    ? (Array.isArray(options.transactions) ? options.transactions : []).filter((t) => {
         const tLid = String(t?.ledgerId || t?.ledger_id || t?.meta?.ledgerId || '');
         return !lid || tLid === lid || tLid === '';
       })
@@ -71,7 +75,14 @@ function bySeverityThenDate(a, b) {
 
 function isIncomeCategory(category) {
   const c = String(category || '').toLowerCase();
-  return c === 'income' || c === 'دخل' || c === 'commission' || c === 'عمولة' || c === 'deposit' || c === 'إيداع';
+  return (
+    c === 'income' ||
+    c === 'دخل' ||
+    c === 'commission' ||
+    c === 'عمولة' ||
+    c === 'deposit' ||
+    c === 'إيداع'
+  );
 }
 
 // ---------- 1. أزمة سيولة متوقعة ----------
@@ -101,7 +112,11 @@ function detectCashflowCrisis(ledgerId, options = {}) {
 
   const needed = Math.abs(Math.round(projected));
   const dateStr = new Date(now.getTime() + 30 * DAY_MS);
-  const dateLabel = dateStr.toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+  const dateLabel = dateStr.toLocaleDateString('ar-SA', {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  });
   return [
     {
       id: 'smart_cashflow_crisis',
@@ -182,7 +197,13 @@ function detectMissedIncome(ledgerId, options = {}) {
     if (!dueStr || dueStr >= todayStr) continue;
     if (isDuePaid(txs, r.id, dueStr, nextDueByFrequency(dueStr, r.frequency))) continue;
     const name = r?.title || '—';
-    const dateLabel = dueStr ? new Date(dueStr + 'T00:00:00').toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' }) : dueStr;
+    const dateLabel = dueStr
+      ? new Date(dueStr + 'T00:00:00').toLocaleDateString('ar-SA', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+        })
+      : dueStr;
     alerts.push({
       id: `smart_missed_income_${r.id}_${dueStr}`,
       type: 'missed_income',
@@ -298,6 +319,14 @@ function detectDormantCommitments(ledgerId, options = {}) {
   return alerts;
 }
 
+// ---------- 6. تنبيهات العقود (SPR-018) ----------
+function detectContractExpirations(options = {}) {
+  const contracts = options.contracts || [];
+  const properties = options.properties || [];
+  const contacts = options.contacts || [];
+  return generateContractAlerts(contracts, properties, contacts);
+}
+
 // ---------- تجميع وترتيب ----------
 function detectAllAlerts(ledgerId, options = {}) {
   const all = [
@@ -306,6 +335,7 @@ function detectAllAlerts(ledgerId, options = {}) {
     ...detectMissedIncome(ledgerId, options),
     ...detectHealthTrend(ledgerId, options),
     ...detectDormantCommitments(ledgerId, options),
+    ...detectContractExpirations(options),
   ];
   const hidden = getHiddenIds();
   const filtered = all.filter((a) => a && a.id && !hidden.has(a.id));

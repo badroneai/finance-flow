@@ -24,11 +24,26 @@ export const PROPERTY_STATUS_OPTIONS = [
 
 /** أبرز المدن السعودية */
 export const SAUDI_CITIES = [
-  'الرياض', 'جدة', 'مكة المكرمة', 'المدينة المنورة',
-  'الدمام', 'الخبر', 'الظهران', 'الطائف',
-  'تبوك', 'بريدة', 'خميس مشيط', 'أبها',
-  'حائل', 'نجران', 'جازان', 'ينبع',
-  'الجبيل', 'الأحساء', 'القطيف', 'أخرى',
+  'الرياض',
+  'جدة',
+  'مكة المكرمة',
+  'المدينة المنورة',
+  'الدمام',
+  'الخبر',
+  'الظهران',
+  'الطائف',
+  'تبوك',
+  'بريدة',
+  'خميس مشيط',
+  'أبها',
+  'حائل',
+  'نجران',
+  'جازان',
+  'ينبع',
+  'الجبيل',
+  'الأحساء',
+  'القطيف',
+  'أخرى',
 ];
 
 /** ترجمة نوع العقار */
@@ -136,11 +151,12 @@ export function filterProperties(properties, filters = {}) {
   }
   if (filters.search) {
     const s = filters.search.toLowerCase();
-    list = list.filter((p) =>
-      (p.name || '').toLowerCase().includes(s) ||
-      (p.district || '').toLowerCase().includes(s) ||
-      (p.ownerName || '').toLowerCase().includes(s) ||
-      (p.city || '').toLowerCase().includes(s)
+    list = list.filter(
+      (p) =>
+        (p.name || '').toLowerCase().includes(s) ||
+        (p.district || '').toLowerCase().includes(s) ||
+        (p.ownerName || '').toLowerCase().includes(s) ||
+        (p.city || '').toLowerCase().includes(s)
     );
   }
 

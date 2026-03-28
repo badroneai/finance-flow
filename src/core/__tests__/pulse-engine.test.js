@@ -32,7 +32,12 @@ describe('pulse-engine', () => {
     expect(pulse.alerts).toHaveLength(0);
     expect(Array.isArray(pulse.upcomingDues)).toBe(true);
     expect(pulse.upcomingDues).toHaveLength(0);
-    expect(pulse.weekForecast).toEqual({ expectedIncome: 0, expectedExpenses: 0, netCashflow: 0, riskLevel: 'safe' });
+    expect(pulse.weekForecast).toEqual({
+      expectedIncome: 0,
+      expectedExpenses: 0,
+      netCashflow: 0,
+      riskLevel: 'safe',
+    });
     expect(pulse.ledgerSummary).toBeDefined();
     expect(pulse.ledgerSummary.ledgerId).toBe('');
     expect(pulse.ledgerSummary.ledgerName).toBe('');

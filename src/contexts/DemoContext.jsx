@@ -73,24 +73,25 @@ export const DemoProvider = ({ children }) => {
 
   const exitDemo = useCallback(() => {
     setIsDemo(false);
-    try { sessionStorage.removeItem('ff_demo_mode'); } catch {}
+    try {
+      sessionStorage.removeItem('ff_demo_mode');
+    } catch {}
     // توجيه لصفحة التسجيل
     window.location.hash = '#/auth';
   }, []);
 
-  const value = useMemo(() => ({
-    isDemo,
-    activateDemo,
-    exitDemo,
-    demoProfile: isDemo ? DEMO_PROFILE : null,
-    demoOffice: isDemo ? DEMO_OFFICE : null,
-  }), [isDemo, activateDemo, exitDemo]);
-
-  return (
-    <DemoContext.Provider value={value}>
-      {children}
-    </DemoContext.Provider>
+  const value = useMemo(
+    () => ({
+      isDemo,
+      activateDemo,
+      exitDemo,
+      demoProfile: isDemo ? DEMO_PROFILE : null,
+      demoOffice: isDemo ? DEMO_OFFICE : null,
+    }),
+    [isDemo, activateDemo, exitDemo]
   );
+
+  return <DemoContext.Provider value={value}>{children}</DemoContext.Provider>;
 };
 
 export const useDemo = () => {

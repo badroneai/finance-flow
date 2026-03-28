@@ -15,11 +15,14 @@ function MonthlyReportPage({ setPage }) {
   const month = searchParams.get('month') || '';
   const year = searchParams.get('year') || '';
 
-  const dataOptions = useMemo(() => ({
-    transactions,
-    recurringItems,
-    ledgers,
-  }), [transactions, recurringItems, ledgers]);
+  const dataOptions = useMemo(
+    () => ({
+      transactions,
+      recurringItems,
+      ledgers,
+    }),
+    [transactions, recurringItems, ledgers]
+  );
 
   const handleBack = () => setPage?.('ledgers');
 

@@ -14,11 +14,17 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // 1. اختبارات التنقل (navigation)
 // ═══════════════════════════════════════
 
-import { NAV_ITEMS, BOTTOM_NAV_MAIN, BOTTOM_NAV_MORE, pathToId, idToPath } from '../../config/navigation.js';
+import {
+  NAV_ITEMS,
+  BOTTOM_NAV_MAIN,
+  BOTTOM_NAV_MORE,
+  pathToId,
+  idToPath,
+} from '../../config/navigation.js';
 
 describe('Navigation — التنقل', () => {
-  it('يحتوي على 7 عناصر تنقل', () => {
-    expect(NAV_ITEMS.length).toBe(7);
+  it('يحتوي على 11 عنصر تنقل', () => {
+    expect(NAV_ITEMS.length).toBe(11);
   });
 
   it('كل عنصر تنقل يحتوي على id و label و path', () => {
@@ -36,18 +42,20 @@ describe('Navigation — التنقل', () => {
     expect(BOTTOM_NAV_MAIN.length).toBe(4);
   });
 
-  it('BOTTOM_NAV_MORE يحتوي على 3 عناصر', () => {
-    expect(BOTTOM_NAV_MORE.length).toBe(3);
+  it('BOTTOM_NAV_MORE يحتوي على 7 عناصر', () => {
+    expect(BOTTOM_NAV_MORE.length).toBe(7);
   });
 
   it('pathToId يحوّل المسار للمعرّف بشكل صحيح', () => {
-    expect(pathToId('/')).toBe('pulse');
+    expect(pathToId('/')).toBe('dashboard');
+    expect(pathToId('/pulse')).toBe('pulse');
     expect(pathToId('/settings')).toBe('settings');
     expect(pathToId('/commissions')).toBe('commissions');
   });
 
   it('idToPath يحوّل المعرّف للمسار بشكل صحيح', () => {
-    expect(idToPath('pulse')).toBe('/');
+    expect(idToPath('dashboard')).toBe('/');
+    expect(idToPath('pulse')).toBe('/pulse');
     expect(idToPath('settings')).toBe('/settings');
     expect(idToPath('commissions')).toBe('/commissions');
   });
@@ -67,8 +75,12 @@ describe('Navigation — التنقل', () => {
 const mockStorage = {};
 vi.stubGlobal('localStorage', {
   getItem: vi.fn((k) => mockStorage[k] ?? null),
-  setItem: vi.fn((k, v) => { mockStorage[k] = v; }),
-  removeItem: vi.fn((k) => { delete mockStorage[k]; }),
+  setItem: vi.fn((k, v) => {
+    mockStorage[k] = v;
+  }),
+  removeItem: vi.fn((k) => {
+    delete mockStorage[k];
+  }),
 });
 
 import { storageFacade } from '../storage-facade.js';
@@ -84,7 +96,7 @@ describe('StorageFacade — طبقة التخزين', () => {
   });
 
   it('setJSON و getJSON يعملان مع كائنات', () => {
-    const obj = { name: 'بدر', amount: 1500.50 };
+    const obj = { name: 'بدر', amount: 1500.5 };
     storageFacade.setJSON('test_obj', obj);
     expect(storageFacade.getJSON('test_obj')).toEqual(obj);
   });
@@ -176,7 +188,9 @@ describe('XSS Sanitization — تعقيم النصوص', () => {
   };
 
   it('يحوّل أحرف HTML الخطرة لـ entities', () => {
-    expect(esc('<script>alert("xss")</script>')).toBe('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;');
+    expect(esc('<script>alert("xss")</script>')).toBe(
+      '&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;'
+    );
   });
 
   it('يتعامل مع null و undefined', () => {
@@ -194,7 +208,7 @@ describe('XSS Sanitization — تعقيم النصوص', () => {
   });
 
   it('يعقّم علامات الاقتباس المفردة والمزدوجة', () => {
-    expect(esc("it's a \"test\"")).toBe('it&#39;s a &quot;test&quot;');
+    expect(esc('it\'s a "test"')).toBe('it&#39;s a &quot;test&quot;');
   });
 
   it('يعقّم ampersand', () => {

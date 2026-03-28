@@ -48,12 +48,14 @@ function breakdownByKey(txs, keyField, typeFilter) {
     byKey[key].count += 1;
   }
   const total = Object.values(byKey).reduce((s, x) => s + x.amount, 0);
-  return Object.entries(byKey).map(([k, v]) => ({
-    [keyField === 'category' ? 'category' : 'source']: k,
-    amount: Math.round(v.amount) || 0,
-    percentage: total > 0 ? Math.round((v.amount / total) * 10000) / 100 : 0,
-    count: v.count,
-  })).sort((a, b) => b.amount - a.amount);
+  return Object.entries(byKey)
+    .map(([k, v]) => ({
+      [keyField === 'category' ? 'category' : 'source']: k,
+      amount: Math.round(v.amount) || 0,
+      percentage: total > 0 ? Math.round((v.amount / total) * 10000) / 100 : 0,
+      count: v.count,
+    }))
+    .sort((a, b) => b.amount - a.amount);
 }
 
 /**
@@ -71,8 +73,15 @@ export async function generateMonthlyReport(ledgerId, month, year, options = {})
   const lid = String(ledgerId || '').trim();
   const allLedgers = options.ledgers || getLedgers() || [];
   const ledger = allLedgers.find((l) => l.id === lid) || null;
-  const recurringList = (options.recurringItems || getRecurringItems() || []).filter((r) => String(r?.ledgerId || '') === lid);
-  const txs = options.transactions ? (Array.isArray(options.transactions) ? options.transactions : []).filter(t => { const tLid = String(t?.ledgerId || t?.ledger_id || t?.meta?.ledgerId || ''); return !lid || tLid === lid || tLid === ''; }) : getTransactionsForLedger(lid);
+  const recurringList = (options.recurringItems || getRecurringItems() || []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
+  const txs = options.transactions
+    ? (Array.isArray(options.transactions) ? options.transactions : []).filter((t) => {
+        const tLid = String(t?.ledgerId || t?.ledger_id || t?.meta?.ledgerId || '');
+        return !lid || tLid === lid || tLid === '';
+      })
+    : getTransactionsForLedger(lid);
   const { firstDay, lastDay } = monthRange(year, month);
   const monthTxs = filterTxInMonth(txs, firstDay, lastDay);
 
@@ -89,7 +98,9 @@ export async function generateMonthlyReport(ledgerId, month, year, options = {})
   const prevYear = month === 1 ? year - 1 : year;
   const { firstDay: prevFirst, lastDay: prevLast } = monthRange(prevYear, prevMonth);
   const prevTxs = filterTxInMonth(txs, prevFirst, prevLast);
-  const prevNet = (computePL({ transactions: prevTxs })?.income || 0) - (computePL({ transactions: prevTxs })?.expense || 0);
+  const prevNet =
+    (computePL({ transactions: prevTxs })?.income || 0) -
+    (computePL({ transactions: prevTxs })?.expense || 0);
   if (netCashflow > prevNet) healthTrend = 'تحسن';
   else if (netCashflow < prevNet) healthTrend = 'تراجع';
 
@@ -110,21 +121,47 @@ export async function generateMonthlyReport(ledgerId, month, year, options = {})
   });
   const totalDue = dueInMonth.reduce((s, r) => s + (Number(r.amount) || 0), 0);
   const nowForInbox = new Date(year, month - 1, 15);
-  const inbox = buildLedgerInbox({ ledgerId: lid, recurringItems: recurringList, now: nowForInbox });
-  const totalOverdue = (inbox || []).filter((i) => {
-    const d = (i.nextDueDate || '').slice(0, 10);
-    return d && d < firstDay;
-  }).reduce((s, i) => s + (Number(i.amount) || 0), 0);
-  const complianceRate = totalDue > 0 ? Math.round((Math.min(recurringPaidInMonth, totalDue) / totalDue) * 100) : 100;
+  const inbox = buildLedgerInbox({
+    ledgerId: lid,
+    recurringItems: recurringList,
+    now: nowForInbox,
+  });
+  const totalOverdue = (inbox || [])
+    .filter((i) => {
+      const d = (i.nextDueDate || '').slice(0, 10);
+      return d && d < firstDay;
+    })
+    .reduce((s, i) => s + (Number(i.amount) || 0), 0);
+  const complianceRate =
+    totalDue > 0 ? Math.round((Math.min(recurringPaidInMonth, totalDue) / totalDue) * 100) : 100;
 
   const highlights = [];
-  if (netCashflow > 0) highlights.push({ type: 'positive', message: `صافي التدفق إيجابي: +${Math.round(netCashflow).toLocaleString('ar-SA')} ر.س` });
-  else if (netCashflow < 0) highlights.push({ type: 'negative', message: `صافي التدفق سالب: ${Math.round(netCashflow).toLocaleString('ar-SA')} ر.س` });
-  if (totalOverdue > 0) highlights.push({ type: 'negative', message: `وجود التزامات متأخرة بقيمة ${Math.round(totalOverdue).toLocaleString('ar-SA')} ر.س` });
-  if (complianceRate >= 90 && totalDue > 0) highlights.push({ type: 'positive', message: `نسبة الالتزام بالمواعيد ${complianceRate}%` });
-  if (healthScore >= 80) highlights.push({ type: 'positive', message: `درجة الصحة المالية ${healthScore}` });
-  else if (healthScore < 50 && healthScore > 0) highlights.push({ type: 'negative', message: `درجة الصحة المالية تحت المتوسط: ${healthScore}` });
-  if (highlights.length === 0) highlights.push({ type: 'neutral', message: 'لا أحداث بارزة هذا الشهر' });
+  if (netCashflow > 0)
+    highlights.push({
+      type: 'positive',
+      message: `صافي التدفق إيجابي: +${Math.round(netCashflow).toLocaleString('ar-SA')} ر.س`,
+    });
+  else if (netCashflow < 0)
+    highlights.push({
+      type: 'negative',
+      message: `صافي التدفق سالب: ${Math.round(netCashflow).toLocaleString('ar-SA')} ر.س`,
+    });
+  if (totalOverdue > 0)
+    highlights.push({
+      type: 'negative',
+      message: `وجود التزامات متأخرة بقيمة ${Math.round(totalOverdue).toLocaleString('ar-SA')} ر.س`,
+    });
+  if (complianceRate >= 90 && totalDue > 0)
+    highlights.push({ type: 'positive', message: `نسبة الالتزام بالمواعيد ${complianceRate}%` });
+  if (healthScore >= 80)
+    highlights.push({ type: 'positive', message: `درجة الصحة المالية ${healthScore}` });
+  else if (healthScore < 50 && healthScore > 0)
+    highlights.push({
+      type: 'negative',
+      message: `درجة الصحة المالية تحت المتوسط: ${healthScore}`,
+    });
+  if (highlights.length === 0)
+    highlights.push({ type: 'neutral', message: 'لا أحداث بارزة هذا الشهر' });
 
   const nextMonth = month === 12 ? 1 : month + 1;
   const nextYear = month === 12 ? year + 1 : year;
@@ -133,12 +170,17 @@ export async function generateMonthlyReport(ledgerId, month, year, options = {})
     const d = (r?.nextDueDate || '').slice(0, 10);
     return d && d >= nextFirst;
   });
-  const expectedExpense = nextRecurring.filter((r) => String(r?.category || '').toLowerCase() !== 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
-  const expectedIncome = nextRecurring.filter((r) => String(r?.category || '').toLowerCase() === 'income').reduce((s, r) => s + (Number(r.amount) || 0), 0);
+  const expectedExpense = nextRecurring
+    .filter((r) => String(r?.category || '').toLowerCase() !== 'income')
+    .reduce((s, r) => s + (Number(r.amount) || 0), 0);
+  const expectedIncome = nextRecurring
+    .filter((r) => String(r?.category || '').toLowerCase() === 'income')
+    .reduce((s, r) => s + (Number(r.amount) || 0), 0);
   const expectedNet = expectedIncome - expectedExpense;
   const risks = [];
   if (totalOverdue > 0) risks.push('التزامات متأخرة من الشهر السابق');
-  if (expectedExpense > closingBalance && closingBalance > 0) risks.push('رصيد الإغلاق قد لا يغطي مصروفات الشهر القادم');
+  if (expectedExpense > closingBalance && closingBalance > 0)
+    risks.push('رصيد الإغلاق قد لا يغطي مصروفات الشهر القادم');
 
   return {
     meta: {

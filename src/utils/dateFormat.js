@@ -7,7 +7,11 @@ import { getNumeralsMode, getSavedDateHeader } from '../core/theme-ui.js';
 /** تطبيع لاحقة الهجري: إزالة تكرار هـ وضمان وجودها مرة واحدة في النهاية فقط */
 export const normalizeHijriSuffix = (str) => {
   if (!str || typeof str !== 'string') return str;
-  let s = str.trim().replace(/\s*هـ+\s*$/g, '').replace(/هـ\s*هـ/g, 'هـ').trim();
+  let s = str
+    .trim()
+    .replace(/\s*هـ+\s*$/g, '')
+    .replace(/هـ\s*هـ/g, 'هـ')
+    .trim();
   return s ? `${s} هـ` : '';
 };
 
@@ -56,36 +60,53 @@ export const getHijriLocale = (mode) => {
 
 /** يعرض التاريخ للهيدر حسب الوضع: off|greg|hijri|both */
 export const formatDateHeader = (date, modeOverride = null) => {
-  const d = date instanceof Date ? date : (date ? new Date(date) : null);
+  const d = date instanceof Date ? date : date ? new Date(date) : null;
   if (!d || Number.isNaN(d.getTime())) return '';
   const headerMode = modeOverride || getSavedDateHeader() || 'both';
   if (headerMode === 'off') return '';
   const numeralsMode = getNumeralsMode();
   const localeGreg = getGregorianLocale(numeralsMode);
-  const greg = new Intl.DateTimeFormat(localeGreg, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+  const greg = new Intl.DateTimeFormat(localeGreg, {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
   const localeHijri = getHijriLocale(numeralsMode);
-  const hijriRaw = new Intl.DateTimeFormat(localeHijri, { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
-  const hijri = normalizeHijriSuffix(hijriRaw) || (hijriRaw.trim() + ' هـ');
+  const hijriRaw = new Intl.DateTimeFormat(localeHijri, {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  }).format(d);
+  const hijri = normalizeHijriSuffix(hijriRaw) || hijriRaw.trim() + ' هـ';
   if (headerMode === 'greg') return greg;
   if (headerMode === 'hijri') return hijri;
   return `${greg} — ${hijri}`;
 };
 
 export const formatDateGregorianNumeric = (date) => {
-  const d = date instanceof Date ? date : (date ? new Date(date) : null);
+  const d = date instanceof Date ? date : date ? new Date(date) : null;
   if (!d || Number.isNaN(d.getTime())) return '';
   const numeralsMode = getNumeralsMode();
   const localeGreg = getGregorianLocale(numeralsMode);
-  return new Intl.DateTimeFormat(localeGreg, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
+  return new Intl.DateTimeFormat(localeGreg, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(d);
 };
 
 export const formatDateHijriNumeric = (date) => {
-  const d = date instanceof Date ? date : (date ? new Date(date) : null);
+  const d = date instanceof Date ? date : date ? new Date(date) : null;
   if (!d || Number.isNaN(d.getTime())) return '';
   const mode = getNumeralsMode();
   const localeHijri = getHijriLocale(mode);
-  const raw = new Intl.DateTimeFormat(localeHijri, { day: '2-digit', month: '2-digit', year: 'numeric' }).format(d);
-  return normalizeHijriSuffix(raw) || (raw.trim() + ' هـ');
+  const raw = new Intl.DateTimeFormat(localeHijri, {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(d);
+  return normalizeHijriSuffix(raw) || raw.trim() + ' هـ';
 };
 
 export default {

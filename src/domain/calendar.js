@@ -17,7 +17,8 @@ export function buildCalendarDays(currentYear, currentMonthIndex0) {
     const y = currentMonthIndex0 === 0 ? currentYear - 1 : currentYear;
     days.push({ day: d, month: m, year: y, current: false });
   }
-  for (let d = 1; d <= daysInMonth; d++) days.push({ day: d, month: currentMonthIndex0 + 1, year: currentYear, current: true });
+  for (let d = 1; d <= daysInMonth; d++)
+    days.push({ day: d, month: currentMonthIndex0 + 1, year: currentYear, current: true });
 
   const remaining = 42 - days.length;
   for (let d = 1; d <= remaining; d++) {
@@ -33,7 +34,7 @@ export function getEventsForDate(events, gY, gM, gD) {
   const list = Array.isArray(events) ? events : [];
   const h = gregorianToHijri(gY, gM, gD);
 
-  return list.filter(ev => {
+  return list.filter((ev) => {
     if (ev.dateType === 'hijri') {
       for (let i = 0; i < (ev.duration || 1); i++) {
         if (h.month === ev.hMonth && h.day === ev.hDay + i) return true;
@@ -51,5 +52,5 @@ export function getEventsForDate(events, gY, gM, gD) {
 
 export function isHoliday(eventsForDate) {
   const list = Array.isArray(eventsForDate) ? eventsForDate : [];
-  return list.some(e => e.category === 'holiday' || e.category === 'religious');
+  return list.some((e) => e.category === 'holiday' || e.category === 'religious');
 }

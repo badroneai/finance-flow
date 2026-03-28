@@ -56,13 +56,13 @@ describe('ledger-analytics — computePL', () => {
 
   it('مبالغ عشرية تُحسب بدقة', () => {
     const transactions = [
-      { type: 'income', amount: 1500.50 },
+      { type: 'income', amount: 1500.5 },
       { type: 'expense', amount: 750.25 },
     ];
 
     const pl = computePL({ transactions });
 
-    expect(pl.income).toBeCloseTo(1500.50, 2);
+    expect(pl.income).toBeCloseTo(1500.5, 2);
     expect(pl.expense).toBeCloseTo(750.25, 2);
     expect(pl.net).toBeCloseTo(750.25, 2);
   });

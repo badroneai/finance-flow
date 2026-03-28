@@ -52,9 +52,9 @@ function daysLabel(due) {
 
 function priorityDot(priority) {
   const p = String(priority || '').toLowerCase();
-  if (p === 'critical') return 'bg-rose-500';
-  if (p === 'high') return 'bg-amber-500';
-  return 'bg-gray-400';
+  if (p === 'critical') return { background: 'var(--color-danger)' };
+  if (p === 'high') return { background: 'var(--color-warning)' };
+  return { background: 'var(--color-muted)' };
 }
 
 function InboxSection({ title, count, total, amountLabel, open, onToggle, children }) {
@@ -67,7 +67,9 @@ function InboxSection({ title, count, total, amountLabel, open, onToggle, childr
         className="w-full flex items-center justify-between gap-3 px-4 py-3 text-right border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
         aria-expanded={isOpen}
       >
-        <span className="font-semibold text-[var(--color-text)]">{title} ({count})</span>
+        <span className="font-semibold text-[var(--color-text)]">
+          {title} ({count})
+        </span>
         <span className="text-sm text-[var(--color-muted)]">{amountLabel}</span>
         <span className="text-[var(--color-muted)]">{isOpen ? '\u25B2' : '\u25BC'}</span>
       </button>
@@ -81,11 +83,20 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
   return (
     <div className="px-4 py-3">
       <div className="flex items-start gap-3">
-        <span className={`flex-shrink-0 w-2 h-2 rounded-full mt-1.5 ${dotClass}`} aria-hidden="true" />
+        <span
+          className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
+          style={dotClass}
+          aria-hidden="true"
+        />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <span className="font-medium text-[var(--color-text)]">{due.name}</span>
-            <span className={due.type === 'income' ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium'}>
+            <span
+              className="font-medium"
+              style={{
+                color: due.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
+              }}
+            >
               {formatCurrency(due.amount)}
             </span>
           </div>
@@ -94,7 +105,8 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
             <button
               type="button"
               onClick={() => onRecordPayment(due)}
-              className="text-sm font-medium text-blue-600 hover:text-blue-800"
+              className="text-sm font-medium hover:opacity-80"
+              style={{ color: 'var(--color-info)' }}
             >
               سجّل دفعة
             </button>
@@ -130,7 +142,9 @@ export default function InboxPage({ setPage }) {
   } = useData();
 
   const [inbox, setInbox] = useState(null);
-  const [activeLedgerId, setActiveLedgerId] = useState(() => dataActiveLedgerId || getActiveLedgerId() || '');
+  const [activeLedgerId, setActiveLedgerId] = useState(
+    () => dataActiveLedgerId || getActiveLedgerId() || ''
+  );
   const [filter, setFilter] = useState('all');
   const [openOverdue, setOpenOverdue] = useState(true);
   const [openThisWeek, setOpenThisWeek] = useState(true);
@@ -178,23 +192,28 @@ export default function InboxPage({ setPage }) {
     [filter, snoozeMap]
   );
 
-  const handleSnoozeTomorrow = useCallback((due) => {
-    const d = new Date();
-    d.setDate(d.getDate() + 1);
-    const tomorrow = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    setSnoozeDue(due.id, tomorrow);
-    setSnoozeMap(getSnoozeMap());
-    refresh();
-  }, [refresh]);
+  const handleSnoozeTomorrow = useCallback(
+    (due) => {
+      const d = new Date();
+      d.setDate(d.getDate() + 1);
+      const tomorrow = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      setSnoozeDue(due.id, tomorrow);
+      setSnoozeMap(getSnoozeMap());
+      refresh();
+    },
+    [refresh]
+  );
 
   const handleTouchStart = (e) => {
-    if (typeof window !== 'undefined' && window.scrollY <= 0) touchStartY.current = e.touches[0].clientY;
+    if (typeof window !== 'undefined' && window.scrollY <= 0)
+      touchStartY.current = e.touches[0].clientY;
   };
   const handleTouchMove = (e) => {
     if (touchStartY.current === 0) return;
     const y = e.touches[0].clientY;
     const delta = y - touchStartY.current;
-    if (delta > 0 && typeof window !== 'undefined' && window.scrollY <= 0) setPullY(Math.min(delta, 100));
+    if (delta > 0 && typeof window !== 'undefined' && window.scrollY <= 0)
+      setPullY(Math.min(delta, 100));
     else setPullY(0);
   };
   const handleTouchEnd = () => {
@@ -204,20 +223,32 @@ export default function InboxPage({ setPage }) {
   };
 
   const noLedger = !activeLedgerId;
-  const ledgers = (dataLedgers && dataLedgers.length > 0) ? dataLedgers : (getLedgers() || []);
+  const ledgers = dataLedgers && dataLedgers.length > 0 ? dataLedgers : getLedgers() || [];
   const overdue = filterDues(inbox?.overdue || []);
   const thisWeek = filterDues(inbox?.thisWeek || []);
   const thisMonth = filterDues(inbox?.thisMonth || []);
   const totalCount = overdue.length + thisWeek.length + thisMonth.length;
   const summary = inbox?.summary || {};
   const totalIncomeMonth =
-    (inbox?.overdue || []).filter((d) => d.type === 'income').reduce((s, d) => s + (d.amount || 0), 0) +
-    (inbox?.thisWeek || []).filter((d) => d.type === 'income').reduce((s, d) => s + (d.amount || 0), 0) +
-    (inbox?.thisMonth || []).filter((d) => d.type === 'income').reduce((s, d) => s + (d.amount || 0), 0);
+    (inbox?.overdue || [])
+      .filter((d) => d.type === 'income')
+      .reduce((s, d) => s + (d.amount || 0), 0) +
+    (inbox?.thisWeek || [])
+      .filter((d) => d.type === 'income')
+      .reduce((s, d) => s + (d.amount || 0), 0) +
+    (inbox?.thisMonth || [])
+      .filter((d) => d.type === 'income')
+      .reduce((s, d) => s + (d.amount || 0), 0);
   const totalExpenseMonth =
-    (inbox?.overdue || []).filter((d) => d.type === 'expense').reduce((s, d) => s + (d.amount || 0), 0) +
-    (inbox?.thisWeek || []).filter((d) => d.type === 'expense').reduce((s, d) => s + (d.amount || 0), 0) +
-    (inbox?.thisMonth || []).filter((d) => d.type === 'expense').reduce((s, d) => s + (d.amount || 0), 0);
+    (inbox?.overdue || [])
+      .filter((d) => d.type === 'expense')
+      .reduce((s, d) => s + (d.amount || 0), 0) +
+    (inbox?.thisWeek || [])
+      .filter((d) => d.type === 'expense')
+      .reduce((s, d) => s + (d.amount || 0), 0) +
+    (inbox?.thisMonth || [])
+      .filter((d) => d.type === 'expense')
+      .reduce((s, d) => s + (d.amount || 0), 0);
 
   return (
     <div
@@ -267,7 +298,8 @@ export default function InboxPage({ setPage }) {
                 } catch {}
                 setPage('ledgers');
               }}
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+              className="text-sm font-medium hover:opacity-80"
+              style={{ color: 'var(--color-info)' }}
             >
               إدارة الدفاتر
             </button>
@@ -276,14 +308,22 @@ export default function InboxPage({ setPage }) {
       </div>
 
       {noLedger ? (
-        <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center text-amber-800">
+        <div
+          className="rounded-xl p-6 text-center"
+          style={{
+            background: 'var(--color-warning-bg)',
+            color: 'var(--color-warning)',
+            border: '1px solid var(--color-warning)',
+          }}
+        >
           <p className="font-medium">لا يوجد دفتر نشط</p>
           <p className="text-sm mt-1">اختر دفتراً من قائمة الدفاتر لرؤية المستحقات.</p>
           {setPage && (
             <button
               type="button"
               onClick={() => setPage('ledgers')}
-              className="mt-4 px-4 py-2 rounded-lg bg-amber-600 text-white text-sm font-medium hover:bg-amber-700"
+              className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
+              style={{ background: 'var(--color-warning)' }}
             >
               فتح الدفاتر
             </button>
@@ -307,8 +347,15 @@ export default function InboxPage({ setPage }) {
                 type="button"
                 onClick={() => setFilter(f.key)}
                 className={`px-3 py-2 rounded-lg text-sm font-medium border ${
-                  filter === f.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'
+                  filter === f.key
+                    ? 'border-transparent text-white'
+                    : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'
                 }`}
+                style={
+                  filter === f.key
+                    ? { background: 'var(--color-info)', borderColor: 'var(--color-info)' }
+                    : undefined
+                }
               >
                 {f.label}
               </button>
@@ -381,7 +428,8 @@ export default function InboxPage({ setPage }) {
           <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-sm text-[var(--color-muted)]">
             <p className="font-medium text-[var(--color-text)]">الإجمالي المتوقع هذا الشهر</p>
             <p className="mt-1">
-              دخل: {formatCurrency(totalIncomeMonth)} ر.س | مصروف: {formatCurrency(totalExpenseMonth)} ر.س
+              دخل: {formatCurrency(totalIncomeMonth)} ر.س | مصروف:{' '}
+              {formatCurrency(totalExpenseMonth)} ر.س
             </p>
           </div>
         </>

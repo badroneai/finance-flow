@@ -212,18 +212,19 @@ function LedgerRecurringTab(props) {
 
   // Filter
   const filteredItems = (() => {
-    if (listFilter === 'overdue') return sortedItems.filter(r => isPastDue(r));
-    if (listFilter === 'soon') return sortedItems.filter(r => !isPastDue(r) && isDueWithinDays(r, 14));
-    if (listFilter === 'paid') return sortedItems.filter(r => r.payState === 'paid');
+    if (listFilter === 'overdue') return sortedItems.filter((r) => isPastDue(r));
+    if (listFilter === 'soon')
+      return sortedItems.filter((r) => !isPastDue(r) && isDueWithinDays(r, 14));
+    if (listFilter === 'paid') return sortedItems.filter((r) => r.payState === 'paid');
     return sortedItems;
   })();
 
-  const overdueCount = allItems.filter(r => isPastDue(r)).length;
-  const soonCount = allItems.filter(r => !isPastDue(r) && isDueWithinDays(r, 14)).length;
+  const overdueCount = allItems.filter((r) => isPastDue(r)).length;
+  const soonCount = allItems.filter((r) => !isPastDue(r) && isDueWithinDays(r, 14)).length;
 
   // Monthly summary
   const monthlyTotal = allItems
-    .filter(r => String(r.frequency || '').toLowerCase() === 'monthly' && Number(r.amount) > 0)
+    .filter((r) => String(r.frequency || '').toLowerCase() === 'monthly' && Number(r.amount) > 0)
     .reduce((s, r) => s + Number(r.amount), 0);
   const yearlyEstimate = allItems.reduce((s, r) => {
     const amt = Number(r.amount) || 0;
@@ -235,17 +236,17 @@ function LedgerRecurringTab(props) {
     return s + amt;
   }, 0);
   const overdueTotal = allItems
-    .filter(r => isPastDue(r) && Number(r.amount) > 0)
+    .filter((r) => isPastDue(r) && Number(r.amount) > 0)
     .reduce((s, r) => s + Number(r.amount), 0);
   const thisMonthDue = allItems
-    .filter(r => isDueWithinDays(r, 30) && Number(r.amount) > 0)
+    .filter((r) => isDueWithinDays(r, 30) && Number(r.amount) > 0)
     .reduce((s, r) => s + Number(r.amount), 0);
 
   // Category distribution for advanced section
   const categoryDist = (() => {
     const map = {};
     let total = 0;
-    allItems.forEach(r => {
+    allItems.forEach((r) => {
       const amt = Number(r.amount) || 0;
       if (amt <= 0) return;
       const cat = normalizeRecurringCategory(r.category) || 'uncategorized';
@@ -258,8 +259,10 @@ function LedgerRecurringTab(props) {
   // Status helper
   const getStatusInfo = (item) => {
     if (isPastDue(item)) return { label: 'متأخر', color: 'bg-red-50 border-red-200 text-red-700' };
-    if (isDueWithinDays(item, 7)) return { label: 'مستحق قريباً', color: 'bg-amber-50 border-amber-200 text-amber-700' };
-    if (item.payState === 'paid') return { label: 'مدفوع', color: 'bg-green-50 border-green-200 text-green-700' };
+    if (isDueWithinDays(item, 7))
+      return { label: 'مستحق قريباً', color: 'bg-amber-50 border-amber-200 text-amber-700' };
+    if (item.payState === 'paid')
+      return { label: 'مدفوع', color: 'bg-green-50 border-green-200 text-green-700' };
     return { label: 'نشط', color: 'bg-blue-50 border-blue-200 text-blue-700' };
   };
 
@@ -269,21 +272,54 @@ function LedgerRecurringTab(props) {
       {/* مودال تسجيل الدفعة */}
       {/* ════════════════════════════════════════ */}
       {payOpen && paySource && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setPayOpen(false)}>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md" dir="rtl" onClick={(e) => e.stopPropagation()}>
-            <h4 className="font-bold text-[var(--color-text)] mb-3">تسجيل دفعة — {paySource.title}</h4>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setPayOpen(false)}
+        >
+          <div
+            className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="font-bold text-[var(--color-text)] mb-3">
+              تسجيل دفعة — {paySource.title}
+            </h4>
             <div className="flex flex-col gap-3">
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المبلغ</label>
-                <input type="text" inputMode="decimal" value={payForm.amount} onChange={(e) => setPayForm(p => ({ ...p, amount: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="المبلغ" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  المبلغ
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={payForm.amount}
+                  onChange={(e) => setPayForm((p) => ({ ...p, amount: e.target.value }))}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="المبلغ"
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">التاريخ</label>
-                <input type="date" value={payForm.date} onChange={(e) => setPayForm(p => ({ ...p, date: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="التاريخ" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  التاريخ
+                </label>
+                <input
+                  type="date"
+                  value={payForm.date}
+                  onChange={(e) => setPayForm((p) => ({ ...p, date: e.target.value }))}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="التاريخ"
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">طريقة الدفع</label>
-                <select value={payForm.paymentMethod} onChange={(e) => setPayForm(p => ({ ...p, paymentMethod: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="طريقة الدفع">
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  طريقة الدفع
+                </label>
+                <select
+                  value={payForm.paymentMethod}
+                  onChange={(e) => setPayForm((p) => ({ ...p, paymentMethod: e.target.value }))}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+                  aria-label="طريقة الدفع"
+                >
                   <option value="cash">نقدي</option>
                   <option value="bank_transfer">تحويل بنكي</option>
                   <option value="check">شيك</option>
@@ -292,13 +328,33 @@ function LedgerRecurringTab(props) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">الوصف</label>
-                <input type="text" value={payForm.description} onChange={(e) => setPayForm(p => ({ ...p, description: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="الوصف" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  الوصف
+                </label>
+                <input
+                  type="text"
+                  value={payForm.description}
+                  onChange={(e) => setPayForm((p) => ({ ...p, description: e.target.value }))}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="الوصف"
+                />
               </div>
             </div>
             <div className="flex gap-2 justify-end mt-4">
-              <button type="button" onClick={() => setPayOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
-              <button type="button" onClick={submitPayNow} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">تسجيل الدفعة</button>
+              <button
+                type="button"
+                onClick={() => setPayOpen(false)}
+                className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={submitPayNow}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              >
+                تسجيل الدفعة
+              </button>
             </div>
           </div>
         </div>
@@ -308,32 +364,79 @@ function LedgerRecurringTab(props) {
       {/* معالج التسعير السريع */}
       {/* ════════════════════════════════════════ */}
       {pricingOpen && pricingList && pricingList.length > 0 && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setPricingOpen(false)}>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md" dir="rtl" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setPricingOpen(false)}
+        >
+          <div
+            className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h4 className="font-bold text-[var(--color-text)] mb-1">معالج التسعير</h4>
-            <p className="text-xs text-[var(--color-muted)] mb-3">بند {pricingIndex + 1} من {pricingList.length}</p>
+            <p className="text-xs text-[var(--color-muted)] mb-3">
+              بند {pricingIndex + 1} من {pricingList.length}
+            </p>
             <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] mb-3">
-              <div className="font-semibold text-[var(--color-text)]">{pricingList[pricingIndex]?.title || '—'}</div>
+              <div className="font-semibold text-[var(--color-text)]">
+                {pricingList[pricingIndex]?.title || '—'}
+              </div>
               {pricingList[pricingIndex]?.priceBand && (
                 <div className="text-xs text-[var(--color-muted)] mt-1">
-                  نطاق السعر: <Currency value={pricingList[pricingIndex].priceBand.min || 0} /> — <Currency value={pricingList[pricingIndex].priceBand.max || 0} />
-                  {pricingList[pricingIndex].priceBand.typical > 0 && <> (المتوسط: <Currency value={pricingList[pricingIndex].priceBand.typical} />)</>}
+                  نطاق السعر: <Currency value={pricingList[pricingIndex].priceBand.min || 0} /> —{' '}
+                  <Currency value={pricingList[pricingIndex].priceBand.max || 0} />
+                  {pricingList[pricingIndex].priceBand.typical > 0 && (
+                    <>
+                      {' '}
+                      (المتوسط: <Currency value={pricingList[pricingIndex].priceBand.typical} />)
+                    </>
+                  )}
                 </div>
               )}
             </div>
             <div className="flex flex-col gap-3">
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المبلغ (ر.س)</label>
-                <input type="text" inputMode="decimal" value={pricingAmount} onChange={(e) => setPricingAmount(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="المبلغ" placeholder="0" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  المبلغ (ر.س)
+                </label>
+                <input
+                  type="text"
+                  inputMode="decimal"
+                  value={pricingAmount}
+                  onChange={(e) => setPricingAmount(e.target.value)}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="المبلغ"
+                  placeholder="0"
+                />
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">تاريخ الاستحقاق القادم</label>
-                <input type="date" value={pricingDate} onChange={(e) => setPricingDate(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="تاريخ الاستحقاق" />
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  تاريخ الاستحقاق القادم
+                </label>
+                <input
+                  type="date"
+                  value={pricingDate}
+                  onChange={(e) => setPricingDate(e.target.value)}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="تاريخ الاستحقاق"
+                />
               </div>
             </div>
             <div className="flex gap-2 justify-end mt-4">
-              <button type="button" onClick={() => setPricingOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
-              <button type="button" onClick={applyQuickPricing} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">حفظ وانتقل للتالي</button>
+              <button
+                type="button"
+                onClick={() => setPricingOpen(false)}
+                className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={applyQuickPricing}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              >
+                حفظ وانتقل للتالي
+              </button>
             </div>
           </div>
         </div>
@@ -343,14 +446,32 @@ function LedgerRecurringTab(props) {
       {/* معالج التسعير السعودي */}
       {/* ════════════════════════════════════════ */}
       {saPricingOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setSaPricingOpen(false)}>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md" dir="rtl" onClick={(e) => e.stopPropagation()}>
-            <h4 className="font-bold text-[var(--color-text)] mb-1">تسعير تلقائي (أسعار السوق السعودي)</h4>
-            <p className="text-xs text-[var(--color-muted)] mb-3">يطبّق أسعاراً مقترحة بناءً على المدينة وحجم المكتب.</p>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setSaPricingOpen(false)}
+        >
+          <div
+            className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md"
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className="font-bold text-[var(--color-text)] mb-1">
+              تسعير تلقائي (أسعار السوق السعودي)
+            </h4>
+            <p className="text-xs text-[var(--color-muted)] mb-3">
+              يطبّق أسعاراً مقترحة بناءً على المدينة وحجم المكتب.
+            </p>
             <div className="flex flex-col gap-3">
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المدينة</label>
-                <select value={saCity} onChange={(e) => setSaCity(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="المدينة">
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  المدينة
+                </label>
+                <select
+                  value={saCity}
+                  onChange={(e) => setSaCity(e.target.value)}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+                  aria-label="المدينة"
+                >
                   <option value="riyadh">الرياض</option>
                   <option value="jeddah">جدة</option>
                   <option value="dammam">الدمام</option>
@@ -359,30 +480,60 @@ function LedgerRecurringTab(props) {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">حجم المكتب</label>
-                <select value={saSize} onChange={(e) => setSaSize(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="حجم المكتب">
+                <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                  حجم المكتب
+                </label>
+                <select
+                  value={saSize}
+                  onChange={(e) => setSaSize(e.target.value)}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+                  aria-label="حجم المكتب"
+                >
                   <option value="small">صغير</option>
                   <option value="medium">متوسط</option>
                   <option value="large">كبير</option>
                 </select>
               </div>
               <label className="inline-flex items-center gap-2 text-sm text-[var(--color-text)]">
-                <input type="checkbox" checked={saOnlyUnpriced} onChange={(e) => setSaOnlyUnpriced(e.target.checked)} />
+                <input
+                  type="checkbox"
+                  checked={saOnlyUnpriced}
+                  onChange={(e) => setSaOnlyUnpriced(e.target.checked)}
+                />
                 فقط البنود غير المسعّرة
               </label>
             </div>
             <div className="flex gap-2 justify-end mt-4">
-              <button type="button" onClick={() => setSaPricingOpen(false)} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]">إلغاء</button>
-              <button type="button" onClick={() => {
-                const result = applySaudiAutoPricingForLedger({ ledgerId: activeId, city: saCity, size: saSize, onlyUnpriced: saOnlyUnpriced });
-                if (result.ok) { toast.success('تم تطبيق التسعير'); setSaPricingOpen(false); refresh(); }
-                else toast.error(result.message || 'تعذر التطبيق');
-              }} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">تطبيق التسعير</button>
+              <button
+                type="button"
+                onClick={() => setSaPricingOpen(false)}
+                className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+              >
+                إلغاء
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const result = applySaudiAutoPricingForLedger({
+                    ledgerId: activeId,
+                    city: saCity,
+                    size: saSize,
+                    onlyUnpriced: saOnlyUnpriced,
+                  });
+                  if (result.ok) {
+                    toast.success('تم تطبيق التسعير');
+                    setSaPricingOpen(false);
+                    refresh();
+                  } else toast.error(result.message || 'تعذر التطبيق');
+                }}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              >
+                تطبيق التسعير
+              </button>
             </div>
           </div>
         </div>
       )}
-
 
       {/* ════════════════════════════════════════════════════════════ */}
       {/* القسم 1: نموذج إضافة / تعديل التزام (أول شيء يراه المستخدم) */}
@@ -393,11 +544,13 @@ function LedgerRecurringTab(props) {
         </h4>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">اسم الالتزام</label>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+              اسم الالتزام
+            </label>
             <input
               type="text"
               value={recForm.title}
-              onChange={(e) => setRecForm(p => ({ ...p, title: e.target.value }))}
+              onChange={(e) => setRecForm((p) => ({ ...p, title: e.target.value }))}
               maxLength={200}
               className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
               aria-label="اسم الالتزام"
@@ -405,22 +558,26 @@ function LedgerRecurringTab(props) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">المبلغ (ر.س)</label>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+              المبلغ (ر.س)
+            </label>
             <input
               type="text"
               inputMode="decimal"
               value={recForm.amount}
-              onChange={(e) => setRecForm(p => ({ ...p, amount: e.target.value }))}
+              onChange={(e) => setRecForm((p) => ({ ...p, amount: e.target.value }))}
               className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
               aria-label="المبلغ"
               placeholder="0"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">التكرار</label>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+              التكرار
+            </label>
             <select
               value={recForm.frequency}
-              onChange={(e) => setRecForm(p => ({ ...p, frequency: e.target.value }))}
+              onChange={(e) => setRecForm((p) => ({ ...p, frequency: e.target.value }))}
               className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
               aria-label="التكرار"
             >
@@ -431,21 +588,25 @@ function LedgerRecurringTab(props) {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">تاريخ الاستحقاق القادم</label>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+              تاريخ الاستحقاق القادم
+            </label>
             <input
               type="date"
               value={recForm.nextDueDate}
-              onChange={(e) => setRecForm(p => ({ ...p, nextDueDate: e.target.value }))}
+              onChange={(e) => setRecForm((p) => ({ ...p, nextDueDate: e.target.value }))}
               className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
               aria-label="تاريخ الاستحقاق القادم"
             />
           </div>
           <div className="md:col-span-2 lg:col-span-2">
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">ملاحظات (اختياري)</label>
+            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+              ملاحظات (اختياري)
+            </label>
             <input
               type="text"
               value={recForm.notes || ''}
-              onChange={(e) => setRecForm(p => ({ ...p, notes: e.target.value }))}
+              onChange={(e) => setRecForm((p) => ({ ...p, notes: e.target.value }))}
               className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
               aria-label="ملاحظات"
               placeholder="ملاحظة اختيارية"
@@ -456,7 +617,10 @@ function LedgerRecurringTab(props) {
           {recEditingId && (
             <button
               type="button"
-              onClick={() => { setRecEditingId(null); resetRecForm(); }}
+              onClick={() => {
+                setRecEditingId(null);
+                resetRecForm();
+              }}
               className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
             >
               إلغاء
@@ -473,7 +637,6 @@ function LedgerRecurringTab(props) {
         </div>
       </div>
 
-
       {/* ════════════════════════════════════════════════════════════ */}
       {/* القسم 2: قائمة الالتزامات الحالية                           */}
       {/* ════════════════════════════════════════════════════════════ */}
@@ -485,7 +648,7 @@ function LedgerRecurringTab(props) {
               { key: 'all', label: 'الكل', count: allItems.length },
               { key: 'overdue', label: 'متأخر', count: overdueCount },
               { key: 'soon', label: 'قريب', count: soonCount },
-            ].map(f => (
+            ].map((f) => (
               <button
                 key={f.key}
                 type="button"
@@ -502,24 +665,44 @@ function LedgerRecurringTab(props) {
         {unpricedList && unpricedList.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-xl border border-amber-200 bg-amber-50">
             <span className="text-sm text-amber-800">{unpricedList.length} التزام بدون مبلغ</span>
-            <button type="button" onClick={openPricingWizard} className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700">معالج التسعير</button>
-            <button type="button" onClick={() => setSaPricingOpen(true)} className="px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 text-xs font-medium hover:bg-amber-100">تسعير تلقائي (سعودي)</button>
+            <button
+              type="button"
+              onClick={openPricingWizard}
+              className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700"
+            >
+              معالج التسعير
+            </button>
+            <button
+              type="button"
+              onClick={() => setSaPricingOpen(true)}
+              className="px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 text-xs font-medium hover:bg-amber-100"
+            >
+              تسعير تلقائي (سعودي)
+            </button>
           </div>
         )}
 
         {filteredItems.length === 0 ? (
           <div className="py-10 text-center">
-            <p className="text-[var(--color-text)] font-medium">لا توجد التزامات{listFilter !== 'all' ? ` (${listFilter === 'overdue' ? 'متأخرة' : 'قريبة'})` : ''}</p>
+            <p className="text-[var(--color-text)] font-medium">
+              لا توجد التزامات
+              {listFilter !== 'all' ? ` (${listFilter === 'overdue' ? 'متأخرة' : 'قريبة'})` : ''}
+            </p>
             {allItems.length === 0 && (
-              <p className="text-sm text-[var(--color-muted)] mt-2">أضف أول التزام (مثل: إيجار المكتب، فاتورة الكهرباء، رسوم البلدية)</p>
+              <p className="text-sm text-[var(--color-muted)] mt-2">
+                أضف أول التزام (مثل: إيجار المكتب، فاتورة الكهرباء، رسوم البلدية)
+              </p>
             )}
           </div>
         ) : (
           <div className="flex flex-col gap-2">
             {filteredItems.map((item) => {
               const status = getStatusInfo(item);
-              const catLabel = CATEGORY_LABELS_AR[normalizeRecurringCategory(item.category)] || CATEGORY_LABELS_AR.other;
-              const freqLabel = FREQUENCY_LABELS[String(item.frequency || '').toLowerCase()] || 'شهري';
+              const catLabel =
+                CATEGORY_LABELS_AR[normalizeRecurringCategory(item.category)] ||
+                CATEGORY_LABELS_AR.other;
+              const freqLabel =
+                FREQUENCY_LABELS[String(item.frequency || '').toLowerCase()] || 'شهري';
               return (
                 <div
                   key={item.id}
@@ -531,18 +714,32 @@ function LedgerRecurringTab(props) {
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-semibold text-[var(--color-text)] truncate">{item.title || '—'}</span>
-                        <span className={`px-2 py-0.5 rounded-full text-[11px] border ${status.color}`}>{status.label}</span>
-                        <span className="px-2 py-0.5 rounded-full text-[11px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)]">{catLabel}</span>
+                        <span className="font-semibold text-[var(--color-text)] truncate">
+                          {item.title || '—'}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[11px] border ${status.color}`}
+                        >
+                          {status.label}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-full text-[11px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)]">
+                          {catLabel}
+                        </span>
                       </div>
                       <div className="flex flex-wrap gap-3 mt-1 text-xs text-[var(--color-muted)]">
                         <span>{freqLabel}</span>
                         {item.nextDueDate && <span>الاستحقاق: {item.nextDueDate}</span>}
                         <span className="font-semibold text-[var(--color-text)]">
-                          {Number(item.amount) > 0 ? <Currency value={item.amount} /> : <span className="text-amber-600">غير مسعّر</span>}
+                          {Number(item.amount) > 0 ? (
+                            <Currency value={item.amount} />
+                          ) : (
+                            <span className="text-amber-600">غير مسعّر</span>
+                          )}
                         </span>
                       </div>
-                      {item.notes?.trim() && <div className="text-xs text-[var(--color-muted)] mt-1">{item.notes}</div>}
+                      {item.notes?.trim() && (
+                        <div className="text-xs text-[var(--color-muted)] mt-1">{item.notes}</div>
+                      )}
                     </div>
 
                     {/* Actions */}
@@ -550,7 +747,9 @@ function LedgerRecurringTab(props) {
                       <button
                         type="button"
                         onClick={() => {
-                          const r = (Array.isArray(recurring) ? recurring : []).find(x => x.id === item.id);
+                          const r = (Array.isArray(recurring) ? recurring : []).find(
+                            (x) => x.id === item.id
+                          );
                           if (r) startPayNow(r);
                         }}
                         disabled={Number(item.amount) === 0}
@@ -584,7 +783,6 @@ function LedgerRecurringTab(props) {
         )}
       </div>
 
-
       {/* ════════════════════════════════════════════════════════════ */}
       {/* القسم 3: ملخص شهري بسيط (بطاقة واحدة)                     */}
       {/* ════════════════════════════════════════════════════════════ */}
@@ -593,21 +791,29 @@ function LedgerRecurringTab(props) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
             <div className="text-xs text-[var(--color-muted)]">إجمالي شهري</div>
-            <div className="mt-1 text-lg font-bold text-[var(--color-text)]"><Currency value={monthlyTotal} /></div>
+            <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+              <Currency value={monthlyTotal} />
+            </div>
           </div>
           {overdueTotal > 0 && (
             <div className="p-3 rounded-xl border border-red-200 bg-red-50">
               <div className="text-xs text-red-600">متأخر</div>
-              <div className="mt-1 text-lg font-bold text-red-700"><Currency value={overdueTotal} /></div>
+              <div className="mt-1 text-lg font-bold text-red-700">
+                <Currency value={overdueTotal} />
+              </div>
             </div>
           )}
           <div className="p-3 rounded-xl border border-amber-200 bg-amber-50">
             <div className="text-xs text-amber-700">مستحق هذا الشهر</div>
-            <div className="mt-1 text-lg font-bold text-amber-800"><Currency value={thisMonthDue} /></div>
+            <div className="mt-1 text-lg font-bold text-amber-800">
+              <Currency value={thisMonthDue} />
+            </div>
           </div>
           <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
             <div className="text-xs text-[var(--color-muted)]">تقدير سنوي</div>
-            <div className="mt-1 text-lg font-bold text-[var(--color-text)]"><Currency value={yearlyEstimate} /></div>
+            <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+              <Currency value={yearlyEstimate} />
+            </div>
           </div>
           <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
             <div className="text-xs text-[var(--color-muted)]">عدد الالتزامات</div>
@@ -618,15 +824,17 @@ function LedgerRecurringTab(props) {
         {/* تنبيهات بسيطة */}
         {ledgerAlerts && ledgerAlerts.length > 0 && (
           <div className="mt-3 flex flex-col gap-2">
-            {ledgerAlerts.map(a => (
-              <div key={a.id} className="p-3 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-800">
+            {ledgerAlerts.map((a) => (
+              <div
+                key={a.id}
+                className="p-3 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-800"
+              >
                 <span className="font-semibold">{a.title}</span>: {a.reason}
               </div>
             ))}
           </div>
         )}
       </div>
-
 
       {/* ════════════════════════════════════════════════════════════ */}
       {/* القسم 4: تفاصيل متقدمة (مطوية افتراضياً)                   */}
@@ -644,7 +852,6 @@ function LedgerRecurringTab(props) {
 
         {advancedOpen && (
           <div className="p-4 md:p-5 pt-0 flex flex-col gap-4">
-
             {/* توقعات 30/60/90 يوم */}
             <div>
               <h5 className="font-semibold text-[var(--color-text)] mb-2">توقعات الاستحقاق</h5>
@@ -654,11 +861,18 @@ function LedgerRecurringTab(props) {
                   { label: '60 يوم', data: outlook?.d60 },
                   { label: '90 يوم', data: outlook?.d90 },
                 ].map(({ label, data }) => (
-                  <div key={label} className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
+                  <div
+                    key={label}
+                    className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center"
+                  >
                     <div className="text-xs text-[var(--color-muted)]">{label}</div>
-                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={data?.pricedTotal || 0} /></div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]">
+                      <Currency value={data?.pricedTotal || 0} />
+                    </div>
                     {(data?.unpricedCount || 0) > 0 && (
-                      <div className="text-[11px] text-amber-600 mt-1">{data.unpricedCount} غير مسعّر</div>
+                      <div className="text-[11px] text-amber-600 mt-1">
+                        {data.unpricedCount} غير مسعّر
+                      </div>
                     )}
                   </div>
                 ))}
@@ -668,20 +882,32 @@ function LedgerRecurringTab(props) {
             {/* توزيع حسب التصنيف */}
             {categoryDist.total > 0 && (
               <div>
-                <h5 className="font-semibold text-[var(--color-text)] mb-2">توزيع الالتزامات حسب التصنيف</h5>
+                <h5 className="font-semibold text-[var(--color-text)] mb-2">
+                  توزيع الالتزامات حسب التصنيف
+                </h5>
                 <div className="flex flex-col gap-2">
                   {Object.entries(categoryDist.map)
                     .sort((a, b) => b[1] - a[1])
                     .map(([cat, amt]) => {
-                      const pct = categoryDist.total > 0 ? Math.round((amt / categoryDist.total) * 100) : 0;
+                      const pct =
+                        categoryDist.total > 0 ? Math.round((amt / categoryDist.total) * 100) : 0;
                       return (
                         <div key={cat} className="flex items-center gap-3">
-                          <span className="text-sm text-[var(--color-text)] w-28 shrink-0">{CATEGORY_LABELS_AR[cat] || 'أخرى'}</span>
+                          <span className="text-sm text-[var(--color-text)] w-28 shrink-0">
+                            {CATEGORY_LABELS_AR[cat] || 'أخرى'}
+                          </span>
                           <div className="flex-1 h-4 bg-[var(--color-bg)] rounded-full overflow-hidden border border-[var(--color-border)]">
-                            <div className="h-full bg-blue-500 rounded-full" style={{ width: `${pct}%` }} />
+                            <div
+                              className="h-full bg-blue-500 rounded-full"
+                              style={{ width: `${pct}%` }}
+                            />
                           </div>
-                          <span className="text-xs text-[var(--color-muted)] w-16 text-end">{pct}%</span>
-                          <span className="text-xs font-semibold text-[var(--color-text)] w-24 text-end"><Currency value={amt} /></span>
+                          <span className="text-xs text-[var(--color-muted)] w-16 text-end">
+                            {pct}%
+                          </span>
+                          <span className="text-xs font-semibold text-[var(--color-text)] w-24 text-end">
+                            <Currency value={amt} />
+                          </span>
                         </div>
                       );
                     })}
@@ -694,23 +920,69 @@ function LedgerRecurringTab(props) {
               <h5 className="font-semibold text-[var(--color-text)] mb-2">أهداف الميزانية</h5>
               <div className="grid md:grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">هدف شهري (ر.س)</label>
-                  <input type="text" inputMode="decimal" value={budgetForm.monthlyTarget} onChange={(e) => setBudgetForm(p => ({ ...p, monthlyTarget: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="هدف شهري" placeholder="0" />
+                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                    هدف شهري (ر.س)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={budgetForm.monthlyTarget}
+                    onChange={(e) =>
+                      setBudgetForm((p) => ({ ...p, monthlyTarget: e.target.value }))
+                    }
+                    className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                    aria-label="هدف شهري"
+                    placeholder="0"
+                  />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">هدف سنوي (ر.س)</label>
-                  <input type="text" inputMode="decimal" value={budgetForm.yearlyTarget} onChange={(e) => setBudgetForm(p => ({ ...p, yearlyTarget: e.target.value }))} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="هدف سنوي" placeholder="0" />
+                  <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
+                    هدف سنوي (ر.س)
+                  </label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={budgetForm.yearlyTarget}
+                    onChange={(e) => setBudgetForm((p) => ({ ...p, yearlyTarget: e.target.value }))}
+                    className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                    aria-label="هدف سنوي"
+                    placeholder="0"
+                  />
                 </div>
               </div>
               <div className="flex justify-end mt-2">
-                <button type="button" onClick={() => saveLedgerBudgets({ monthlyTarget: budgetForm.monthlyTarget, yearlyTarget: budgetForm.yearlyTarget })} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">حفظ الميزانية</button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    saveLedgerBudgets({
+                      monthlyTarget: budgetForm.monthlyTarget,
+                      yearlyTarget: budgetForm.yearlyTarget,
+                    })
+                  }
+                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                >
+                  حفظ الميزانية
+                </button>
               </div>
-              {budgetsHealth && (budgetsHealth.monthlyTarget > 0 || budgetsHealth.yearlyTarget > 0) && (
-                <div className={`mt-2 p-3 rounded-xl border text-sm ${budgetsHealth.status === 'danger' ? 'border-red-200 bg-red-50 text-red-700' : budgetsHealth.status === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-green-200 bg-green-50 text-green-700'}`}>
-                  {budgetsHealth.status === 'danger' ? 'تجاوز الميزانية' : budgetsHealth.status === 'warn' ? 'قريب من حد الميزانية' : 'ضمن الميزانية'}
-                  {budgetsHealth.monthlyTarget > 0 && <> — الشهري: <Currency value={actuals.actualMonthly} /> من <Currency value={budgetsHealth.monthlyTarget} /></>}
-                </div>
-              )}
+              {budgetsHealth &&
+                (budgetsHealth.monthlyTarget > 0 || budgetsHealth.yearlyTarget > 0) && (
+                  <div
+                    className={`mt-2 p-3 rounded-xl border text-sm ${budgetsHealth.status === 'danger' ? 'border-red-200 bg-red-50 text-red-700' : budgetsHealth.status === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-green-200 bg-green-50 text-green-700'}`}
+                  >
+                    {budgetsHealth.status === 'danger'
+                      ? 'تجاوز الميزانية'
+                      : budgetsHealth.status === 'warn'
+                        ? 'قريب من حد الميزانية'
+                        : 'ضمن الميزانية'}
+                    {budgetsHealth.monthlyTarget > 0 && (
+                      <>
+                        {' '}
+                        — الشهري: <Currency value={actuals.actualMonthly} /> من{' '}
+                        <Currency value={budgetsHealth.monthlyTarget} />
+                      </>
+                    )}
+                  </div>
+                )}
             </div>
 
             {/* صحة الدفتر (مبسّطة) */}
@@ -720,19 +992,33 @@ function LedgerRecurringTab(props) {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">الدرجة</div>
-                    <div className={`mt-1 text-2xl font-bold ${health.score >= 70 ? 'text-green-700' : health.score >= 40 ? 'text-amber-700' : 'text-red-700'}`}>{health.score || 0}</div>
+                    <div
+                      className={`mt-1 text-2xl font-bold ${health.score >= 70 ? 'text-green-700' : health.score >= 40 ? 'text-amber-700' : 'text-red-700'}`}
+                    >
+                      {health.score || 0}
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">التسعير</div>
-                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{health.pricingRatio != null ? `${Math.round(health.pricingRatio * 100)}%` : '—'}</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+                      {health.pricingRatio != null
+                        ? `${Math.round(health.pricingRatio * 100)}%`
+                        : '—'}
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">الانضباط</div>
-                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{health.disciplineRatio != null ? `${Math.round(health.disciplineRatio * 100)}%` : '—'}</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+                      {health.disciplineRatio != null
+                        ? `${Math.round(health.disciplineRatio * 100)}%`
+                        : '—'}
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">اكتمال الدفتر</div>
-                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{completeness?.pct ?? 0}%</div>
+                    <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+                      {completeness?.pct ?? 0}%
+                    </div>
                   </div>
                 </div>
               </div>
@@ -745,20 +1031,25 @@ function LedgerRecurringTab(props) {
                 <div className="grid grid-cols-3 gap-3">
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">شهري</div>
-                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={brain.burn.monthly || 0} /></div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]">
+                      <Currency value={brain.burn.monthly || 0} />
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">90 يوم</div>
-                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={brain.burn.d90 || 0} /></div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]">
+                      <Currency value={brain.burn.d90 || 0} />
+                    </div>
                   </div>
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">سنوي</div>
-                    <div className="mt-1 font-bold text-[var(--color-text)]"><Currency value={brain.burn.yearly || 0} /></div>
+                    <div className="mt-1 font-bold text-[var(--color-text)]">
+                      <Currency value={brain.burn.yearly || 0} />
+                    </div>
                   </div>
                 </div>
               </div>
             )}
-
           </div>
         )}
       </div>

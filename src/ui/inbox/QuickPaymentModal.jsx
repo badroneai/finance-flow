@@ -5,7 +5,11 @@
 */
 import React, { useState, useEffect } from 'react';
 import { formatCurrency, formatNumber } from '../../utils/format.jsx';
-import { getActiveLedgerId, getRecurringItems, setRecurringItems } from '../../core/ledger-store.js';
+import {
+  getActiveLedgerId,
+  getRecurringItems,
+  setRecurringItems,
+} from '../../core/ledger-store.js';
 import { buildTxMetaFromRecurring } from '../../core/ledger-analytics.js';
 import { pushHistoryEntry } from '../../core/ledger-item-history.js';
 import { dataStore } from '../../core/dataStore.js';
@@ -61,9 +65,10 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
       setSubmitting(false);
       return;
     }
-    const recurringList = (Array.isArray(ctxRecurringItems) && ctxRecurringItems.length > 0)
-      ? ctxRecurringItems
-      : (getRecurringItems() || []);
+    const recurringList =
+      Array.isArray(ctxRecurringItems) && ctxRecurringItems.length > 0
+        ? ctxRecurringItems
+        : getRecurringItems() || [];
     const recurring = recurringList.find((r) => r.id === dueItem.recurringItemId);
     if (!recurring) {
       setSubmitting(false);
@@ -180,13 +185,17 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
 
           {success ? (
             <div className="py-6 text-center">
-              <p className="text-emerald-600 font-semibold">تم التسجيل</p>
+              <p className="font-semibold" style={{ color: 'var(--color-success)' }}>
+                تم التسجيل
+              </p>
               <p className="text-sm text-[var(--color-muted)] mt-1">يُغلق تلقائياً خلال لحظات</p>
             </div>
           ) : (
             <>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">المبلغ المدفوع (ر.س)</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  المبلغ المدفوع (ر.س)
+                </label>
                 <input
                   type="text"
                   inputMode="decimal"
@@ -198,7 +207,9 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                 <p className="text-xs text-[var(--color-muted)] mt-1">يمكن تعديله للدفع الجزئي</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">تاريخ الدفع</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  تاريخ الدفع
+                </label>
                 <input
                   type="date"
                   value={date}
@@ -207,7 +218,9 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">ملاحظة (اختياري)</label>
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  ملاحظة (اختياري)
+                </label>
                 <input
                   type="text"
                   value={note}
@@ -220,7 +233,8 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                className="w-full py-3 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+                className="w-full py-3 rounded-lg text-white font-medium disabled:opacity-50"
+                style={{ background: 'var(--color-info)' }}
               >
                 {submitting ? 'جاري التسجيل…' : 'تسجيل الدفعة'}
               </button>

@@ -71,11 +71,26 @@ function f(c, camel, snake) {
 // ═══════════════════════════════════════
 function exportCSV(data, ledgerNameFn) {
   const BOM = '\uFEFF';
-  const headers = ['العميل', 'الوكيل', 'الدفتر', 'قيمة الصفقة', 'نسبة المكتب %', 'العمولة', 'المدفوع', 'المتبقي', 'الحالة', 'تاريخ الاستحقاق', 'ملاحظات'];
+  const headers = [
+    'العميل',
+    'الوكيل',
+    'الدفتر',
+    'قيمة الصفقة',
+    'نسبة المكتب %',
+    'العمولة',
+    'المدفوع',
+    'المتبقي',
+    'الحالة',
+    'تاريخ الاستحقاق',
+    'ملاحظات',
+  ];
   const statusLabel = { pending: 'مستحقة', partial: 'مدفوعة جزئياً', paid: 'مدفوعة' };
 
   const rows = data.map((c) => {
-    const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+    const amount = calcCommissionAmount(
+      f(c, 'dealValue', 'deal_value'),
+      f(c, 'officePercent', 'office_percent')
+    );
     const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
     const remaining = Math.max(0, amount - paid);
     return [
@@ -90,7 +105,9 @@ function exportCSV(data, ledgerNameFn) {
       statusLabel[c.status] || c.status,
       f(c, 'dueDate', 'due_date') || '',
       (c.notes || '').replace(/[\r\n]+/g, ' '),
-    ].map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',');
+    ]
+      .map((v) => `"${String(v).replace(/"/g, '""')}"`)
+      .join(',');
   });
 
   const csv = BOM + headers.join(',') + '\n' + rows.join('\n');
@@ -123,7 +140,15 @@ export function CommissionsPage({ setPage }) {
   } = useData();
 
   const [activeTab, setActiveTab] = useState('list');
-  const [filters, setFilters] = useState({ status: '', ledgerId: '', search: '', agent: '', dateFrom: '', dateTo: '', sort: 'newest' });
+  const [filters, setFilters] = useState({
+    status: '',
+    ledgerId: '',
+    search: '',
+    agent: '',
+    dateFrom: '',
+    dateTo: '',
+    sort: 'newest',
+  });
   const [showFilters, setShowFilters] = useState(false);
   const [modal, setModal] = useState(null); // null | 'add' | commission object (edit)
   const [paymentModal, setPaymentModal] = useState(null); // null | commission object
@@ -139,7 +164,9 @@ export function CommissionsPage({ setPage }) {
     fetchCommissions();
   }, [fetchCommissions]);
 
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // SPR-012: قائمة أسماء الوكلاء الفريدة (للفلتر)
   const agentNames = useMemo(() => {
@@ -164,15 +191,17 @@ export function CommissionsPage({ setPage }) {
     }
 
     if (filters.status) list = list.filter((c) => c.status === filters.status);
-    if (filters.ledgerId) list = list.filter((c) => (f(c, 'ledgerId', 'ledger_id')) === filters.ledgerId);
+    if (filters.ledgerId)
+      list = list.filter((c) => f(c, 'ledgerId', 'ledger_id') === filters.ledgerId);
     if (filters.agent) {
       list = list.filter((c) => (f(c, 'agentName', 'agent_name') || '') === filters.agent);
     }
     if (filters.search) {
       const s = filters.search.toLowerCase();
-      list = list.filter((c) =>
-        (f(c, 'clientName', 'client_name') || '').toLowerCase().includes(s) ||
-        (f(c, 'agentName', 'agent_name') || '').toLowerCase().includes(s)
+      list = list.filter(
+        (c) =>
+          (f(c, 'clientName', 'client_name') || '').toLowerCase().includes(s) ||
+          (f(c, 'agentName', 'agent_name') || '').toLowerCase().includes(s)
       );
     }
     // SPR-012: فلتر التاريخ
@@ -193,19 +222,48 @@ export function CommissionsPage({ setPage }) {
     const sorted = [...list];
     switch (filters.sort) {
       case 'newest':
-        sorted.sort((a, b) => ((f(b, 'createdAt', 'created_at') || '') > (f(a, 'createdAt', 'created_at') || '') ? 1 : -1));
+        sorted.sort((a, b) =>
+          (f(b, 'createdAt', 'created_at') || '') > (f(a, 'createdAt', 'created_at') || '') ? 1 : -1
+        );
         break;
       case 'oldest':
-        sorted.sort((a, b) => ((f(a, 'createdAt', 'created_at') || '') > (f(b, 'createdAt', 'created_at') || '') ? 1 : -1));
+        sorted.sort((a, b) =>
+          (f(a, 'createdAt', 'created_at') || '') > (f(b, 'createdAt', 'created_at') || '') ? 1 : -1
+        );
         break;
       case 'amount_desc':
-        sorted.sort((a, b) => calcCommissionAmount(f(b, 'dealValue', 'deal_value'), f(b, 'officePercent', 'office_percent')) - calcCommissionAmount(f(a, 'dealValue', 'deal_value'), f(a, 'officePercent', 'office_percent')));
+        sorted.sort(
+          (a, b) =>
+            calcCommissionAmount(
+              f(b, 'dealValue', 'deal_value'),
+              f(b, 'officePercent', 'office_percent')
+            ) -
+            calcCommissionAmount(
+              f(a, 'dealValue', 'deal_value'),
+              f(a, 'officePercent', 'office_percent')
+            )
+        );
         break;
       case 'amount_asc':
-        sorted.sort((a, b) => calcCommissionAmount(f(a, 'dealValue', 'deal_value'), f(a, 'officePercent', 'office_percent')) - calcCommissionAmount(f(b, 'dealValue', 'deal_value'), f(b, 'officePercent', 'office_percent')));
+        sorted.sort(
+          (a, b) =>
+            calcCommissionAmount(
+              f(a, 'dealValue', 'deal_value'),
+              f(a, 'officePercent', 'office_percent')
+            ) -
+            calcCommissionAmount(
+              f(b, 'dealValue', 'deal_value'),
+              f(b, 'officePercent', 'office_percent')
+            )
+        );
         break;
       case 'client_asc':
-        sorted.sort((a, b) => (f(a, 'clientName', 'client_name') || '').localeCompare(f(b, 'clientName', 'client_name') || '', 'ar'));
+        sorted.sort((a, b) =>
+          (f(a, 'clientName', 'client_name') || '').localeCompare(
+            f(b, 'clientName', 'client_name') || '',
+            'ar'
+          )
+        );
         break;
       default:
         break;
@@ -215,13 +273,21 @@ export function CommissionsPage({ setPage }) {
 
   // حساب الملخص
   const summary = useMemo(() => {
-    const list = agentOnly && currentAgentName
-      ? (commissions || []).filter((c) => (f(c, 'agentName', 'agent_name') || '').toLowerCase() === currentAgentName.toLowerCase())
-      : (commissions || []);
+    const list =
+      agentOnly && currentAgentName
+        ? (commissions || []).filter(
+            (c) =>
+              (f(c, 'agentName', 'agent_name') || '').toLowerCase() ===
+              currentAgentName.toLowerCase()
+          )
+        : commissions || [];
     let totalDue = 0;
     let totalPaid = 0;
     for (const c of list) {
-      const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+      const amount = calcCommissionAmount(
+        f(c, 'dealValue', 'deal_value'),
+        f(c, 'officePercent', 'office_percent')
+      );
       const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
       if (c.status === 'paid') {
         totalPaid += amount;
@@ -234,16 +300,17 @@ export function CommissionsPage({ setPage }) {
   }, [commissions, agentOnly, currentAgentName]);
 
   // اسم الدفتر
-  const ledgerName = useCallback((id) => {
-    const l = (ledgers || []).find((x) => x.id === id);
-    return l?.name || l?.title || '—';
-  }, [ledgers]);
+  const ledgerName = useCallback(
+    (id) => {
+      const l = (ledgers || []).find((x) => x.id === id);
+      return l?.name || l?.title || '—';
+    },
+    [ledgers]
+  );
 
   // حفظ عمولة (إضافة/تعديل)
   const handleSave = async (data, editId) => {
-    const { error } = editId
-      ? await updateCommission(editId, data)
-      : await createCommission(data);
+    const { error } = editId ? await updateCommission(editId, data) : await createCommission(data);
     if (error) {
       toast.error(error?.message || 'حدث خطأ أثناء الحفظ');
       return;
@@ -256,7 +323,10 @@ export function CommissionsPage({ setPage }) {
   const handlePayment = async (commissionId, paymentAmount, paymentDate) => {
     const c = (commissions || []).find((x) => x.id === commissionId);
     if (!c) return;
-    const totalAmount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+    const totalAmount = calcCommissionAmount(
+      f(c, 'dealValue', 'deal_value'),
+      f(c, 'officePercent', 'office_percent')
+    );
     const currentPaid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
     const newPaid = currentPaid + safeNum(paymentAmount, 0);
     let newStatus = 'partial';
@@ -296,7 +366,16 @@ export function CommissionsPage({ setPage }) {
     });
   };
 
-  const resetFilters = () => setFilters({ status: '', ledgerId: '', search: '', agent: '', dateFrom: '', dateTo: '', sort: 'newest' });
+  const resetFilters = () =>
+    setFilters({
+      status: '',
+      ledgerId: '',
+      search: '',
+      agent: '',
+      dateFrom: '',
+      dateTo: '',
+      sort: 'newest',
+    });
 
   // هل يمكن الكتابة (غير وكيل)
   const canWrite = !agentOnly;
@@ -323,7 +402,14 @@ export function CommissionsPage({ setPage }) {
 
       {/* ═══ عرض الوكيل — شريط تنبيه ═══ */}
       {agentOnly && (
-        <div className="border rounded-lg p-3 mb-4 text-sm flex items-center gap-2" style={{ background: 'var(--color-info-bg)', borderColor: 'var(--color-info-bg)', color: 'var(--color-info)' }}>
+        <div
+          className="border rounded-lg p-3 mb-4 text-sm flex items-center gap-2"
+          style={{
+            background: 'var(--color-info-bg)',
+            borderColor: 'var(--color-info-bg)',
+            color: 'var(--color-info)',
+          }}
+        >
           <Icons.info size={16} />
           <span>أنت تشاهد عمولاتك فقط (وضع الوكيل)</span>
         </div>
@@ -335,20 +421,35 @@ export function CommissionsPage({ setPage }) {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <SummaryCard
               label="إجمالي المستحق"
-              value={<><span className="text-lg font-bold">{formatNumber(summary.totalDue)}</span> <span className="text-xs">ر.س</span></>}
+              value={
+                <>
+                  <span className="text-lg font-bold">{formatNumber(summary.totalDue)}</span>{' '}
+                  <span className="text-xs">ر.س</span>
+                </>
+              }
               color="red"
               icon={<Icons.arrowDown size={16} />}
             />
             <SummaryCard
               label="إجمالي المدفوع"
-              value={<><span className="text-lg font-bold">{formatNumber(summary.totalPaid)}</span> <span className="text-xs">ر.س</span></>}
+              value={
+                <>
+                  <span className="text-lg font-bold">{formatNumber(summary.totalPaid)}</span>{' '}
+                  <span className="text-xs">ر.س</span>
+                </>
+              }
               color="green"
               icon={<Icons.arrowUp size={16} />}
             />
             <div className="col-span-2">
               <SummaryCard
                 label="صافي المتبقي"
-                value={<><span className="text-lg font-bold">{formatNumber(summary.remaining)}</span> <span className="text-xs">ر.س</span></>}
+                value={
+                  <>
+                    <span className="text-lg font-bold">{formatNumber(summary.remaining)}</span>{' '}
+                    <span className="text-xs">ر.س</span>
+                  </>
+                }
                 color={summary.remaining > 0 ? 'red' : 'green'}
               />
             </div>
@@ -358,7 +459,10 @@ export function CommissionsPage({ setPage }) {
           <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
             <div className="flex flex-wrap gap-2 items-center">
               <div className="relative flex-1 min-w-[180px]">
-                <Icons.search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]" />
+                <Icons.search
+                  size={16}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]"
+                />
                 <input
                   type="text"
                   placeholder="بحث بالعميل أو الوكيل..."
@@ -380,10 +484,15 @@ export function CommissionsPage({ setPage }) {
             >
               <Icons.filter size={14} />
               فلاتر متقدمة
-              <Icons.chevronDown size={16} className={`transition-transform ${showFilters ? 'rotate-180' : ''}`} />
+              <Icons.chevronDown
+                size={16}
+                className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}
+              />
             </button>
 
-            <div className={`flex flex-wrap gap-2 items-center mt-2 ${showFilters ? 'flex' : 'hidden'} md:flex`}>
+            <div
+              className={`flex flex-wrap gap-2 items-center mt-2 ${showFilters ? 'flex' : 'hidden'} md:flex`}
+            >
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}
@@ -391,7 +500,9 @@ export function CommissionsPage({ setPage }) {
                 aria-label="حالة العمولة"
               >
                 {STATUS_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
                 ))}
               </select>
 
@@ -403,7 +514,9 @@ export function CommissionsPage({ setPage }) {
               >
                 <option value="">كل الدفاتر</option>
                 {(ledgers || []).map((l) => (
-                  <option key={l.id} value={l.id}>{l.name || l.title || l.id}</option>
+                  <option key={l.id} value={l.id}>
+                    {l.name || l.title || l.id}
+                  </option>
                 ))}
               </select>
 
@@ -417,7 +530,9 @@ export function CommissionsPage({ setPage }) {
                 >
                   <option value="">كل الوكلاء</option>
                   {agentNames.map((name) => (
-                    <option key={name} value={name}>{name}</option>
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
                   ))}
                 </select>
               )}
@@ -448,7 +563,9 @@ export function CommissionsPage({ setPage }) {
                 aria-label="ترتيب"
               >
                 {SORT_OPTIONS.map((o) => (
-                  <option key={o.value} value={o.value}>{o.label}</option>
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
                 ))}
               </select>
 
@@ -472,7 +589,11 @@ export function CommissionsPage({ setPage }) {
                       setPdfExporting(true);
                       try {
                         const { exportCommissionsReport } = await loadPdfService();
-                        await exportCommissionsReport(filtered, { name: office?.name || office?.office_name || '' }, filters);
+                        await exportCommissionsReport(
+                          filtered,
+                          { name: office?.name || office?.office_name || '' },
+                          filters
+                        );
                         toast.success('تم تصدير PDF بنجاح');
                       } catch (e) {
                         toast.error(e?.message || 'خطأ في التصدير');
@@ -488,7 +609,10 @@ export function CommissionsPage({ setPage }) {
                     {pdfExporting ? 'جاري…' : 'تصدير PDF'}
                   </button>
                   <button
-                    onClick={() => { exportCSV(filtered, ledgerName); toast.success('تم تصدير الملف بنجاح'); }}
+                    onClick={() => {
+                      exportCSV(filtered, ledgerName);
+                      toast.success('تم تصدير الملف بنجاح');
+                    }}
                     className="px-4 py-2 rounded-lg bg-[var(--color-surface)] text-[var(--color-text)] text-sm font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg)] flex items-center gap-2"
                     aria-label="تصدير CSV"
                   >
@@ -539,43 +663,112 @@ export function CommissionsPage({ setPage }) {
                   <table className="w-full text-sm min-w-[800px]">
                     <thead>
                       <tr className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">العميل</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">الوكيل</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">الدفتر</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">قيمة الصفقة</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">نسبة المكتب</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">العمولة</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">المدفوع</th>
-                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">المتبقي</th>
-                        <th className="px-4 py-3 text-center font-semibold text-[var(--color-muted)]">الحالة</th>
-                        {canWrite && <th className="px-4 py-3 text-center font-semibold text-[var(--color-muted)]">إجراءات</th>}
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          العميل
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          الوكيل
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          الدفتر
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          قيمة الصفقة
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          نسبة المكتب
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          العمولة
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          المدفوع
+                        </th>
+                        <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                          المتبقي
+                        </th>
+                        <th className="px-4 py-3 text-center font-semibold text-[var(--color-muted)]">
+                          الحالة
+                        </th>
+                        {canWrite && (
+                          <th className="px-4 py-3 text-center font-semibold text-[var(--color-muted)]">
+                            إجراءات
+                          </th>
+                        )}
                       </tr>
                     </thead>
                     <tbody>
                       {filtered.map((c) => {
-                        const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+                        const amount = calcCommissionAmount(
+                          f(c, 'dealValue', 'deal_value'),
+                          f(c, 'officePercent', 'office_percent')
+                        );
                         const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
                         const remaining = Math.max(0, amount - paid);
                         const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
                         return (
-                          <tr key={c.id} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50">
-                            <td className="px-4 py-3 text-[var(--color-text)] font-medium">{f(c, 'clientName', 'client_name') || '—'}</td>
-                            <td className="px-4 py-3 text-[var(--color-muted)]">{f(c, 'agentName', 'agent_name') || '—'}</td>
-                            <td className="px-4 py-3 text-[var(--color-muted)]">{ledgerName(f(c, 'ledgerId', 'ledger_id'))}</td>
-                            <td className="px-4 py-3 text-[var(--color-text)]">{formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س</td>
-                            <td className="px-4 py-3 text-[var(--color-muted)]">{f(c, 'officePercent', 'office_percent') || 0}%</td>
-                            <td className="px-4 py-3 font-semibold text-[var(--color-text)]">{formatNumber(amount)} ر.س</td>
-                            <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>{formatNumber(paid)} ر.س</td>
-                            <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>{formatNumber(remaining)} ر.س</td>
-                            <td className="px-4 py-3 text-center"><Badge color={st.color}>{st.label}</Badge></td>
+                          <tr
+                            key={c.id}
+                            className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50"
+                          >
+                            <td className="px-4 py-3 text-[var(--color-text)] font-medium">
+                              {f(c, 'clientName', 'client_name') || '—'}
+                            </td>
+                            <td className="px-4 py-3 text-[var(--color-muted)]">
+                              {f(c, 'agentName', 'agent_name') || '—'}
+                            </td>
+                            <td className="px-4 py-3 text-[var(--color-muted)]">
+                              {ledgerName(f(c, 'ledgerId', 'ledger_id'))}
+                            </td>
+                            <td className="px-4 py-3 text-[var(--color-text)]">
+                              {formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س
+                            </td>
+                            <td className="px-4 py-3 text-[var(--color-muted)]">
+                              {f(c, 'officePercent', 'office_percent') || 0}%
+                            </td>
+                            <td className="px-4 py-3 font-semibold text-[var(--color-text)]">
+                              {formatNumber(amount)} ر.س
+                            </td>
+                            <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>
+                              {formatNumber(paid)} ر.س
+                            </td>
+                            <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>
+                              {formatNumber(remaining)} ر.س
+                            </td>
+                            <td className="px-4 py-3 text-center">
+                              <Badge color={st.color}>{st.label}</Badge>
+                            </td>
                             {canWrite && (
                               <td className="px-4 py-3">
                                 <div className="flex gap-1 justify-center">
-                                  <button onClick={() => setModal(c)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-primary)]" aria-label="تعديل" title="تعديل"><Icons.edit size={15} /></button>
+                                  <button
+                                    onClick={() => setModal(c)}
+                                    className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-primary)]"
+                                    aria-label="تعديل"
+                                    title="تعديل"
+                                  >
+                                    <Icons.edit size={15} />
+                                  </button>
                                   {c.status !== 'paid' && (
-                                    <button onClick={() => setPaymentModal(c)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]" style={{ color: 'var(--color-success)' }} aria-label="تسجيل دفعة" title="تسجيل دفعة"><Icons.check size={15} /></button>
+                                    <button
+                                      onClick={() => setPaymentModal(c)}
+                                      className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]"
+                                      style={{ color: 'var(--color-success)' }}
+                                      aria-label="تسجيل دفعة"
+                                      title="تسجيل دفعة"
+                                    >
+                                      <Icons.check size={15} />
+                                    </button>
                                   )}
-                                  <button onClick={() => handleDelete(c.id)} className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]" style={{ color: 'var(--color-danger)' }} aria-label="حذف" title="حذف"><Icons.trash size={15} /></button>
+                                  <button
+                                    onClick={() => handleDelete(c.id)}
+                                    className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]"
+                                    style={{ color: 'var(--color-danger)' }}
+                                    aria-label="حذف"
+                                    title="حذف"
+                                  >
+                                    <Icons.trash size={15} />
+                                  </button>
                                 </div>
                               </td>
                             )}
@@ -590,47 +783,84 @@ export function CommissionsPage({ setPage }) {
               {/* موبايل: بطاقات */}
               <div className="md:hidden flex flex-col gap-3">
                 {filtered.map((c) => {
-                  const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+                  const amount = calcCommissionAmount(
+                    f(c, 'dealValue', 'deal_value'),
+                    f(c, 'officePercent', 'office_percent')
+                  );
                   const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
                   const remaining = Math.max(0, amount - paid);
                   const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
                   return (
-                    <div key={c.id} className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+                    <div
+                      key={c.id}
+                      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm"
+                    >
                       <div className="flex items-start justify-between mb-2">
                         <div>
-                          <p className="font-semibold text-[var(--color-text)]">{f(c, 'clientName', 'client_name') || '—'}</p>
-                          <p className="text-xs text-[var(--color-muted)]">{ledgerName(f(c, 'ledgerId', 'ledger_id'))}</p>
+                          <p className="font-semibold text-[var(--color-text)]">
+                            {f(c, 'clientName', 'client_name') || '—'}
+                          </p>
+                          <p className="text-xs text-[var(--color-muted)]">
+                            {ledgerName(f(c, 'ledgerId', 'ledger_id'))}
+                          </p>
                         </div>
                         <Badge color={st.color}>{st.label}</Badge>
                       </div>
                       <div className="grid grid-cols-2 gap-2 text-sm mb-3">
                         <div>
                           <span className="text-[var(--color-muted)]">قيمة الصفقة: </span>
-                          <span className="font-medium text-[var(--color-text)]">{formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س</span>
+                          <span className="font-medium text-[var(--color-text)]">
+                            {formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س
+                          </span>
                         </div>
                         <div>
                           <span className="text-[var(--color-muted)]">العمولة: </span>
-                          <span className="font-semibold text-[var(--color-text)]">{formatNumber(amount)} ر.س</span>
+                          <span className="font-semibold text-[var(--color-text)]">
+                            {formatNumber(amount)} ر.س
+                          </span>
                         </div>
                         <div>
                           <span className="text-[var(--color-muted)]">المدفوع: </span>
-                          <span style={{ color: 'var(--color-success)' }}>{formatNumber(paid)} ر.س</span>
+                          <span style={{ color: 'var(--color-success)' }}>
+                            {formatNumber(paid)} ر.س
+                          </span>
                         </div>
                         <div>
                           <span className="text-[var(--color-muted)]">المتبقي: </span>
-                          <span style={{ color: 'var(--color-danger)' }}>{formatNumber(remaining)} ر.س</span>
+                          <span style={{ color: 'var(--color-danger)' }}>
+                            {formatNumber(remaining)} ر.س
+                          </span>
                         </div>
                       </div>
-                      {(f(c, 'agentName', 'agent_name')) && (
-                        <p className="text-xs text-[var(--color-muted)] mb-2">الوكيل: {f(c, 'agentName', 'agent_name')}</p>
+                      {f(c, 'agentName', 'agent_name') && (
+                        <p className="text-xs text-[var(--color-muted)] mb-2">
+                          الوكيل: {f(c, 'agentName', 'agent_name')}
+                        </p>
                       )}
                       {canWrite && (
                         <div className="flex gap-2 border-t border-[var(--color-border)] pt-2">
-                          <button onClick={() => setModal(c)} className="flex-1 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]">تعديل</button>
+                          <button
+                            onClick={() => setModal(c)}
+                            className="flex-1 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
+                          >
+                            تعديل
+                          </button>
                           {c.status !== 'paid' && (
-                            <button onClick={() => setPaymentModal(c)} className="flex-1 py-1.5 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]" style={{ color: 'var(--color-success)' }}>دفعة</button>
+                            <button
+                              onClick={() => setPaymentModal(c)}
+                              className="flex-1 py-1.5 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
+                              style={{ color: 'var(--color-success)' }}
+                            >
+                              دفعة
+                            </button>
                           )}
-                          <button onClick={() => handleDelete(c.id)} className="py-1.5 px-3 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]" style={{ color: 'var(--color-danger)' }}>حذف</button>
+                          <button
+                            onClick={() => handleDelete(c.id)}
+                            className="py-1.5 px-3 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
+                            style={{ color: 'var(--color-danger)' }}
+                          >
+                            حذف
+                          </button>
                         </div>
                       )}
                     </div>
@@ -643,9 +873,14 @@ export function CommissionsPage({ setPage }) {
       ) : (
         /* ═══ تبويب التقارير ═══ */
         <CommissionReports
-          commissions={agentOnly && currentAgentName
-            ? (commissions || []).filter((c) => (f(c, 'agentName', 'agent_name') || '').toLowerCase() === currentAgentName.toLowerCase())
-            : (commissions || [])
+          commissions={
+            agentOnly && currentAgentName
+              ? (commissions || []).filter(
+                  (c) =>
+                    (f(c, 'agentName', 'agent_name') || '').toLowerCase() ===
+                    currentAgentName.toLowerCase()
+                )
+              : commissions || []
           }
           ledgerName={ledgerName}
           agentOnly={agentOnly}
@@ -716,8 +951,19 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
     const map = {};
     (commissions || []).forEach((c) => {
       const agent = f(c, 'agentName', 'agent_name') || 'بدون وكيل';
-      if (!map[agent]) map[agent] = { agent, count: 0, totalDeal: 0, totalCommission: 0, totalPaid: 0, totalRemaining: 0 };
-      const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+      if (!map[agent])
+        map[agent] = {
+          agent,
+          count: 0,
+          totalDeal: 0,
+          totalCommission: 0,
+          totalPaid: 0,
+          totalRemaining: 0,
+        };
+      const amount = calcCommissionAmount(
+        f(c, 'dealValue', 'deal_value'),
+        f(c, 'officePercent', 'office_percent')
+      );
       const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
       map[agent].count++;
       map[agent].totalDeal += safeNum(f(c, 'dealValue', 'deal_value'), 0);
@@ -734,8 +980,19 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
     (commissions || []).forEach((c) => {
       const lid = f(c, 'ledgerId', 'ledger_id') || '__none__';
       const lname = ledgerName(lid);
-      if (!map[lid]) map[lid] = { ledger: lname, count: 0, totalDeal: 0, totalCommission: 0, totalPaid: 0, totalRemaining: 0 };
-      const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+      if (!map[lid])
+        map[lid] = {
+          ledger: lname,
+          count: 0,
+          totalDeal: 0,
+          totalCommission: 0,
+          totalPaid: 0,
+          totalRemaining: 0,
+        };
+      const amount = calcCommissionAmount(
+        f(c, 'dealValue', 'deal_value'),
+        f(c, 'officePercent', 'office_percent')
+      );
       const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
       map[lid].count++;
       map[lid].totalDeal += safeNum(f(c, 'dealValue', 'deal_value'), 0);
@@ -752,8 +1009,19 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
     (commissions || []).forEach((c) => {
       const dateStr = f(c, 'dueDate', 'due_date') || f(c, 'createdAt', 'created_at') || '';
       const month = dateStr ? dateStr.substring(0, 7) : 'بدون تاريخ'; // YYYY-MM
-      if (!map[month]) map[month] = { month, count: 0, totalDeal: 0, totalCommission: 0, totalPaid: 0, totalRemaining: 0 };
-      const amount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+      if (!map[month])
+        map[month] = {
+          month,
+          count: 0,
+          totalDeal: 0,
+          totalCommission: 0,
+          totalPaid: 0,
+          totalRemaining: 0,
+        };
+      const amount = calcCommissionAmount(
+        f(c, 'dealValue', 'deal_value'),
+        f(c, 'officePercent', 'office_percent')
+      );
       const paid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
       map[month].count++;
       map[month].totalDeal += safeNum(f(c, 'dealValue', 'deal_value'), 0);
@@ -766,12 +1034,15 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
 
   // أكبر عمولة (للرسم البياني البسيط)
   const maxCommission = useMemo(() => {
-    const data = reportTab === 'by_agent' ? byAgent : reportTab === 'by_ledger' ? byLedger : monthly;
+    const data =
+      reportTab === 'by_agent' ? byAgent : reportTab === 'by_ledger' ? byLedger : monthly;
     return Math.max(1, ...data.map((r) => r.totalCommission));
   }, [reportTab, byAgent, byLedger, monthly]);
 
-  const reportData = reportTab === 'by_agent' ? byAgent : reportTab === 'by_ledger' ? byLedger : monthly;
-  const labelKey = reportTab === 'by_agent' ? 'agent' : reportTab === 'by_ledger' ? 'ledger' : 'month';
+  const reportData =
+    reportTab === 'by_agent' ? byAgent : reportTab === 'by_ledger' ? byLedger : monthly;
+  const labelKey =
+    reportTab === 'by_agent' ? 'agent' : reportTab === 'by_ledger' ? 'ledger' : 'month';
 
   if ((commissions || []).length === 0) {
     return (
@@ -819,17 +1090,33 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
       <div className="grid grid-cols-3 gap-3 mb-6">
         <SummaryCard
           label="عدد الصفقات"
-          value={<span className="text-lg font-bold">{reportData.reduce((s, r) => s + r.count, 0)}</span>}
+          value={
+            <span className="text-lg font-bold">{reportData.reduce((s, r) => s + r.count, 0)}</span>
+          }
           color="blue"
         />
         <SummaryCard
           label="إجمالي العمولات"
-          value={<><span className="text-lg font-bold">{formatNumber(reportData.reduce((s, r) => s + r.totalCommission, 0))}</span> <span className="text-xs">ر.س</span></>}
+          value={
+            <>
+              <span className="text-lg font-bold">
+                {formatNumber(reportData.reduce((s, r) => s + r.totalCommission, 0))}
+              </span>{' '}
+              <span className="text-xs">ر.س</span>
+            </>
+          }
           color="green"
         />
         <SummaryCard
           label="المتبقي"
-          value={<><span className="text-lg font-bold">{formatNumber(reportData.reduce((s, r) => s + r.totalRemaining, 0))}</span> <span className="text-xs">ر.س</span></>}
+          value={
+            <>
+              <span className="text-lg font-bold">
+                {formatNumber(reportData.reduce((s, r) => s + r.totalRemaining, 0))}
+              </span>{' '}
+              <span className="text-xs">ر.س</span>
+            </>
+          }
           color="red"
         />
       </div>
@@ -841,33 +1128,76 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
             <thead>
               <tr className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
                 <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
-                  {reportTab === 'by_agent' ? 'الوكيل' : reportTab === 'by_ledger' ? 'الدفتر' : 'الشهر'}
+                  {reportTab === 'by_agent'
+                    ? 'الوكيل'
+                    : reportTab === 'by_ledger'
+                      ? 'الدفتر'
+                      : 'الشهر'}
                 </th>
-                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">الصفقات</th>
-                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">قيمة الصفقات</th>
-                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">العمولة</th>
-                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">المدفوع</th>
-                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">المتبقي</th>
-                <th className="px-4 py-3 font-semibold text-[var(--color-muted)] hidden md:table-cell" style={{ minWidth: 150 }}>&nbsp;</th>
+                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                  الصفقات
+                </th>
+                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                  قيمة الصفقات
+                </th>
+                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                  العمولة
+                </th>
+                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                  المدفوع
+                </th>
+                <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
+                  المتبقي
+                </th>
+                <th
+                  className="px-4 py-3 font-semibold text-[var(--color-muted)] hidden md:table-cell"
+                  style={{ minWidth: 150 }}
+                >
+                  &nbsp;
+                </th>
               </tr>
             </thead>
             <tbody>
               {reportData.map((row, i) => {
                 const label = reportTab === 'monthly' ? formatMonth(row[labelKey]) : row[labelKey];
                 const barWidth = Math.max(2, (row.totalCommission / maxCommission) * 100);
-                const paidWidth = row.totalCommission > 0 ? (row.totalPaid / row.totalCommission) * 100 : 0;
+                const paidWidth =
+                  row.totalCommission > 0 ? (row.totalPaid / row.totalCommission) * 100 : 0;
                 return (
-                  <tr key={i} className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50">
+                  <tr
+                    key={i}
+                    className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50"
+                  >
                     <td className="px-4 py-3 font-medium text-[var(--color-text)]">{label}</td>
                     <td className="px-4 py-3 text-[var(--color-muted)]">{row.count}</td>
-                    <td className="px-4 py-3 text-[var(--color-text)]">{formatNumber(row.totalDeal)} ر.س</td>
-                    <td className="px-4 py-3 font-semibold text-[var(--color-text)]">{formatNumber(row.totalCommission)} ر.س</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>{formatNumber(row.totalPaid)} ر.س</td>
-                    <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>{formatNumber(row.totalRemaining)} ر.س</td>
+                    <td className="px-4 py-3 text-[var(--color-text)]">
+                      {formatNumber(row.totalDeal)} ر.س
+                    </td>
+                    <td className="px-4 py-3 font-semibold text-[var(--color-text)]">
+                      {formatNumber(row.totalCommission)} ر.س
+                    </td>
+                    <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>
+                      {formatNumber(row.totalPaid)} ر.س
+                    </td>
+                    <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>
+                      {formatNumber(row.totalRemaining)} ر.س
+                    </td>
                     <td className="px-4 py-3 hidden md:table-cell">
-                      <div className="w-full h-4 bg-[var(--color-bg)] rounded-full overflow-hidden relative" title={`العمولة: ${formatNumber(row.totalCommission)} ر.س`}>
-                        <div className="absolute inset-y-0 start-0 rounded-full" style={{ background: 'var(--color-info-bg)', width: `${barWidth}%` }} />
-                        <div className="absolute inset-y-0 start-0 rounded-full" style={{ background: 'var(--color-success)', width: `${Math.min(barWidth, (paidWidth / 100) * barWidth)}%` }} />
+                      <div
+                        className="w-full h-4 bg-[var(--color-bg)] rounded-full overflow-hidden relative"
+                        title={`العمولة: ${formatNumber(row.totalCommission)} ر.س`}
+                      >
+                        <div
+                          className="absolute inset-y-0 start-0 rounded-full"
+                          style={{ background: 'var(--color-info-bg)', width: `${barWidth}%` }}
+                        />
+                        <div
+                          className="absolute inset-y-0 start-0 rounded-full"
+                          style={{
+                            background: 'var(--color-success)',
+                            width: `${Math.min(barWidth, (paidWidth / 100) * barWidth)}%`,
+                          }}
+                        />
                       </div>
                     </td>
                   </tr>
@@ -880,8 +1210,20 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
 
       {/* مفتاح الرسم */}
       <div className="flex gap-4 mt-3 text-xs text-[var(--color-muted)]">
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block" style={{ background: 'var(--color-success)' }} /> المدفوع</span>
-        <span className="flex items-center gap-1"><span className="w-3 h-3 rounded inline-block" style={{ background: 'var(--color-info-bg)' }} /> إجمالي العمولة</span>
+        <span className="flex items-center gap-1">
+          <span
+            className="w-3 h-3 rounded inline-block"
+            style={{ background: 'var(--color-success)' }}
+          />{' '}
+          المدفوع
+        </span>
+        <span className="flex items-center gap-1">
+          <span
+            className="w-3 h-3 rounded inline-block"
+            style={{ background: 'var(--color-info-bg)' }}
+          />{' '}
+          إجمالي العمولة
+        </span>
       </div>
     </div>
   );
@@ -897,7 +1239,9 @@ function EmptyCommissions({ onAdd }) {
         <Icons.percent size={32} className="text-[var(--color-muted)]" />
       </div>
       <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">لا توجد عمولات بعد</h3>
-      <p className="text-sm text-[var(--color-muted)] mb-4 max-w-xs">سجّل عمولات صفقاتك لتتبع مستحقاتك المالية ومدفوعاتك</p>
+      <p className="text-sm text-[var(--color-muted)] mb-4 max-w-xs">
+        سجّل عمولات صفقاتك لتتبع مستحقاتك المالية ومدفوعاتك
+      </p>
       {onAdd && (
         <button
           type="button"
@@ -952,7 +1296,8 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
     const errs = {};
     if (!form.clientName.trim()) errs.clientName = 'اسم العميل مطلوب';
     const dv = Number(form.dealValue);
-    if (!form.dealValue || !Number.isFinite(dv) || dv <= 0) errs.dealValue = 'قيمة الصفقة مطلوبة وأكبر من صفر';
+    if (!form.dealValue || !Number.isFinite(dv) || dv <= 0)
+      errs.dealValue = 'قيمة الصفقة مطلوبة وأكبر من صفر';
     const op = Number(form.officePercent);
     if (!Number.isFinite(op) || op < 0 || op > 100) errs.officePercent = 'النسبة بين 0 و 100';
     setErrors(errs);
@@ -1004,7 +1349,9 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
           >
             <option value="">بدون دفتر</option>
             {(ledgers || []).map((l) => (
-              <option key={l.id} value={l.id}>{l.name || l.title || l.id}</option>
+              <option key={l.id} value={l.id}>
+                {l.name || l.title || l.id}
+              </option>
             ))}
           </select>
         </FormField>
@@ -1064,7 +1411,9 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
         <div className="bg-[var(--color-bg)] rounded-lg p-3 mb-3 text-sm border border-[var(--color-border)]">
           <div className="flex justify-between mb-1">
             <span className="text-[var(--color-muted)]">عمولة المكتب:</span>
-            <span className="font-semibold text-[var(--color-text)]">{formatNumber(officeAmount)} ر.س</span>
+            <span className="font-semibold text-[var(--color-text)]">
+              {formatNumber(officeAmount)} ر.س
+            </span>
           </div>
           {safeNum(form.agentPercent, 0) > 0 && (
             <>
@@ -1074,7 +1423,9 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
               </div>
               <div className="flex justify-between border-t border-[var(--color-border)] pt-1 mt-1">
                 <span className="text-[var(--color-muted)]">صافي المكتب:</span>
-                <span className="font-bold text-[var(--color-text)]">{formatNumber(netOffice)} ر.س</span>
+                <span className="font-bold text-[var(--color-text)]">
+                  {formatNumber(netOffice)} ر.س
+                </span>
               </div>
             </>
           )}
@@ -1124,7 +1475,10 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
 // ═══════════════════════════════════════
 function PaymentForm({ commission, onSave, onCancel }) {
   const c = commission;
-  const totalAmount = calcCommissionAmount(f(c, 'dealValue', 'deal_value'), f(c, 'officePercent', 'office_percent'));
+  const totalAmount = calcCommissionAmount(
+    f(c, 'dealValue', 'deal_value'),
+    f(c, 'officePercent', 'office_percent')
+  );
   const currentPaid = safeNum(f(c, 'paidAmount', 'paid_amount'), 0);
   const remaining = Math.max(0, totalAmount - currentPaid);
 
@@ -1150,7 +1504,9 @@ function PaymentForm({ commission, onSave, onCancel }) {
   return (
     <form onSubmit={handleSubmit}>
       <div className="bg-[var(--color-bg)] rounded-lg p-4 mb-4 border border-[var(--color-border)]">
-        <p className="font-semibold text-[var(--color-text)] mb-2">{f(c, 'clientName', 'client_name') || '—'}</p>
+        <p className="font-semibold text-[var(--color-text)] mb-2">
+          {f(c, 'clientName', 'client_name') || '—'}
+        </p>
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div>
             <span className="text-[var(--color-muted)]">العمولة</span>
@@ -1158,11 +1514,15 @@ function PaymentForm({ commission, onSave, onCancel }) {
           </div>
           <div>
             <span className="text-[var(--color-muted)]">المدفوع</span>
-            <p className="font-medium" style={{ color: 'var(--color-success)' }}>{formatNumber(currentPaid)} ر.س</p>
+            <p className="font-medium" style={{ color: 'var(--color-success)' }}>
+              {formatNumber(currentPaid)} ر.س
+            </p>
           </div>
           <div>
             <span className="text-[var(--color-muted)]">المتبقي</span>
-            <p className="font-bold" style={{ color: 'var(--color-danger)' }}>{formatNumber(remaining)} ر.س</p>
+            <p className="font-bold" style={{ color: 'var(--color-danger)' }}>
+              {formatNumber(remaining)} ر.س
+            </p>
           </div>
         </div>
       </div>
@@ -1196,9 +1556,13 @@ function PaymentForm({ commission, onSave, onCancel }) {
           type="button"
           onClick={() => setAmount(String(remaining))}
           className="w-full mb-3 py-2 rounded-lg text-sm font-medium border"
-          style={{ color: 'var(--color-success)', background: 'var(--color-success-bg)', borderColor: 'var(--color-success)' }}
-          onMouseEnter={(e) => e.target.style.opacity = '0.8'}
-          onMouseLeave={(e) => e.target.style.opacity = '1'}
+          style={{
+            color: 'var(--color-success)',
+            background: 'var(--color-success-bg)',
+            borderColor: 'var(--color-success)',
+          }}
+          onMouseEnter={(e) => (e.target.style.opacity = '0.8')}
+          onMouseLeave={(e) => (e.target.style.opacity = '1')}
         >
           دفع المبلغ كاملاً ({formatNumber(remaining)} ر.س)
         </button>
@@ -1216,8 +1580,8 @@ function PaymentForm({ commission, onSave, onCancel }) {
           type="submit"
           className="px-4 py-2 rounded-lg text-white text-sm font-medium"
           style={{ background: 'var(--color-success)' }}
-          onMouseEnter={(e) => e.target.style.opacity = '0.9'}
-          onMouseLeave={(e) => e.target.style.opacity = '1'}
+          onMouseEnter={(e) => (e.target.style.opacity = '0.9')}
+          onMouseLeave={(e) => (e.target.style.opacity = '1')}
         >
           تسجيل الدفعة
         </button>

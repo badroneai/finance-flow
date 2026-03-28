@@ -48,7 +48,9 @@ function sumByTypeInRange(txs, fromStr, toStr) {
  * @returns {Object} { ledgers, bestPerformer, worstPerformer, recommendations }
  */
 export function compareLedgers(ledgerIds) {
-  const ids = (Array.isArray(ledgerIds) ? ledgerIds : []).filter((id) => id != null && String(id).trim());
+  const ids = (Array.isArray(ledgerIds) ? ledgerIds : []).filter(
+    (id) => id != null && String(id).trim()
+  );
   const limited = ids.slice(0, 5);
   if (limited.length < 2) {
     return {
@@ -64,9 +66,13 @@ export function compareLedgers(ledgerIds) {
   const { fromStr: fromPrev, toStr: toPrev } = previous30DaysRange();
 
   const ledgers = limited.map((lid) => {
-    const ledger = (allLedgers).find((l) => l.id === lid) || null;
+    const ledger = allLedgers.find((l) => l.id === lid) || null;
     const txs = getTransactionsForLedger(lid);
-    const { income: totalIncome30d, expense: totalExpense30d } = sumByTypeInRange(txs, from30, to30);
+    const { income: totalIncome30d, expense: totalExpense30d } = sumByTypeInRange(
+      txs,
+      from30,
+      to30
+    );
     const prev = sumByTypeInRange(txs, fromPrev, toPrev);
     const netCashflow30d = totalIncome30d - totalExpense30d;
     const prevNet = prev.income - prev.expense;
@@ -78,7 +84,8 @@ export function compareLedgers(ledgerIds) {
     const overdueCount = inbox?.summary?.totalOverdue ?? 0;
     const overdueAmount = inbox?.summary?.totalOverdueAmount ?? 0;
 
-    const roi = totalExpense30d > 0 ? totalIncome30d / totalExpense30d : (totalIncome30d > 0 ? 10 : 0);
+    const roi =
+      totalExpense30d > 0 ? totalIncome30d / totalExpense30d : totalIncome30d > 0 ? 10 : 0;
     const healthScore = calculateHealthScore(lid);
 
     return {
@@ -97,19 +104,34 @@ export function compareLedgers(ledgerIds) {
   });
 
   const withRoi = ledgers.filter((l) => l.totalExpense30d > 0);
-  const bestByRoi = withRoi.length ? withRoi.reduce((a, b) => (b.roi > a.roi ? b : a), withRoi[0]) : null;
-  const bestByHealth = ledgers.reduce((a, b) => (b.healthScore > a.healthScore ? b : a), ledgers[0]);
+  const bestByRoi = withRoi.length
+    ? withRoi.reduce((a, b) => (b.roi > a.roi ? b : a), withRoi[0])
+    : null;
+  const bestByHealth = ledgers.reduce(
+    (a, b) => (b.healthScore > a.healthScore ? b : a),
+    ledgers[0]
+  );
   const bestPerformer = bestByRoi
     ? { ledgerId: bestByRoi.id, reason: 'أعلى ROI' }
     : { ledgerId: bestByHealth.id, reason: 'أفضل صحة' };
 
-  const worstByOverdue = ledgers.reduce((a, b) => (b.overdueAmount > a.overdueAmount || (b.overdueCount > a.overdueCount && b.overdueAmount >= a.overdueAmount) ? b : a), ledgers[0]);
-  const worstByRoi = withRoi.length ? withRoi.reduce((a, b) => (b.roi < a.roi ? b : a), withRoi[0]) : null;
-  const worstPerformer = worstByRoi && worstByRoi.roi < 1
-    ? { ledgerId: worstByRoi.id, reason: 'أقل ROI' }
-    : (worstByOverdue.overdueCount > 0 || worstByOverdue.overdueAmount > 0)
-      ? { ledgerId: worstByOverdue.id, reason: 'أكثر متأخرات' }
-      : { ledgerId: ledgers[0].id, reason: '—' };
+  const worstByOverdue = ledgers.reduce(
+    (a, b) =>
+      b.overdueAmount > a.overdueAmount ||
+      (b.overdueCount > a.overdueCount && b.overdueAmount >= a.overdueAmount)
+        ? b
+        : a,
+    ledgers[0]
+  );
+  const worstByRoi = withRoi.length
+    ? withRoi.reduce((a, b) => (b.roi < a.roi ? b : a), withRoi[0])
+    : null;
+  const worstPerformer =
+    worstByRoi && worstByRoi.roi < 1
+      ? { ledgerId: worstByRoi.id, reason: 'أقل ROI' }
+      : worstByOverdue.overdueCount > 0 || worstByOverdue.overdueAmount > 0
+        ? { ledgerId: worstByOverdue.id, reason: 'أكثر متأخرات' }
+        : { ledgerId: ledgers[0].id, reason: '—' };
 
   const recommendations = [];
   for (const l of ledgers) {

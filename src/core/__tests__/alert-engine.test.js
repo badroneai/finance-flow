@@ -8,9 +8,15 @@ const localStorageMock = (() => {
   let store = {};
   return {
     getItem: vi.fn((key) => store[key] || null),
-    setItem: vi.fn((key, val) => { store[key] = String(val); }),
-    removeItem: vi.fn((key) => { delete store[key]; }),
-    clear: vi.fn(() => { store = {}; }),
+    setItem: vi.fn((key, val) => {
+      store[key] = String(val);
+    }),
+    removeItem: vi.fn((key) => {
+      delete store[key];
+    }),
+    clear: vi.fn(() => {
+      store = {};
+    }),
   };
 })();
 Object.defineProperty(globalThis, 'localStorage', { value: localStorageMock, writable: true });
@@ -40,8 +46,12 @@ vi.mock('../ledger-health.js', () => ({
 vi.mock('../ledger-analytics.js', () => ({
   computePL: vi.fn(({ transactions }) => {
     const txs = Array.isArray(transactions) ? transactions : [];
-    const income = txs.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0);
-    const expense = txs.filter((t) => t.type === 'expense').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+    const income = txs
+      .filter((t) => t.type === 'income')
+      .reduce((a, t) => a + (Number(t.amount) || 0), 0);
+    const expense = txs
+      .filter((t) => t.type === 'expense')
+      .reduce((a, t) => a + (Number(t.amount) || 0), 0);
     return { income, expense, net: income - expense };
   }),
 }));

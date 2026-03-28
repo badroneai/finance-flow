@@ -167,11 +167,12 @@ export function filterContracts(contracts, filters = {}) {
   }
   if (filters.search) {
     const s = filters.search.toLowerCase();
-    list = list.filter((c) =>
-      (c.contractNumber || '').toLowerCase().includes(s) ||
-      (c.notes || '').toLowerCase().includes(s) ||
-      (c._propertyName || '').toLowerCase().includes(s) ||
-      (c._contactName || '').toLowerCase().includes(s)
+    list = list.filter(
+      (c) =>
+        (c.contractNumber || '').toLowerCase().includes(s) ||
+        (c.notes || '').toLowerCase().includes(s) ||
+        (c._propertyName || '').toLowerCase().includes(s) ||
+        (c._contactName || '').toLowerCase().includes(s)
     );
   }
 

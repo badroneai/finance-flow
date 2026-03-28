@@ -29,14 +29,19 @@ export const safeGet = (key, fallback) => storageFacade.getJSON(key, fallback);
 
 /** يرجع { ok: true } عند النجاح، أو { ok: false, code, message } عند الفشل */
 export const safeSet = (key, val) => {
-  if (SIMULATE_STORAGE_FAILURE) throw new DOMException('Simulated quota exceeded', 'QuotaExceededError');
+  if (SIMULATE_STORAGE_FAILURE)
+    throw new DOMException('Simulated quota exceeded', 'QuotaExceededError');
   try {
     const ok = storageFacade.setJSON(key, val);
     if (ok) return { ok: true };
     return { ok: false, code: 'unknown', message: STORAGE_ERROR_MESSAGE };
   } catch (e) {
     const isQuota = e && (e.name === 'QuotaExceededError' || e.code === 22);
-    const message = isQuota ? STORAGE_ERROR_MESSAGE : (e && e.message) ? String(e.message) : STORAGE_ERROR_MESSAGE;
+    const message = isQuota
+      ? STORAGE_ERROR_MESSAGE
+      : e && e.message
+        ? String(e.message)
+        : STORAGE_ERROR_MESSAGE;
     return { ok: false, code: isQuota ? 'quota' : 'unknown', message };
   }
 };
@@ -130,6 +135,15 @@ export const dataStore = {
     }),
   },
   commissions: _commissionsCrud,
+  properties: createCrud(KEYS.properties, {
+    sortBy: (a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''),
+  }),
+  contacts: createCrud(KEYS.contacts, {
+    sortBy: (a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''),
+  }),
+  contracts: createCrud(KEYS.contracts, {
+    sortBy: (a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''),
+  }),
   letters: {
     listDrafts: _draftsCrud.list,
     saveDraft: _draftsCrud.create,
@@ -139,8 +153,15 @@ export const dataStore = {
   settings: {
     get: () => {
       const current = safeGet(KEYS.settings, SEED_SETTINGS);
-      const theme = (current && (current.theme === 'light' || current.theme === 'dim' || current.theme === 'dark')) ? current.theme : 'light';
-      const numerals = (current && (current.numerals === 'ar' || current.numerals === 'en')) ? current.numerals : 'ar';
+      const theme =
+        current &&
+        (current.theme === 'light' || current.theme === 'dim' || current.theme === 'dark')
+          ? current.theme
+          : 'light';
+      const numerals =
+        current && (current.numerals === 'ar' || current.numerals === 'en')
+          ? current.numerals
+          : 'ar';
       return { ...SEED_SETTINGS, ...current, theme, numerals };
     },
     update: (data) => {
@@ -161,8 +182,18 @@ export const dataStore = {
         updatedAt: now(),
         ...(activeLedgerId ? { ledgerId: activeLedgerId } : {}),
       }));
-      const cms = SEED_COMMISSIONS.map((c) => ({ ...c, id: genId(), createdAt: now(), updatedAt: now() }));
-      const drs = SEED_DRAFTS.map((d) => ({ ...d, id: genId(), createdAt: now(), updatedAt: now() }));
+      const cms = SEED_COMMISSIONS.map((c) => ({
+        ...c,
+        id: genId(),
+        createdAt: now(),
+        updatedAt: now(),
+      }));
+      const drs = SEED_DRAFTS.map((d) => ({
+        ...d,
+        id: genId(),
+        createdAt: now(),
+        updatedAt: now(),
+      }));
       let r = safeSet(KEYS.transactions, txs);
       if (!r.ok) return r;
       r = safeSet(KEYS.commissions, cms);

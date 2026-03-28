@@ -21,12 +21,8 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
   }, [moreOpen]);
 
   // تحديد العناصر الرئيسية والثانوية
-  const mainItems = mainIds
-    ? items.filter((it) => mainIds.includes(it.id))
-    : items;
-  const moreItems = moreIds
-    ? items.filter((it) => moreIds.includes(it.id))
-    : [];
+  const mainItems = mainIds ? items.filter((it) => mainIds.includes(it.id)) : items;
+  const moreItems = moreIds ? items.filter((it) => moreIds.includes(it.id)) : [];
   const isMoreActive = moreItems.some((it) => it.id === page);
 
   return (
@@ -43,12 +39,14 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
             <button
               key={item.id}
               type="button"
-              onClick={() => { setPage(item.id); setMoreOpen(false); }}
+              onClick={() => {
+                setPage(item.id);
+                setMoreOpen(false);
+              }}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
-              className={`flex flex-col items-center justify-center flex-1 h-full gap-0.5 text-xs transition-colors ${
-                isActive ? 'text-blue-600 font-medium' : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
-              }`}
+              className="flex flex-col items-center justify-center flex-1 h-full gap-0.5 text-xs transition-colors"
+              style={{ color: isActive ? 'var(--color-info)' : 'var(--color-muted)' }}
             >
               {Icon && <Icon size={22} />}
               <span className="leading-tight">{item.label}</span>
@@ -63,9 +61,8 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
               onClick={() => setMoreOpen((v) => !v)}
               aria-label="المزيد"
               aria-expanded={moreOpen}
-              className={`flex flex-col items-center justify-center w-full h-full gap-0.5 text-xs transition-colors ${
-                isMoreActive ? 'text-blue-600 font-medium' : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
-              }`}
+              className="flex flex-col items-center justify-center w-full h-full gap-0.5 text-xs transition-colors"
+              style={{ color: isMoreActive ? 'var(--color-info)' : 'var(--color-muted)' }}
             >
               {MoreIcon ? <MoreIcon size={22} /> : <span style={{ fontSize: 18 }}>⋮</span>}
               <span className="leading-tight">المزيد</span>
@@ -85,10 +82,15 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
                       key={item.id}
                       type="button"
                       role="menuitem"
-                      onClick={() => { setPage(item.id); setMoreOpen(false); }}
-                      className={`w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors ${
-                        isActive ? 'bg-blue-50 text-blue-600 font-medium' : 'text-[var(--color-text)] hover:bg-[var(--color-bg)]'
-                      }`}
+                      onClick={() => {
+                        setPage(item.id);
+                        setMoreOpen(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
+                      style={{
+                        background: isActive ? 'var(--color-info-bg)' : 'transparent',
+                        color: isActive ? 'var(--color-info)' : 'var(--color-text)',
+                      }}
                     >
                       {Icon && <Icon size={18} />}
                       <span>{item.label}</span>

@@ -38,15 +38,19 @@ function endOfWeekMs(now = new Date()) {
 
 /** تجميع سياق الدفتر (للاستخدام الداخلي والدوال المُصدَّرة) */
 function getContext(ledgerId, options = {}) {
-  const lid = (ledgerId != null ? String(ledgerId).trim() : (getActiveLedgerId() || '').trim()) || '';
+  const lid =
+    (ledgerId != null ? String(ledgerId).trim() : (getActiveLedgerId() || '').trim()) || '';
 
   // Ledgers: use options.ledgers if provided, otherwise read from localStorage
   const ledgersData = options.ledgers != null ? options.ledgers : getLedgers();
   const ledger = (Array.isArray(ledgersData) ? ledgersData : []).find((l) => l.id === lid) || null;
 
   // Recurring items: use options.recurringItems if provided, otherwise read from localStorage
-  const recurringData = options.recurringItems != null ? options.recurringItems : getRecurringItems();
-  const recurringList = (Array.isArray(recurringData) ? recurringData : []).filter((r) => String(r?.ledgerId || '') === lid);
+  const recurringData =
+    options.recurringItems != null ? options.recurringItems : getRecurringItems();
+  const recurringList = (Array.isArray(recurringData) ? recurringData : []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
 
   // Transactions: use options.transactions if provided and filter by ledgerId, otherwise read from localStorage
   let txs;
@@ -79,7 +83,11 @@ export function calculateHealthScore(ledgerId, options = {}) {
   if (!lid) return 0;
 
   const health = computeLedgerHealth({ recurringItems: recurringList, transactions: txs });
-  const compliance = computeComplianceShield({ ledgerId: lid, recurringItems: recurringList, now: ctx.now });
+  const compliance = computeComplianceShield({
+    ledgerId: lid,
+    recurringItems: recurringList,
+    now: ctx.now,
+  });
 
   // 40%: انضباط الدفع (disciplineRatio 0–1)
   const disciplineScore = Math.min(40, Math.round((Number(health?.disciplineRatio) ?? 0) * 40));
@@ -113,13 +121,17 @@ export function calculateHealthScore(ledgerId, options = {}) {
   const nets = Object.values(byMonth);
   const avg = nets.length ? nets.reduce((a, n) => a + n, 0) / nets.length : 0;
   const variance = nets.length ? nets.reduce((a, n) => a + (n - avg) ** 2, 0) / nets.length : 0;
-  const stability = variance > 0 ? Math.max(0, 1 - Math.min(1, variance / (Math.abs(avg) || 1))) : 1;
+  const stability =
+    variance > 0 ? Math.max(0, 1 - Math.min(1, variance / (Math.abs(avg) || 1))) : 1;
   const stabilityScore = Math.round(stability * 20);
 
   // خلط مع صحة الدفتر والامتثال إن وُجدتا (مرجّح خفيف)
-  const legacyHealth = (health?.score != null ? Math.min(50, Math.round(health.score * 0.5)) : 0) +
+  const legacyHealth =
+    (health?.score != null ? Math.min(50, Math.round(health.score * 0.5)) : 0) +
     (compliance?.score != null ? Math.min(50, Math.round(compliance.score * 0.5)) : 0);
-  const blended = (disciplineScore + ratioScore + alertScore + stabilityScore) * 0.7 + Math.min(100, legacyHealth) * 0.3;
+  const blended =
+    (disciplineScore + ratioScore + alertScore + stabilityScore) * 0.7 +
+    Math.min(100, legacyHealth) * 0.3;
 
   return Math.min(100, Math.max(0, Math.round(blended)));
 }
@@ -175,8 +187,12 @@ function detectAlertsInternal(ctx) {
     if (!d) return false;
     return Date.now() - new Date(d + 'T00:00:00').getTime() <= 90 * DAY_MS;
   });
-  const avgIncome = last90.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0) / (last90.filter((t) => t.type === 'income').length || 1);
-  const avgExpense = last90.filter((t) => t.type === 'expense').reduce((a, t) => a + (Number(t.amount) || 0), 0) / (last90.filter((t) => t.type === 'expense').length || 1);
+  const avgIncome =
+    last90.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0) /
+    (last90.filter((t) => t.type === 'income').length || 1);
+  const avgExpense =
+    last90.filter((t) => t.type === 'expense').reduce((a, t) => a + (Number(t.amount) || 0), 0) /
+    (last90.filter((t) => t.type === 'expense').length || 1);
   for (const t of last90) {
     const amt = Number(t.amount) || 0;
     const threshold = t.type === 'income' ? avgIncome * 3 : avgExpense * 3;
@@ -230,7 +246,9 @@ function calculateWeekForecastInternal(ctx) {
     if (!d) return false;
     return new Date(d + 'T00:00:00').getTime() >= cutoff;
   });
-  const incomeSum = recent.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+  const incomeSum = recent
+    .filter((t) => t.type === 'income')
+    .reduce((a, t) => a + (Number(t.amount) || 0), 0);
   const expectedIncome = recent.length > 0 ? incomeSum / (28 / 7) : 0;
 
   const netCashflow = expectedIncome - weekExpenses;
@@ -269,14 +287,24 @@ export function calculatePulse(ledgerId, options = {}) {
       alerts: [],
       weekForecast: { expectedIncome: 0, expectedExpenses: 0, netCashflow: 0, riskLevel: 'safe' },
       upcomingDues: [],
-      ledgerSummary: { ledgerId: '', ledgerName: '', ledgerType: '', totalTransactions: 0, activeRecurringItems: 0, monthlyAvgIncome: 0, monthlyAvgExpense: 0 },
+      ledgerSummary: {
+        ledgerId: '',
+        ledgerName: '',
+        ledgerType: '',
+        totalTransactions: 0,
+        activeRecurringItems: 0,
+        monthlyAvgIncome: 0,
+        monthlyAvgExpense: 0,
+      },
       calculatedAt,
       dataFreshness: 'live',
     };
   }
 
   const todayStr = todayKey(now);
-  const todayIncome = txs.filter((t) => t.type === 'income' && (t.date || '').slice(0, 10) === todayStr).reduce((a, t) => a + (Number(t.amount) || 0), 0);
+  const todayIncome = txs
+    .filter((t) => t.type === 'income' && (t.date || '').slice(0, 10) === todayStr)
+    .reduce((a, t) => a + (Number(t.amount) || 0), 0);
   const weekStart = startOfWeekMs(now);
   const weekEnd = endOfWeekMs(now);
   const weekExpenses = txs
@@ -300,7 +328,10 @@ export function calculatePulse(ledgerId, options = {}) {
       const tMs = new Date(d + 'T00:00:00').getTime();
       return tMs >= lastWeekStart && tMs <= lastWeekEnd;
     })
-    .reduce((a, t) => a + (t.type === 'income' ? Number(t.amount) || 0 : -(Number(t.amount) || 0)), 0);
+    .reduce(
+      (a, t) => a + (t.type === 'income' ? Number(t.amount) || 0 : -(Number(t.amount) || 0)),
+      0
+    );
   const thisWeekNet = txs
     .filter((t) => {
       const d = (t.date || '').slice(0, 10);
@@ -308,7 +339,10 @@ export function calculatePulse(ledgerId, options = {}) {
       const tMs = new Date(d + 'T00:00:00').getTime();
       return tMs >= weekStart && tMs <= weekEnd;
     })
-    .reduce((a, t) => a + (t.type === 'income' ? Number(t.amount) || 0 : -(Number(t.amount) || 0)), 0);
+    .reduce(
+      (a, t) => a + (t.type === 'income' ? Number(t.amount) || 0 : -(Number(t.amount) || 0)),
+      0
+    );
   let balanceTrend = 'stable';
   if (thisWeekNet > lastWeekNet) balanceTrend = 'up';
   else if (thisWeekNet < lastWeekNet) balanceTrend = 'down';
@@ -341,8 +375,10 @@ export function calculatePulse(ledgerId, options = {}) {
     if (!d) return false;
     return Date.now() - new Date(d + 'T00:00:00').getTime() <= 90 * DAY_MS;
   });
-  const monthlyIncome = last90.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0) / 3;
-  const monthlyExpense = last90.filter((t) => t.type === 'expense').reduce((a, t) => a + (Number(t.amount) || 0), 0) / 3;
+  const monthlyIncome =
+    last90.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0) / 3;
+  const monthlyExpense =
+    last90.filter((t) => t.type === 'expense').reduce((a, t) => a + (Number(t.amount) || 0), 0) / 3;
 
   return {
     todayIncome,

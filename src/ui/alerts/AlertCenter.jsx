@@ -15,11 +15,23 @@ const ICON_BY_TYPE = {
   missed_income: 'income',
   health_trend: 'trend',
   dormant_commitment: 'clock',
+  contract_expiring: 'contract',
+  contract_expired: 'contract',
 };
 
 function BellIcon({ size = 22, className = '' }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
       <path d="M13.73 21a2 2 0 01-3.46 0" />
     </svg>
@@ -43,6 +55,9 @@ export function useAlerts() {
     recurringItems,
     ledgers,
     activeLedgerId: ctxActiveLedgerId,
+    contracts,
+    properties,
+    contacts,
   } = useData();
 
   const [alerts, setAlerts] = useState([]);
@@ -51,10 +66,19 @@ export function useAlerts() {
     AlertManager.cleanup();
     // DataContext first, fallback to localStorage
     const lid = ctxActiveLedgerId || getActiveLedgerId() || '';
-    const list = lid ? generateSmartAlerts(lid, { transactions, recurringItems, ledgers }) : [];
+    const list = lid
+      ? generateSmartAlerts(lid, {
+          transactions,
+          recurringItems,
+          ledgers,
+          contracts,
+          properties,
+          contacts,
+        })
+      : [];
     setAlerts(Array.isArray(list) ? list : []);
     setFetchTime(Date.now());
-  }, [ctxActiveLedgerId, transactions, recurringItems, ledgers]);
+  }, [ctxActiveLedgerId, transactions, recurringItems, ledgers, contracts, properties, contacts]);
   useEffect(() => {
     refresh();
   }, [refresh]);
@@ -67,6 +91,7 @@ export function useAlerts() {
     const type = alert?.actionType || '';
     if (type === 'record_payment' || type === 'prepare_payment') setPage?.('inbox');
     else if (type === 'review_transaction') setPage?.('transactions');
+    else if (type === 'view_contract') setPage?.('contracts');
     else if (type === 'review_forecast') setPage?.('ledgers');
     else setPage?.('inbox');
   }, []);
@@ -79,29 +104,62 @@ export function useAlerts() {
   const handleDismissAll = useCallback(() => {
     alerts.forEach((a) => AlertManager.dismiss(a.id, a.type));
   }, [alerts]);
-  return { alerts, fetchTime, criticalFirst, refresh, handleAction, handleDismiss, handleSnooze, handleDismissAll };
+  return {
+    alerts,
+    fetchTime,
+    criticalFirst,
+    refresh,
+    handleAction,
+    handleDismiss,
+    handleSnooze,
+    handleDismissAll,
+  };
 }
 
 export function CriticalAlertBanner({ criticalFirst, onAction, onDismiss, setPage }) {
   if (!criticalFirst) return null;
   return (
     <div
-      className="w-full bg-rose-600 text-white px-4 py-2.5 flex items-center justify-between gap-3 no-print"
+      className="w-full text-white px-4 py-2.5 flex items-center justify-between gap-3 no-print"
+      style={{ background: 'var(--color-danger)' }}
       role="alert"
       dir="rtl"
     >
       <p className="text-sm font-medium truncate flex-1 min-w-0">{criticalFirst.title}</p>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <button type="button" onClick={() => { onAction(criticalFirst, setPage); }} className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30">
+        <button
+          type="button"
+          onClick={() => {
+            onAction(criticalFirst, setPage);
+          }}
+          className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30"
+        >
           {criticalFirst.actionLabel || 'اتخذ إجراء'}
         </button>
-        <button type="button" onClick={() => onDismiss(criticalFirst)} className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30" aria-label="رفض">رفض</button>
+        <button
+          type="button"
+          onClick={() => onDismiss(criticalFirst)}
+          className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30"
+          aria-label="رفض"
+        >
+          رفض
+        </button>
       </div>
     </div>
   );
 }
 
-export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst, refresh, handleAction, handleDismiss, handleSnooze, handleDismissAll }) {
+export default function AlertCenter({
+  setPage,
+  alerts,
+  fetchTime,
+  criticalFirst,
+  refresh,
+  handleAction,
+  handleDismiss,
+  handleSnooze,
+  handleDismissAll,
+}) {
   const [open, setOpen] = useState(false);
   const panelRef = useRef(null);
 
@@ -143,83 +201,109 @@ export default function AlertCenter({ setPage, alerts, fetchTime, criticalFirst,
 
   return (
     <div className="relative flex items-center" ref={panelRef} data-alert-bell>
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          className={`relative p-2 rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] ${hasCritical ? 'animate-pulse' : ''}`}
-          aria-label={count ? `${count} تنبيه` : 'مركز التنبيهات'}
-          aria-expanded={open}
-        >
-          <BellIcon size={22} />
-          {count > 0 && (
-            <span className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-rose-500 text-white text-[11px] font-bold leading-none">
-              {count > 9 ? '9+' : count}
-            </span>
-          )}
-        </button>
-
-        {/* اللوحة المنبثقة */}
-        {open && (
-          <div
-            className="absolute top-full end-0 mt-1 w-[min(360px,100vw-2rem)] max-h-[70vh] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl z-50 flex flex-col"
-            dir="rtl"
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className={`relative p-2 rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] ${hasCritical ? 'animate-pulse' : ''}`}
+        aria-label={count ? `${count} تنبيه` : 'مركز التنبيهات'}
+        aria-expanded={open}
+      >
+        <BellIcon size={22} />
+        {count > 0 && (
+          <span
+            className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[11px] font-bold leading-none"
+            style={{ background: 'var(--color-danger)' }}
           >
-            <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
-              <h3 className="font-semibold text-[var(--color-text)]">التنبيهات</h3>
-              {count > 0 && (
-                <button
-                  type="button"
-                  onClick={onDismissAll}
-                  className="text-xs text-[var(--color-muted)] hover:text-rose-600 font-medium"
-                >
-                  مسح الكل
-                </button>
-              )}
-            </div>
-            <ul className="overflow-y-auto flex-1 divide-y divide-[var(--color-border)]">
-              {count === 0 ? (
-                <li className="px-4 py-6 text-center text-sm text-[var(--color-muted)]">لا توجد تنبيهات</li>
-              ) : (
-                alerts.map((alert) => (
-                  <li key={alert.id} className="px-4 py-3">
-                    <div className="flex gap-3">
-                      <span
-                        className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs ${
-                          alert.severity === 'critical' ? 'bg-rose-500' : alert.severity === 'warning' ? 'bg-amber-500' : 'bg-blue-500'
-                        }`}
-                        aria-hidden="true"
-                      >
-                        {ICON_BY_TYPE[alert.type] ? String(alert.type).slice(0, 1) : '•'}
-                      </span>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-medium text-[var(--color-text)] text-sm">{alert.title}</p>
-                        <p className="text-xs text-[var(--color-muted)] mt-0.5">
-                          {formatHoursAgo(Date.now() - fetchTime)}
-                          {alert.amount > 0 && ` · ${Number(alert.amount).toLocaleString('ar-SA')} ر.س`}
-                        </p>
-                        <div className="flex flex-wrap gap-2 mt-2">
-                          <button
-                            type="button"
-                            onClick={() => onAction(alert)}
-                            className="text-xs font-medium text-blue-600 hover:text-blue-800"
-                          >
-                            {alert.actionLabel || 'اتخذ إجراء'}
-                          </button>
-                          <button type="button" onClick={() => onDismiss(alert)} className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]">
-                            رفض
-                          </button>
-                          <button type="button" onClick={() => onSnooze(alert)} className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]">
-                            تأجيل
-                          </button>
-                        </div>
+            {count > 9 ? '9+' : count}
+          </span>
+        )}
+      </button>
+
+      {/* اللوحة المنبثقة */}
+      {open && (
+        <div
+          className="absolute top-full end-0 mt-1 w-[min(360px,100vw-2rem)] max-h-[70vh] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl z-50 flex flex-col"
+          dir="rtl"
+        >
+          <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+            <h3 className="font-semibold text-[var(--color-text)]">التنبيهات</h3>
+            {count > 0 && (
+              <button
+                type="button"
+                onClick={onDismissAll}
+                className="text-xs font-medium"
+                style={{ color: 'var(--color-muted)' }}
+                onMouseEnter={(e) => (e.target.style.color = 'var(--color-danger)')}
+                onMouseLeave={(e) => (e.target.style.color = 'var(--color-muted)')}
+              >
+                مسح الكل
+              </button>
+            )}
+          </div>
+          <ul className="overflow-y-auto flex-1 divide-y divide-[var(--color-border)]">
+            {count === 0 ? (
+              <li className="px-4 py-6 text-center text-sm text-[var(--color-muted)]">
+                لا توجد تنبيهات
+              </li>
+            ) : (
+              alerts.map((alert) => (
+                <li key={alert.id} className="px-4 py-3">
+                  <div className="flex gap-3">
+                    <span
+                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
+                      style={{
+                        background:
+                          alert.severity === 'critical'
+                            ? 'var(--color-danger)'
+                            : alert.severity === 'warning'
+                              ? 'var(--color-warning)'
+                              : 'var(--color-info)',
+                      }}
+                      aria-hidden="true"
+                    >
+                      {ICON_BY_TYPE[alert.type] ? String(alert.type).slice(0, 1) : '•'}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-[var(--color-text)] text-sm">{alert.title}</p>
+                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                        {formatHoursAgo(Date.now() - fetchTime)}
+                        {alert.amount > 0 &&
+                          ` · ${Number(alert.amount).toLocaleString('ar-SA')} ر.س`}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => onAction(alert)}
+                          className="text-xs font-medium"
+                          style={{ color: 'var(--color-info)' }}
+                          onMouseEnter={(e) => (e.target.style.opacity = '0.8')}
+                          onMouseLeave={(e) => (e.target.style.opacity = '1')}
+                        >
+                          {alert.actionLabel || 'اتخذ إجراء'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onDismiss(alert)}
+                          className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                        >
+                          رفض
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => onSnooze(alert)}
+                          className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                        >
+                          تأجيل
+                        </button>
                       </div>
                     </div>
-                  </li>
-                ))
-              )}
-            </ul>
-          </div>
-        )}
+                  </div>
+                </li>
+              ))
+            )}
+          </ul>
+        </div>
+      )}
     </div>
   );
 }

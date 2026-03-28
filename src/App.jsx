@@ -12,20 +12,37 @@ import { PageLoadErrorBoundary } from './ui/ErrorBoundaries.jsx';
 import { WelcomeBanner } from './ui/WelcomeBanner.jsx';
 import { HelpPanel } from './ui/HelpPanel.jsx';
 import { OnboardingModal } from './ui/OnboardingModal.jsx';
+import { TooltipTour, isTourSeen, resetTour } from './ui/TooltipTour.jsx';
 import { Icons } from './ui/ui-common.jsx';
 import { ProtectedRoute } from './ui/ProtectedRoute.jsx';
 import { DemoBanner } from './ui/DemoBanner.jsx';
 
-import { NAV_ITEMS as NAV_ITEMS_CONFIG, BOTTOM_NAV_MAIN, BOTTOM_NAV_MORE, pathToId, idToPath } from './config/navigation.js';
+import {
+  NAV_ITEMS as NAV_ITEMS_CONFIG,
+  BOTTOM_NAV_MAIN,
+  BOTTOM_NAV_MORE,
+  pathToId,
+  idToPath,
+} from './config/navigation.js';
 
+const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
 const PulsePage = lazy(() => import('./pages/PulsePage.jsx'));
+const PropertiesPage = lazy(() => import('./pages/PropertiesPage.jsx'));
+const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
+const ContractsPage = lazy(() => import('./pages/ContractsPage.jsx'));
 const InboxPage = lazy(() => import('./pages/InboxPage.jsx'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const LedgersPage = lazy(() => import('./pages/LedgersPage.jsx'));
-const TransactionsPage = lazy(() => import('./pages/TransactionsPage.jsx').then((m) => ({ default: m.TransactionsPage })));
-const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx').then((m) => ({ default: m.SettingsPage })));
+const TransactionsPage = lazy(() =>
+  import('./pages/TransactionsPage.jsx').then((m) => ({ default: m.TransactionsPage }))
+);
+const SettingsPage = lazy(() =>
+  import('./pages/SettingsPage.jsx').then((m) => ({ default: m.SettingsPage }))
+);
 const MonthlyReportPage = lazy(() => import('./pages/MonthlyReportPage.jsx'));
-const CommissionsPage = lazy(() => import('./pages/CommissionsPage.jsx').then((m) => ({ default: m.CommissionsPage })));
+const CommissionsPage = lazy(() =>
+  import('./pages/CommissionsPage.jsx').then((m) => ({ default: m.CommissionsPage }))
+);
 
 import { storageFacade } from './core/storage-facade.js';
 import {
@@ -45,7 +62,6 @@ const SIMULATE_RENDER_ERROR = false;
 // ربط عناصر التنقل بأيقونات الواجهة (برومبت 0.3)
 const NAV_ITEMS = NAV_ITEMS_CONFIG.map((it) => ({ ...it, icon: Icons[it.iconKey] }));
 
-
 // ============================================
 // APP (Main Router — برومبت 0.3: مسارات URL)
 // ============================================
@@ -53,18 +69,26 @@ const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const page = pathToId(location.pathname);
-  const setPage = useCallback((id) => { navigate(idToPath(id)); }, [navigate]);
+  const setPage = useCallback(
+    (id) => {
+      navigate(idToPath(id));
+    },
+    [navigate]
+  );
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   // Ensure seed data on first load
-  useEffect(() => { dataStore.seed.ensureSeeded(); }, []);
+  useEffect(() => {
+    dataStore.seed.ensureSeeded();
+  }, []);
   const [headerDateMode, setHeaderDateMode] = useState(getSavedDateHeader() || 'both');
   const [headerDateText, setHeaderDateText] = useState('');
 
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showTour, setShowTour] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [helpSection, setHelpSection] = useState('start'); // start|ledgers|recurring|reports|backup|privacy
 
@@ -116,7 +140,7 @@ const App = () => {
 
     setShowOnboarding(!getOnboardingSeen());
 
-    const datePref = (getSavedDateHeader() || 'both');
+    const datePref = getSavedDateHeader() || 'both';
     setHeaderDateMode(datePref);
 
     if (datePref !== 'off') {
@@ -124,9 +148,11 @@ const App = () => {
     }
 
     const cancelMidnight = scheduleHeaderDateMidnightRefresh();
-    const onNumerals = () => { if ((getSavedDateHeader() || 'both') !== 'off') updateHeaderDate(); };
+    const onNumerals = () => {
+      if ((getSavedDateHeader() || 'both') !== 'off') updateHeaderDate();
+    };
     const onDateHeader = () => {
-      const pref = (getSavedDateHeader() || 'both');
+      const pref = getSavedDateHeader() || 'both';
       setHeaderDateMode(pref);
       if (pref !== 'off') updateHeaderDate();
     };
@@ -142,21 +168,45 @@ const App = () => {
   }, [updateHeaderDate, scheduleHeaderDateMidnightRefresh]);
   // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
   useEffect(() => {
-    const handler = (e) => { if (dirty) { e.preventDefault(); e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟'; return e.returnValue; } };
+    const handler = (e) => {
+      if (dirty) {
+        e.preventDefault();
+        e.returnValue = 'لديك تغييرات غير محفوظة. هل تريد المغادرة؟';
+        return e.returnValue;
+      }
+    };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
   }, [dirty]);
 
   if (SIMULATE_RENDER_ERROR) throw new Error('Phase 9.3 test error');
 
-  const settingsProps = { setPage, onShowOnboarding: () => { try { storageFacade.removeRaw(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); } };
+  const settingsProps = {
+    setPage,
+    onShowOnboarding: () => {
+      try {
+        storageFacade.removeRaw(UI_ONBOARDING_SEEN_KEY);
+      } catch {}
+      setShowOnboarding(true);
+    },
+    onStartTour: () => {
+      resetTour();
+      setShowTour(true);
+    },
+  };
 
   // صفحة المصادقة تُعرض بدون layout (بدون Sidebar/Topbar/BottomNav)
   const isAuthPage = location.pathname === '/auth';
 
   if (isAuthPage) {
     return (
-      <Suspense fallback={<div className="p-6 text-center text-[var(--color-muted)]" dir="rtl">جاري التحميل…</div>}>
+      <Suspense
+        fallback={
+          <div className="p-6 text-center text-[var(--color-muted)]" dir="rtl">
+            جاري التحميل…
+          </div>
+        }
+      >
         <AuthPage />
       </Suspense>
     );
@@ -165,7 +215,9 @@ const App = () => {
   // مسار /demo → يفعّل وضع Demo ويحوّل إلى الصفحة الرئيسية
   if (location.pathname === '/demo') {
     // تفعيل Demo عبر sessionStorage ثم redirect
-    try { sessionStorage.setItem('ff_demo_mode', 'true'); } catch {}
+    try {
+      sessionStorage.setItem('ff_demo_mode', 'true');
+    } catch {}
     window.location.hash = '#/';
     window.location.reload();
     return null;
@@ -174,46 +226,176 @@ const App = () => {
   return (
     <ToastProvider>
       <UnsavedContext.Provider value={setDirty}>
-        <TrustChecks/>
+        <TrustChecks />
         <DemoBanner />
         <div className="app-shell flex min-h-screen">
-          <a href="#main-content" className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-[var(--color-surface)] focus:text-[var(--color-text)] focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-blue-600 focus:outline-none focus:fixed focus:top-4 focus:start-4">
+          <a
+            href="#main-content"
+            className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-[var(--color-surface)] focus:text-[var(--color-text)] focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-blue-600 focus:outline-none focus:fixed focus:top-4 focus:start-4"
+          >
             تخطي إلى المحتوى الرئيسي
           </a>
-          <Sidebar Icons={Icons} navItems={NAV_ITEMS} page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
-          <main className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0" id="main-content" role="main" aria-label="المحتوى الرئيسي">
-            <Topbar Icons={Icons} page={page} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} headerDateText={headerDateMode !== 'off' ? headerDateText : ''} setPage={setPage}/>
+          <Sidebar
+            Icons={Icons}
+            navItems={NAV_ITEMS}
+            page={page}
+            setPage={setPage}
+            collapsed={collapsed}
+            setCollapsed={setCollapsed}
+            mobileOpen={mobileOpen}
+            setMobileOpen={setMobileOpen}
+            onOpenHelp={() => {
+              setHelpSection('start');
+              setShowHelp(true);
+            }}
+          />
+          <main
+            className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0"
+            id="main-content"
+            role="main"
+            aria-label="المحتوى الرئيسي"
+          >
+            <Topbar
+              Icons={Icons}
+              page={page}
+              mobileOpen={mobileOpen}
+              setMobileOpen={setMobileOpen}
+              headerDateText={headerDateMode !== 'off' ? headerDateText : ''}
+              setPage={setPage}
+            />
             <PulseAlertsBanner page={page} onGoToInbox={() => setPage('inbox')} />
             <div className="px-4 md:px-6 max-w-4xl mx-auto">
-              {!showOnboarding && <WelcomeBanner/>}
+              {!showOnboarding && <WelcomeBanner />}
             </div>
 
             {showOnboarding && (
               <OnboardingModal
-                onClose={() => { setOnboardingSeen(); setShowOnboarding(false); }}
+                onClose={() => {
+                  setOnboardingSeen();
+                  setShowOnboarding(false);
+                  // بعد إغلاق المودال → ابدأ جولة التلميحات إذا لم تُشاهد
+                  if (!isTourSeen()) setTimeout(() => setShowTour(true), 400);
+                }}
                 onOpenSettings={() => {
                   setOnboardingSeen();
                   setShowOnboarding(false);
                   setPage('settings');
                   setTimeout(() => {
                     const el = document.querySelector('[aria-label="وضع العرض"]');
-                    if (el && el.scrollIntoView) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    if (el && el.scrollIntoView)
+                      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
                   }, 50);
                 }}
               />
             )}
+
+            <TooltipTour active={showTour} onComplete={() => setShowTour(false)} />
             <div className="print-container flex-1">
-              <PageLoadErrorBoundary key={page} onGoHome={() => setPage('pulse')}>
-                <Suspense fallback={<div className="p-6 text-center text-[var(--color-muted)]" aria-live="polite">جاري التحميل…</div>}>
+              <PageLoadErrorBoundary key={page} onGoHome={() => setPage('dashboard')}>
+                <Suspense
+                  fallback={
+                    <div className="p-6 text-center text-[var(--color-muted)]" aria-live="polite">
+                      جاري التحميل…
+                    </div>
+                  }
+                >
                   <Routes>
-                    <Route path="/" element={<ProtectedRoute><PulsePage setPage={setPage} /></ProtectedRoute>} />
-                    <Route path="/inbox" element={<ProtectedRoute><InboxPage setPage={setPage} /></ProtectedRoute>} />
-                    <Route path="/ledgers" element={<ProtectedRoute><LedgersPage setPage={setPage} /></ProtectedRoute>} />
-                    <Route path="/transactions" element={<ProtectedRoute><TransactionsPage setPage={setPage} /></ProtectedRoute>} />
-                    <Route path="/commissions" element={<ProtectedRoute><CommissionsPage setPage={setPage} /></ProtectedRoute>} />
-                    <Route path="/settings" element={<ProtectedRoute><SettingsPage {...settingsProps} /></ProtectedRoute>} />
-                    <Route path="/report" element={<ProtectedRoute><MonthlyReportPage setPage={setPage} /></ProtectedRoute>} />
-                    <Route path="*" element={<ProtectedRoute><PulsePage setPage={setPage} /></ProtectedRoute>} />
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/properties"
+                      element={
+                        <ProtectedRoute>
+                          <PropertiesPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/contacts"
+                      element={
+                        <ProtectedRoute>
+                          <ContactsPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/contracts"
+                      element={
+                        <ProtectedRoute>
+                          <ContractsPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/inbox"
+                      element={
+                        <ProtectedRoute>
+                          <InboxPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/ledgers"
+                      element={
+                        <ProtectedRoute>
+                          <LedgersPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/transactions"
+                      element={
+                        <ProtectedRoute>
+                          <TransactionsPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/commissions"
+                      element={
+                        <ProtectedRoute>
+                          <CommissionsPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
+                        <ProtectedRoute>
+                          <SettingsPage {...settingsProps} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/report"
+                      element={
+                        <ProtectedRoute>
+                          <MonthlyReportPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/pulse"
+                      element={
+                        <ProtectedRoute>
+                          <PulsePage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="*"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
                   </Routes>
                 </Suspense>
               </PageLoadErrorBoundary>
@@ -228,10 +410,20 @@ const App = () => {
               />
             )}
 
-          <footer className="no-print border-t border-[var(--color-border)] py-3 px-4 text-center text-sm text-[var(--color-muted)]" role="contentinfo">
-            <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>
-          </footer>
-          <BottomNav navItems={NAV_ITEMS} page={page} setPage={setPage} mainIds={BOTTOM_NAV_MAIN} moreIds={BOTTOM_NAV_MORE} MoreIcon={Icons.moreMenu} />
+            <footer
+              className="no-print border-t border-[var(--color-border)] py-3 px-4 text-center text-sm text-[var(--color-muted)]"
+              role="contentinfo"
+            >
+              <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>
+            </footer>
+            <BottomNav
+              navItems={NAV_ITEMS}
+              page={page}
+              setPage={setPage}
+              mainIds={BOTTOM_NAV_MAIN}
+              moreIds={BOTTOM_NAV_MORE}
+              MoreIcon={Icons.moreMenu}
+            />
           </main>
         </div>
       </UnsavedContext.Provider>

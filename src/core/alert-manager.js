@@ -14,7 +14,8 @@ function readState() {
     return {
       dismissed: data?.dismissed && typeof data.dismissed === 'object' ? data.dismissed : {},
       snoozed: data?.snoozed && typeof data.snoozed === 'object' ? data.snoozed : {},
-      dismissedTypes: data?.dismissedTypes && typeof data.dismissedTypes === 'object' ? data.dismissedTypes : {},
+      dismissedTypes:
+        data?.dismissedTypes && typeof data.dismissedTypes === 'object' ? data.dismissedTypes : {},
     };
   } catch {
     return { dismissed: {}, snoozed: {}, dismissedTypes: {} };
@@ -91,9 +92,7 @@ function getStats() {
   const state = readState();
   const types = state.dismissedTypes || {};
   const entries = Object.entries(types);
-  const mostDismissedType = entries.length
-    ? entries.sort((a, b) => b[1] - a[1])[0][0]
-    : '';
+  const mostDismissedType = entries.length ? entries.sort((a, b) => b[1] - a[1])[0][0] : '';
   return {
     totalDismissed: Number(Object.keys(state.dismissed || {}).length),
     totalSnoozed: Number(Object.keys(state.snoozed || {}).length),

@@ -44,7 +44,21 @@ const esc = (str) => {
     .replace(/'/g, '&#39;');
 };
 
-const MONTH_NAMES = ['', 'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+const MONTH_NAMES = [
+  '',
+  'يناير',
+  'فبراير',
+  'مارس',
+  'أبريل',
+  'مايو',
+  'يونيو',
+  'يوليو',
+  'أغسطس',
+  'سبتمبر',
+  'أكتوبر',
+  'نوفمبر',
+  'ديسمبر',
+];
 
 const STATUS_LABELS = { pending: 'مستحقة', partial: 'مدفوعة جزئياً', paid: 'مدفوعة' };
 const STATUS_COLORS = { pending: '#f59e0b', partial: '#3b82f6', paid: '#059669' };
@@ -52,7 +66,8 @@ const STATUS_COLORS = { pending: '#f59e0b', partial: '#3b82f6', paid: '#059669' 
 /** إنشاء عنصر مؤقت مخفي */
 function createHiddenContainer() {
   const el = document.createElement('div');
-  el.style.cssText = 'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;color:#1a1a2e;direction:rtl;padding:0;margin:0;z-index:-1;';
+  el.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;color:#1a1a2e;direction:rtl;padding:0;margin:0;z-index:-1;';
   document.body.appendChild(el);
   return el;
 }
@@ -135,13 +150,45 @@ const SHARED_CSS = `
 // ═══════════════════════════════════════
 
 /**
+ * قراءة شعار المكتب من التخزين (base64 data URL)
+ * SPR-017: يُقرأ تلقائياً — لا يحتاج المستدعي تمريره
+ */
+function getOfficeLogo(officeInfo) {
+  // أولوية: officeInfo.logo ← التخزين المحلي
+  if (officeInfo?.logo) return officeInfo.logo;
+  try {
+    const stored = localStorage.getItem('ff_office_logo');
+    if (stored && stored.startsWith('data:image')) return stored;
+  } catch {}
+  return '';
+}
+
+/**
+ * بناء HTML الشعار (إذا وجد)
+ */
+function logoHtml(officeInfo) {
+  const logo = getOfficeLogo(officeInfo);
+  if (!logo) return '';
+  return `<div style="text-align:center;margin-bottom:8px;"><img src="${logo}" alt="شعار المكتب" style="max-height:56px;max-width:180px;object-fit:contain;" /></div>`;
+}
+
+/**
  * @param {Object} reportData - كائن التقرير من generateMonthlyReport
- * @param {Object} officeInfo - { name, phone, address }
+ * @param {Object} officeInfo - { name, phone, address, logo }
  */
 export async function exportMonthlyReport(reportData, officeInfo = {}) {
   if (!reportData) throw new Error('لا توجد بيانات تقرير');
 
-  const { meta, summary, incomeBreakdown, expenseBreakdown, commitments, highlights, nextMonthForecast, transactions } = reportData;
+  const {
+    meta,
+    summary,
+    incomeBreakdown,
+    expenseBreakdown,
+    commitments,
+    highlights,
+    nextMonthForecast,
+    transactions,
+  } = reportData;
   const monthLabel = `${MONTH_NAMES[meta?.month] || meta?.month} ${meta?.year}`;
   const officeName = officeInfo?.name || 'مكتب عقاري';
 
@@ -149,6 +196,7 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
   container.innerHTML = `<style>${SHARED_CSS}</style>
   <div class="pdf-page">
     <div class="pdf-header">
+      ${logoHtml(officeInfo)}
       <h1>قيد العقار</h1>
       <div class="subtitle">التقرير الشهري</div>
       <div class="period">${esc(meta?.ledgerName) || '—'} — ${esc(monthLabel)}</div>
@@ -189,64 +237,97 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
       </div>
     </div>
 
-    ${(incomeBreakdown || []).length > 0 ? `
+    ${
+      (incomeBreakdown || []).length > 0
+        ? `
     <div class="section-title">تفصيل الدخل</div>
     <table>
       <thead><tr><th>المصدر</th><th>المبلغ</th><th>النسبة</th><th>العدد</th></tr></thead>
       <tbody>
         ${incomeBreakdown.map((r) => `<tr><td>${esc(r.source) || '—'}</td><td class="amount-green">${fmt(r.amount)} ر.س</td><td>${fmt(r.percentage)}%</td><td>${r.count || 0}</td></tr>`).join('')}
       </tbody>
-    </table>` : ''}
+    </table>`
+        : ''
+    }
 
-    ${(expenseBreakdown || []).length > 0 ? `
+    ${
+      (expenseBreakdown || []).length > 0
+        ? `
     <div class="section-title">تفصيل المصروفات</div>
     <table>
       <thead><tr><th>الفئة</th><th>المبلغ</th><th>النسبة</th><th>العدد</th></tr></thead>
       <tbody>
         ${expenseBreakdown.map((r) => `<tr><td>${esc(r.category) || '—'}</td><td class="amount-red">${fmt(r.amount)} ر.س</td><td>${fmt(r.percentage)}%</td><td>${r.count || 0}</td></tr>`).join('')}
       </tbody>
-    </table>` : ''}
+    </table>`
+        : ''
+    }
 
-    ${commitments ? `
+    ${
+      commitments
+        ? `
     <div class="section-title">الالتزامات</div>
     <div class="summary-grid">
       <div class="summary-card"><div class="label">مستحقات الشهر</div><div class="value">${fmt(commitments.totalDue)} ر.س</div></div>
       <div class="summary-card"><div class="label">المدفوع</div><div class="value green">${fmt(commitments.totalPaid)} ر.س</div></div>
       <div class="summary-card"><div class="label">نسبة الالتزام</div><div class="value blue">${commitments.complianceRate || 0}%</div></div>
-    </div>` : ''}
+    </div>`
+        : ''
+    }
 
-    ${(highlights || []).length > 0 ? `
+    ${
+      (highlights || []).length > 0
+        ? `
     <div class="section-title">أبرز الأحداث</div>
     <div style="margin-bottom:16px;">
-      ${highlights.map((h) => {
-        const bg = h.type === 'positive' ? '#dcfce7' : h.type === 'negative' ? '#fee2e2' : '#f1f5f9';
-        const color = h.type === 'positive' ? '#166534' : h.type === 'negative' ? '#991b1b' : '#334155';
-        return `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:4px;">${esc(h.message)}</div>`;
-      }).join('')}
-    </div>` : ''}
+      ${highlights
+        .map((h) => {
+          const bg =
+            h.type === 'positive' ? '#dcfce7' : h.type === 'negative' ? '#fee2e2' : '#f1f5f9';
+          const color =
+            h.type === 'positive' ? '#166534' : h.type === 'negative' ? '#991b1b' : '#334155';
+          return `<div style="background:${bg};color:${color};padding:8px 12px;border-radius:6px;font-size:12px;margin-bottom:4px;">${esc(h.message)}</div>`;
+        })
+        .join('')}
+    </div>`
+        : ''
+    }
 
-    ${nextMonthForecast ? `
+    ${
+      nextMonthForecast
+        ? `
     <div class="section-title">توقعات الشهر القادم</div>
     <div class="summary-grid">
       <div class="summary-card"><div class="label">دخل متوقع</div><div class="value green">${fmt(nextMonthForecast.expectedIncome)} ر.س</div></div>
       <div class="summary-card"><div class="label">مصروف متوقع</div><div class="value red">${fmt(nextMonthForecast.expectedExpense)} ر.س</div></div>
       <div class="summary-card"><div class="label">صافي متوقع</div><div class="value ${(nextMonthForecast.expectedNet || 0) >= 0 ? 'green' : 'red'}">${fmt(nextMonthForecast.expectedNet)} ر.س</div></div>
-    </div>` : ''}
+    </div>`
+        : ''
+    }
 
-    ${(transactions || []).length > 0 ? `
+    ${
+      (transactions || []).length > 0
+        ? `
     <div class="section-title">حركات الشهر (${transactions.length})</div>
     <table>
       <thead><tr><th>التاريخ</th><th>النوع</th><th>الفئة</th><th>الوصف</th><th>المبلغ</th></tr></thead>
       <tbody>
-        ${transactions.slice(0, 100).map((t) => `<tr>
+        ${transactions
+          .slice(0, 100)
+          .map(
+            (t) => `<tr>
           <td>${esc(t.date) || '—'}</td>
           <td>${t.type === 'income' ? 'دخل' : 'مصروف'}</td>
           <td>${esc(t.category) || '—'}</td>
           <td>${esc((t.description || '—').substring(0, 40))}</td>
           <td class="${t.type === 'income' ? 'amount-green' : 'amount-red'}">${fmt(t.amount)} ر.س</td>
-        </tr>`).join('')}
+        </tr>`
+          )
+          .join('')}
       </tbody>
-    </table>` : ''}
+    </table>`
+        : ''
+    }
 
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
@@ -268,7 +349,11 @@ function f(c, camel, snake) {
 }
 
 function calcAmount(c) {
-  return ((Number(f(c, 'dealValue', 'deal_value')) || 0) * (Number(f(c, 'officePercent', 'office_percent')) || 0)) / 100;
+  return (
+    ((Number(f(c, 'dealValue', 'deal_value')) || 0) *
+      (Number(f(c, 'officePercent', 'office_percent')) || 0)) /
+    100
+  );
 }
 
 /**
@@ -283,7 +368,9 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
   const officeName = officeInfo?.name || 'مكتب عقاري';
 
   // حساب الملخص
-  let totalCommission = 0, totalPaid = 0, totalRemaining = 0;
+  let totalCommission = 0,
+    totalPaid = 0,
+    totalRemaining = 0;
   for (const c of list) {
     const amt = calcAmount(c);
     const paid = Number(f(c, 'paidAmount', 'paid_amount')) || 0;
@@ -299,9 +386,13 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
     if (!byAgent[agent]) byAgent[agent] = { count: 0, commission: 0, paid: 0 };
     byAgent[agent].count++;
     byAgent[agent].commission += calcAmount(c);
-    byAgent[agent].paid += (Number(f(c, 'paidAmount', 'paid_amount')) || 0);
+    byAgent[agent].paid += Number(f(c, 'paidAmount', 'paid_amount')) || 0;
   }
-  const agentSummary = Object.entries(byAgent).map(([name, d]) => ({ name, ...d, remaining: Math.max(0, d.commission - d.paid) }));
+  const agentSummary = Object.entries(byAgent).map(([name, d]) => ({
+    name,
+    ...d,
+    remaining: Math.max(0, d.commission - d.paid),
+  }));
 
   // الفترة
   let periodLabel = todayStr();
@@ -313,6 +404,7 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
   container.innerHTML = `<style>${SHARED_CSS}</style>
   <div class="pdf-page">
     <div class="pdf-header">
+      ${logoHtml(officeInfo)}
       <h1>قيد العقار</h1>
       <div class="subtitle">تقرير العمولات</div>
       <div class="period">${esc(periodLabel)}</div>
@@ -340,12 +432,14 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
         <th>العميل</th><th>الوكيل</th><th>قيمة الصفقة</th><th>النسبة</th><th>العمولة</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th>
       </tr></thead>
       <tbody>
-        ${list.slice(0, 200).map((c) => {
-          const amt = calcAmount(c);
-          const paid = Number(f(c, 'paidAmount', 'paid_amount')) || 0;
-          const rem = Math.max(0, amt - paid);
-          const st = c.status || 'pending';
-          return `<tr>
+        ${list
+          .slice(0, 200)
+          .map((c) => {
+            const amt = calcAmount(c);
+            const paid = Number(f(c, 'paidAmount', 'paid_amount')) || 0;
+            const rem = Math.max(0, amt - paid);
+            const st = c.status || 'pending';
+            return `<tr>
             <td>${esc(f(c, 'clientName', 'client_name')) || '—'}</td>
             <td>${esc(f(c, 'agentName', 'agent_name')) || '—'}</td>
             <td>${fmt(f(c, 'dealValue', 'deal_value'))} ر.س</td>
@@ -355,31 +449,41 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
             <td class="amount-red">${fmt(rem)} ر.س</td>
             <td><span class="status-badge" style="background:${STATUS_COLORS[st] || '#94a3b8'}">${STATUS_LABELS[st] || st}</span></td>
           </tr>`;
-        }).join('')}
+          })
+          .join('')}
       </tbody>
     </table>
 
-    ${agentSummary.length > 1 ? `
+    ${
+      agentSummary.length > 1
+        ? `
     <div class="section-title">ملخص حسب الوكيل</div>
     <table>
       <thead><tr><th>الوكيل</th><th>عدد الصفقات</th><th>إجمالي العمولة</th><th>المدفوع</th><th>المتبقي</th></tr></thead>
       <tbody>
-        ${agentSummary.sort((a, b) => b.commission - a.commission).map((a) => `<tr>
+        ${agentSummary
+          .sort((a, b) => b.commission - a.commission)
+          .map(
+            (a) => `<tr>
           <td style="font-weight:600">${esc(a.name)}</td>
           <td>${a.count}</td>
           <td>${fmt(a.commission)} ر.س</td>
           <td class="amount-green">${fmt(a.paid)} ر.س</td>
           <td class="amount-red">${fmt(a.remaining)} ر.س</td>
-        </tr>`).join('')}
+        </tr>`
+          )
+          .join('')}
       </tbody>
-    </table>` : ''}
+    </table>`
+        : ''
+    }
 
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
   </div>`;
 
-  const filename = `عمولات_${(officeName).replace(/[/\\?%*:|"<>]/g, '_')}_${todayStr()}.pdf`;
+  const filename = `عمولات_${officeName.replace(/[/\\?%*:|"<>]/g, '_')}_${todayStr()}.pdf`;
   return htmlToPdf(container, filename);
 }
 
@@ -394,7 +498,9 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
  * @param {Object} period - { from, to, month, year }
  */
 export async function exportLedgerStatement(ledger, transactions, officeInfo = {}, period = {}) {
-  const txs = (transactions || []).slice().sort((a, b) => ((a.date || '') > (b.date || '') ? 1 : -1));
+  const txs = (transactions || [])
+    .slice()
+    .sort((a, b) => ((a.date || '') > (b.date || '') ? 1 : -1));
   if (txs.length === 0) throw new Error('لا توجد حركات للتصدير');
 
   const officeName = officeInfo?.name || 'مكتب عقاري';
@@ -407,12 +513,16 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
   } else if (period.from && period.to) {
     periodLabel = `${period.from} — ${period.to}`;
   } else {
-    const dates = txs.map((t) => t.date).filter(Boolean).sort();
+    const dates = txs
+      .map((t) => t.date)
+      .filter(Boolean)
+      .sort();
     periodLabel = dates.length > 0 ? `${dates[0]} — ${dates[dates.length - 1]}` : todayStr();
   }
 
   // حساب الأرصدة
-  let totalIncome = 0, totalExpense = 0;
+  let totalIncome = 0,
+    totalExpense = 0;
   let runningBalance = 0;
   const rows = txs.map((t) => {
     const amt = Number(t.amount) || 0;
@@ -440,6 +550,7 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
   </style>
   <div class="pdf-page">
     <div class="pdf-header">
+      ${logoHtml(officeInfo)}
       <h1>قيد العقار</h1>
       <div class="subtitle">كشف حساب</div>
       <div class="period">${esc(ledgerName)} — ${esc(periodLabel)}</div>
@@ -467,14 +578,19 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
         <th>التاريخ</th><th>الوصف</th><th>التصنيف</th><th>مدين</th><th>دائن</th><th>الرصيد</th>
       </tr></thead>
       <tbody>
-        ${rows.slice(0, 200).map((r) => `<tr>
+        ${rows
+          .slice(0, 200)
+          .map(
+            (r) => `<tr>
           <td>${esc(r.date)}</td>
           <td>${esc(r.description.substring(0, 50))}</td>
           <td>${esc(r.category)}</td>
           <td class="${r.debit > 0 ? 'amount-red' : ''}">${r.debit > 0 ? fmt(r.debit) + ' ر.س' : '—'}</td>
           <td class="${r.credit > 0 ? 'amount-green' : ''}">${r.credit > 0 ? fmt(r.credit) + ' ر.س' : '—'}</td>
           <td style="font-weight:600;color:${r.balance >= 0 ? '#059669' : '#dc2626'}">${fmt(r.balance)} ر.س</td>
-        </tr>`).join('')}
+        </tr>`
+          )
+          .join('')}
         <tr class="balance-row">
           <td colspan="3" style="text-align:center;font-size:13px;">الإجمالي</td>
           <td class="amount-red">${fmt(totalExpense)} ر.س</td>

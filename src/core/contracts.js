@@ -4,7 +4,11 @@
 const isDev = (() => {
   try {
     // Vite
-    if (typeof import.meta !== 'undefined' && import.meta.env && typeof import.meta.env.DEV !== 'undefined') {
+    if (
+      typeof import.meta !== 'undefined' &&
+      import.meta.env &&
+      typeof import.meta.env.DEV !== 'undefined'
+    ) {
       return !!import.meta.env.DEV;
     }
   } catch {}
@@ -12,7 +16,11 @@ const isDev = (() => {
 })();
 
 const safeJson = (v) => {
-  try { return JSON.stringify(v); } catch { return String(v); }
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
 };
 
 export function invariant(condition, message, context) {
@@ -27,7 +35,9 @@ export function invariant(condition, message, context) {
   }
 
   // Prod: do not crash; warn and continue
-  try { console.warn(full); } catch {}
+  try {
+    console.warn(full);
+  } catch {}
   return false;
 }
 
@@ -37,7 +47,11 @@ export function assertFn(fn, name) {
 }
 
 export function assertObj(obj, name) {
-  invariant(obj != null && typeof obj === 'object' && !Array.isArray(obj), `${name || 'obj'} must be an object`, { typeof: typeof obj });
+  invariant(
+    obj != null && typeof obj === 'object' && !Array.isArray(obj),
+    `${name || 'obj'} must be an object`,
+    { typeof: typeof obj }
+  );
   return obj;
 }
 

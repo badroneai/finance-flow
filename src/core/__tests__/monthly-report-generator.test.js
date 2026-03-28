@@ -28,8 +28,12 @@ vi.mock('../ledger-health.js', () => ({
 vi.mock('../ledger-analytics.js', () => ({
   computePL: vi.fn(({ transactions }) => {
     const txs = Array.isArray(transactions) ? transactions : [];
-    const income = txs.filter((t) => t.type === 'income').reduce((a, t) => a + (Number(t.amount) || 0), 0);
-    const expense = txs.filter((t) => t.type === 'expense').reduce((a, t) => a + (Number(t.amount) || 0), 0);
+    const income = txs
+      .filter((t) => t.type === 'income')
+      .reduce((a, t) => a + (Number(t.amount) || 0), 0);
+    const expense = txs
+      .filter((t) => t.type === 'expense')
+      .reduce((a, t) => a + (Number(t.amount) || 0), 0);
     return { income, expense, net: income - expense };
   }),
 }));
@@ -66,11 +70,43 @@ describe('monthly-report-generator — generateMonthlyReport', () => {
 
   it('حركات الشهر تُحسب في الملخص بشكل صحيح', async () => {
     const transactions = [
-      { id: 't1', ledgerId: LEDGER_ID, type: 'income', amount: 15000, date: '2025-03-05', category: 'إيجار', description: 'إيجار مارس' },
-      { id: 't2', ledgerId: LEDGER_ID, type: 'expense', amount: 3000, date: '2025-03-10', category: 'صيانة', description: 'صيانة مكيفات' },
-      { id: 't3', ledgerId: LEDGER_ID, type: 'expense', amount: 1000, date: '2025-03-15', category: 'كهرباء', description: 'فاتورة كهرباء' },
+      {
+        id: 't1',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 15000,
+        date: '2025-03-05',
+        category: 'إيجار',
+        description: 'إيجار مارس',
+      },
+      {
+        id: 't2',
+        ledgerId: LEDGER_ID,
+        type: 'expense',
+        amount: 3000,
+        date: '2025-03-10',
+        category: 'صيانة',
+        description: 'صيانة مكيفات',
+      },
+      {
+        id: 't3',
+        ledgerId: LEDGER_ID,
+        type: 'expense',
+        amount: 1000,
+        date: '2025-03-15',
+        category: 'كهرباء',
+        description: 'فاتورة كهرباء',
+      },
       // حركة خارج الشهر — لا تُحسب
-      { id: 't4', ledgerId: LEDGER_ID, type: 'income', amount: 5000, date: '2025-02-28', category: 'إيجار', description: 'إيجار فبراير' },
+      {
+        id: 't4',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 5000,
+        date: '2025-02-28',
+        category: 'إيجار',
+        description: 'إيجار فبراير',
+      },
     ];
 
     const report = await generateMonthlyReport(LEDGER_ID, 3, 2025, {
@@ -87,9 +123,30 @@ describe('monthly-report-generator — generateMonthlyReport', () => {
 
   it('رصيد الافتتاح يشمل حركات قبل الشهر', async () => {
     const transactions = [
-      { id: 't-prev', ledgerId: LEDGER_ID, type: 'income', amount: 20000, date: '2025-02-15', category: 'إيجار' },
-      { id: 't-prev2', ledgerId: LEDGER_ID, type: 'expense', amount: 5000, date: '2025-02-20', category: 'مصروف' },
-      { id: 't-current', ledgerId: LEDGER_ID, type: 'income', amount: 10000, date: '2025-03-10', category: 'إيجار' },
+      {
+        id: 't-prev',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 20000,
+        date: '2025-02-15',
+        category: 'إيجار',
+      },
+      {
+        id: 't-prev2',
+        ledgerId: LEDGER_ID,
+        type: 'expense',
+        amount: 5000,
+        date: '2025-02-20',
+        category: 'مصروف',
+      },
+      {
+        id: 't-current',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 10000,
+        date: '2025-03-10',
+        category: 'إيجار',
+      },
     ];
 
     const report = await generateMonthlyReport(LEDGER_ID, 3, 2025, {
@@ -106,10 +163,38 @@ describe('monthly-report-generator — generateMonthlyReport', () => {
 
   it('تفصيل الدخل والمصروف حسب التصنيف', async () => {
     const transactions = [
-      { id: 't1', ledgerId: LEDGER_ID, type: 'income', amount: 10000, date: '2025-03-01', category: 'إيجار' },
-      { id: 't2', ledgerId: LEDGER_ID, type: 'income', amount: 5000, date: '2025-03-05', category: 'عمولة' },
-      { id: 't3', ledgerId: LEDGER_ID, type: 'expense', amount: 2000, date: '2025-03-10', category: 'صيانة' },
-      { id: 't4', ledgerId: LEDGER_ID, type: 'expense', amount: 1000, date: '2025-03-12', category: 'صيانة' },
+      {
+        id: 't1',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 10000,
+        date: '2025-03-01',
+        category: 'إيجار',
+      },
+      {
+        id: 't2',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 5000,
+        date: '2025-03-05',
+        category: 'عمولة',
+      },
+      {
+        id: 't3',
+        ledgerId: LEDGER_ID,
+        type: 'expense',
+        amount: 2000,
+        date: '2025-03-10',
+        category: 'صيانة',
+      },
+      {
+        id: 't4',
+        ledgerId: LEDGER_ID,
+        type: 'expense',
+        amount: 1000,
+        date: '2025-03-12',
+        category: 'صيانة',
+      },
     ];
 
     const report = await generateMonthlyReport(LEDGER_ID, 3, 2025, {
@@ -130,7 +215,14 @@ describe('monthly-report-generator — generateMonthlyReport', () => {
 
   it('صافي موجب يظهر كـ highlight إيجابي', async () => {
     const transactions = [
-      { id: 't1', ledgerId: LEDGER_ID, type: 'income', amount: 10000, date: '2025-03-01', category: 'إيجار' },
+      {
+        id: 't1',
+        ledgerId: LEDGER_ID,
+        type: 'income',
+        amount: 10000,
+        date: '2025-03-01',
+        category: 'إيجار',
+      },
     ];
 
     const report = await generateMonthlyReport(LEDGER_ID, 3, 2025, {

@@ -20,7 +20,7 @@ const startOfDayMs = (d = new Date()) => {
 
 const normalizeRisk = (risk) => {
   const x = String(risk || '').toLowerCase();
-  return (x === 'high' || x === 'medium' || x === 'low') ? x : '';
+  return x === 'high' || x === 'medium' || x === 'low' ? x : '';
 };
 
 // ==================== SECTION: Inbox (from ledger-inbox.js) ====================
@@ -54,12 +54,14 @@ const isSnoozedActive = (r, nowMs) => {
 
 const normalizeStatus = (s) => {
   const x = String(s || '').toLowerCase();
-  return (x === 'open' || x === 'snoozed' || x === 'resolved') ? x : 'open';
+  return x === 'open' || x === 'snoozed' || x === 'resolved' ? x : 'open';
 };
 
 export function buildLedgerInbox({ ledgerId, recurringItems = [], now = new Date() } = {}) {
   const lid = String(ledgerId || '').trim();
-  const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(r => String(r?.ledgerId || '') === lid);
+  const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
 
   const nowMs = (() => {
     const d = new Date(now);
@@ -85,12 +87,25 @@ export function buildLedgerInbox({ ledgerId, recurringItems = [], now = new Date
     let reason = null;
     let priority = 0;
 
-    if (highRisk && overdue) { reason = 'خطر متأخر'; priority = 100; }
-    else if (overdue) { reason = 'متأخر'; priority = 90; }
-    else if (required && highRisk && unpriced) { reason = 'خطر غير مسعّر'; priority = 85; }
-    else if (required && unpriced) { reason = 'إلزامي غير مسعّر'; priority = 75; }
-    else if (isDueWithinDays(r, 7, nowMs)) { reason = 'مستحق خلال 7 أيام'; priority = 70; }
-    else if (isDueWithinDays(r, 14, nowMs)) { reason = 'مستحق خلال 14 يوم'; priority = 60; }
+    if (highRisk && overdue) {
+      reason = 'خطر متأخر';
+      priority = 100;
+    } else if (overdue) {
+      reason = 'متأخر';
+      priority = 90;
+    } else if (required && highRisk && unpriced) {
+      reason = 'خطر غير مسعّر';
+      priority = 85;
+    } else if (required && unpriced) {
+      reason = 'إلزامي غير مسعّر';
+      priority = 75;
+    } else if (isDueWithinDays(r, 7, nowMs)) {
+      reason = 'مستحق خلال 7 أيام';
+      priority = 70;
+    } else if (isDueWithinDays(r, 14, nowMs)) {
+      reason = 'مستحق خلال 14 يوم';
+      priority = 60;
+    }
 
     if (!reason) continue;
 
@@ -159,7 +174,9 @@ const addToBreakdown = (obj, key, amount) => {
 
 export function computeCashPlan({ ledgerId, recurringItems = [], now = new Date() } = {}) {
   const lid = String(ledgerId || '').trim();
-  const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(r => String(r?.ledgerId || '') === lid);
+  const list = (Array.isArray(recurringItems) ? recurringItems : []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
 
   const todayMs = startOfDayMs(now);
 
@@ -220,7 +237,9 @@ const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
 const normalizeCategory = (c) => {
   const x = String(c || '').toLowerCase();
-  return (x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing') ? x : 'other';
+  return x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing'
+    ? x
+    : 'other';
 };
 
 const freqMultiplierYearly = (freq) => {
@@ -263,7 +282,7 @@ const nextMonths = (count = 6) => {
 
 export function normalizeMonthlyRunRate(recurringItems = []) {
   const list = Array.isArray(recurringItems) ? recurringItems : [];
-  const priced = list.filter(r => Number(r?.amount) > 0);
+  const priced = list.filter((r) => Number(r?.amount) > 0);
 
   const byCategory = { system: 0, operational: 0, maintenance: 0, marketing: 0, other: 0 };
   for (const r of priced) {
@@ -277,7 +296,7 @@ export function normalizeMonthlyRunRate(recurringItems = []) {
 
 export function forecast6m(recurringItems = [], scenario = {}) {
   const list = Array.isArray(recurringItems) ? recurringItems : [];
-  const priced = list.filter(r => Number(r?.amount) > 0);
+  const priced = list.filter((r) => Number(r?.amount) > 0);
 
   const mult = {
     rent: Number(scenario.rent ?? 1.0),
@@ -291,13 +310,30 @@ export function forecast6m(recurringItems = [], scenario = {}) {
   const isRentLike = (r) => {
     const hint = String(r?.saHint || '').toLowerCase();
     const title = String(r?.title || '').toLowerCase();
-    return hint.includes('إيجار') || hint.includes('ايجار') || title.includes('إيجار') || title.includes('ايجار');
+    return (
+      hint.includes('إيجار') ||
+      hint.includes('ايجار') ||
+      title.includes('إيجار') ||
+      title.includes('ايجار')
+    );
   };
   const isUtilitiesLike = (r) => {
     const hint = String(r?.saHint || '').toLowerCase();
     const title = String(r?.title || '').toLowerCase();
-    return hint.includes('كهرب') || hint.includes('ماء') || hint.includes('اتصال') || hint.includes('إنترنت') || hint.includes('انترنت') || hint.includes('هاتف') ||
-      title.includes('كهرب') || title.includes('ماء') || title.includes('اتصال') || title.includes('إنترنت') || title.includes('انترنت') || title.includes('هاتف');
+    return (
+      hint.includes('كهرب') ||
+      hint.includes('ماء') ||
+      hint.includes('اتصال') ||
+      hint.includes('إنترنت') ||
+      hint.includes('انترنت') ||
+      hint.includes('هاتف') ||
+      title.includes('كهرب') ||
+      title.includes('ماء') ||
+      title.includes('اتصال') ||
+      title.includes('إنترنت') ||
+      title.includes('انترنت') ||
+      title.includes('هاتف')
+    );
   };
 
   const bucketForScenario = (r) => {
@@ -310,7 +346,7 @@ export function forecast6m(recurringItems = [], scenario = {}) {
     return 'other';
   };
 
-  const months = nextMonths(6).map(m => ({
+  const months = nextMonths(6).map((m) => ({
     monthKey: m.monthKey,
     expectedOutflow: 0,
     byCategory: { system: 0, operational: 0, maintenance: 0, marketing: 0, other: 0 },
@@ -345,7 +381,7 @@ export function cashGapModel(forecast = [], assumedMonthlyInflow = 0) {
   let firstGapMonth = null;
   let worstGap = 0;
 
-  for (const row of (Array.isArray(forecast) ? forecast : [])) {
+  for (const row of Array.isArray(forecast) ? forecast : []) {
     const outflow = Number(row?.expectedOutflow) || 0;
     const net = inflow - outflow;
     cumulative += net;
@@ -365,7 +401,8 @@ export function insightsFromForecast(forecast = [], cashGap = null) {
   for (const m of list) {
     for (const k of Object.keys(sumByCategory)) sumByCategory[k] += Number(m?.byCategory?.[k] || 0);
   }
-  const top = Object.entries(sumByCategory).sort((a, b) => (b[1] || 0) - (a[1] || 0))[0]?.[0] || 'other';
+  const top =
+    Object.entries(sumByCategory).sort((a, b) => (b[1] || 0) - (a[1] || 0))[0]?.[0] || 'other';
 
   const maint = sumByCategory.maintenance;
   const avg = Object.values(sumByCategory).reduce((a, n) => a + (Number(n) || 0), 0) / 5;
@@ -375,7 +412,9 @@ export function insightsFromForecast(forecast = [], cashGap = null) {
   if (maint > avg * 1.2) tips.push('الصيانة مرتفعة نسبيًا — راجع البنود القابلة للتأجيل/التجزئة.');
 
   if (cashGap && cashGap.firstGapMonth) {
-    tips.push(`يوجد عجز متوقع يبدأ من ${cashGap.firstGapMonth}. خفّض البنود الأعلى ضغطًا أو عزز الدخل الشهري مبكرًا.`);
+    tips.push(
+      `يوجد عجز متوقع يبدأ من ${cashGap.firstGapMonth}. خفّض البنود الأعلى ضغطًا أو عزز الدخل الشهري مبكرًا.`
+    );
   } else if (cashGap) {
     tips.push('لا يوجد عجز تراكمي خلال 6 أشهر وفق الدخل المفترض الحالي.');
   }

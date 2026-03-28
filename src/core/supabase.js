@@ -24,16 +24,14 @@ const hasValidConfig = !isPlaceholder(supabaseUrl) && !isPlaceholder(supabaseAno
 if (!hasValidConfig && import.meta.env.DEV) {
   console.warn(
     '[قيد العقار] ⚠️ إعدادات Supabase غير مكتملة أو وهمية.\n' +
-    'التطبيق يعمل بوضع localStorage فقط.\n' +
-    'لتفعيل Supabase، عدّل ملف .env.local بالقيم الحقيقية من لوحة تحكم Supabase.'
+      'التطبيق يعمل بوضع localStorage فقط.\n' +
+      'لتفعيل Supabase، عدّل ملف .env.local بالقيم الحقيقية من لوحة تحكم Supabase.'
   );
 }
 
 // ─── إنشاء العميل ────────────────────────────────────────────────
 // نُنشئ العميل حتى لو كانت القيم وهمية — لن يُستخدم فعلياً إلا عند التحقق من hasValidConfig
-export const supabase = hasValidConfig
-  ? createClient(supabaseUrl, supabaseAnonKey)
-  : null;
+export const supabase = hasValidConfig ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 /** هل إعدادات Supabase صالحة وجاهزة للاستخدام؟ */
 export const isSupabaseConfigured = hasValidConfig;
@@ -45,7 +43,9 @@ export const isSupabaseConfigured = hasValidConfig;
 export const getCurrentUser = async () => {
   if (!supabase) return null;
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
     return user;
   } catch {
     return null;
@@ -59,7 +59,9 @@ export const getCurrentUser = async () => {
 export const getSession = async () => {
   if (!supabase) return null;
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     return session;
   } catch {
     return null;

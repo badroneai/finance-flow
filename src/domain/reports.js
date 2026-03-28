@@ -35,16 +35,16 @@ export function getDashboardDateRange(periodType, fromDate, toDate, nowDate = ne
 
 export function computeIncomeExpenseNet(txs) {
   const list = Array.isArray(txs) ? txs : [];
-  const income = list.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = list.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
+  const income = list.filter((t) => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = list.filter((t) => t.type === 'expense').reduce((s, t) => s + t.amount, 0);
   const net = income - expense;
   return { income, expense, net };
 }
 
 export function splitCommissionsByStatus(allCms) {
   const list = Array.isArray(allCms) ? allCms : [];
-  const pendingCms = list.filter(c => c.status === 'pending');
-  const paidCms = list.filter(c => c.status === 'paid');
+  const pendingCms = list.filter((c) => c.status === 'pending');
+  const paidCms = list.filter((c) => c.status === 'paid');
   return { pendingCms, paidCms };
 }
 

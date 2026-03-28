@@ -26,11 +26,7 @@ const profile = {
   /** جلب بيانات الملف الشخصي بمعرّف المستخدم */
   get: async (userId) => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
+      const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
       if (error) return handleError('profile.get', error);
       return { data, error: null };
     } catch (err) {
@@ -159,11 +155,7 @@ const ledgers = {
   /** جلب دفتر واحد بالمعرّف */
   get: async (id) => {
     try {
-      const { data, error } = await supabase
-        .from('ledgers')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data, error } = await supabase.from('ledgers').select('*').eq('id', id).single();
       if (error) return handleError('ledgers.get', error);
       return { data, error: null };
     } catch (err) {
@@ -174,11 +166,7 @@ const ledgers = {
   /** إنشاء دفتر جديد */
   create: async (ledger) => {
     try {
-      const { data, error } = await supabase
-        .from('ledgers')
-        .insert(ledger)
-        .select('*')
-        .single();
+      const { data, error } = await supabase.from('ledgers').insert(ledger).select('*').single();
       if (error) return handleError('ledgers.create', error);
       return { data, error: null };
     } catch (err) {
@@ -205,10 +193,7 @@ const ledgers = {
   /** حذف دفتر */
   remove: async (id) => {
     try {
-      const { error } = await supabase
-        .from('ledgers')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('ledgers').delete().eq('id', id);
       if (error) return handleError('ledgers.remove', error);
       return { data: null, error: null };
     } catch (err) {
@@ -240,10 +225,7 @@ const transactions = {
   /** جلب حركات المكتب مع فلاتر اختيارية */
   list: async (officeId, filters = {}) => {
     try {
-      let query = supabase
-        .from('transactions')
-        .select('*')
-        .eq('office_id', officeId);
+      let query = supabase.from('transactions').select('*').eq('office_id', officeId);
 
       // فلاتر اختيارية
       if (filters.ledgerId) query = query.eq('ledger_id', filters.ledgerId);
@@ -268,11 +250,7 @@ const transactions = {
   /** جلب حركة واحدة بالمعرّف */
   get: async (id) => {
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data, error } = await supabase.from('transactions').select('*').eq('id', id).single();
       if (error) return handleError('transactions.get', error);
       return { data, error: null };
     } catch (err) {
@@ -283,11 +261,7 @@ const transactions = {
   /** إنشاء حركة مالية جديدة */
   create: async (tx) => {
     try {
-      const { data, error } = await supabase
-        .from('transactions')
-        .insert(tx)
-        .select('*')
-        .single();
+      const { data, error } = await supabase.from('transactions').insert(tx).select('*').single();
       if (error) return handleError('transactions.create', error);
       return { data, error: null };
     } catch (err) {
@@ -314,10 +288,7 @@ const transactions = {
   /** حذف حركة مالية */
   remove: async (id) => {
     try {
-      const { error } = await supabase
-        .from('transactions')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('transactions').delete().eq('id', id);
       if (error) return handleError('transactions.remove', error);
       return { data: null, error: null };
     } catch (err) {
@@ -338,10 +309,7 @@ const recurringItems = {
   /** جلب الالتزامات المتكررة للمكتب مع فلتر اختياري بدفتر */
   list: async (officeId, ledgerId = null) => {
     try {
-      let query = supabase
-        .from('recurring_items')
-        .select('*')
-        .eq('office_id', officeId);
+      let query = supabase.from('recurring_items').select('*').eq('office_id', officeId);
 
       if (ledgerId) query = query.eq('ledger_id', ledgerId);
 
@@ -389,10 +357,7 @@ const recurringItems = {
   /** حذف التزام متكرر */
   remove: async (id) => {
     try {
-      const { error } = await supabase
-        .from('recurring_items')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('recurring_items').delete().eq('id', id);
       if (error) return handleError('recurringItems.remove', error);
       return { data: null, error: null };
     } catch (err) {
@@ -408,10 +373,7 @@ const commissions = {
   /** جلب جميع عمولات المكتب مع فلاتر اختيارية */
   list: async (officeId, filters = {}) => {
     try {
-      let query = supabase
-        .from('commissions')
-        .select('*')
-        .eq('office_id', officeId);
+      let query = supabase.from('commissions').select('*').eq('office_id', officeId);
 
       if (filters.ledgerId) query = query.eq('ledger_id', filters.ledgerId);
       if (filters.status) query = query.eq('status', filters.status);
@@ -430,11 +392,7 @@ const commissions = {
   /** جلب عمولة واحدة */
   get: async (id) => {
     try {
-      const { data, error } = await supabase
-        .from('commissions')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data, error } = await supabase.from('commissions').select('*').eq('id', id).single();
       if (error) return handleError('commissions.get', error);
       return { data, error: null };
     } catch (err) {
@@ -476,10 +434,7 @@ const commissions = {
   /** حذف عمولة */
   remove: async (id) => {
     try {
-      const { error } = await supabase
-        .from('commissions')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('commissions').delete().eq('id', id);
       if (error) return handleError('commissions.remove', error);
       return { data: null, error: null };
     } catch (err) {
@@ -510,11 +465,7 @@ const drafts = {
   /** جلب مسودة واحدة */
   get: async (id) => {
     try {
-      const { data, error } = await supabase
-        .from('drafts')
-        .select('*')
-        .eq('id', id)
-        .single();
+      const { data, error } = await supabase.from('drafts').select('*').eq('id', id).single();
       if (error) return handleError('drafts.get', error);
       return { data, error: null };
     } catch (err) {
@@ -525,11 +476,7 @@ const drafts = {
   /** إنشاء مسودة جديدة */
   create: async (draft) => {
     try {
-      const { data, error } = await supabase
-        .from('drafts')
-        .insert(draft)
-        .select('*')
-        .single();
+      const { data, error } = await supabase.from('drafts').insert(draft).select('*').single();
       if (error) return handleError('drafts.create', error);
       return { data, error: null };
     } catch (err) {
@@ -556,10 +503,7 @@ const drafts = {
   /** حذف مسودة */
   remove: async (id) => {
     try {
-      const { error } = await supabase
-        .from('drafts')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('drafts').delete().eq('id', id);
       if (error) return handleError('drafts.remove', error);
       return { data: null, error: null };
     } catch (err) {
@@ -569,98 +513,336 @@ const drafts = {
 };
 
 // ═══════════════════════════════════════
-// جهات الاتصال (contacts) — هيكل فقط للمستقبل
+// جهات الاتصال (contacts) — SPR-018
 // ═══════════════════════════════════════
 const contacts = {
-  list: async (officeId, filters = {}) => { /* TODO */ },
-  get: async (id) => { /* TODO */ },
-  create: async (contact) => { /* TODO */ },
-  update: async (id, updates) => { /* TODO */ },
-  remove: async (id) => { /* TODO */ },
+  /** جلب جميع جهات اتصال المكتب مع فلاتر اختيارية */
+  list: async (officeId, filters = {}) => {
+    try {
+      let query = supabase.from('contacts').select('*').eq('office_id', officeId);
+      if (filters.type) query = query.eq('type', filters.type);
+      if (filters.city) query = query.eq('city', filters.city);
+      if (filters.search)
+        query = query.or(
+          `name.ilike.%${filters.search}%,phone.ilike.%${filters.search}%,email.ilike.%${filters.search}%,company_name.ilike.%${filters.search}%`
+        );
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('contacts.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('contacts.list', err);
+    }
+  },
+  /** جلب جهة اتصال واحدة بالمعرّف */
+  get: async (id) => {
+    try {
+      const { data, error } = await supabase.from('contacts').select('*').eq('id', id).single();
+      if (error) return handleError('contacts.get', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contacts.get', err);
+    }
+  },
+  /** إنشاء جهة اتصال جديدة */
+  create: async (contact) => {
+    try {
+      const { data, error } = await supabase.from('contacts').insert(contact).select().single();
+      if (error) return handleError('contacts.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contacts.create', err);
+    }
+  },
+  /** تحديث جهة اتصال */
+  update: async (id, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('contacts')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return handleError('contacts.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contacts.update', err);
+    }
+  },
+  /** حذف جهة اتصال */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('contacts').delete().eq('id', id);
+      if (error) return handleError('contacts.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('contacts.remove', err);
+    }
+  },
 };
 
 // ═══════════════════════════════════════
-// الوحدات العقارية (properties) — هيكل فقط للمستقبل
+// الوحدات العقارية (properties) — SPR-018
 // ═══════════════════════════════════════
 const properties = {
-  list: async (officeId, filters = {}) => { /* TODO */ },
-  get: async (id) => { /* TODO */ },
-  create: async (property) => { /* TODO */ },
-  update: async (id, updates) => { /* TODO */ },
-  remove: async (id) => { /* TODO */ },
+  /** جلب جميع عقارات المكتب مع فلاتر اختيارية */
+  list: async (officeId, filters = {}) => {
+    try {
+      let query = supabase.from('properties').select('*').eq('office_id', officeId);
+      if (filters.type) query = query.eq('type', filters.type);
+      if (filters.status) query = query.eq('status', filters.status);
+      if (filters.city) query = query.eq('city', filters.city);
+      if (filters.search)
+        query = query.or(
+          `name.ilike.%${filters.search}%,district.ilike.%${filters.search}%,owner_name.ilike.%${filters.search}%`
+        );
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('properties.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('properties.list (exception)', err);
+    }
+  },
+
+  /** جلب عقار واحد بالمعرّف */
+  get: async (id) => {
+    try {
+      const { data, error } = await supabase.from('properties').select('*').eq('id', id).single();
+      if (error) return handleError('properties.get', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('properties.get (exception)', err);
+    }
+  },
+
+  /** إنشاء عقار جديد */
+  create: async (property) => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .insert(property)
+        .select('*')
+        .single();
+      if (error) return handleError('properties.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('properties.create (exception)', err);
+    }
+  },
+
+  /** تحديث بيانات عقار */
+  update: async (id, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) return handleError('properties.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('properties.update (exception)', err);
+    }
+  },
+
+  /** حذف عقار */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('properties').delete().eq('id', id);
+      if (error) return handleError('properties.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('properties.remove (exception)', err);
+    }
+  },
 };
 
 // ═══════════════════════════════════════
-// العقود (contracts) — هيكل فقط للمستقبل
+// العقود (contracts) — SPR-018
 // ═══════════════════════════════════════
 const contracts = {
-  list: async (officeId, filters = {}) => { /* TODO */ },
-  get: async (id) => { /* TODO */ },
-  create: async (contract) => { /* TODO */ },
-  update: async (id, updates) => { /* TODO */ },
-  remove: async (id) => { /* TODO */ },
+  /** جلب جميع عقود المكتب مع فلاتر اختيارية */
+  list: async (officeId, filters = {}) => {
+    try {
+      let query = supabase
+        .from('contracts')
+        .select('*, properties(name), contacts(name)')
+        .eq('office_id', officeId);
+      if (filters.type) query = query.eq('type', filters.type);
+      if (filters.status) query = query.eq('status', filters.status);
+      if (filters.propertyId) query = query.eq('property_id', filters.propertyId);
+      if (filters.contactId) query = query.eq('contact_id', filters.contactId);
+      if (filters.search)
+        query = query.or(
+          `contract_number.ilike.%${filters.search}%,notes.ilike.%${filters.search}%`
+        );
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('contracts.list', error);
+      // إضافة أسماء العقار والعميل للبحث المحلي
+      const enriched = (data || []).map((c) => ({
+        ...c,
+        _property_name: c.properties?.name || '',
+        _contact_name: c.contacts?.name || '',
+      }));
+      return { data: enriched, error: null };
+    } catch (err) {
+      return handleError('contracts.list', err);
+    }
+  },
+  /** جلب عقد واحد بالمعرّف */
+  get: async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*, properties(name), contacts(name)')
+        .eq('id', id)
+        .single();
+      if (error) return handleError('contracts.get', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contracts.get', err);
+    }
+  },
+  /** إنشاء عقد جديد */
+  create: async (contract) => {
+    try {
+      const { data, error } = await supabase.from('contracts').insert(contract).select().single();
+      if (error) return handleError('contracts.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contracts.create', err);
+    }
+  },
+  /** تحديث عقد */
+  update: async (id, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('contracts')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) return handleError('contracts.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contracts.update', err);
+    }
+  },
+  /** حذف عقد */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('contracts').delete().eq('id', id);
+      if (error) return handleError('contracts.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('contracts.remove', err);
+    }
+  },
 };
 
 // ═══════════════════════════════════════
 // جدول الدفعات (payment_schedule) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const paymentSchedule = {
-  list: async (officeId, contractId = null) => { /* TODO */ },
-  create: async (payment) => { /* TODO */ },
-  update: async (id, updates) => { /* TODO */ },
+  list: async (officeId, contractId = null) => {
+    /* TODO */
+  },
+  create: async (payment) => {
+    /* TODO */
+  },
+  update: async (id, updates) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════
 // طلبات الصيانة (maintenance_requests) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const maintenanceRequests = {
-  list: async (officeId, filters = {}) => { /* TODO */ },
-  get: async (id) => { /* TODO */ },
-  create: async (request) => { /* TODO */ },
-  update: async (id, updates) => { /* TODO */ },
+  list: async (officeId, filters = {}) => {
+    /* TODO */
+  },
+  get: async (id) => {
+    /* TODO */
+  },
+  create: async (request) => {
+    /* TODO */
+  },
+  update: async (id, updates) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════
 // سجل التواصل (contact_activities) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const contactActivities = {
-  list: async (officeId, contactId = null) => { /* TODO */ },
-  create: async (activity) => { /* TODO */ },
+  list: async (officeId, contactId = null) => {
+    /* TODO */
+  },
+  create: async (activity) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════
 // الإشعارات (notifications) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const notifications = {
-  list: async (userId) => { /* TODO */ },
-  markRead: async (id) => { /* TODO */ },
-  markAllRead: async (userId) => { /* TODO */ },
+  list: async (userId) => {
+    /* TODO */
+  },
+  markRead: async (id) => {
+    /* TODO */
+  },
+  markAllRead: async (userId) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════
 // تذاكر الدعم (support_tickets) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const supportTickets = {
-  list: async (officeId) => { /* TODO */ },
-  create: async (ticket) => { /* TODO */ },
-  update: async (id, updates) => { /* TODO */ },
+  list: async (officeId) => {
+    /* TODO */
+  },
+  create: async (ticket) => {
+    /* TODO */
+  },
+  update: async (id, updates) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════
 // سجل العمليات (audit_log) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const auditLog = {
-  log: async (entry) => { /* TODO */ },
-  list: async (officeId, filters = {}) => { /* TODO */ },
+  log: async (entry) => {
+    /* TODO */
+  },
+  list: async (officeId, filters = {}) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════
 // المرفقات (attachments) — هيكل فقط للمستقبل
 // ═══════════════════════════════════════
 const attachments = {
-  list: async (entityType, entityId) => { /* TODO */ },
-  upload: async (file, metadata) => { /* TODO */ },
-  remove: async (id) => { /* TODO */ },
+  list: async (entityType, entityId) => {
+    /* TODO */
+  },
+  upload: async (file, metadata) => {
+    /* TODO */
+  },
+  remove: async (id) => {
+    /* TODO */
+  },
 };
 
 // ═══════════════════════════════════════

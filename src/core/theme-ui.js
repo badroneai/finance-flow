@@ -22,7 +22,7 @@ let __themeSystemListener = null;
 export const getSavedTheme = () => {
   try {
     const t = storageFacade.getRaw(UI_THEME_KEY);
-    return (t === 'system' || t === 'light' || t === 'dim' || t === 'dark') ? t : null;
+    return t === 'system' || t === 'light' || t === 'dim' || t === 'dark' ? t : null;
   } catch {
     return null;
   }
@@ -30,7 +30,8 @@ export const getSavedTheme = () => {
 
 const getEffectiveSystemTheme = () => {
   try {
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark =
+      window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     return prefersDark ? 'dark' : 'light';
   } catch {
     return 'light';
@@ -45,7 +46,8 @@ const startSystemThemeListener = () => {
     __themeSystemListener = () => {
       document.documentElement.dataset.theme = getEffectiveSystemTheme();
     };
-    if (__themeSystemMql.addEventListener) __themeSystemMql.addEventListener('change', __themeSystemListener);
+    if (__themeSystemMql.addEventListener)
+      __themeSystemMql.addEventListener('change', __themeSystemListener);
     else if (__themeSystemMql.addListener) __themeSystemMql.addListener(__themeSystemListener);
   } catch {}
 };
@@ -53,19 +55,25 @@ const startSystemThemeListener = () => {
 const stopSystemThemeListener = () => {
   try {
     if (!__themeSystemMql || !__themeSystemListener) return;
-    if (__themeSystemMql.removeEventListener) __themeSystemMql.removeEventListener('change', __themeSystemListener);
-    else if (__themeSystemMql.removeListener) __themeSystemMql.removeListener(__themeSystemListener);
-  } catch {} finally {
+    if (__themeSystemMql.removeEventListener)
+      __themeSystemMql.removeEventListener('change', __themeSystemListener);
+    else if (__themeSystemMql.removeListener)
+      __themeSystemMql.removeListener(__themeSystemListener);
+  } catch {
+  } finally {
     __themeSystemMql = null;
     __themeSystemListener = null;
   }
 };
 
 export const applyTheme = (theme) => {
-  const t = (theme === 'system' || theme === 'light' || theme === 'dim' || theme === 'dark') ? theme : 'system';
+  const t =
+    theme === 'system' || theme === 'light' || theme === 'dim' || theme === 'dark'
+      ? theme
+      : 'system';
   if (t === 'system') startSystemThemeListener();
   else stopSystemThemeListener();
-  const effective = (t === 'system') ? getEffectiveSystemTheme() : t;
+  const effective = t === 'system' ? getEffectiveSystemTheme() : t;
   document.documentElement.dataset.theme = effective;
   try {
     storageFacade.setRaw(UI_THEME_KEY, t);
@@ -74,7 +82,8 @@ export const applyTheme = (theme) => {
 
 export const initTheme = () => {
   try {
-    if (document.body && document.body.dataset && document.body.dataset.theme) delete document.body.dataset.theme;
+    if (document.body && document.body.dataset && document.body.dataset.theme)
+      delete document.body.dataset.theme;
   } catch {}
   const saved = getSavedTheme();
   const t = saved || 'system';
@@ -85,7 +94,7 @@ export const initTheme = () => {
 export const getSavedNumerals = () => {
   try {
     const n = storageFacade.getRaw(UI_NUMERALS_KEY);
-    return (n === 'ar' || n === 'en') ? n : null;
+    return n === 'ar' || n === 'en' ? n : null;
   } catch {
     return null;
   }
@@ -96,14 +105,15 @@ export const getSavedDateHeader = () => {
     const v = storageFacade.getRaw(UI_DATE_HEADER_KEY);
     if (v === 'on') return 'both';
     if (v === 'off') return 'off';
-    return (v === 'off' || v === 'greg' || v === 'hijri' || v === 'both') ? v : null;
+    return v === 'off' || v === 'greg' || v === 'hijri' || v === 'both' ? v : null;
   } catch {
     return null;
   }
 };
 
 export const setDateHeaderPref = (value) => {
-  const v = (value === 'off' || value === 'greg' || value === 'hijri' || value === 'both') ? value : 'both';
+  const v =
+    value === 'off' || value === 'greg' || value === 'hijri' || value === 'both' ? value : 'both';
   try {
     storageFacade.setRaw(UI_DATE_HEADER_KEY, v);
   } catch {}
@@ -127,7 +137,7 @@ export const setOnboardingSeen = () => {
 };
 
 export const applyNumerals = (mode) => {
-  const m = (mode === 'ar' || mode === 'en') ? mode : 'ar';
+  const m = mode === 'ar' || mode === 'en' ? mode : 'ar';
   __uiNumeralsMode = m;
   try {
     window.__uiNumeralsMode = __uiNumeralsMode;

@@ -49,7 +49,9 @@ export const storageFacade = {
   // Small helper for batch operations (used in clear/export)
   removeMany: (keys = []) => {
     for (const k of keys) {
-      try { localStorage.removeItem(k); } catch {}
+      try {
+        localStorage.removeItem(k);
+      } catch {}
     }
   },
 };

@@ -21,7 +21,15 @@ function safeAmount(val) {
   return Number.isFinite(n) ? n : 0;
 }
 
-export function createRecurringItem({ ledgerId, title, category, amount, frequency, nextDueDate, notes }) {
+export function createRecurringItem({
+  ledgerId,
+  title,
+  category,
+  amount,
+  frequency,
+  nextDueDate,
+  notes,
+}) {
   const ts = nowISO();
   return {
     id: genId(),
@@ -54,7 +62,18 @@ export function validateRecurringItem(input) {
   const okCreatedAt = typeof x.createdAt === 'string' && x.createdAt.length > 0;
   const okUpdatedAt = typeof x.updatedAt === 'string' && x.updatedAt.length > 0;
 
-  return Boolean(okId && okLedgerId && okTitle && okCategory && okAmount && okFrequency && okNextDueDate && okNotes && okCreatedAt && okUpdatedAt);
+  return Boolean(
+    okId &&
+    okLedgerId &&
+    okTitle &&
+    okCategory &&
+    okAmount &&
+    okFrequency &&
+    okNextDueDate &&
+    okNotes &&
+    okCreatedAt &&
+    okUpdatedAt
+  );
 }
 
 // Optional pure helper: normalize frequency

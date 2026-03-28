@@ -38,7 +38,7 @@ export function pushHistoryEntry(item, entry, max = MAX_HISTORY) {
   h.push({
     at,
     type,
-    amount: (e.amount == null ? undefined : Number(e.amount)),
+    amount: e.amount == null ? undefined : Number(e.amount),
     txId: e.txId ? String(e.txId) : undefined,
     meta: e.meta && typeof e.meta === 'object' ? { ...e.meta } : undefined,
   });

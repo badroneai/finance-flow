@@ -3,7 +3,12 @@
   (Refactor Plan 0.2 — نفس أسماء الدوال المُصدّرة لعدم كسر الاستيرادات)
 */
 
-import { normalizeCategory, normalizeRisk, isSeededRecurring, isPastDue } from './recurring-intelligence.js';
+import {
+  normalizeCategory,
+  normalizeRisk,
+  isSeededRecurring,
+  isPastDue,
+} from './recurring-intelligence.js';
 import { assertArr } from './contracts.js';
 
 // ---------- Helpers shared across sections ----------
@@ -50,14 +55,14 @@ export function filterTransactionsForLedgerByMeta({ transactions, ledgerId }) {
   assertArr(transactions, 'transactions');
   const txs = Array.isArray(transactions) ? transactions : [];
   const lid = String(ledgerId || '');
-  return txs.filter(t => t?.meta && String(t.meta.ledgerId || '') === lid);
+  return txs.filter((t) => t?.meta && String(t.meta.ledgerId || '') === lid);
 }
 
 export function computePL({ transactions }) {
   assertArr(transactions, 'transactions');
   const txs = Array.isArray(transactions) ? transactions : [];
-  const income = txs.filter(t => t.type === 'income').reduce((a, t) => a + asNum(t.amount), 0);
-  const expense = txs.filter(t => t.type === 'expense').reduce((a, t) => a + asNum(t.amount), 0);
+  const income = txs.filter((t) => t.type === 'income').reduce((a, t) => a + asNum(t.amount), 0);
+  const expense = txs.filter((t) => t.type === 'expense').reduce((a, t) => a + asNum(t.amount), 0);
   return { income, expense, net: income - expense };
 }
 
@@ -81,8 +86,10 @@ export function computeComplianceScore({ recurringItems, budgetsHealth }) {
   const seeded = list.filter(isSeededRecurring);
   if (seeded.length === 0) return null;
 
-  const completion = seeded.length ? (seeded.filter(x => asNum(x.amount) > 0).length / seeded.length) : 0;
-  const overdueCount = seeded.filter(x => isPastDue(x)).length;
+  const completion = seeded.length
+    ? seeded.filter((x) => asNum(x.amount) > 0).length / seeded.length
+    : 0;
+  const overdueCount = seeded.filter((x) => isPastDue(x)).length;
 
   const budgetPenalty = (() => {
     if (!budgetsHealth) return 0;
@@ -96,11 +103,12 @@ export function computeComplianceScore({ recurringItems, budgetsHealth }) {
   const score = Math.max(0, Math.min(1, completion - overduePenalty - budgetPenalty));
   const pct = Math.round(score * 100);
 
-  const note = overdueCount > 0
-    ? 'يوجد استحقاقات متأخرة — ابدأ بتسعير/تحديث الأقرب.'
-    : budgetsHealth?.status === 'danger'
-      ? 'تجاوز للميزانية — راجع الالتزامات عالية التكلفة.'
-      : 'جيد — استمر برفع اكتمال التسعير.';
+  const note =
+    overdueCount > 0
+      ? 'يوجد استحقاقات متأخرة — ابدأ بتسعير/تحديث الأقرب.'
+      : budgetsHealth?.status === 'danger'
+        ? 'تجاوز للميزانية — راجع الالتزامات عالية التكلفة.'
+        : 'جيد — استمر برفع اكتمال التسعير.';
 
   return { pct, note, completionPct: Math.round(completion * 100), overdueCount };
 }
@@ -117,16 +125,16 @@ export function normalizeBudgets(budgets) {
 export function computeBudgetHealth({ actualMonthly = 0, actualYearly = 0, budgets }) {
   const b = normalizeBudgets(budgets);
 
-  const gapMonthly = b.monthlyTarget > 0 ? (b.monthlyTarget - actualMonthly) : 0;
-  const gapYearly = b.yearlyTarget > 0 ? (b.yearlyTarget - actualYearly) : 0;
+  const gapMonthly = b.monthlyTarget > 0 ? b.monthlyTarget - actualMonthly : 0;
+  const gapYearly = b.yearlyTarget > 0 ? b.yearlyTarget - actualYearly : 0;
 
-  const ratioMonthly = b.monthlyTarget > 0 ? (actualMonthly / b.monthlyTarget) : null;
-  const ratioYearly = b.yearlyTarget > 0 ? (actualYearly / b.yearlyTarget) : null;
+  const ratioMonthly = b.monthlyTarget > 0 ? actualMonthly / b.monthlyTarget : null;
+  const ratioYearly = b.yearlyTarget > 0 ? actualYearly / b.yearlyTarget : null;
 
   const status = (() => {
     if (b.monthlyTarget === 0 && b.yearlyTarget === 0) return 'neutral';
 
-    const ratios = [ratioMonthly, ratioYearly].filter(x => typeof x === 'number');
+    const ratios = [ratioMonthly, ratioYearly].filter((x) => typeof x === 'number');
     const max = ratios.length ? Math.max(...ratios) : 0;
 
     if (max <= 0.7) return 'good';
@@ -202,10 +210,16 @@ export function computeExpectedByMonth(forecast6mOutput = [], incomeModelFn = nu
     if (!isValidMonthKey(key)) continue;
 
     const expectedExpense = Number(row?.expectedOutflow) || 0;
-    const expectedIncome = typeof incomeModelFn === 'function' ? (Number(incomeModelFn(key)) || 0) : 0;
+    const expectedIncome =
+      typeof incomeModelFn === 'function' ? Number(incomeModelFn(key)) || 0 : 0;
     const expectedNet = expectedIncome - expectedExpense;
 
-    expected[key] = { income: expectedIncome, expense: expectedExpense, net: expectedNet, byCategory: row?.byCategory || null };
+    expected[key] = {
+      income: expectedIncome,
+      expense: expectedExpense,
+      net: expectedNet,
+      byCategory: row?.byCategory || null,
+    };
   }
 
   return { months: expected };
@@ -223,7 +237,9 @@ export function variance(expectedRow = null, actualRow = null) {
   if (varianceExpense > 0) {
     const by = e.byCategory && typeof e.byCategory === 'object' ? e.byCategory : null;
     if (by) {
-      const top = Object.entries(by).sort((x, y) => (Number(y[1]) || 0) - (Number(x[1]) || 0))[0]?.[0];
+      const top = Object.entries(by).sort(
+        (x, y) => (Number(y[1]) || 0) - (Number(x[1]) || 0)
+      )[0]?.[0];
       if (top) reasons.push(`مصروفات أعلى من المتوقع (أكبر ضغط: ${top}).`);
       else reasons.push('مصروفات أعلى من المتوقع.');
     } else {
@@ -268,18 +284,24 @@ export function buildIncomeModelFn(model = {}) {
     const peak = Number(model?.peakMonthly) || 0;
     const base = Number(model?.baseMonthly) || 0;
     const peaks = Array.isArray(model?.peakMonths) ? model.peakMonths.map(String) : [];
-    return (monthKey) => peaks.includes(String(monthKey)) ? peak : base;
+    return (monthKey) => (peaks.includes(String(monthKey)) ? peak : base);
   }
 
   if (mode === 'manual') {
-    const map = model?.manualByMonth && typeof model.manualByMonth === 'object' ? model.manualByMonth : {};
+    const map =
+      model?.manualByMonth && typeof model.manualByMonth === 'object' ? model.manualByMonth : {};
     return (monthKey) => Number(map?.[String(monthKey)]) || 0;
   }
 
   return () => 0;
 }
 
-export function getLast4MonthsTable({ forecast6mOutput = [], transactions = [], ledgerId, incomeModel }) {
+export function getLast4MonthsTable({
+  forecast6mOutput = [],
+  transactions = [],
+  ledgerId,
+  incomeModel,
+}) {
   const keys = lastNMonthKeys(4);
   const actual = computeActualsByMonth(transactions, ledgerId).months;
   const expected = computeExpectedByMonth(forecast6mOutput, buildIncomeModelFn(incomeModel)).months;

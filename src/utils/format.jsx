@@ -19,7 +19,8 @@ export const formatNumber = (value, options = {}) => {
   return new Intl.NumberFormat(locale, opts).format(n);
 };
 
-export const formatCurrency = (value) => `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
+export const formatCurrency = (value) =>
+  `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
 
 /** أيقونة الريال السعودي (SAMA) */
 export const SarSymbol = ({ className = 'w-4 h-4', title = 'ريال سعودي' }) => (
@@ -49,7 +50,8 @@ export const Currency = ({ value, className = '', symbolClassName = 'w-4 h-4' })
   </span>
 );
 
-export const formatPercent = (value) => `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
+export const formatPercent = (value) =>
+  `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 1 })}%`;
 
 export const formatNum = (n) => formatNumber(n, { maximumFractionDigits: 2 });
 

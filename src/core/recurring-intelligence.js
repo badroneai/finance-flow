@@ -7,7 +7,8 @@ export function isSeededRecurring(item) {
   const cat = asStr(item.category).toLowerCase();
   const risk = asStr(item.riskLevel).toLowerCase();
   const req = item.required;
-  const catOk = cat === 'system' || cat === 'operational' || cat === 'maintenance' || cat === 'marketing';
+  const catOk =
+    cat === 'system' || cat === 'operational' || cat === 'maintenance' || cat === 'marketing';
   const riskOk = risk === 'high' || risk === 'medium' || risk === 'low';
   const reqOk = typeof req === 'boolean';
   return catOk && riskOk && reqOk;
@@ -15,17 +16,17 @@ export function isSeededRecurring(item) {
 
 export function normalizeCategory(cat) {
   const c = asStr(cat).toLowerCase();
-  return (c === 'system' || c === 'operational' || c === 'maintenance' || c === 'marketing') ? c : '';
+  return c === 'system' || c === 'operational' || c === 'maintenance' || c === 'marketing' ? c : '';
 }
 
 export function normalizeRisk(risk) {
   const r = asStr(risk).toLowerCase();
-  return (r === 'high' || r === 'medium' || r === 'low') ? r : '';
+  return r === 'high' || r === 'medium' || r === 'low' ? r : '';
 }
 
 export function normalizeFrequency(freq) {
   const f = asStr(freq).toLowerCase();
-  return (f === 'monthly' || f === 'quarterly' || f === 'yearly' || f === 'adhoc') ? f : 'monthly';
+  return f === 'monthly' || f === 'quarterly' || f === 'yearly' || f === 'adhoc' ? f : 'monthly';
 }
 
 export function isDueWithinDays(item, days, { now = new Date() } = {}) {
@@ -86,21 +87,21 @@ export function sortRecurringInSection(list) {
 
 export function computeRecurringDashboard(list, { now = new Date() } = {}) {
   const items = Array.isArray(list) ? list : [];
-  const priced = items.filter(x => Number(x?.amount) > 0);
+  const priced = items.filter((x) => Number(x?.amount) > 0);
 
   const sum = (xs) => xs.reduce((acc, x) => acc + (Number(x?.amount) || 0), 0);
 
-  const monthlyTotal = sum(priced.filter(x => normalizeFrequency(x.frequency) === 'monthly'));
-  const yearlyTotal = sum(priced.filter(x => normalizeFrequency(x.frequency) === 'yearly'));
-  const within30Total = sum(priced.filter(x => isDueWithinDays(x, 30, { now })));
+  const monthlyTotal = sum(priced.filter((x) => normalizeFrequency(x.frequency) === 'monthly'));
+  const yearlyTotal = sum(priced.filter((x) => normalizeFrequency(x.frequency) === 'yearly'));
+  const within30Total = sum(priced.filter((x) => isDueWithinDays(x, 30, { now })));
 
   const totalCount = items.length;
-  const requiredCount = items.filter(x => !!x?.required).length;
-  const unpricedCount = items.filter(x => Number(x?.amount) === 0).length;
-  const highRiskCount = items.filter(x => normalizeRisk(x?.riskLevel) === 'high').length;
+  const requiredCount = items.filter((x) => !!x?.required).length;
+  const unpricedCount = items.filter((x) => Number(x?.amount) === 0).length;
+  const highRiskCount = items.filter((x) => normalizeRisk(x?.riskLevel) === 'high').length;
 
   const next3 = [...items]
-    .filter(x => asStr(x?.nextDueDate))
+    .filter((x) => asStr(x?.nextDueDate))
     .sort((a, b) => asStr(a.nextDueDate).localeCompare(asStr(b.nextDueDate)))
     .slice(0, 3);
 
@@ -120,7 +121,7 @@ export function computeLedgerCompleteness(list) {
   const items = Array.isArray(list) ? list : [];
   const seeded = items.filter(isSeededRecurring);
   if (seeded.length === 0) return null;
-  const pricedSeeded = seeded.filter(x => Number(x?.amount) > 0).length;
+  const pricedSeeded = seeded.filter((x) => Number(x?.amount) > 0).length;
   const pct = Math.round((pricedSeeded / seeded.length) * 100);
   return { pct, total: seeded.length, priced: pricedSeeded };
 }
@@ -147,8 +148,11 @@ export function groupRecurringBySections(list) {
 
 export function sectionStats(list) {
   const items = Array.isArray(list) ? list : [];
-  const subtotal = items.reduce((acc, x) => acc + ((Number(x?.amount) > 0) ? Number(x.amount) : 0), 0);
+  const subtotal = items.reduce(
+    (acc, x) => acc + (Number(x?.amount) > 0 ? Number(x.amount) : 0),
+    0
+  );
   const count = items.length;
-  const unpricedCount = items.filter(x => Number(x?.amount) === 0).length;
+  const unpricedCount = items.filter((x) => Number(x?.amount) === 0).length;
   return { subtotal, count, unpricedCount };
 }

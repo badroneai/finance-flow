@@ -9,7 +9,10 @@
  * @returns {string}
  */
 export function getReportFilename(meta) {
-  const name = String(meta?.ledgerName || 'دفتر').replace(/[/\\?%*:|"<>]/g, '_').trim() || 'دفتر';
+  const name =
+    String(meta?.ledgerName || 'دفتر')
+      .replace(/[/\\?%*:|"<>]/g, '_')
+      .trim() || 'دفتر';
   const month = Number(meta?.month) || new Date().getMonth() + 1;
   const year = Number(meta?.year) || new Date().getFullYear();
   return `تقرير_قيد_${name}_${month}_${year}.pdf`;

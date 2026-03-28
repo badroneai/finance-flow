@@ -81,5 +81,7 @@ export function validateLedger(input) {
   const okUpdatedAt = typeof x.updatedAt === 'string' && x.updatedAt.length > 0;
   const okArchived = typeof x.archived === 'boolean';
 
-  return Boolean(okId && okName && okType && okNote && okCurrency && okCreatedAt && okUpdatedAt && okArchived);
+  return Boolean(
+    okId && okName && okType && okNote && okCurrency && okCreatedAt && okUpdatedAt && okArchived
+  );
 }

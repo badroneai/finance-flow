@@ -85,7 +85,9 @@ export const AuthProvider = ({ children }) => {
     // جلب الجلسة الحالية عند التحميل الأولي
     const initSession = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
+        const {
+          data: { session: currentSession },
+        } = await supabase.auth.getSession();
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
@@ -103,22 +105,22 @@ export const AuthProvider = ({ children }) => {
     initSession();
 
     // الاستماع للتغييرات المستقبلية (تسجيل دخول/خروج، تجديد token)
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, newSession) => {
-        setSession(newSession);
-        setUser(newSession?.user ?? null);
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      setSession(newSession);
+      setUser(newSession?.user ?? null);
 
-        if (event === 'SIGNED_IN' && newSession?.user?.id) {
-          // تأخير بسيط ليكتمل الـ trigger في Supabase
-          setTimeout(() => fetchUserData(newSession.user.id), 500);
-        }
-
-        if (event === 'SIGNED_OUT') {
-          setProfile(null);
-          setOffice(null);
-        }
+      if (event === 'SIGNED_IN' && newSession?.user?.id) {
+        // تأخير بسيط ليكتمل الـ trigger في Supabase
+        setTimeout(() => fetchUserData(newSession.user.id), 500);
       }
-    );
+
+      if (event === 'SIGNED_OUT') {
+        setProfile(null);
+        setOffice(null);
+      }
+    });
 
     return () => {
       subscription?.unsubscribe();
@@ -127,62 +129,68 @@ export const AuthProvider = ({ children }) => {
 
   // ── تسجيل حساب جديد ──────────────────────────────────────────
   // metadata يحتوي: { office_name, full_name }
-  const signUp = useCallback(async (email, password, metadata = {}) => {
-    if (!supabase) {
-      return { error: { message: 'Supabase غير مُعدّ. عدّل ملف .env.local.' } };
-    }
-    try {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            office_name: metadata.office_name || '',
-            full_name: metadata.full_name || '',
+  const signUp = useCallback(
+    async (email, password, metadata = {}) => {
+      if (!supabase) {
+        return { error: { message: 'Supabase غير مُعدّ. عدّل ملف .env.local.' } };
+      }
+      try {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              office_name: metadata.office_name || '',
+              full_name: metadata.full_name || '',
+            },
           },
-        },
-      });
+        });
 
-      if (error) {
-        console.error('[قيد العقار] Auth signUp Error:', error);
+        if (error) {
+          console.error('[قيد العقار] Auth signUp Error:', error);
+        }
+
+        // إذا نجح التسجيل والمستخدم حصل على session مباشرة (بدون تأكيد بريد)
+        if (!error && data?.session && data?.user?.id) {
+          // تأخير ليكتمل trigger إنشاء الـ profile والمكتب
+          setTimeout(() => fetchUserData(data.user.id), 800);
+        }
+
+        return { data, error };
+      } catch (err) {
+        console.error('[قيد العقار] Auth signUp Exception:', err);
+        return { error: { message: err.message || 'خطأ غير متوقع أثناء التسجيل' } };
       }
-
-      // إذا نجح التسجيل والمستخدم حصل على session مباشرة (بدون تأكيد بريد)
-      if (!error && data?.session && data?.user?.id) {
-        // تأخير ليكتمل trigger إنشاء الـ profile والمكتب
-        setTimeout(() => fetchUserData(data.user.id), 800);
-      }
-
-      return { data, error };
-    } catch (err) {
-      console.error('[قيد العقار] Auth signUp Exception:', err);
-      return { error: { message: err.message || 'خطأ غير متوقع أثناء التسجيل' } };
-    }
-  }, [fetchUserData]);
+    },
+    [fetchUserData]
+  );
 
   // ── تسجيل دخول ───────────────────────────────────────────────
-  const signIn = useCallback(async (email, password) => {
-    if (!supabase) {
-      return { error: { message: 'Supabase غير مُعدّ. عدّل ملف .env.local.' } };
-    }
-    try {
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error) {
-        console.error('[قيد العقار] Auth signIn Error:', error);
+  const signIn = useCallback(
+    async (email, password) => {
+      if (!supabase) {
+        return { error: { message: 'Supabase غير مُعدّ. عدّل ملف .env.local.' } };
       }
+      try {
+        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
-      // جلب بيانات المستخدم بعد تسجيل الدخول الناجح
-      if (!error && data?.user?.id) {
-        await fetchUserData(data.user.id);
+        if (error) {
+          console.error('[قيد العقار] Auth signIn Error:', error);
+        }
+
+        // جلب بيانات المستخدم بعد تسجيل الدخول الناجح
+        if (!error && data?.user?.id) {
+          await fetchUserData(data.user.id);
+        }
+
+        return { data, error };
+      } catch (err) {
+        console.error('[قيد العقار] Auth signIn Exception:', err);
+        return { error: { message: err.message || 'خطأ غير متوقع أثناء تسجيل الدخول' } };
       }
-
-      return { data, error };
-    } catch (err) {
-      console.error('[قيد العقار] Auth signIn Exception:', err);
-      return { error: { message: err.message || 'خطأ غير متوقع أثناء تسجيل الدخول' } };
-    }
-  }, [fetchUserData]);
+    },
+    [fetchUserData]
+  );
 
   // ── تسجيل خروج ───────────────────────────────────────────────
   const signOut = useCallback(async () => {
@@ -227,27 +235,44 @@ export const AuthProvider = ({ children }) => {
   const effectiveRole = effectiveProfile?.role || null;
   const effectiveIsAuthenticated = isDemo ? true : !!user;
 
-  const value = useMemo(() => ({
-    user: isDemo ? { id: 'demo-user-001', email: 'demo@qaydalaqar.com' } : user,
-    session,
-    loading: isDemo ? false : loading,
-    profile: effectiveProfile,
-    office: effectiveOffice,
-    profileLoading: isDemo ? false : profileLoading,
-    signUp,
-    signIn,
-    signOut,
-    getProfile,
-    isAuthenticated: effectiveIsAuthenticated,
-    isSupabaseConfigured,
-    isDemo,
-    // أدوار المستخدم
-    role: effectiveRole,
-    isOwner: effectiveRole === 'owner',
-    isManager: effectiveRole === 'manager',
-    isAgent: effectiveRole === 'agent',
-    isSuperAdmin: effectiveRole === 'super_admin',
-  }), [user, session, loading, effectiveProfile, effectiveOffice, profileLoading, signUp, signIn, signOut, getProfile, effectiveRole, effectiveIsAuthenticated, isDemo]);
+  const value = useMemo(
+    () => ({
+      user: isDemo ? { id: 'demo-user-001', email: 'demo@qaydalaqar.com' } : user,
+      session,
+      loading: isDemo ? false : loading,
+      profile: effectiveProfile,
+      office: effectiveOffice,
+      profileLoading: isDemo ? false : profileLoading,
+      signUp,
+      signIn,
+      signOut,
+      getProfile,
+      isAuthenticated: effectiveIsAuthenticated,
+      isSupabaseConfigured,
+      isDemo,
+      // أدوار المستخدم
+      role: effectiveRole,
+      isOwner: effectiveRole === 'owner',
+      isManager: effectiveRole === 'manager',
+      isAgent: effectiveRole === 'agent',
+      isSuperAdmin: effectiveRole === 'super_admin',
+    }),
+    [
+      user,
+      session,
+      loading,
+      effectiveProfile,
+      effectiveOffice,
+      profileLoading,
+      signUp,
+      signIn,
+      signOut,
+      getProfile,
+      effectiveRole,
+      effectiveIsAuthenticated,
+      isDemo,
+    ]
+  );
 
   // أثناء التحقق الأولي، نعرض شاشة تحميل بسيطة
   if (loading) {
@@ -271,11 +296,7 @@ export const AuthProvider = ({ children }) => {
     );
   }
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
 // ─── Hook مختصر للوصول من أي مكون ──────────────────────────────

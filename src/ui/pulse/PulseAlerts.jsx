@@ -6,15 +6,15 @@ import React, { useState, useMemo } from 'react';
 
 const SEVERITY_ORDER = { critical: 0, warning: 1, info: 2 };
 const SEVERITY_DOT = {
-  critical: 'bg-rose-500',
-  warning: 'bg-amber-500',
-  info: 'bg-blue-500',
+  critical: { background: 'var(--color-danger)' },
+  warning: { background: 'var(--color-warning)' },
+  info: { background: 'var(--color-info)' },
 };
 
 function formatAmount(val) {
   const n = Number(val);
   if (val == null || !Number.isFinite(n) || n === 0) return null;
-  return `${(n).toLocaleString('ar-SA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
+  return `${n.toLocaleString('ar-SA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
 }
 
 function getDaysText(dueDate) {
@@ -74,12 +74,13 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
   }
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden" dir="rtl">
+    <div
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden"
+      dir="rtl"
+    >
       <style>{slideInStyles}</style>
       <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
-        <h2 className="font-semibold text-[var(--color-text)]">
-          تنبيهات عاجلة ({sorted.length})
-        </h2>
+        <h2 className="font-semibold text-[var(--color-text)]">تنبيهات عاجلة ({sorted.length})</h2>
       </div>
       <ul className="divide-y divide-[var(--color-border)]" aria-label="قائمة التنبيهات">
         {displayList.map((alert, index) => (
@@ -98,7 +99,8 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
             <button
               type="button"
               onClick={onShowAll}
-              className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+              className="text-sm font-medium hover:opacity-80"
+              style={{ color: 'var(--color-info)' }}
             >
               عرض الكل ({sorted.length})
             </button>
@@ -113,18 +115,26 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
 
 function AlertRow({ alert, index, onAction, onDismiss }) {
   const isCritical = alert.severity === 'critical';
-  const dotClass = SEVERITY_DOT[alert.severity] || 'bg-gray-400';
+  const dotStyle = SEVERITY_DOT[alert.severity] || { background: '#d1d5db' };
   const amountStr = formatAmount(alert.amount);
   const daysStr = getDaysText(alert.dueDate);
 
   return (
     <li
-      className={`pulse-alert-row px-4 py-3 flex flex-col gap-2 ${isCritical ? 'bg-red-50' : 'bg-[var(--color-surface)]'}`}
-      style={{ animationDelay: `${index * 50}ms`, opacity: 0 }}
+      className="pulse-alert-row px-4 py-3 flex flex-col gap-2"
+      style={{
+        background: isCritical ? 'var(--color-danger-bg)' : 'var(--color-surface)',
+        animationDelay: `${index * 50}ms`,
+        opacity: 0,
+      }}
     >
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 flex items-center gap-2">
-          <span className={`flex-shrink-0 w-2 h-2 rounded-full ${dotClass}`} aria-hidden="true" />
+          <span
+            className="flex-shrink-0 w-2 h-2 rounded-full"
+            style={dotStyle}
+            aria-hidden="true"
+          />
           <div className="min-w-0">
             <p className="font-medium text-[var(--color-text)] truncate">{alert.title}</p>
             <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-[var(--color-muted)] mt-0.5">
@@ -147,7 +157,8 @@ function AlertRow({ alert, index, onAction, onDismiss }) {
           <button
             type="button"
             onClick={() => onAction && onAction(alert)}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+            className="text-sm font-medium hover:opacity-80"
+            style={{ color: 'var(--color-info)' }}
           >
             {alert.actionLabel}
           </button>

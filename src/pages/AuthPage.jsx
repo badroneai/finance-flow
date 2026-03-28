@@ -22,13 +22,19 @@ const translateError = (msg) => {
   // في وضع التطوير: دائماً نُظهر الرسالة الأصلية مع الترجمة
   const devSuffix = isDev ? `\n[DEV] ${msg}` : '';
 
-  if (lower.includes('invalid login credentials')) return 'البريد الإلكتروني أو كلمة المرور غير صحيحة' + devSuffix;
-  if (lower.includes('user already registered')) return 'هذا البريد الإلكتروني مسجّل بالفعل' + devSuffix;
-  if (lower.includes('password should be at least')) return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' + devSuffix;
+  if (lower.includes('invalid login credentials'))
+    return 'البريد الإلكتروني أو كلمة المرور غير صحيحة' + devSuffix;
+  if (lower.includes('user already registered'))
+    return 'هذا البريد الإلكتروني مسجّل بالفعل' + devSuffix;
+  if (lower.includes('password should be at least'))
+    return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل' + devSuffix;
   if (lower.includes('email not confirmed')) return 'يرجى تأكيد بريدك الإلكتروني أولاً' + devSuffix;
-  if (lower.includes('email rate limit exceeded') || lower.includes('rate limit')) return 'تم تجاوز عدد المحاولات. حاول لاحقاً' + devSuffix;
-  if (lower.includes('invalid email') || lower.includes('unable to validate email')) return 'صيغة البريد الإلكتروني غير صحيحة' + devSuffix;
-  if (lower.includes('signup is not allowed') || lower.includes('signups not allowed')) return 'التسجيل غير متاح حالياً' + devSuffix;
+  if (lower.includes('email rate limit exceeded') || lower.includes('rate limit'))
+    return 'تم تجاوز عدد المحاولات. حاول لاحقاً' + devSuffix;
+  if (lower.includes('invalid email') || lower.includes('unable to validate email'))
+    return 'صيغة البريد الإلكتروني غير صحيحة' + devSuffix;
+  if (lower.includes('signup is not allowed') || lower.includes('signups not allowed'))
+    return 'التسجيل غير متاح حالياً' + devSuffix;
   if (lower.includes('signup requires a valid password')) return 'أدخل كلمة مرور صالحة' + devSuffix;
   if (lower.includes('database')) return 'حدث خطأ في النظام. حاول مرة أخرى بعد قليل' + devSuffix;
   // رسائل غير معروفة
@@ -38,11 +44,19 @@ const translateError = (msg) => {
 
 // ─── شعار التطبيق (SVG) ────────────────────────────────────────
 const AppLogo = () => (
-  <svg viewBox="0 0 100 100" fill="none" width="56" height="56" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-    <path d="M50 20L24 44V76H38V60H62V76H76V44L50 20Z"/>
-    <path d="M62 30V24H68V36"/>
-    <path d="M20 80H80" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round"/>
-    <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5"/>
+  <svg
+    viewBox="0 0 100 100"
+    fill="none"
+    width="56"
+    height="56"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinejoin="round"
+  >
+    <path d="M50 20L24 44V76H38V60H62V76H76V44L50 20Z" />
+    <path d="M62 30V24H68V36" />
+    <path d="M20 80H80" strokeOpacity="0.5" strokeWidth="1.5" strokeLinecap="round" />
+    <path d="M24 84L20 80L24 76H76L80 80L76 84H24Z" strokeOpacity="0.4" strokeWidth="1.5" />
   </svg>
 );
 
@@ -76,7 +90,10 @@ const AuthPage = () => {
   // لا نعرض النموذج إذا المستخدم مسجّل بالفعل
   if (isAuthenticated) return null;
 
-  const resetMessages = () => { setError(''); setSuccessMsg(''); };
+  const resetMessages = () => {
+    setError('');
+    setSuccessMsg('');
+  };
 
   const switchMode = (newMode) => {
     setMode(newMode);
@@ -90,8 +107,14 @@ const AuthPage = () => {
     e.preventDefault();
     resetMessages();
 
-    if (!email.trim()) { setError('أدخل البريد الإلكتروني'); return; }
-    if (!password) { setError('أدخل كلمة المرور'); return; }
+    if (!email.trim()) {
+      setError('أدخل البريد الإلكتروني');
+      return;
+    }
+    if (!password) {
+      setError('أدخل كلمة المرور');
+      return;
+    }
 
     setLoading(true);
     const { data, error: err } = await signIn(email.trim(), password);
@@ -110,11 +133,26 @@ const AuthPage = () => {
     e.preventDefault();
     resetMessages();
 
-    if (!officeName.trim()) { setError('أدخل اسم المكتب العقاري'); return; }
-    if (!fullName.trim()) { setError('أدخل الاسم الكامل'); return; }
-    if (!email.trim()) { setError('أدخل البريد الإلكتروني'); return; }
-    if (password.length < 6) { setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل'); return; }
-    if (password !== confirmPassword) { setError('كلمتا المرور غير متطابقتين'); return; }
+    if (!officeName.trim()) {
+      setError('أدخل اسم المكتب العقاري');
+      return;
+    }
+    if (!fullName.trim()) {
+      setError('أدخل الاسم الكامل');
+      return;
+    }
+    if (!email.trim()) {
+      setError('أدخل البريد الإلكتروني');
+      return;
+    }
+    if (password.length < 6) {
+      setError('كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError('كلمتا المرور غير متطابقتين');
+      return;
+    }
 
     setLoading(true);
     const { data, error: err } = await signUp(email.trim(), password, {
@@ -175,7 +213,10 @@ const AuthPage = () => {
           border: '1px solid var(--color-border, #e2e8f0)',
         }}
       >
-        <h2 className="text-lg font-bold mb-5 text-center" style={{ color: 'var(--color-text, #0f172a)' }}>
+        <h2
+          className="text-lg font-bold mb-5 text-center"
+          style={{ color: 'var(--color-text, #0f172a)' }}
+        >
           {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
         </h2>
 
@@ -183,7 +224,10 @@ const AuthPage = () => {
           {/* ── اسم المكتب (إنشاء حساب فقط) ────────────────────── */}
           {!isLogin && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text, #0f172a)' }}>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--color-text, #0f172a)' }}
+              >
                 اسم المكتب العقاري
               </label>
               <input
@@ -202,7 +246,10 @@ const AuthPage = () => {
           {/* ── الاسم الكامل (إنشاء حساب فقط) ─────────────────── */}
           {!isLogin && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text, #0f172a)' }}>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--color-text, #0f172a)' }}
+              >
                 الاسم الكامل
               </label>
               <input
@@ -221,7 +268,10 @@ const AuthPage = () => {
 
           {/* ── البريد الإلكتروني ─────────────────────────────────── */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text, #0f172a)' }}>
+            <label
+              className="block text-sm font-medium mb-1.5"
+              style={{ color: 'var(--color-text, #0f172a)' }}
+            >
               البريد الإلكتروني
             </label>
             <input
@@ -239,7 +289,10 @@ const AuthPage = () => {
 
           {/* ── كلمة المرور ───────────────────────────────────────── */}
           <div className="mb-4">
-            <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text, #0f172a)' }}>
+            <label
+              className="block text-sm font-medium mb-1.5"
+              style={{ color: 'var(--color-text, #0f172a)' }}
+            >
               كلمة المرور
             </label>
             <input
@@ -258,7 +311,10 @@ const AuthPage = () => {
           {/* ── تأكيد كلمة المرور (إنشاء حساب فقط) ───────────────── */}
           {!isLogin && (
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1.5" style={{ color: 'var(--color-text, #0f172a)' }}>
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--color-text, #0f172a)' }}
+              >
                 تأكيد كلمة المرور
               </label>
               <input
@@ -317,11 +373,7 @@ const AuthPage = () => {
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
-            {loading
-              ? 'جاري…'
-              : isLogin
-                ? 'دخول'
-                : 'إنشاء حساب'}
+            {loading ? 'جاري…' : isLogin ? 'دخول' : 'إنشاء حساب'}
           </button>
         </form>
 

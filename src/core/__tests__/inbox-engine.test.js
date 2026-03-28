@@ -97,7 +97,9 @@ describe('inbox-engine — calculateInbox', () => {
     });
 
     // المستحق المدفوع لا يظهر في overdue لنفس الفترة
-    const overdueForPaid = result.overdue.filter((d) => d.recurringItemId === 'rec-paid' && d.dueDate === dueDate);
+    const overdueForPaid = result.overdue.filter(
+      (d) => d.recurringItemId === 'rec-paid' && d.dueDate === dueDate
+    );
     expect(overdueForPaid).toHaveLength(0);
   });
 

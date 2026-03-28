@@ -44,9 +44,13 @@ export const WelcomeBanner = () => {
       <div className="banner-content">
         <div className="banner-text">
           <strong>مرحبًا بك في قيد العقار!</strong>
-          <p>ابدأ بإنشاء دفتر (عقار)، ثم سجّل الدخل والمصروفات، وسيتم احتساب التحليل المالي تلقائيًا.</p>
+          <p>
+            ابدأ بإنشاء دفتر (عقار)، ثم سجّل الدخل والمصروفات، وسيتم احتساب التحليل المالي تلقائيًا.
+          </p>
         </div>
-        <button type="button" onClick={dismiss} className="banner-close" aria-label="إغلاق">×</button>
+        <button type="button" onClick={dismiss} className="banner-close" aria-label="إغلاق">
+          ×
+        </button>
       </div>
     </div>
   );

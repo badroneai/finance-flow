@@ -16,9 +16,7 @@ export function csvEscape(v) {
  */
 export function downloadCSV({ filename, headers, rows }) {
   const BOM = '\uFEFF';
-  const all = [headers, ...rows]
-    .map((r) => r.map(csvEscape).join(','))
-    .join('\n');
+  const all = [headers, ...rows].map((r) => r.map(csvEscape).join(',')).join('\n');
   const blob = new Blob([BOM + all], { type: 'text/csv;charset=utf-8;' });
   const link = document.createElement('a');
   link.href = URL.createObjectURL(blob);

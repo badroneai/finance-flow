@@ -149,7 +149,15 @@ const LedgersPage = ({ setPage }) => {
 
   const normalizeLedgerType = (t) => {
     const x = String(t || '').toLowerCase();
-    return (x === 'office' || x === 'chalet' || x === 'apartment' || x === 'villa' || x === 'building' || x === 'personal' || x === 'other') ? x : 'office';
+    return x === 'office' ||
+      x === 'chalet' ||
+      x === 'apartment' ||
+      x === 'villa' ||
+      x === 'building' ||
+      x === 'personal' ||
+      x === 'other'
+      ? x
+      : 'office';
   };
 
   const normalizeNote = (s) => {
@@ -169,7 +177,13 @@ const LedgersPage = ({ setPage }) => {
 
   // Recurring items CRUD (linked by active ledger id)
   const [recurring, setRecurringState] = useState([]);
-  const [recForm, setRecForm] = useState({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
+  const [recForm, setRecForm] = useState({
+    title: '',
+    amount: '',
+    frequency: 'monthly',
+    nextDueDate: '',
+    notes: '',
+  });
   const [recEditingId, setRecEditingId] = useState(null);
 
   // Budget targets (stored inside active ledger object)
@@ -190,7 +204,14 @@ const LedgersPage = ({ setPage }) => {
   // Convert-to-transaction modal
   const [payOpen, setPayOpen] = useState(false);
   const [paySource, setPaySource] = useState(null); // recurring item
-  const [payForm, setPayForm] = useState({ type: 'expense', category: 'other', paymentMethod: 'cash', amount: '', date: '', description: '' });
+  const [payForm, setPayForm] = useState({
+    type: 'expense',
+    category: 'other',
+    paymentMethod: 'cash',
+    amount: '',
+    date: '',
+    description: '',
+  });
 
   // Intelligence UI (display-only; no storage)
   const [healthHelpOpen, setHealthHelpOpen] = useState(false);
@@ -215,19 +236,39 @@ const LedgersPage = ({ setPage }) => {
     const s = String(input ?? '');
     const map = {
       // Arabic-Indic
-      '٠': '0', '١': '1', '٢': '2', '٣': '3', '٤': '4', '٥': '5', '٦': '6', '٧': '7', '٨': '8', '٩': '9',
+      '٠': '0',
+      '١': '1',
+      '٢': '2',
+      '٣': '3',
+      '٤': '4',
+      '٥': '5',
+      '٦': '6',
+      '٧': '7',
+      '٨': '8',
+      '٩': '9',
       // Eastern Arabic-Indic (Persian)
-      '۰': '0', '۱': '1', '۲': '2', '۳': '3', '۴': '4', '۵': '5', '۶': '6', '۷': '7', '۸': '8', '۹': '9',
+      '۰': '0',
+      '۱': '1',
+      '۲': '2',
+      '۳': '3',
+      '۴': '4',
+      '۵': '5',
+      '۶': '6',
+      '۷': '7',
+      '۸': '8',
+      '۹': '9',
     };
-    return s
-      .split('')
-      .map(ch => map[ch] ?? ch)
-      // remove thousands separators + spaces
-      .join('')
-      .replace(/[\s\u00A0]/g, '')
-      .replace(/[٬,]/g, '')
-      // normalize decimal separators
-      .replace(/[٫]/g, '.');
+    return (
+      s
+        .split('')
+        .map((ch) => map[ch] ?? ch)
+        // remove thousands separators + spaces
+        .join('')
+        .replace(/[\s\u00A0]/g, '')
+        .replace(/[٬,]/g, '')
+        // normalize decimal separators
+        .replace(/[٫]/g, '.')
+    );
   };
 
   const parseRecurringAmount = (raw) => {
@@ -250,22 +291,34 @@ const LedgersPage = ({ setPage }) => {
   }, [fetchDataLedgers, fetchDataRecurringItems, fetchDataTransactions]);
 
   // جلب أولي عند التحميل
-  useEffect(() => { refresh(); }, [refresh]);
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   // (2) مزامنة الحالة المحلية عند تغيّر بيانات DataContext
   useEffect(() => {
     try {
-      const ledgersData = (Array.isArray(dataLedgers) && dataLedgers.length > 0) ? dataLedgers : getLedgers();
+      const ledgersData =
+        Array.isArray(dataLedgers) && dataLedgers.length > 0 ? dataLedgers : getLedgers();
       setLedgersState(ledgersData || []);
     } catch {
       setLedgersState([]);
       toast.error('تعذر تحميل قائمة الدفاتر. تحقق من التخزين أو أعد تحميل الصفحة.');
     }
-    try { setActiveIdState(dataActiveLedgerId || getActiveLedgerId() || ''); } catch { setActiveIdState(''); }
     try {
-      const recData = (Array.isArray(dataRecurringItems) && dataRecurringItems.length > 0) ? dataRecurringItems : (getRecurringItems() || []);
+      setActiveIdState(dataActiveLedgerId || getActiveLedgerId() || '');
+    } catch {
+      setActiveIdState('');
+    }
+    try {
+      const recData =
+        Array.isArray(dataRecurringItems) && dataRecurringItems.length > 0
+          ? dataRecurringItems
+          : getRecurringItems() || [];
       setRecurringState(recData);
-    } catch { setRecurringState([]); }
+    } catch {
+      setRecurringState([]);
+    }
   }, [dataLedgers, dataActiveLedgerId, dataRecurringItems, toast]);
 
   // فتح تبويب محدد من خارج الصفحة (مثلاً من المستحقات: إدارة الالتزامات)
@@ -291,17 +344,25 @@ const LedgersPage = ({ setPage }) => {
   // Keep budget form in sync with active ledger
   useEffect(() => {
     const b = normalizeBudgets(activeLedger?.budgets);
-    setBudgetForm({ monthlyTarget: b.monthlyTarget ? String(b.monthlyTarget) : '', yearlyTarget: b.yearlyTarget ? String(b.yearlyTarget) : '' });
+    setBudgetForm({
+      monthlyTarget: b.monthlyTarget ? String(b.monthlyTarget) : '',
+      yearlyTarget: b.yearlyTarget ? String(b.yearlyTarget) : '',
+    });
 
     // Load saved incomeModel (if any) from ledger object
-    const im = activeLedger?.incomeModel && typeof activeLedger.incomeModel === 'object' ? activeLedger.incomeModel : null;
+    const im =
+      activeLedger?.incomeModel && typeof activeLedger.incomeModel === 'object'
+        ? activeLedger.incomeModel
+        : null;
     if (im) {
       const m = String(im.mode || 'fixed');
       setIncomeMode(m);
       setIncomeFixed(String(im.fixedMonthly ?? '0'));
       setIncomePeak(String(im.peakMonthly ?? '0'));
       setIncomeBase(String(im.baseMonthly ?? '0'));
-      setIncomeManual(im.manualByMonth && typeof im.manualByMonth === 'object' ? im.manualByMonth : {});
+      setIncomeManual(
+        im.manualByMonth && typeof im.manualByMonth === 'object' ? im.manualByMonth : {}
+      );
       setIncomeSave(true);
     } else {
       setIncomeSave(false);
@@ -330,11 +391,16 @@ const LedgersPage = ({ setPage }) => {
 
   const createLedger = async () => {
     const t = (newName || '').trim();
-    if (!t) { toast.error('اسم الدفتر مطلوب'); return; }
+    if (!t) {
+      toast.error('اسم الدفتر مطلوب');
+      return;
+    }
 
     const ts = new Date().toISOString();
     const id = (() => {
-      try { if (crypto && typeof crypto.randomUUID === 'function') return `ledg_${crypto.randomUUID()}`; } catch {}
+      try {
+        if (crypto && typeof crypto.randomUUID === 'function') return `ledg_${crypto.randomUUID()}`;
+      } catch {}
       return `ledg_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
     })();
 
@@ -376,10 +442,16 @@ const LedgersPage = ({ setPage }) => {
 
   const saveEdit = async () => {
     const t = (editingName || '').trim();
-    if (!t) { toast.error('اسم الدفتر مطلوب'); return; }
+    if (!t) {
+      toast.error('اسم الدفتر مطلوب');
+      return;
+    }
 
-    const ledgerToUpdate = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === editingId);
-    if (!ledgerToUpdate) { toast.error('لم يتم العثور على الدفتر'); return; }
+    const ledgerToUpdate = (Array.isArray(ledgers) ? ledgers : []).find((l) => l.id === editingId);
+    if (!ledgerToUpdate) {
+      toast.error('لم يتم العثور على الدفتر');
+      return;
+    }
 
     try {
       await updateDataLedger(editingId, {
@@ -413,8 +485,11 @@ const LedgersPage = ({ setPage }) => {
     refresh();
   };
 
-  const activeLedger = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === activeId) || null;
-  const activeRecurringRaw = (Array.isArray(recurring) ? recurring : []).filter(r => r.ledgerId === activeId);
+  const activeLedger =
+    (Array.isArray(ledgers) ? ledgers : []).find((l) => l.id === activeId) || null;
+  const activeRecurringRaw = (Array.isArray(recurring) ? recurring : []).filter(
+    (r) => r.ledgerId === activeId
+  );
 
   const CATEGORY_LABEL = {
     system: 'إيجار ورسوم',
@@ -445,14 +520,17 @@ const LedgersPage = ({ setPage }) => {
   // P0 #4 و P0 #8 — useMemo لتقليل إعادة الحساب (ledgerTxs + brain)
   // SPR-006: prefer DataContext transactions, fallback to localStorage
   const allTransactionsRef = useMemo(() => {
-    return (Array.isArray(dataTransactions) && dataTransactions.length > 0)
+    return Array.isArray(dataTransactions) && dataTransactions.length > 0
       ? dataTransactions
-      : (dataStore.transactions.list() || []);
+      : dataStore.transactions.list() || [];
   }, [dataTransactions]);
 
   const ledgerTxs = useMemo(() => {
     if (!activeId) return [];
-    return filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: activeId });
+    return filterTransactionsForLedgerByMeta({
+      transactions: allTransactionsRef,
+      ledgerId: activeId,
+    });
   }, [activeId, allTransactionsRef]);
 
   const health = useMemo(() => {
@@ -462,7 +540,11 @@ const LedgersPage = ({ setPage }) => {
 
   const brainCtx = useMemo(() => {
     const ledgerType = String(activeLedger?.type || 'office');
-    return { ledgerType, recurringItems: Array.isArray(recurring) ? recurring : [], transactions: ledgerTxs };
+    return {
+      ledgerType,
+      recurringItems: Array.isArray(recurring) ? recurring : [],
+      transactions: ledgerTxs,
+    };
   }, [activeLedger, recurring, ledgerTxs]);
 
   const brain = useMemo(() => {
@@ -480,30 +562,72 @@ const LedgersPage = ({ setPage }) => {
   const projection = computeLedgerProjection({ recurringItems: seededOnlyList });
 
   const forecastScenario = (() => {
-    if (forecastPreset === 'optimistic') return { rent: 0.95, utilities: 0.9, maintenance: 0.85, marketing: 0.9, system: 1.0, other: 1.0 };
-    if (forecastPreset === 'stressed') return { rent: 1.05, utilities: 1.15, maintenance: 1.25, marketing: 1.1, system: 1.0, other: 1.0 };
-    if (forecastPreset === 'custom') return { rent: scRent, utilities: scUtilities, maintenance: scMaintenance, marketing: scMarketing, system: 1.0, other: scOther };
+    if (forecastPreset === 'optimistic')
+      return {
+        rent: 0.95,
+        utilities: 0.9,
+        maintenance: 0.85,
+        marketing: 0.9,
+        system: 1.0,
+        other: 1.0,
+      };
+    if (forecastPreset === 'stressed')
+      return {
+        rent: 1.05,
+        utilities: 1.15,
+        maintenance: 1.25,
+        marketing: 1.1,
+        system: 1.0,
+        other: 1.0,
+      };
+    if (forecastPreset === 'custom')
+      return {
+        rent: scRent,
+        utilities: scUtilities,
+        maintenance: scMaintenance,
+        marketing: scMarketing,
+        system: 1.0,
+        other: scOther,
+      };
     return { rent: 1.0, utilities: 1.0, maintenance: 1.0, marketing: 1.0, system: 1.0, other: 1.0 };
   })();
 
-  const forecastRunRate = normalizeMonthlyRunRate(seededOnlyList.filter(r => Number(r?.amount) > 0));
+  const forecastRunRate = normalizeMonthlyRunRate(
+    seededOnlyList.filter((r) => Number(r?.amount) > 0)
+  );
   const forecast = forecast6m(seededOnlyList, forecastScenario);
   const cashGap = cashGapModel(forecast, parseRecurringAmount(assumedInflow));
   const forecastInsights = insightsFromForecast(forecast, cashGap);
 
-  const unpricedList = activeRecurring.filter(x => Number(x?.amount) === 0);
+  const unpricedList = activeRecurring.filter((x) => Number(x?.amount) === 0);
 
   // Pricing wizard list (Stage 6 extraction: keep 1:1 behavior)
   const pricingList = unpricedList;
 
-  const inbox = buildLedgerInbox({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
-  const cashPlan = computeCashPlan({ ledgerId: activeId, recurringItems: recurring, now: new Date() });
+  const inbox = buildLedgerInbox({
+    ledgerId: activeId,
+    recurringItems: recurring,
+    now: new Date(),
+  });
+  const cashPlan = computeCashPlan({
+    ledgerId: activeId,
+    recurringItems: recurring,
+    now: new Date(),
+  });
 
   const budgets = normalizeAuthorityBudgets(activeLedger?.budgets);
-  const spendByBucket = computeSpendByBucketFromHistory({ ledgerId: activeId, recurringItems: Array.isArray(recurring) ? recurring : [], monthKey: monthKeyFromDate(new Date()) });
+  const spendByBucket = computeSpendByBucketFromHistory({
+    ledgerId: activeId,
+    recurringItems: Array.isArray(recurring) ? recurring : [],
+    monthKey: monthKeyFromDate(new Date()),
+  });
   const budgetAuth = computeBudgetUtilization({ budgets, spendByBucket, softThreshold: 0.8 });
 
-  const compliance = computeComplianceShield({ ledgerId: activeId, recurringItems: Array.isArray(recurring) ? recurring : [], now: new Date() });
+  const compliance = computeComplianceShield({
+    ledgerId: activeId,
+    recurringItems: Array.isArray(recurring) ? recurring : [],
+    now: new Date(),
+  });
 
   const [inboxFilter, setInboxFilter] = useState('all'); // all|overdue|soon|unpriced|high
   const [historyModal, setHistoryModal] = useState(null); // null | { item }
@@ -511,17 +635,21 @@ const LedgersPage = ({ setPage }) => {
 
   const inboxView = (() => {
     const list = Array.isArray(inbox) ? inbox : [];
-    if (inboxFilter === 'overdue') return list.filter(x => String(x.reason || '').includes('متأخر'));
-    if (inboxFilter === 'soon') return list.filter(x => String(x.reason || '').includes('7') || String(x.reason || '').includes('14'));
-    if (inboxFilter === 'unpriced') return list.filter(x => Number(x.amount) === 0);
-    if (inboxFilter === 'high') return list.filter(x => String(x.reason || '').includes('خطر'));
+    if (inboxFilter === 'overdue')
+      return list.filter((x) => String(x.reason || '').includes('متأخر'));
+    if (inboxFilter === 'soon')
+      return list.filter(
+        (x) => String(x.reason || '').includes('7') || String(x.reason || '').includes('14')
+      );
+    if (inboxFilter === 'unpriced') return list.filter((x) => Number(x.amount) === 0);
+    if (inboxFilter === 'high') return list.filter((x) => String(x.reason || '').includes('خطر'));
     return list;
   })();
 
   const operatorMode = (() => {
     const list = activeRecurring;
-    const overdue = list.filter(x => isPastDue(x));
-    const upcoming14 = list.filter(x => !isPastDue(x) && isDueWithinDays(x, 14));
+    const overdue = list.filter((x) => isPastDue(x));
+    const upcoming14 = list.filter((x) => !isPastDue(x) && isDueWithinDays(x, 14));
 
     const byDueAsc = (a, b) => {
       const da = new Date(String(a?.nextDueDate || '') + 'T00:00:00').getTime();
@@ -529,24 +657,32 @@ const LedgersPage = ({ setPage }) => {
       return (da || 0) - (db || 0);
     };
 
-    const priorityNow = [
-      ...overdue.sort(byDueAsc),
-      ...upcoming14.sort(byDueAsc),
-    ].slice(0, 10);
+    const priorityNow = [...overdue.sort(byDueAsc), ...upcoming14.sort(byDueAsc)].slice(0, 10);
 
-    const pricedCount = list.filter(x => Number(x?.amount) > 0).length;
-    const unpricedCount = list.filter(x => Number(x?.amount) === 0).length;
-    const monthlyTotal = list.filter(x => String(x.frequency || '').toLowerCase() === 'monthly' && Number(x.amount) > 0).reduce((a, x) => a + Number(x.amount), 0);
+    const pricedCount = list.filter((x) => Number(x?.amount) > 0).length;
+    const unpricedCount = list.filter((x) => Number(x?.amount) === 0).length;
+    const monthlyTotal = list
+      .filter((x) => String(x.frequency || '').toLowerCase() === 'monthly' && Number(x.amount) > 0)
+      .reduce((a, x) => a + Number(x.amount), 0);
 
-    return { priorityNow, overdueCount: overdue.length, upcoming14Count: upcoming14.length, pricedCount, unpricedCount, monthlyTotal };
+    return {
+      priorityNow,
+      overdueCount: overdue.length,
+      upcoming14Count: upcoming14.length,
+      pricedCount,
+      unpricedCount,
+      monthlyTotal,
+    };
   })();
 
   const outlook = (() => {
     const list = activeRecurring;
     const within = (days) => {
-      const due = list.filter(x => isDueWithinDays(x, days));
-      const pricedTotal = due.filter(x => Number(x?.amount) > 0).reduce((a, x) => a + Number(x.amount), 0);
-      const unpricedCount = due.filter(x => Number(x?.amount) === 0).length;
+      const due = list.filter((x) => isDueWithinDays(x, days));
+      const pricedTotal = due
+        .filter((x) => Number(x?.amount) > 0)
+        .reduce((a, x) => a + Number(x.amount), 0);
+      const unpricedCount = due.filter((x) => Number(x?.amount) === 0).length;
       return { pricedTotal, count: due.length, unpricedCount };
     };
     return {
@@ -557,31 +693,71 @@ const LedgersPage = ({ setPage }) => {
   })();
 
   const actuals = (() => {
-    const priced = activeRecurring.filter(x => Number(x?.amount) > 0);
-    const actualMonthly = priced.filter(x => String(x.frequency || '').toLowerCase() === 'monthly').reduce((a, x) => a + Number(x.amount), 0);
-    const actualYearly = priced.filter(x => String(x.frequency || '').toLowerCase() === 'yearly').reduce((a, x) => a + Number(x.amount), 0);
+    const priced = activeRecurring.filter((x) => Number(x?.amount) > 0);
+    const actualMonthly = priced
+      .filter((x) => String(x.frequency || '').toLowerCase() === 'monthly')
+      .reduce((a, x) => a + Number(x.amount), 0);
+    const actualYearly = priced
+      .filter((x) => String(x.frequency || '').toLowerCase() === 'yearly')
+      .reduce((a, x) => a + Number(x.amount), 0);
     return { actualMonthly, actualYearly };
   })();
 
-  const budgetsHealth = computeBudgetHealth({ actualMonthly: actuals.actualMonthly, actualYearly: actuals.actualYearly, budgets: activeLedger?.budgets });
+  const budgetsHealth = computeBudgetHealth({
+    actualMonthly: actuals.actualMonthly,
+    actualYearly: actuals.actualYearly,
+    budgets: activeLedger?.budgets,
+  });
 
   const ledgerAlerts = (() => {
     const alerts = [];
     const seeded = activeRecurring.filter(isSeededRecurring);
-    const overdue = seeded.filter(x => isPastDue(x));
-    const highRiskUnpriced = seeded.filter(x => String(x.riskLevel || '').toLowerCase() === 'high' && Number(x.amount) === 0);
-    if (overdue.length) alerts.push({ id: 'overdue', title: 'استحقاقات متأخرة', reason: `لديك ${overdue.length} التزام(ات) متأخر(ة).`, action: 'scroll-overdue' });
-    if (highRiskUnpriced.length) alerts.push({ id: 'highrisk-unpriced', title: 'بنود عالية الخطورة غير مُسعّرة', reason: `لديك ${highRiskUnpriced.length} بند عالي الخطورة بدون مبلغ.`, action: 'open-pricing' });
-    if ((budgetsHealth.monthlyTarget || budgetsHealth.yearlyTarget) && budgetsHealth.status === 'danger') alerts.push({ id: 'budget', title: 'تجاوز للميزانية', reason: 'إجماليات الالتزامات أعلى من الهدف.', action: 'scroll-summary' });
+    const overdue = seeded.filter((x) => isPastDue(x));
+    const highRiskUnpriced = seeded.filter(
+      (x) => String(x.riskLevel || '').toLowerCase() === 'high' && Number(x.amount) === 0
+    );
+    if (overdue.length)
+      alerts.push({
+        id: 'overdue',
+        title: 'استحقاقات متأخرة',
+        reason: `لديك ${overdue.length} التزام(ات) متأخر(ة).`,
+        action: 'scroll-overdue',
+      });
+    if (highRiskUnpriced.length)
+      alerts.push({
+        id: 'highrisk-unpriced',
+        title: 'بنود عالية الخطورة غير مُسعّرة',
+        reason: `لديك ${highRiskUnpriced.length} بند عالي الخطورة بدون مبلغ.`,
+        action: 'open-pricing',
+      });
+    if (
+      (budgetsHealth.monthlyTarget || budgetsHealth.yearlyTarget) &&
+      budgetsHealth.status === 'danger'
+    )
+      alerts.push({
+        id: 'budget',
+        title: 'تجاوز للميزانية',
+        reason: 'إجماليات الالتزامات أعلى من الهدف.',
+        action: 'scroll-summary',
+      });
     const completeness = computeLedgerCompleteness(activeRecurring);
-    if (completeness && completeness.pct < 60) alerts.push({ id: 'completion', title: 'اكتمال منخفض', reason: `اكتمال التسعير ${completeness.pct}% فقط.`, action: 'open-pricing' });
+    if (completeness && completeness.pct < 60)
+      alerts.push({
+        id: 'completion',
+        title: 'اكتمال منخفض',
+        reason: `اكتمال التسعير ${completeness.pct}% فقط.`,
+        action: 'open-pricing',
+      });
     return alerts;
   })();
 
   const ledgerReports = (() => {
     if (!activeId) return null;
     // SPR-006: use DataContext transactions via allTransactionsRef
-    const txs = filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: activeId });
+    const txs = filterTransactionsForLedgerByMeta({
+      transactions: allTransactionsRef,
+      ledgerId: activeId,
+    });
 
     const now = new Date();
     const daysAgo = (n) => {
@@ -589,12 +765,12 @@ const LedgersPage = ({ setPage }) => {
       d.setDate(d.getDate() - n);
       return d;
     };
-    const last30 = txs.filter(t => {
+    const last30 = txs.filter((t) => {
       const dt = new Date(String(t.date || '') + 'T00:00:00');
       if (Number.isNaN(dt.getTime())) return false;
       return dt.getTime() >= daysAgo(30).getTime();
     });
-    const last365 = txs.filter(t => {
+    const last365 = txs.filter((t) => {
       const dt = new Date(String(t.date || '') + 'T00:00:00');
       if (Number.isNaN(dt.getTime())) return false;
       return dt.getTime() >= daysAgo(365).getTime();
@@ -633,11 +809,20 @@ const LedgersPage = ({ setPage }) => {
 
   const applyQuickPricing = () => {
     try {
-      if (!activeId) { toast.error('اختر دفترًا نشطًا'); return; }
-      if (!pricingList || pricingList.length === 0) { setPricingOpen(false); return; }
+      if (!activeId) {
+        toast.error('اختر دفترًا نشطًا');
+        return;
+      }
+      if (!pricingList || pricingList.length === 0) {
+        setPricingOpen(false);
+        return;
+      }
 
       const item = pricingList[pricingIndex];
-      if (!item) { setPricingOpen(false); return; }
+      if (!item) {
+        setPricingOpen(false);
+        return;
+      }
 
       const amount = parseRecurringAmount(pricingAmount);
       if (!Number.isFinite(amount) || amount <= 0) {
@@ -668,15 +853,15 @@ const LedgersPage = ({ setPage }) => {
 
   const SA_CITY_FACTOR = {
     riyadh: 1.15,
-    jeddah: 1.10,
+    jeddah: 1.1,
     dammam: 1.05,
     qassim: 0.95,
-    other: 1.00,
+    other: 1.0,
   };
 
   const SA_SIZE_FACTOR = {
     small: 0.85,
-    medium: 1.00,
+    medium: 1.0,
     large: 1.25,
   };
 
@@ -712,7 +897,13 @@ const LedgersPage = ({ setPage }) => {
       const nextDueDate = due ? due : ensureDateValue(due);
 
       const desiredFreq = String(r.defaultFreq || r.frequency || 'monthly').toLowerCase();
-      const freq = (desiredFreq === 'monthly' || desiredFreq === 'quarterly' || desiredFreq === 'yearly' || desiredFreq === 'adhoc') ? desiredFreq : String(r.frequency || 'monthly');
+      const freq =
+        desiredFreq === 'monthly' ||
+        desiredFreq === 'quarterly' ||
+        desiredFreq === 'yearly' ||
+        desiredFreq === 'adhoc'
+          ? desiredFreq
+          : String(r.frequency || 'monthly');
 
       return {
         ...r,
@@ -723,7 +914,11 @@ const LedgersPage = ({ setPage }) => {
       };
     });
 
-    try { setRecurringItems(next); } catch { return { ok: false, message: 'تعذر تطبيق التسعير' }; }
+    try {
+      setRecurringItems(next);
+    } catch {
+      return { ok: false, message: 'تعذر تطبيق التسعير' };
+    }
     setRecurringState(next);
     return { ok: true };
   };
@@ -731,7 +926,7 @@ const LedgersPage = ({ setPage }) => {
   const applyPricingToItem = (itemId, { amount, nextDueDate }) => {
     const list = Array.isArray(recurring) ? recurring : [];
     const ts = new Date().toISOString();
-    const next = list.map(r => {
+    const next = list.map((r) => {
       if (r.id !== itemId) return r;
       return {
         ...r,
@@ -749,9 +944,12 @@ const LedgersPage = ({ setPage }) => {
     const ts = new Date().toISOString();
     let updated = { ...patch, updatedAt: ts };
     if (historyEntry) {
-      const item = list.find(r => r.id === itemId);
+      const item = list.find((r) => r.id === itemId);
       if (item) {
-        updated = pushHistoryEntry({ ...item, ...updated }, { ...historyEntry, at: historyEntry.at || ts });
+        updated = pushHistoryEntry(
+          { ...item, ...updated },
+          { ...historyEntry, at: historyEntry.at || ts }
+        );
       }
     }
     try {
@@ -760,7 +958,7 @@ const LedgersPage = ({ setPage }) => {
       toast.error('تعذر حفظ حالة العنصر');
       return false;
     }
-    setRecurringState(list.map(r => r.id === itemId ? { ...r, ...updated } : r));
+    setRecurringState(list.map((r) => (r.id === itemId ? { ...r, ...updated } : r)));
     return true;
   };
 
@@ -780,14 +978,26 @@ const LedgersPage = ({ setPage }) => {
 
   const submitPayNow = async () => {
     try {
-      if (!activeId) { toast.error('اختر دفترًا نشطًا'); return; }
-      if (!paySource?.id) { toast.error('اختر بندًا أولاً'); return; }
+      if (!activeId) {
+        toast.error('اختر دفترًا نشطًا');
+        return;
+      }
+      if (!paySource?.id) {
+        toast.error('اختر بندًا أولاً');
+        return;
+      }
 
       const amount = parseRecurringAmount(payForm.amount);
-      if (!Number.isFinite(amount) || amount <= 0) { toast.error('المبلغ غير صالح'); return; }
+      if (!Number.isFinite(amount) || amount <= 0) {
+        toast.error('المبلغ غير صالح');
+        return;
+      }
 
       const date = String(payForm.date || '').trim() || today();
-      if (!isValidDateStr(date)) { toast.error('تاريخ غير صالح'); return; }
+      if (!isValidDateStr(date)) {
+        toast.error('تاريخ غير صالح');
+        return;
+      }
       const description = String(payForm.description || paySource.title || '').trim();
       const paymentMethod = String(payForm.paymentMethod || 'cash');
 
@@ -804,7 +1014,10 @@ const LedgersPage = ({ setPage }) => {
         meta,
       });
 
-      if (txError) { toast.error(txError?.message || 'تعذر تسجيل الدفعة'); return; }
+      if (txError) {
+        toast.error(txError?.message || 'تعذر تسجيل الدفعة');
+        return;
+      }
 
       // Update recurring item ops + history (no schema change)
       try {
@@ -837,24 +1050,37 @@ const LedgersPage = ({ setPage }) => {
     if (!activeId) return false;
     if (patch.monthlyTarget !== undefined) {
       const s = String(patch.monthlyTarget).trim();
-      if (s !== '' && !Number.isFinite(Number(s))) { toast.error('قيمة الهدف الشهري غير صالحة. أدخل رقماً.'); return false; }
+      if (s !== '' && !Number.isFinite(Number(s))) {
+        toast.error('قيمة الهدف الشهري غير صالحة. أدخل رقماً.');
+        return false;
+      }
     }
     if (patch.yearlyTarget !== undefined) {
       const s = String(patch.yearlyTarget).trim();
-      if (s !== '' && !Number.isFinite(Number(s))) { toast.error('قيمة الهدف السنوي غير صالحة. أدخل رقماً.'); return false; }
+      if (s !== '' && !Number.isFinite(Number(s))) {
+        toast.error('قيمة الهدف السنوي غير صالحة. أدخل رقماً.');
+        return false;
+      }
     }
-    const currentLedger = (Array.isArray(ledgers) ? ledgers : []).find(l => l.id === activeId);
+    const currentLedger = (Array.isArray(ledgers) ? ledgers : []).find((l) => l.id === activeId);
     if (!currentLedger) return false;
     const ts = new Date().toISOString();
     try {
-      await updateDataLedger(activeId, { budgets: { ...(currentLedger.budgets || {}), ...patch }, updatedAt: ts });
-    } catch { toast.error('تعذر حفظ الميزانيات'); return false; }
+      await updateDataLedger(activeId, {
+        budgets: { ...(currentLedger.budgets || {}), ...patch },
+        updatedAt: ts,
+      });
+    } catch {
+      toast.error('تعذر حفظ الميزانيات');
+      return false;
+    }
     toast.success('تم حفظ الميزانيات');
     refresh();
     return true;
   };
 
-  const resetRecForm = () => setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
+  const resetRecForm = () =>
+    setRecForm({ title: '', amount: '', frequency: 'monthly', nextDueDate: '', notes: '' });
 
   const startEditRecurring = (item) => {
     setRecEditingId(item.id);
@@ -868,34 +1094,91 @@ const LedgersPage = ({ setPage }) => {
   };
 
   const saveRecurring = () => {
-    if (!activeId) { toast.error('اختر دفترًا نشطًا أولًا'); return; }
+    if (!activeId) {
+      toast.error('اختر دفترًا نشطًا أولًا');
+      return;
+    }
 
     const title = (recForm.title || '').trim();
-    if (!title) { toast.error('اسم الالتزام مطلوب'); return; }
+    if (!title) {
+      toast.error('اسم الالتزام مطلوب');
+      return;
+    }
 
     const amount = parseRecurringAmount(recForm.amount);
-    if (!Number.isFinite(amount)) { toast.error('المبلغ غير صالح'); return; }
+    if (!Number.isFinite(amount)) {
+      toast.error('المبلغ غير صالح');
+      return;
+    }
 
-    const freq = (recForm.frequency === 'monthly' || recForm.frequency === 'quarterly' || recForm.frequency === 'yearly' || recForm.frequency === 'adhoc') ? recForm.frequency : 'monthly';
+    const freq =
+      recForm.frequency === 'monthly' ||
+      recForm.frequency === 'quarterly' ||
+      recForm.frequency === 'yearly' ||
+      recForm.frequency === 'adhoc'
+        ? recForm.frequency
+        : 'monthly';
     const nextDueDate = String(recForm.nextDueDate || '').trim();
-    if (!nextDueDate) { toast.error('تاريخ الاستحقاق القادم مطلوب'); return; }
-    if (!isValidDateStr(nextDueDate)) { toast.error('تاريخ الاستحقاق القادم غير صالح'); return; }
+    if (!nextDueDate) {
+      toast.error('تاريخ الاستحقاق القادم مطلوب');
+      return;
+    }
+    if (!isValidDateStr(nextDueDate)) {
+      toast.error('تاريخ الاستحقاق القادم غير صالح');
+      return;
+    }
 
     const ts = new Date().toISOString();
-    const id = recEditingId || (() => {
-      try { if (crypto && typeof crypto.randomUUID === 'function') return `rec_${crypto.randomUUID()}`; } catch {}
-      return `rec_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
-    })();
+    const id =
+      recEditingId ||
+      (() => {
+        try {
+          if (crypto && typeof crypto.randomUUID === 'function')
+            return `rec_${crypto.randomUUID()}`;
+        } catch {}
+        return `rec_${Date.now().toString(36)}${Math.random().toString(36).slice(2)}`;
+      })();
 
     const next = (() => {
       const list = Array.isArray(recurring) ? recurring : [];
       if (!recEditingId) {
-        return [...list, { id, ledgerId: activeId, title, category: '', amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), createdAt: ts, updatedAt: ts }];
+        return [
+          ...list,
+          {
+            id,
+            ledgerId: activeId,
+            title,
+            category: '',
+            amount,
+            frequency: freq,
+            nextDueDate,
+            notes: String(recForm.notes || ''),
+            createdAt: ts,
+            updatedAt: ts,
+          },
+        ];
       }
-      return list.map(r => (r.id === recEditingId ? { ...r, title, amount, frequency: freq, nextDueDate, notes: String(recForm.notes || ''), updatedAt: ts } : r));
+      return list.map((r) =>
+        r.id === recEditingId
+          ? {
+              ...r,
+              title,
+              amount,
+              frequency: freq,
+              nextDueDate,
+              notes: String(recForm.notes || ''),
+              updatedAt: ts,
+            }
+          : r
+      );
     })();
 
-    try { setRecurringItems(next); } catch { toast.error('تعذر حفظ الالتزام'); return; }
+    try {
+      setRecurringItems(next);
+    } catch {
+      toast.error('تعذر حفظ الالتزام');
+      return;
+    }
 
     toast.success(recEditingId ? 'تم تحديث الالتزام' : 'تمت إضافة الالتزام');
     setRecEditingId(null);
@@ -932,13 +1215,37 @@ const LedgersPage = ({ setPage }) => {
     <LedgerTabsShell>
       <LedgerHeader tab={tab} onTabSelect={handleLedgerTabSelect} />
       {setPage && (
-        <div className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 no-print" dir="rtl">
+        <div
+          className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 no-print"
+          dir="rtl"
+        >
           <span className="text-[var(--color-muted)] text-sm">سريع:</span>
-          <button type="button" onClick={() => setPage('pulse')} className="text-sm font-medium transition-opacity duration-200 hover:opacity-80" style={{ color: 'var(--color-info)' }}>النبض المالي</button>
+          <button
+            type="button"
+            onClick={() => setPage('pulse')}
+            className="text-sm font-medium transition-opacity duration-200 hover:opacity-80"
+            style={{ color: 'var(--color-info)' }}
+          >
+            النبض المالي
+          </button>
           <span className="text-[var(--color-muted)]">|</span>
-          <button type="button" onClick={() => setPage('inbox')} className="text-sm font-medium transition-opacity duration-200 hover:opacity-80" style={{ color: 'var(--color-info)' }}>المستحقات</button>
+          <button
+            type="button"
+            onClick={() => setPage('inbox')}
+            className="text-sm font-medium transition-opacity duration-200 hover:opacity-80"
+            style={{ color: 'var(--color-info)' }}
+          >
+            المستحقات
+          </button>
           <span className="text-[var(--color-muted)]">|</span>
-          <button type="button" onClick={() => setPage('transactions')} className="text-sm font-medium transition-opacity duration-200 hover:opacity-80" style={{ color: 'var(--color-info)' }}>الحركات</button>
+          <button
+            type="button"
+            onClick={() => setPage('transactions')}
+            className="text-sm font-medium transition-opacity duration-200 hover:opacity-80"
+            style={{ color: 'var(--color-info)' }}
+          >
+            الحركات
+          </button>
         </div>
       )}
 
@@ -947,12 +1254,28 @@ const LedgersPage = ({ setPage }) => {
           <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
             <div className="grid md:grid-cols-3 gap-3 items-end">
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">اسم الدفتر الجديد</label>
-                <input value={newName} onChange={(e) => setNewName(e.target.value)} maxLength={120} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="اسم الدفتر" placeholder="مثال: مكتب قيد العقار" />
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  اسم الدفتر الجديد
+                </label>
+                <input
+                  value={newName}
+                  onChange={(e) => setNewName(e.target.value)}
+                  maxLength={120}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="اسم الدفتر"
+                  placeholder="مثال: مكتب قيد العقار"
+                />
               </div>
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">اختر نوع الدفتر</label>
-                <select value={newType} onChange={(e) => setNewType(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="نوع الدفتر">
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  اختر نوع الدفتر
+                </label>
+                <select
+                  value={newType}
+                  onChange={(e) => setNewType(e.target.value)}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+                  aria-label="نوع الدفتر"
+                >
                   <option value="office">🏢 مكتب</option>
                   <option value="chalet">🏡 شاليه</option>
                   <option value="apartment">🏠 شقة</option>
@@ -963,232 +1286,395 @@ const LedgersPage = ({ setPage }) => {
                 </select>
               </div>
               <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">وصف مختصر (اختياري)</label>
-                <input value={newNote} onChange={(e) => setNewNote(e.target.value)} maxLength={200} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="وصف مختصر" placeholder="وصف مختصر (اختياري)" />
+                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  وصف مختصر (اختياري)
+                </label>
+                <input
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  maxLength={200}
+                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                  aria-label="وصف مختصر"
+                  placeholder="وصف مختصر (اختياري)"
+                />
               </div>
             </div>
             <div className="flex justify-end mt-3">
-              <button type="button" onClick={() => createLedger()} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="إضافة دفتر">+ إضافة دفتر</button>
+              <button
+                type="button"
+                onClick={() => createLedger()}
+                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                aria-label="إضافة دفتر"
+              >
+                + إضافة دفتر
+              </button>
             </div>
           </div>
 
-          {(!ledgers || ledgers.length === 0) ? (
+          {!ledgers || ledgers.length === 0 ? (
             <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
               <EmptyState message="لا توجد دفاتر" />
               <div className="mt-3 flex justify-center">
-                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('ui:help', { detail: { section: 'ledgers' } }))} className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]" aria-label="افتح المساعدة">افتح المساعدة</button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent('ui:help', { detail: { section: 'ledgers' } })
+                    )
+                  }
+                  className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
+                  aria-label="افتح المساعدة"
+                >
+                  افتح المساعدة
+                </button>
               </div>
             </div>
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {ledgers.filter(l => !l.archived).map((l) => (
-                <div key={l.id} className={`bg-[var(--color-surface)] rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-[var(--color-border)]'}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <h4 className="font-bold text-[var(--color-text)] truncate">{l.name}</h4>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        <span className="text-xs text-[var(--color-muted)]">{LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || '🏢 مكتب'}</span>
-                        <span className="text-xs text-[var(--color-muted)]">•</span>
-                        <span className="text-xs text-[var(--color-muted)]">{l.currency}</span>
-                      </div>
-                      {String(l.note || '').trim() ? <p className="text-xs text-[var(--color-muted)] mt-2">{l.note}</p> : null}
-                    </div>
-                    {l.id === activeId && <Badge color="blue">نشط</Badge>}
-                  </div>
-
-                  {editingId === l.id ? (
-                    <div className="mt-4">
-                      <label className="block text-sm font-medium text-[var(--color-text)] mb-1">تعديل الاسم</label>
-                      <input value={editingName} onChange={(e) => setEditingName(e.target.value)} maxLength={120} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="تعديل اسم الدفتر" />
-
-                      <div className="grid md:grid-cols-2 gap-3 mt-3">
-                        <div>
-                          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">اختر نوع الدفتر</label>
-                          <select value={editingType} onChange={(e) => setEditingType(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]" aria-label="تعديل نوع الدفتر">
-                            <option value="office">🏢 مكتب</option>
-                            <option value="chalet">🏡 شاليه</option>
-                            <option value="apartment">🏠 شقة</option>
-                            <option value="villa">🏘️ فيلا</option>
-                            <option value="building">🏬 عمارة</option>
-                            <option value="personal">👤 شخصي</option>
-                            <option value="other">📁 أخرى</option>
-                          </select>
+              {ledgers
+                .filter((l) => !l.archived)
+                .map((l) => (
+                  <div
+                    key={l.id}
+                    className={`bg-[var(--color-surface)] rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-[var(--color-border)]'}`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <h4 className="font-bold text-[var(--color-text)] truncate">{l.name}</h4>
+                        <div className="flex flex-wrap gap-2 mt-1">
+                          <span className="text-xs text-[var(--color-muted)]">
+                            {LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || '🏢 مكتب'}
+                          </span>
+                          <span className="text-xs text-[var(--color-muted)]">•</span>
+                          <span className="text-xs text-[var(--color-muted)]">{l.currency}</span>
                         </div>
-                        <div>
-                          <label className="block text-sm font-medium text-[var(--color-text)] mb-1">وصف مختصر (اختياري)</label>
-                          <input value={editingNote} onChange={(e) => setEditingNote(e.target.value)} className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm" aria-label="تعديل الوصف" placeholder="وصف مختصر (اختياري)" />
-                        </div>
+                        {String(l.note || '').trim() ? (
+                          <p className="text-xs text-[var(--color-muted)] mt-2">{l.note}</p>
+                        ) : null}
                       </div>
-                      <div className="flex gap-2 justify-end mt-3">
-                        <button type="button" onClick={() => { setEditingId(null); setEditingName(''); }} className="px-4 py-2 rounded-lg bg-[var(--color-bg)] hover:bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium" aria-label="إلغاء">إلغاء</button>
-                        <button type="button" onClick={() => saveEdit()} className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="حفظ">حفظ</button>
-                      </div>
+                      {l.id === activeId && <Badge color="blue">نشط</Badge>}
                     </div>
-                  ) : (
-                    <div className="flex flex-wrap gap-2 justify-end mt-4">
-                      {(() => {
-                        const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(r => r.ledgerId === l.id);
-                        const disabled = hasRecurring;
-                        const title = disabled ? 'تمت إضافة النموذج مسبقًا' : 'إضافة التزامات افتراضية لهذا الدفتر';
-                        return (
+
+                    {editingId === l.id ? (
+                      <div className="mt-4">
+                        <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                          تعديل الاسم
+                        </label>
+                        <input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          maxLength={120}
+                          className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                          aria-label="تعديل اسم الدفتر"
+                        />
+
+                        <div className="grid md:grid-cols-2 gap-3 mt-3">
+                          <div>
+                            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                              اختر نوع الدفتر
+                            </label>
+                            <select
+                              value={editingType}
+                              onChange={(e) => setEditingType(e.target.value)}
+                              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+                              aria-label="تعديل نوع الدفتر"
+                            >
+                              <option value="office">🏢 مكتب</option>
+                              <option value="chalet">🏡 شاليه</option>
+                              <option value="apartment">🏠 شقة</option>
+                              <option value="villa">🏘️ فيلا</option>
+                              <option value="building">🏬 عمارة</option>
+                              <option value="personal">👤 شخصي</option>
+                              <option value="other">📁 أخرى</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                              وصف مختصر (اختياري)
+                            </label>
+                            <input
+                              value={editingNote}
+                              onChange={(e) => setEditingNote(e.target.value)}
+                              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                              aria-label="تعديل الوصف"
+                              placeholder="وصف مختصر (اختياري)"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex gap-2 justify-end mt-3">
                           <button
                             type="button"
-                            disabled={disabled}
-                            title={title}
                             onClick={() => {
-                              if (disabled) return;
-                              setConfirm({
-                                title: 'إضافة نموذج الالتزامات',
-                                message: 'سيتم إضافة التزامات افتراضية لهذا الدفتر. هل تريد المتابعة؟',
-                                confirmLabel: 'نعم، أضف النموذج',
-                                onConfirm: async () => {
-                                  try {
-                                    const list = Array.isArray(recurring) ? recurring : [];
-                                    const already = list.some(r => r.ledgerId === l.id);
-                                    if (already) { toast.success('تمت إضافة النموذج مسبقًا'); setConfirm(null); return; }
+                              setEditingId(null);
+                              setEditingName('');
+                            }}
+                            className="px-4 py-2 rounded-lg bg-[var(--color-bg)] hover:bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium"
+                            aria-label="إلغاء"
+                          >
+                            إلغاء
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => saveEdit()}
+                            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                            aria-label="حفظ"
+                          >
+                            حفظ
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap gap-2 justify-end mt-4">
+                        {(() => {
+                          const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(
+                            (r) => r.ledgerId === l.id
+                          );
+                          const disabled = hasRecurring;
+                          const title = disabled
+                            ? 'تمت إضافة النموذج مسبقًا'
+                            : 'إضافة التزامات افتراضية لهذا الدفتر';
+                          return (
+                            <button
+                              type="button"
+                              disabled={disabled}
+                              title={title}
+                              onClick={() => {
+                                if (disabled) return;
+                                setConfirm({
+                                  title: 'إضافة نموذج الالتزامات',
+                                  message:
+                                    'سيتم إضافة التزامات افتراضية لهذا الدفتر. هل تريد المتابعة؟',
+                                  confirmLabel: 'نعم، أضف النموذج',
+                                  onConfirm: async () => {
+                                    try {
+                                      const list = Array.isArray(recurring) ? recurring : [];
+                                      const already = list.some((r) => r.ledgerId === l.id);
+                                      if (already) {
+                                        toast.success('تمت إضافة النموذج مسبقًا');
+                                        setConfirm(null);
+                                        return;
+                                      }
 
-                                    const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
-                                    // Create each seeded item using the hook
-                                    for (const item of seeded) {
-                                      const ts = new Date().toISOString();
-                                      const id = `rec_${crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
-                                      await createRecurringItem({
-                                        id,
+                                      const seeded = seedRecurringForLedger({
                                         ledgerId: l.id,
-                                        title: item.title || '',
-                                        amount: item.amount || 0,
-                                        frequency: item.frequency || 'monthly',
-                                        nextDueDate: item.nextDueDate || today(),
-                                        notes: item.notes || '',
-                                        category: item.category || '',
-                                        createdAt: ts,
-                                        updatedAt: ts,
-                                        // Include template metadata
-                                        ...item,
+                                        ledgerType: l.type,
                                       });
+                                      // Create each seeded item using the hook
+                                      for (const item of seeded) {
+                                        const ts = new Date().toISOString();
+                                        const id = `rec_${crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+                                        await createRecurringItem({
+                                          id,
+                                          ledgerId: l.id,
+                                          title: item.title || '',
+                                          amount: item.amount || 0,
+                                          frequency: item.frequency || 'monthly',
+                                          nextDueDate: item.nextDueDate || today(),
+                                          notes: item.notes || '',
+                                          category: item.category || '',
+                                          createdAt: ts,
+                                          updatedAt: ts,
+                                          // Include template metadata
+                                          ...item,
+                                        });
+                                      }
+                                      toast.success('تمت إضافة الالتزامات الافتراضية.');
+                                      setConfirm(null);
+                                      refresh();
+                                    } catch (err) {
+                                      console.error('[قيد العقار] Seed error:', err);
+                                      toast.error('تعذر إضافة النموذج');
+                                      setConfirm(null);
                                     }
-                                    toast.success('تمت إضافة الالتزامات الافتراضية.');
-                                    setConfirm(null);
-                                    refresh();
-                                  } catch (err) {
-                                    console.error('[قيد العقار] Seed error:', err);
-                                    toast.error('تعذر إضافة النموذج');
-                                    setConfirm(null);
-                                  }
-                                },
-                              });
-                            }}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
-                            aria-label="إضافة نموذج الالتزامات"
-                          >
-                            إضافة نموذج الالتزامات
-                          </button>
-                        );
-                      })()}
+                                  },
+                                });
+                              }}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+                              aria-label="إضافة نموذج الالتزامات"
+                            >
+                              إضافة نموذج الالتزامات
+                            </button>
+                          );
+                        })()}
 
-                      {(() => {
-                        const isOffice = normalizeLedgerType(l.type) === 'office';
-                        const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(r => r.ledgerId === l.id);
-                        const hasTx = filterTransactionsForLedgerByMeta({ transactions: allTxsForLedgerCards, ledgerId: l.id }).length > 0;
-                        const disabled = !isOffice || hasRecurring || hasTx;
-                        const title = !isOffice ? 'متاح فقط لمكتب' : (hasRecurring || hasTx) ? 'تم إعداد الديمو مسبقًا' : 'زرع نموذج مكتب كامل مع تسعير تلقائي'
+                        {(() => {
+                          const isOffice = normalizeLedgerType(l.type) === 'office';
+                          const hasRecurring = (Array.isArray(recurring) ? recurring : []).some(
+                            (r) => r.ledgerId === l.id
+                          );
+                          const hasTx =
+                            filterTransactionsForLedgerByMeta({
+                              transactions: allTxsForLedgerCards,
+                              ledgerId: l.id,
+                            }).length > 0;
+                          const disabled = !isOffice || hasRecurring || hasTx;
+                          const title = !isOffice
+                            ? 'متاح فقط لمكتب'
+                            : hasRecurring || hasTx
+                              ? 'تم إعداد الديمو مسبقًا'
+                              : 'زرع نموذج مكتب كامل مع تسعير تلقائي';
 
-                        return (
-                          <button
-                            type="button"
-                            disabled={disabled}
-                            title={title}
-                            onClick={() => {
-                              if (disabled) return;
-                              setConfirm({
-                                title: 'تفعيل نموذج مكتب كامل (Demo)',
-                                message: 'سيتم زرع التزامات المكتب وتطبيق تسعير مقترح. هل تريد المتابعة؟',
-                                confirmLabel: 'نعم، فعّل الديمو',
-                                onConfirm: async () => {
-                                  try {
-                                    const list = Array.isArray(recurring) ? recurring : [];
-                                    const already = list.some(r => r.ledgerId === l.id);
-                                    // SPR-006: use DataContext transactions
-                                    const hasTxNow = filterTransactionsForLedgerByMeta({ transactions: allTransactionsRef, ledgerId: l.id }).length > 0;
-                                    if (already || hasTxNow) { toast.success('تم إعداد الديمو مسبقًا'); setConfirm(null); return; }
+                          return (
+                            <button
+                              type="button"
+                              disabled={disabled}
+                              title={title}
+                              onClick={() => {
+                                if (disabled) return;
+                                setConfirm({
+                                  title: 'تفعيل نموذج مكتب كامل (Demo)',
+                                  message:
+                                    'سيتم زرع التزامات المكتب وتطبيق تسعير مقترح. هل تريد المتابعة؟',
+                                  confirmLabel: 'نعم، فعّل الديمو',
+                                  onConfirm: async () => {
+                                    try {
+                                      const list = Array.isArray(recurring) ? recurring : [];
+                                      const already = list.some((r) => r.ledgerId === l.id);
+                                      // SPR-006: use DataContext transactions
+                                      const hasTxNow =
+                                        filterTransactionsForLedgerByMeta({
+                                          transactions: allTransactionsRef,
+                                          ledgerId: l.id,
+                                        }).length > 0;
+                                      if (already || hasTxNow) {
+                                        toast.success('تم إعداد الديمو مسبقًا');
+                                        setConfirm(null);
+                                        return;
+                                      }
 
-                                    const seeded = seedRecurringForLedger({ ledgerId: l.id, ledgerType: l.type });
-                                    // Create each seeded item using the hook
-                                    const createdItems = [];
-                                    for (const item of seeded) {
-                                      const ts = new Date().toISOString();
-                                      const id = `rec_${crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
-                                      const fullItem = {
-                                        id,
+                                      const seeded = seedRecurringForLedger({
                                         ledgerId: l.id,
-                                        title: item.title || '',
-                                        amount: item.amount || 0,
-                                        frequency: item.frequency || 'monthly',
-                                        nextDueDate: item.nextDueDate || today(),
-                                        notes: item.notes || '',
-                                        category: item.category || '',
-                                        createdAt: ts,
-                                        updatedAt: ts,
-                                        // Include template metadata
-                                        ...item,
-                                      };
-                                      await createRecurringItem(fullItem);
-                                      createdItems.push(fullItem);
+                                        ledgerType: l.type,
+                                      });
+                                      // Create each seeded item using the hook
+                                      const createdItems = [];
+                                      for (const item of seeded) {
+                                        const ts = new Date().toISOString();
+                                        const id = `rec_${crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+                                        const fullItem = {
+                                          id,
+                                          ledgerId: l.id,
+                                          title: item.title || '',
+                                          amount: item.amount || 0,
+                                          frequency: item.frequency || 'monthly',
+                                          nextDueDate: item.nextDueDate || today(),
+                                          notes: item.notes || '',
+                                          category: item.category || '',
+                                          createdAt: ts,
+                                          updatedAt: ts,
+                                          // Include template metadata
+                                          ...item,
+                                        };
+                                        await createRecurringItem(fullItem);
+                                        createdItems.push(fullItem);
+                                      }
+
+                                      // Apply Saudi pricing preset (Riyadh + Medium)
+                                      const r = applySaudiAutoPricingForLedger({
+                                        ledgerId: l.id,
+                                        city: 'riyadh',
+                                        size: 'medium',
+                                        onlyUnpriced: false,
+                                      });
+                                      if (!r.ok) {
+                                        toast.error(r.message || 'تعذر تطبيق التسعير');
+                                        setConfirm(null);
+                                        refresh();
+                                        return;
+                                      }
+
+                                      // Optional: create 3 demo payments to populate reports
+                                      const pick = (title) =>
+                                        createdItems.find((x) =>
+                                          String(x.title || '').includes(title)
+                                        );
+                                      const itemsToPay = [
+                                        pick('إيجار'),
+                                        pick('كهرباء'),
+                                        pick('ماء'),
+                                        pick('ترخيص'),
+                                        pick('فال'),
+                                      ]
+                                        .filter(Boolean)
+                                        .slice(0, 3);
+                                      for (const it of itemsToPay) {
+                                        const amt = safeNum(it.amount);
+                                        if (amt <= 0) continue;
+                                        const meta = buildTxMetaFromRecurring({
+                                          activeLedgerId: l.id,
+                                          recurring: it,
+                                        });
+                                        // SPR-006: use DataContext createTransaction
+                                        await createDataTransaction({
+                                          type: 'expense',
+                                          category: 'other',
+                                          amount: amt,
+                                          paymentMethod: 'cash',
+                                          date: today(),
+                                          description: it.title,
+                                          ledgerId: l.id,
+                                          meta,
+                                        });
+                                      }
+
+                                      toast.success('تم تفعيل الديمو بنجاح');
+                                      setConfirm(null);
+                                      refresh();
+                                    } catch {
+                                      toast.error('تعذر تفعيل الديمو');
+                                      setConfirm(null);
                                     }
+                                  },
+                                });
+                              }}
+                              className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+                              aria-label="تفعيل نموذج مكتب كامل (Demo)"
+                            >
+                              تفعيل نموذج مكتب كامل (Demo)
+                            </button>
+                          );
+                        })()}
 
-                                    // Apply Saudi pricing preset (Riyadh + Medium)
-                                    const r = applySaudiAutoPricingForLedger({ ledgerId: l.id, city: 'riyadh', size: 'medium', onlyUnpriced: false });
-                                    if (!r.ok) { toast.error(r.message || 'تعذر تطبيق التسعير'); setConfirm(null); refresh(); return; }
-
-                                    // Optional: create 3 demo payments to populate reports
-                                    const pick = (title) => createdItems.find(x => String(x.title || '').includes(title));
-                                    const itemsToPay = [pick('إيجار'), pick('كهرباء'), pick('ماء'), pick('ترخيص'), pick('فال')].filter(Boolean).slice(0,3);
-                                    for (const it of itemsToPay) {
-                                      const amt = safeNum(it.amount);
-                                      if (amt <= 0) continue;
-                                      const meta = buildTxMetaFromRecurring({ activeLedgerId: l.id, recurring: it });
-                                      // SPR-006: use DataContext createTransaction
-                                      await createDataTransaction({ type: 'expense', category: 'other', amount: amt, paymentMethod: 'cash', date: today(), description: it.title, ledgerId: l.id, meta });
-                                    }
-
-                                    toast.success('تم تفعيل الديمو بنجاح');
-                                    setConfirm(null);
-                                    refresh();
-                                  } catch {
-                                    toast.error('تعذر تفعيل الديمو');
-                                    setConfirm(null);
-                                  }
-                                },
-                              });
-                            }}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
-                            aria-label="تفعيل نموذج مكتب كامل (Demo)"
-                          >
-                            تفعيل نموذج مكتب كامل (Demo)
-                          </button>
-                        );
-                      })()}
-
-                      <button type="button" onClick={() => startEdit(l)} className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)]" aria-label="تعديل الاسم">تعديل الاسم</button>
-                      <button type="button" onClick={() => setActive(l.id)} className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700" aria-label="تعيين كنشط">تعيين كنشط</button>
-                    </div>
-                  )}
-                </div>
-              ))}
+                        <button
+                          type="button"
+                          onClick={() => startEdit(l)}
+                          className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
+                          aria-label="تعديل الاسم"
+                        >
+                          تعديل الاسم
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setActive(l.id)}
+                          className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                          aria-label="تعيين كنشط"
+                        >
+                          تعيين كنشط
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
             </div>
           )}
         </div>
       )}
 
-      {tab === 'recurring' && (
+      {tab === 'recurring' &&
         (() => {
           // Guard: if activeId isn't loaded yet, show a friendly message instead of crashing
           if (!activeId) {
             return (
               <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-sm">
                 <p className="text-[var(--color-text)] font-medium">اختر دفتراً نشطاً أولاً</p>
-                <p className="text-sm text-[var(--color-muted)] mt-1">يجب تحديد دفتر نشط لعرض الالتزامات.</p>
-                <button type="button" onClick={() => setTab('ledgers')} className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700">
+                <p className="text-sm text-[var(--color-muted)] mt-1">
+                  يجب تحديد دفتر نشط لعرض الالتزامات.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setTab('ledgers')}
+                  className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                >
                   عرض الدفاتر
                 </button>
               </div>
@@ -1200,188 +1686,197 @@ const LedgersPage = ({ setPage }) => {
           assertFn(applyQuickPricing, 'applyQuickPricing');
 
           return (
-            <div id="tabpanel-recurring" role="tabpanel" aria-labelledby="tab-recurring" tabIndex={0}>
-            <LedgerRecurringTab
-              {...{
-                Currency,
-                Badge,
-                EmptyState,
+            <div
+              id="tabpanel-recurring"
+              role="tabpanel"
+              aria-labelledby="tab-recurring"
+              tabIndex={0}
+            >
+              <LedgerRecurringTab
+                {...{
+                  Currency,
+                  Badge,
+                  EmptyState,
 
-                activeId,
-                activeLedger,
-                recurring,
-                startPayNow,
-                startEditRecurring,
-                deleteRecurring,
-                resetRecForm,
-                saveRecurring,
-                recForm,
-                setRecForm,
-                recEditingId,
-                setRecEditingId,
+                  activeId,
+                  activeLedger,
+                  recurring,
+                  startPayNow,
+                  startEditRecurring,
+                  deleteRecurring,
+                  resetRecForm,
+                  saveRecurring,
+                  recForm,
+                  setRecForm,
+                  recEditingId,
+                  setRecEditingId,
 
-                authorityOpen,
-                setAuthorityOpen,
-                budgets,
-                saveLedgerBudgets,
-                budgetAuth,
-                compliance,
-                brain,
-                spendByBucket,
+                  authorityOpen,
+                  setAuthorityOpen,
+                  budgets,
+                  saveLedgerBudgets,
+                  budgetAuth,
+                  compliance,
+                  brain,
+                  spendByBucket,
 
-                inbox,
-                cashPlan,
-                inboxFilter,
-                setInboxFilter,
-                inboxView,
-                lastPayNowAt,
-                daysSince,
-                addDaysISO,
-                setHistoryModal,
+                  inbox,
+                  cashPlan,
+                  inboxFilter,
+                  setInboxFilter,
+                  inboxView,
+                  lastPayNowAt,
+                  daysSince,
+                  addDaysISO,
+                  setHistoryModal,
 
-                forecastRunRate,
-                cashGap,
-                assumedInflow,
-                setAssumedInflow,
-                forecastPreset,
-                setForecastPreset,
-                scRent,
-                setScRent,
-                scUtilities,
-                setScUtilities,
-                scMaintenance,
-                setScMaintenance,
-                scMarketing,
-                setScMarketing,
-                scOther,
-                setScOther,
-                forecastInsights,
+                  forecastRunRate,
+                  cashGap,
+                  assumedInflow,
+                  setAssumedInflow,
+                  forecastPreset,
+                  setForecastPreset,
+                  scRent,
+                  setScRent,
+                  scUtilities,
+                  setScUtilities,
+                  scMaintenance,
+                  setScMaintenance,
+                  scMarketing,
+                  setScMarketing,
+                  scOther,
+                  setScOther,
+                  forecastInsights,
 
-                brainDetails,
-                setBrainDetails,
-                seededOnlyList,
-                isPastDue,
-                operatorMode,
-                openPricingWizard,
+                  brainDetails,
+                  setBrainDetails,
+                  seededOnlyList,
+                  isPastDue,
+                  operatorMode,
+                  openPricingWizard,
 
-                health,
-                healthHelpOpen,
-                setHealthHelpOpen,
-                projection,
-                simRentPct,
-                setSimRentPct,
-                simBillsPct,
-                setSimBillsPct,
-                simMaintPct,
-                setSimMaintPct,
-                computeScenario,
+                  health,
+                  healthHelpOpen,
+                  setHealthHelpOpen,
+                  projection,
+                  simRentPct,
+                  setSimRentPct,
+                  simBillsPct,
+                  setSimBillsPct,
+                  simMaintPct,
+                  setSimMaintPct,
+                  computeScenario,
 
-                pricingOpen,
-                setPricingOpen,
-                pricingIndex,
-                setPricingIndex,
-                pricingAmount,
-                setPricingAmount,
-                pricingDate,
-                setPricingDate,
-                pricingList,
-                applyQuickPricing,
+                  pricingOpen,
+                  setPricingOpen,
+                  pricingIndex,
+                  setPricingIndex,
+                  pricingAmount,
+                  setPricingAmount,
+                  pricingDate,
+                  setPricingDate,
+                  pricingList,
+                  applyQuickPricing,
 
-                saPricingOpen,
-                setSaPricingOpen,
-                saCity,
-                setSaCity,
-                saSize,
-                setSaSize,
-                saOnlyUnpriced,
-                setSaOnlyUnpriced,
-                applySaudiAutoPricingForLedger,
+                  saPricingOpen,
+                  setSaPricingOpen,
+                  saCity,
+                  setSaCity,
+                  saSize,
+                  setSaSize,
+                  saOnlyUnpriced,
+                  setSaOnlyUnpriced,
+                  applySaudiAutoPricingForLedger,
 
-                payOpen,
-                setPayOpen,
-                paySource,
-                setPaySource,
-                payForm,
-                setPayForm,
-                submitPayNow,
+                  payOpen,
+                  setPayOpen,
+                  paySource,
+                  setPaySource,
+                  payForm,
+                  setPayForm,
+                  submitPayNow,
 
-                toast,
-                refresh,
-                setConfirm,
-                seedRecurringForLedger,
-                filterTransactionsForLedgerByMeta,
-                dataStore,
-                normalizeLedgerType,
-                parseRecurringAmount,
-                normalizeRecurringCategory,
-                normalizeRecurringRisk,
-                sections,
-                sectionStats,
-                grouped,
-                sortRecurringInSection,
-                isSeededRecurring,
-                isSeededOnly,
-                isDueWithinDays,
-                completeness,
-                recurringDashboard,
-                updateRecurringOps,
+                  toast,
+                  refresh,
+                  setConfirm,
+                  seedRecurringForLedger,
+                  filterTransactionsForLedgerByMeta,
+                  dataStore,
+                  normalizeLedgerType,
+                  parseRecurringAmount,
+                  normalizeRecurringCategory,
+                  normalizeRecurringRisk,
+                  sections,
+                  sectionStats,
+                  grouped,
+                  sortRecurringInSection,
+                  isSeededRecurring,
+                  isSeededOnly,
+                  isDueWithinDays,
+                  completeness,
+                  recurringDashboard,
+                  updateRecurringOps,
 
-                // Stage 6 extraction fix: variables used inside LedgerRecurringTab must be passed 1:1
-                unpricedList,
-                outlook,
-                actuals,
-                budgetsHealth,
-                ledgerAlerts,
-                budgetForm,
-                setBudgetForm,
-                normalizeBudgets,
-                ledgers,
-                setLedgers,
-                activeRecurring,
-                recurringSections,
-                CATEGORY_LABEL,
-              }}
-            />
+                  // Stage 6 extraction fix: variables used inside LedgerRecurringTab must be passed 1:1
+                  unpricedList,
+                  outlook,
+                  actuals,
+                  budgetsHealth,
+                  ledgerAlerts,
+                  budgetForm,
+                  setBudgetForm,
+                  normalizeBudgets,
+                  ledgers,
+                  setLedgers,
+                  activeRecurring,
+                  recurringSections,
+                  CATEGORY_LABEL,
+                }}
+              />
             </div>
           );
-        })()
-      )}
+        })()}
       {tab === 'performance' && (
-        <div id="tabpanel-performance" role="tabpanel" aria-labelledby="tab-performance" tabIndex={0}>
-        <LedgerPerformanceTab
-          activeId={activeId}
-          activeLedger={activeLedger}
-          Badge={Badge}
-          EmptyState={EmptyState}
-          Currency={Currency}
-          incomeMode={incomeMode}
-          setIncomeMode={setIncomeMode}
-          incomeFixed={incomeFixed}
-          setIncomeFixed={setIncomeFixed}
-          incomePeak={incomePeak}
-          setIncomePeak={setIncomePeak}
-          incomeBase={incomeBase}
-          setIncomeBase={setIncomeBase}
-          incomeManual={incomeManual}
-          setIncomeManual={setIncomeManual}
-          incomeSave={incomeSave}
-          setIncomeSave={setIncomeSave}
-          tOperational={tOperational}
-          setTOperational={setTOperational}
-          tMaintenance={tMaintenance}
-          setTMaintenance={setTMaintenance}
-          tMarketing={tMarketing}
-          setTMarketing={setTMarketing}
-          parseRecurringAmount={parseRecurringAmount}
-          forecast={forecast}
-          dataStore={dataStore}
-          getLast4MonthsTable={getLast4MonthsTable}
-          targetsEvaluation={targetsEvaluation}
-          ledgers={ledgers}
-          setLedgers={setLedgers}
-          toast={toast}
-          refresh={refresh}
-        />
+        <div
+          id="tabpanel-performance"
+          role="tabpanel"
+          aria-labelledby="tab-performance"
+          tabIndex={0}
+        >
+          <LedgerPerformanceTab
+            activeId={activeId}
+            activeLedger={activeLedger}
+            Badge={Badge}
+            EmptyState={EmptyState}
+            Currency={Currency}
+            incomeMode={incomeMode}
+            setIncomeMode={setIncomeMode}
+            incomeFixed={incomeFixed}
+            setIncomeFixed={setIncomeFixed}
+            incomePeak={incomePeak}
+            setIncomePeak={setIncomePeak}
+            incomeBase={incomeBase}
+            setIncomeBase={setIncomeBase}
+            incomeManual={incomeManual}
+            setIncomeManual={setIncomeManual}
+            incomeSave={incomeSave}
+            setIncomeSave={setIncomeSave}
+            tOperational={tOperational}
+            setTOperational={setTOperational}
+            tMaintenance={tMaintenance}
+            setTMaintenance={setTMaintenance}
+            tMarketing={tMarketing}
+            setTMarketing={setTMarketing}
+            parseRecurringAmount={parseRecurringAmount}
+            forecast={forecast}
+            dataStore={dataStore}
+            getLast4MonthsTable={getLast4MonthsTable}
+            targetsEvaluation={targetsEvaluation}
+            ledgers={ledgers}
+            setLedgers={setLedgers}
+            toast={toast}
+            refresh={refresh}
+          />
         </div>
       )}
 
@@ -1393,38 +1888,38 @@ const LedgersPage = ({ setPage }) => {
 
       {tab === 'reports' && (
         <div id="tabpanel-reports" role="tabpanel" aria-labelledby="tab-reports" tabIndex={0}>
-        <LedgerTabErrorBoundary onBack={() => setTab('ledgers')}>
-          <LedgerReportsTab
-            {...{
-              toast,
-              activeId,
-              activeLedger,
-              Badge,
-              EmptyState,
-              Currency,
-              Icons,
+          <LedgerTabErrorBoundary onBack={() => setTab('ledgers')}>
+            <LedgerReportsTab
+              {...{
+                toast,
+                activeId,
+                activeLedger,
+                Badge,
+                EmptyState,
+                Currency,
+                Icons,
 
-              dataStore,
-              recurring,
-              parseRecurringAmount,
-              forecast,
-              getLast4MonthsTable,
-              targetsEvaluation,
-              normalizeRecurringCategory,
-              normalizeRecurringRisk,
-              seededOnlyList,
-              isPastDue,
-              normalizeLedgerType,
-              filterTransactionsForLedgerByMeta,
-              ledgerReports,
-              budgetsHealth,
-              setTab,
+                dataStore,
+                recurring,
+                parseRecurringAmount,
+                forecast,
+                getLast4MonthsTable,
+                targetsEvaluation,
+                normalizeRecurringCategory,
+                normalizeRecurringRisk,
+                seededOnlyList,
+                isPastDue,
+                normalizeLedgerType,
+                filterTransactionsForLedgerByMeta,
+                ledgerReports,
+                budgetsHealth,
+                setTab,
 
-              confirm,
-              setConfirm,
-            }}
-          />
-        </LedgerTabErrorBoundary>
+                confirm,
+                setConfirm,
+              }}
+            />
+          </LedgerTabErrorBoundary>
         </div>
       )}
 

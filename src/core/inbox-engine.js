@@ -93,7 +93,14 @@ function prevDueByFrequency(dateStr, frequency) {
 /** دخل من الصنف؟ */
 function isIncomeCategory(category) {
   const c = String(category || '').toLowerCase();
-  return c === 'income' || c === 'دخل' || c === 'commission' || c === 'عمولة' || c === 'deposit' || c === 'إيداع';
+  return (
+    c === 'income' ||
+    c === 'دخل' ||
+    c === 'commission' ||
+    c === 'عمولة' ||
+    c === 'deposit' ||
+    c === 'إيداع'
+  );
 }
 
 /** نوع المستحق: income | expense */
@@ -146,11 +153,7 @@ export function expandRecurringToDues(recurringItems, fromDate, toDate, transact
     (r) => r && Number(r?.amount) !== 0
   );
   const lid = String(ledgerId || '').trim();
-  const txs = Array.isArray(transactions)
-    ? transactions
-    : lid
-      ? getTransactionsForLedger(lid)
-      : [];
+  const txs = Array.isArray(transactions) ? transactions : lid ? getTransactionsForLedger(lid) : [];
   const todayStr = dateStrRiyadh();
   const fromMs = parseDateStr(from);
   const toMs = parseDateStr(to);
@@ -184,7 +187,8 @@ export function expandRecurringToDues(recurringItems, fromDate, toDate, transact
         const paid = isDuePaid(txs, recurringItemId, cur, nextDue);
         if (!paid) {
           const todayMs = parseDateStr(todayStr);
-          const daysOverdue = todayMs != null ? Math.max(0, Math.floor((todayMs - dueMs) / DAY_MS)) : 0;
+          const daysOverdue =
+            todayMs != null ? Math.max(0, Math.floor((todayMs - dueMs) / DAY_MS)) : 0;
           dues.push({
             id: `due_${recurringItemId}_${cur}`,
             name,
@@ -215,7 +219,9 @@ export function expandRecurringToDues(recurringItems, fromDate, toDate, transact
  */
 export function calculateInbox(ledgerId, options = {}) {
   const lid = String(ledgerId || '').trim();
-  const recurringItems = (options.recurringItems || getRecurringItems() || []).filter((r) => String(r?.ledgerId || '') === lid);
+  const recurringItems = (options.recurringItems || getRecurringItems() || []).filter(
+    (r) => String(r?.ledgerId || '') === lid
+  );
   const transactions = options.transactions || getTransactionsForLedger(lid);
 
   const todayStr = dateStrRiyadh();

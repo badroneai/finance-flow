@@ -35,21 +35,23 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
 
   if (sorted.length === 0) {
     return (
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/80 p-5 text-center text-[var(--color-muted)]" dir="rtl">
-        <h2 className="font-semibold text-[var(--color-text)] mb-1">
-          أقرب المستحقات
-        </h2>
+      <div
+        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/80 p-5 text-center text-[var(--color-muted)]"
+        dir="rtl"
+      >
+        <h2 className="font-semibold text-[var(--color-text)] mb-1">أقرب المستحقات</h2>
         <p className="text-sm">لا توجد مستحقات قريبة.</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden" dir="rtl">
+    <div
+      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden"
+      dir="rtl"
+    >
       <div className="px-4 py-3 border-b border-[var(--color-border)]">
-        <h2 className="font-semibold text-[var(--color-text)]">
-          أقرب المستحقات
-        </h2>
+        <h2 className="font-semibold text-[var(--color-text)]">أقرب المستحقات</h2>
       </div>
       <ul className="divide-y divide-[var(--color-border)]">
         {sorted.map((due) => (
@@ -57,7 +59,11 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0 flex-1 flex items-center gap-2">
                 <span
-                  className={`flex-shrink-0 w-2 h-2 rounded-full ${due.type === 'income' ? 'bg-emerald-500' : 'bg-rose-500'}`}
+                  className="flex-shrink-0 w-2 h-2 rounded-full"
+                  style={{
+                    background:
+                      due.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
+                  }}
                   aria-hidden="true"
                 />
                 <div className="min-w-0">
@@ -75,11 +81,13 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
                 </div>
               </div>
               <span
-                className={`flex-shrink-0 font-medium tabular-nums ${
-                  due.type === 'income' ? 'text-emerald-600' : 'text-rose-600'
-                }`}
+                className="flex-shrink-0 font-medium tabular-nums"
+                style={{
+                  color: due.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
+                }}
               >
-                {due.type === 'income' ? '+' : '-'}{formatAmount(Math.abs(Number(due.amount) || 0))} ر.س
+                {due.type === 'income' ? '+' : '-'}
+                {formatAmount(Math.abs(Number(due.amount) || 0))} ر.س
               </span>
             </div>
           </li>
@@ -90,7 +98,8 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
           <button
             type="button"
             onClick={onShowAll}
-            className="text-sm font-medium text-blue-600 hover:text-blue-800"
+            className="text-sm font-medium hover:opacity-80"
+            style={{ color: 'var(--color-info)' }}
           >
             عرض كل المستحقات
           </button>

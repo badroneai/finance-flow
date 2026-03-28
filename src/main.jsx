@@ -36,7 +36,9 @@ function RootErrorFallback({ error, onReload }) {
           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
         }}
       >
-        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>حدث خطأ في تحميل التطبيق</h2>
+        <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>
+          حدث خطأ في تحميل التطبيق
+        </h2>
         <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-muted, #64748b)' }}>
           يمكنك إعادة تحميل الصفحة أو الرجوع للرابط السابق.
         </p>
@@ -87,10 +89,7 @@ class RootErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <RootErrorFallback
-          error={this.state.error}
-          onReload={() => window.location.reload()}
-        />
+        <RootErrorFallback error={this.state.error} onReload={() => window.location.reload()} />
       );
     }
     return this.props.children;
@@ -128,7 +127,8 @@ function mount() {
     el.innerHTML = '';
     const fallback = document.createElement('div');
     fallback.setAttribute('dir', 'rtl');
-    fallback.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-bg,#f8fafc);color:var(--color-text,#0f172a);';
+    fallback.style.cssText =
+      'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-bg,#f8fafc);color:var(--color-text,#0f172a);';
     fallback.innerHTML = [
       '<div style="max-width:420px;background:var(--color-surface,#fff);border:1px solid var(--color-border,#e2e8f0);border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)">',
       '<h2 style="margin:0 0 8px;font-size:20px;font-weight:700">حدث خطأ في تحميل التطبيق</h2>',
@@ -142,7 +142,11 @@ function mount() {
 }
 
 if (!mount()) {
-  window.addEventListener('DOMContentLoaded', () => {
-    mount();
-  }, { once: true });
+  window.addEventListener(
+    'DOMContentLoaded',
+    () => {
+      mount();
+    },
+    { once: true }
+  );
 }
