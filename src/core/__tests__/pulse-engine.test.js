@@ -14,6 +14,7 @@ vi.mock('../dataStore.js', () => ({
   dataStore: {
     transactions: { list: vi.fn(() => []) },
   },
+  getTransactionsForLedger: vi.fn(() => []),
 }));
 
 describe('pulse-engine', () => {

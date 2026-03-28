@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 
 import App from './App.jsx';
+import { AuthProvider } from './contexts/AuthContext.jsx';
+import { DataProvider } from './contexts/DataContext.jsx';
+import { DemoProvider } from './contexts/DemoContext.jsx';
 
 import { ensureDefaultLedger } from './core/ledger-store.js';
 
@@ -19,22 +22,22 @@ function RootErrorFallback({ error, onReload }) {
         justifyContent: 'center',
         padding: 24,
         fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-        background: '#f8fafc',
-        color: '#0f172a',
+        background: 'var(--color-bg, #f8fafc)',
+        color: 'var(--color-text, #0f172a)',
       }}
     >
       <div
         style={{
           maxWidth: 420,
-          background: '#fff',
-          border: '1px solid #e2e8f0',
+          background: 'var(--color-surface, #fff)',
+          border: '1px solid var(--color-border, #e2e8f0)',
           borderRadius: 12,
           padding: 24,
           boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
         }}
       >
         <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>حدث خطأ في تحميل التطبيق</h2>
-        <p style={{ margin: '0 0 16px', fontSize: 14, color: '#64748b' }}>
+        <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-muted, #64748b)' }}>
           يمكنك إعادة تحميل الصفحة أو الرجوع للرابط السابق.
         </p>
         <button
@@ -58,7 +61,7 @@ function RootErrorFallback({ error, onReload }) {
             style={{
               marginTop: 16,
               padding: 12,
-              background: '#f1f5f9',
+              background: 'var(--color-bg, #f1f5f9)',
               borderRadius: 6,
               fontSize: 12,
               overflow: 'auto',
@@ -107,9 +110,15 @@ function mount() {
     ReactDOM.createRoot(el).render(
       <React.StrictMode>
         <RootErrorBoundary>
-          <HashRouter>
-            <App />
-          </HashRouter>
+          <DemoProvider>
+            <AuthProvider>
+              <HashRouter>
+                <DataProvider>
+                  <App />
+                </DataProvider>
+              </HashRouter>
+            </AuthProvider>
+          </DemoProvider>
         </RootErrorBoundary>
       </React.StrictMode>
     );
@@ -119,11 +128,11 @@ function mount() {
     el.innerHTML = '';
     const fallback = document.createElement('div');
     fallback.setAttribute('dir', 'rtl');
-    fallback.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24;font-family:"IBM Plex Sans Arabic",sans-serif;background:#f8fafc;color:#0f172a;';
+    fallback.style.cssText = 'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-bg,#f8fafc);color:var(--color-text,#0f172a);';
     fallback.innerHTML = [
-      '<div style="max-width:420px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)">',
+      '<div style="max-width:420px;background:var(--color-surface,#fff);border:1px solid var(--color-border,#e2e8f0);border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)">',
       '<h2 style="margin:0 0 8px;font-size:20px;font-weight:700">حدث خطأ في تحميل التطبيق</h2>',
-      '<p style="margin:0 0 16px;font-size:14px;color:#64748b">اضغط الزر أدناه لإعادة تحميل الصفحة.</p>',
+      '<p style="margin:0 0 16px;font-size:14px;color:var(--color-muted,#64748b)">اضغط الزر أدناه لإعادة تحميل الصفحة.</p>',
       '<button type="button" onclick="window.location.reload()" style="padding:10px 20px;font-size:14px;font-weight:600;color:#fff;background:#0F1C2E;border:none;border-radius:8px;cursor:pointer">إعادة تحميل الصفحة</button>',
       '</div>',
     ].join('');

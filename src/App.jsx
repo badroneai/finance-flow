@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { useLocation, useNavigate, Routes, Route } from 'react-router-dom';
 
-import { Sidebar, Topbar, BottomNav } from './ui/Sidebar.jsx';
+import { Sidebar } from './ui/Sidebar.jsx';
+import { Topbar } from './ui/Topbar.jsx';
+import { BottomNav } from './ui/BottomNav.jsx';
 import { PulseAlertsBanner } from './ui/PulseAlertsBanner.jsx';
 import { ToastProvider } from './contexts/ToastContext.jsx';
 import { UnsavedContext } from './contexts/UnsavedContext.jsx';
@@ -11,16 +13,20 @@ import { WelcomeBanner } from './ui/WelcomeBanner.jsx';
 import { HelpPanel } from './ui/HelpPanel.jsx';
 import { OnboardingModal } from './ui/OnboardingModal.jsx';
 import { Icons } from './ui/ui-common.jsx';
+import { ProtectedRoute } from './ui/ProtectedRoute.jsx';
+import { DemoBanner } from './ui/DemoBanner.jsx';
 
-import { NAV_ITEMS as NAV_ITEMS_CONFIG, pathToId, idToPath } from './config/navigation.js';
+import { NAV_ITEMS as NAV_ITEMS_CONFIG, BOTTOM_NAV_MAIN, BOTTOM_NAV_MORE, pathToId, idToPath } from './config/navigation.js';
 
 import PulsePage from './pages/PulsePage.jsx';
 import InboxPage from './pages/InboxPage.jsx';
 
+const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const LedgersPage = lazy(() => import('./pages/LedgersPage.jsx'));
 const TransactionsPage = lazy(() => import('./pages/TransactionsPage.jsx').then((m) => ({ default: m.TransactionsPage })));
 const SettingsPage = lazy(() => import('./pages/SettingsPage.jsx').then((m) => ({ default: m.SettingsPage })));
 const MonthlyReportPage = lazy(() => import('./pages/MonthlyReportPage.jsx'));
+const CommissionsPage = lazy(() => import('./pages/CommissionsPage.jsx').then((m) => ({ default: m.CommissionsPage })));
 
 import { storageFacade } from './core/storage-facade.js';
 import {
@@ -52,8 +58,6 @@ const App = () => {
 
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [letterType, setLetterType] = useState('intro');
-  const [editDraft, setEditDraft] = useState(null);
   const [dirty, setDirty] = useState(false);
 
   // Ensure seed data on first load
@@ -148,12 +152,33 @@ const App = () => {
 
   const settingsProps = { setPage, onShowOnboarding: () => { try { storageFacade.removeRaw(UI_ONBOARDING_SEEN_KEY); } catch {} setShowOnboarding(true); } };
 
+  // صفحة المصادقة تُعرض بدون layout (بدون Sidebar/Topbar/BottomNav)
+  const isAuthPage = location.pathname === '/auth';
+
+  if (isAuthPage) {
+    return (
+      <Suspense fallback={<div className="p-6 text-center text-[var(--color-muted)]" dir="rtl">جاري التحميل…</div>}>
+        <AuthPage />
+      </Suspense>
+    );
+  }
+
+  // مسار /demo → يفعّل وضع Demo ويحوّل إلى الصفحة الرئيسية
+  if (location.pathname === '/demo') {
+    // تفعيل Demo عبر sessionStorage ثم redirect
+    try { sessionStorage.setItem('ff_demo_mode', 'true'); } catch {}
+    window.location.hash = '#/';
+    window.location.reload();
+    return null;
+  }
+
   return (
     <ToastProvider>
       <UnsavedContext.Provider value={setDirty}>
         <TrustChecks/>
+        <DemoBanner />
         <div className="app-shell flex min-h-screen">
-          <a href="#main-content" className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-white focus:text-gray-900 focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-blue-600 focus:outline-none focus:fixed focus:top-4 focus:start-4">
+          <a href="#main-content" className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-[var(--color-surface)] focus:text-[var(--color-text)] focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-blue-600 focus:outline-none focus:fixed focus:top-4 focus:start-4">
             تخطي إلى المحتوى الرئيسي
           </a>
           <Sidebar Icons={Icons} navItems={NAV_ITEMS} page={page} setPage={setPage} collapsed={collapsed} setCollapsed={setCollapsed} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} onOpenHelp={() => { setHelpSection('start'); setShowHelp(true); }}/>
@@ -180,15 +205,16 @@ const App = () => {
             )}
             <div className="print-container flex-1">
               <PageLoadErrorBoundary key={page} onGoHome={() => setPage('pulse')}>
-                <Suspense fallback={<div className="p-6 text-center text-gray-500" aria-live="polite">جاري التحميل…</div>}>
+                <Suspense fallback={<div className="p-6 text-center text-[var(--color-muted)]" aria-live="polite">جاري التحميل…</div>}>
                   <Routes>
-                    <Route path="/" element={<PulsePage setPage={setPage} />} />
-                    <Route path="/inbox" element={<InboxPage setPage={setPage} />} />
-                    <Route path="/ledgers" element={<LedgersPage setPage={setPage} />} />
-                    <Route path="/transactions" element={<TransactionsPage setPage={setPage} />} />
-                    <Route path="/settings" element={<SettingsPage {...settingsProps} />} />
-                    <Route path="/report" element={<MonthlyReportPage setPage={setPage} />} />
-                    <Route path="*" element={<PulsePage setPage={setPage} />} />
+                    <Route path="/" element={<ProtectedRoute><PulsePage setPage={setPage} /></ProtectedRoute>} />
+                    <Route path="/inbox" element={<ProtectedRoute><InboxPage setPage={setPage} /></ProtectedRoute>} />
+                    <Route path="/ledgers" element={<ProtectedRoute><LedgersPage setPage={setPage} /></ProtectedRoute>} />
+                    <Route path="/transactions" element={<ProtectedRoute><TransactionsPage setPage={setPage} /></ProtectedRoute>} />
+                    <Route path="/commissions" element={<ProtectedRoute><CommissionsPage setPage={setPage} /></ProtectedRoute>} />
+                    <Route path="/settings" element={<ProtectedRoute><SettingsPage {...settingsProps} /></ProtectedRoute>} />
+                    <Route path="/report" element={<ProtectedRoute><MonthlyReportPage setPage={setPage} /></ProtectedRoute>} />
+                    <Route path="*" element={<ProtectedRoute><PulsePage setPage={setPage} /></ProtectedRoute>} />
                   </Routes>
                 </Suspense>
               </PageLoadErrorBoundary>
@@ -203,10 +229,10 @@ const App = () => {
               />
             )}
 
-          <footer className="no-print border-t border-gray-100 py-3 px-4 text-center text-sm text-gray-500" role="contentinfo">
+          <footer className="no-print border-t border-[var(--color-border)] py-3 px-4 text-center text-sm text-[var(--color-muted)]" role="contentinfo">
             <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>
           </footer>
-          <BottomNav navItems={NAV_ITEMS} page={page} setPage={setPage} />
+          <BottomNav navItems={NAV_ITEMS} page={page} setPage={setPage} mainIds={BOTTOM_NAV_MAIN} moreIds={BOTTOM_NAV_MORE} MoreIcon={Icons.moreMenu} />
           </main>
         </div>
       </UnsavedContext.Provider>
