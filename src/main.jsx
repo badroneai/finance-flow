@@ -124,18 +124,37 @@ function mount() {
     return true;
   } catch (err) {
     console.error('mount failed', err);
-    el.innerHTML = '';
+    // تنظيف المحتوى بدون innerHTML
+    while (el.firstChild) el.removeChild(el.firstChild);
+
     const fallback = document.createElement('div');
     fallback.setAttribute('dir', 'rtl');
     fallback.style.cssText =
-      'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-bg,#f8fafc);color:var(--color-text,#0f172a);';
-    fallback.innerHTML = [
-      '<div style="max-width:420px;background:var(--color-surface,#fff);border:1px solid var(--color-border,#e2e8f0);border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)">',
-      '<h2 style="margin:0 0 8px;font-size:20px;font-weight:700">حدث خطأ في تحميل التطبيق</h2>',
-      '<p style="margin:0 0 16px;font-size:14px;color:var(--color-muted,#64748b)">اضغط الزر أدناه لإعادة تحميل الصفحة.</p>',
-      '<button type="button" onclick="window.location.reload()" style="padding:10px 20px;font-size:14px;font-weight:600;color:#fff;background:#0F1C2E;border:none;border-radius:8px;cursor:pointer">إعادة تحميل الصفحة</button>',
-      '</div>',
-    ].join('');
+      'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-bg,#f8fafc);color:var(--color-text,#0f172a);';
+
+    const card = document.createElement('div');
+    card.style.cssText =
+      'max-width:420px;background:var(--color-surface,#fff);border:1px solid var(--color-border,#e2e8f0);border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)';
+
+    const heading = document.createElement('h2');
+    heading.style.cssText = 'margin:0 0 8px;font-size:20px;font-weight:700';
+    heading.textContent = 'حدث خطأ في تحميل التطبيق';
+
+    const para = document.createElement('p');
+    para.style.cssText = 'margin:0 0 16px;font-size:14px;color:var(--color-muted,#64748b)';
+    para.textContent = 'اضغط الزر أدناه لإعادة تحميل الصفحة.';
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.style.cssText =
+      'padding:10px 20px;font-size:14px;font-weight:600;color:#fff;background:#0F1C2E;border:none;border-radius:8px;cursor:pointer';
+    btn.textContent = 'إعادة تحميل الصفحة';
+    btn.addEventListener('click', () => window.location.reload());
+
+    card.appendChild(heading);
+    card.appendChild(para);
+    card.appendChild(btn);
+    fallback.appendChild(card);
     el.appendChild(fallback);
     return true;
   }
