@@ -18,9 +18,8 @@ import { DemoBanner } from './ui/DemoBanner.jsx';
 
 import { NAV_ITEMS as NAV_ITEMS_CONFIG, BOTTOM_NAV_MAIN, BOTTOM_NAV_MORE, pathToId, idToPath } from './config/navigation.js';
 
-import PulsePage from './pages/PulsePage.jsx';
-import InboxPage from './pages/InboxPage.jsx';
-
+const PulsePage = lazy(() => import('./pages/PulsePage.jsx'));
+const InboxPage = lazy(() => import('./pages/InboxPage.jsx'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
 const LedgersPage = lazy(() => import('./pages/LedgersPage.jsx'));
 const TransactionsPage = lazy(() => import('./pages/TransactionsPage.jsx').then((m) => ({ default: m.TransactionsPage })));

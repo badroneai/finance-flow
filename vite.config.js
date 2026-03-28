@@ -19,6 +19,8 @@ export default defineConfig({
       output: {
         manualChunks: {
           'pdf-lib': ['jspdf', 'html2canvas'],
+          'supabase': ['@supabase/supabase-js'],
+          'router': ['react-router-dom'],
         },
       },
     },

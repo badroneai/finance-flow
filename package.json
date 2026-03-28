@@ -24,6 +24,9 @@
     "url": "https://github.com/badroneai/finance-flow/issues"
   },
   "homepage": "https://github.com/badroneai/finance-flow#readme",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "devDependencies": {
     "@vitejs/plugin-react": "^5.1.4",
     "jsdom": "^28.1.0",
