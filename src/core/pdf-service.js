@@ -18,6 +18,7 @@
 
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
+import DOMPurify from 'dompurify';
 
 // ═══════════════════════════════════════
 // أدوات مساعدة
@@ -62,6 +63,17 @@ const MONTH_NAMES = [
 
 const STATUS_LABELS = { pending: 'مستحقة', partial: 'مدفوعة جزئياً', paid: 'مدفوعة' };
 const STATUS_COLORS = { pending: '#f59e0b', partial: '#3b82f6', paid: '#059669' };
+
+/**
+ * حقن HTML آمن باستخدام DOMPurify
+ * يسمح بالعناصر والأنماط اللازمة لقوالب PDF مع حظر السكربتات
+ */
+function safeSetHTML(el, html) {
+  el.innerHTML = DOMPurify.sanitize(html, {
+    ADD_TAGS: ['style'],
+    ADD_ATTR: ['style', 'class', 'dir', 'colspan', 'rowspan'],
+  });
+}
 
 /** إنشاء عنصر مؤقت مخفي */
 function createHiddenContainer() {
@@ -193,7 +205,7 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
   const officeName = officeInfo?.name || 'مكتب عقاري';
 
   const container = createHiddenContainer();
-  container.innerHTML = `<style>${SHARED_CSS}</style>
+  safeSetHTML(container, `<style>${SHARED_CSS}</style>
   <div class="pdf-page">
     <div class="pdf-header">
       ${logoHtml(officeInfo)}
@@ -332,7 +344,7 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`;
+  </div>`);
 
   const safeName = (meta?.ledgerName || 'دفتر').replace(/[/\\?%*:|"<>]/g, '_');
   const filename = `تقرير_${safeName}_${meta?.month}_${meta?.year}.pdf`;
@@ -401,7 +413,7 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
   else if (filters.dateTo) periodLabel = `حتى ${filters.dateTo}`;
 
   const container = createHiddenContainer();
-  container.innerHTML = `<style>${SHARED_CSS}</style>
+  safeSetHTML(container, `<style>${SHARED_CSS}</style>
   <div class="pdf-page">
     <div class="pdf-header">
       ${logoHtml(officeInfo)}
@@ -481,7 +493,7 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`;
+  </div>`);
 
   const filename = `عمولات_${officeName.replace(/[/\\?%*:|"<>]/g, '_')}_${todayStr()}.pdf`;
   return htmlToPdf(container, filename);
@@ -545,7 +557,7 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
   });
 
   const container = createHiddenContainer();
-  container.innerHTML = `<style>${SHARED_CSS}
+  safeSetHTML(container, `<style>${SHARED_CSS}
     .balance-row td { font-weight: 700; background: #f1f5f9 !important; }
   </style>
   <div class="pdf-page">
@@ -603,7 +615,7 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`;
+  </div>`);
 
   const safeName = ledgerName.replace(/[/\\?%*:|"<>]/g, '_');
   const filename = `كشف_حساب_${safeName}_${todayStr()}.pdf`;

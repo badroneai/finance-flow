@@ -11,8 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint src/",
-    "format": "prettier --write src/"
+    "lint": "npx eslint src/",
+    "format": "npx prettier --write src/"
   },
   "repository": {
     "type": "git",
@@ -42,6 +42,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.99.2",
+    "dompurify": "^3.3.3",
     "html2canvas": "^1.4.1",
     "jspdf": "^4.2.1",
     "react": "^19.2.4",

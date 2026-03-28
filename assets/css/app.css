@@ -91,6 +91,9 @@ html[data-theme] .border-slate-200 { border-color: var(--color-border) !importan
     padding-left: env(safe-area-inset-left);
     padding-right: env(safe-area-inset-right);
   }
+  .safe-area-pb {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
 }
 @media (max-width: 768px) {
   #root input[type="text"],
@@ -122,6 +125,31 @@ html[data-theme] .border-slate-200 { border-color: var(--color-border) !importan
 @media print {
   #root button { min-height: auto; }
   #root table td button { min-height: auto; min-width: auto; padding: 0.25rem; }
+}
+
+/* ========== Mobile Batch 7 — Bottom padding for BottomNav + page spacing ========== */
+@media (max-width: 768px) {
+  /* مسافة سفلية لكل صفحة لتجنب تغطية BottomNav للمحتوى */
+  .app-shell main,
+  .print-container,
+  .pulse-page,
+  .properties-page,
+  [dir="rtl"].min-h-screen {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px) + 1.5rem) !important;
+  }
+  /* تحسين مسافات النماذج على الجوال */
+  #root form .grid { gap: 0.75rem; }
+  #root form .grid.grid-cols-2,
+  #root form .grid.grid-cols-3 { grid-template-columns: 1fr !important; }
+  /* بطاقات الملخص — عمودين على الجوال الصغير */
+  .grid.grid-cols-2.md\\:grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
+  /* تحسين line-clamp للبطاقات */
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
 }
 
 /* ========== Mobile Batch 5 — Scrollbar + Print ========== */

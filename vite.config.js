@@ -10,6 +10,8 @@ export default defineConfig({
     include: ['src/**/*.test.js'],
   },
   build: {
+    // إذا فشل تنظيف dist/ (ملفات مقفلة من deploy سابق)، أكمل البناء بدون حذفها أولاً
+    emptyOutDir: false,
     rollupOptions: {
       input: {
         app: 'finance-flow.html',

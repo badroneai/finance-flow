@@ -34,12 +34,14 @@ npm run test      # تشغيل الاختبارات (Vitest)
 
 ### وضع Supabase (مع backend)
 
-أنشئ ملف `.env` في جذر المشروع:
+أنشئ ملف `.env.local` في جذر المشروع (أو `.env` — Vite يقرأ الاثنين):
 
 ```env
 VITE_SUPABASE_URL=https://[project-id].supabase.co
 VITE_SUPABASE_ANON_KEY=eyJ...
 ```
+
+> ملاحظة: `.env.local` مُفضّل لأنه مُستثنى من Git تلقائياً.
 
 عند وجود القيم، يتصل التطبيق بـ Supabase للمصادقة وتخزين البيانات سحابياً.
 

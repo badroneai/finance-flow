@@ -22,6 +22,20 @@
   --color-surface-hover: #f1f5f9;  /* hover on cards/rows */
   --color-input-bg: #ffffff;       /* input fields background */
 
+  /* Semantic status colors */
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.08);
+  --color-success-light: #10b981;
+  --color-danger: #dc2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.08);
+  --color-danger-light: #ef4444;
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-warning-light: #f59e0b;
+  --color-info: #2563eb;
+  --color-info-bg: rgba(37, 99, 235, 0.08);
+  --color-info-light: #3b82f6;
+
   /* Focus ring */
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(201, 162, 39, 0.25);
@@ -54,6 +68,19 @@
   --color-surface-hover: #f1f5f9;
   --color-input-bg: #ffffff;
 
+  --color-success: #059669;
+  --color-success-bg: rgba(5, 150, 105, 0.08);
+  --color-success-light: #10b981;
+  --color-danger: #dc2626;
+  --color-danger-bg: rgba(220, 38, 38, 0.08);
+  --color-danger-light: #ef4444;
+  --color-warning: #d97706;
+  --color-warning-bg: rgba(217, 119, 6, 0.08);
+  --color-warning-light: #f59e0b;
+  --color-info: #2563eb;
+  --color-info-bg: rgba(37, 99, 235, 0.08);
+  --color-info-light: #3b82f6;
+
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(201, 162, 39, 0.25);
 }
@@ -72,6 +99,20 @@
   --color-accent: #d2ad43;
   --color-surface-hover: #112a45;
   --color-input-bg: #0c1d33;
+
+  /* Semantic — lighter for dark backgrounds */
+  --color-success: #34d399;
+  --color-success-bg: rgba(52, 211, 153, 0.12);
+  --color-success-light: #6ee7b7;
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(248, 113, 113, 0.12);
+  --color-danger-light: #fca5a5;
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.12);
+  --color-warning-light: #fde68a;
+  --color-info: #60a5fa;
+  --color-info-bg: rgba(96, 165, 250, 0.12);
+  --color-info-light: #93c5fd;
 
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(210, 173, 67, 0.26);
@@ -96,6 +137,20 @@
   --color-accent: #e0c05a;
   --color-surface-hover: #0e2035;
   --color-input-bg: #0a1627;
+
+  /* Semantic — bright enough for true dark backgrounds */
+  --color-success: #34d399;
+  --color-success-bg: rgba(52, 211, 153, 0.10);
+  --color-success-light: #6ee7b7;
+  --color-danger: #f87171;
+  --color-danger-bg: rgba(248, 113, 113, 0.10);
+  --color-danger-light: #fca5a5;
+  --color-warning: #fbbf24;
+  --color-warning-bg: rgba(251, 191, 36, 0.10);
+  --color-warning-light: #fde68a;
+  --color-info: #60a5fa;
+  --color-info-bg: rgba(96, 165, 250, 0.10);
+  --color-info-light: #93c5fd;
 
   --color-focus: var(--color-accent);
   --color-focus-soft: rgba(224, 192, 90, 0.28);

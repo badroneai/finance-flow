@@ -39,3 +39,40 @@ ALTER TABLE properties
 -- عدد الوحدات لا يمكن أن يكون سالباً
 ALTER TABLE properties
   ADD CONSTRAINT positive_units CHECK (units_count >= 0);
+
+-- ══════════════════════════════════════════════════════════
+-- عزل البيانات بين المكاتب (cross-office isolation)
+-- ══════════════════════════════════════════════════════════
+
+-- دالة مساعدة: التحقق أن العقار والعقد ينتميان لنفس المكتب
+CREATE OR REPLACE FUNCTION check_contract_office_match()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- تحقق من تطابق office_id مع العقار
+  IF NEW.property_id IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM properties WHERE id = NEW.property_id AND office_id = NEW.office_id
+    ) THEN
+      RAISE EXCEPTION 'العقار لا ينتمي لنفس المكتب';
+    END IF;
+  END IF;
+
+  -- تحقق من تطابق office_id مع جهة الاتصال
+  IF NEW.contact_id IS NOT NULL THEN
+    IF NOT EXISTS (
+      SELECT 1 FROM contacts WHERE id = NEW.contact_id AND office_id = NEW.office_id
+    ) THEN
+      RAISE EXCEPTION 'جهة الاتصال لا تنتمي لنفس المكتب';
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- تطبيق الـ trigger على العقود
+DROP TRIGGER IF EXISTS trg_contract_office_match ON contracts;
+CREATE TRIGGER trg_contract_office_match
+  BEFORE INSERT OR UPDATE ON contracts
+  FOR EACH ROW
+  EXECUTE FUNCTION check_contract_office_match();
