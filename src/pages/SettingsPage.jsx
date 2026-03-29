@@ -38,8 +38,22 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
   const toast = useToast();
   const navigate = useNavigate();
   const { user, signOut, isSupabaseConfigured, profile, office, role } = useAuth();
-  const { isCloudMode, updateOfficeSettings, transactions, commissions, ledgers, recurringItems } =
-    useData();
+  const {
+    isCloudMode,
+    updateOfficeSettings,
+    transactions,
+    commissions,
+    ledgers,
+    recurringItems,
+    contractPayments,
+    fetchTransactions,
+    fetchCommissions,
+    fetchProperties,
+    fetchUnits,
+    fetchContacts,
+    fetchContracts,
+    fetchContractPayments,
+  } = useData();
 
   // SPR-010: قراءة الإعدادات — سحابي: من office (Supabase)، محلي: من localStorage
   const [settings, setSettings] = useState(() => {
@@ -138,13 +152,22 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
     setConfirm({
       title: 'إعادة بيانات الديمو',
       message: 'سيتم استبدال جميع البيانات ببيانات الديمو. هل أنت متأكد؟',
-      onConfirm: () => {
+      onConfirm: async () => {
         const res = dataStore.seed.resetDemo();
         if (!res.ok) {
           toast.error(res.message);
           setConfirm(null);
           return;
         }
+        await Promise.all([
+          fetchTransactions(),
+          fetchCommissions(),
+          fetchProperties(),
+          fetchUnits(),
+          fetchContacts(),
+          fetchContracts(),
+          fetchContractPayments(),
+        ]);
         setSettings(dataStore.settings.get());
         initTheme();
         toast.success('تمت إعادة بيانات الديمو');
@@ -169,8 +192,17 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
       dangerText: 'لا يمكن التراجع عن هذا الإجراء.',
       confirmLabel: 'نعم، احذف كل شيء',
       danger: true,
-      onConfirm: () => {
+      onConfirm: async () => {
         dataStore.seed.clearAll();
+        await Promise.all([
+          fetchTransactions(),
+          fetchCommissions(),
+          fetchProperties(),
+          fetchUnits(),
+          fetchContacts(),
+          fetchContracts(),
+          fetchContractPayments(),
+        ]);
         setSettings(SEED_SETTINGS);
         initTheme();
         toast.success('تم حذف جميع البيانات');
@@ -186,6 +218,11 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
     KEYS.drafts,
     KEYS.settings,
     KEYS.seeded,
+    KEYS.properties,
+    KEYS.units,
+    KEYS.contacts,
+    KEYS.contracts,
+    KEYS.contractPayments,
 
     // Ledgers (PR-1)
     'ff_ledgers',
@@ -211,6 +248,11 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
     KEYS.commissions,
     KEYS.drafts,
     KEYS.settings,
+    KEYS.properties,
+    KEYS.units,
+    KEYS.contacts,
+    KEYS.contracts,
+    KEYS.contractPayments,
     'ff_ledgers',
     'ff_recurring_items',
   ]);
@@ -237,6 +279,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
         [KEYS.commissions]: commissions || [],
         ff_ledgers: ledgers || [],
         ff_recurring_items: recurringItems || [],
+        [KEYS.contractPayments]: contractPayments || [],
         [KEYS.settings]: settings,
       };
       // نضيف أيضاً إعدادات UI المحلية

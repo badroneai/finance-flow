@@ -1,22 +1,19 @@
 /**
- * صفحة العقارات — SPR-018: النواة العقارية
- * إدارة الوحدات العقارية (إضافة، تعديل، حذف، فلترة، ملخص).
- * الهيكل: نموذج إضافة أولاً → قائمة العقارات → ملخص.
- * responsive: بطاقات على الجوال، جدول على الديسكتوب.
+ * صفحة العقارات — النواة العقارية
+ * تجعل العقار نقطة دخول لصفحة التفاصيل بدل أن يبقى مجرد عنصر قائمة.
  */
 import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { FormField, SummaryCard, Icons, Badge, EmptyState, MobileFAB } from '../ui/ui-common.jsx';
+import { FormField, SummaryCard, Icons, EmptyState, MobileFAB, Badge } from '../ui/ui-common.jsx';
 import { ConfirmDialog } from '../ui/Modals.jsx';
-import { Currency, formatCurrency } from '../utils/format.jsx';
+import { formatCurrency } from '../utils/format.jsx';
 import { safeNum } from '../utils/helpers.js';
 import {
   PROPERTY_TYPE_OPTIONS,
   PROPERTY_STATUS_OPTIONS,
   SAUDI_CITIES,
-  getPropertyTypeIcon,
   getPropertyTypeLabel,
   getPropertyStatusLabel,
   getPropertyStatusColor,
@@ -26,37 +23,141 @@ import {
   defaultProperty,
 } from '../domain/properties.js';
 
-// ═══════════════════════════════════════
-// نموذج إضافة/تعديل العقار
-// ═══════════════════════════════════════
-function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
+function getStatusScopedFields(status) {
+  if (status === 'rented') {
+    return {
+      maintenanceContactId: '',
+      maintenanceContactName: '',
+      maintenanceContactPhone: '',
+      buyerContactId: '',
+      buyerName: '',
+      buyerPhone: '',
+    };
+  }
+  if (status === 'maintenance') {
+    return {
+      tenantContactId: '',
+      tenantName: '',
+      tenantPhone: '',
+      buyerContactId: '',
+      buyerName: '',
+      buyerPhone: '',
+    };
+  }
+  if (status === 'sold') {
+    return {
+      tenantContactId: '',
+      tenantName: '',
+      tenantPhone: '',
+      maintenanceContactId: '',
+      maintenanceContactName: '',
+      maintenanceContactPhone: '',
+    };
+  }
+  return {
+    tenantContactId: '',
+    tenantName: '',
+    tenantPhone: '',
+    maintenanceContactId: '',
+    maintenanceContactName: '',
+    maintenanceContactPhone: '',
+    buyerContactId: '',
+    buyerName: '',
+    buyerPhone: '',
+  };
+}
+
+function PropertyForm({
+  form,
+  setForm,
+  onSave,
+  onCancel,
+  editMode,
+  saving,
+  ownerContacts,
+  tenantContacts,
+  maintenanceContacts,
+  buyerContacts,
+  manualOwnerEntry,
+  setManualOwnerEntry,
+}) {
   const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      if (field === 'status') {
+        return { ...prev, status: value, ...getStatusScopedFields(value) };
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
+  const handleOwnerChange = (value) => {
+    if (!value) {
+      setManualOwnerEntry(true);
+      setForm((prev) => ({ ...prev, ownerId: '' }));
+      return;
+    }
+
+    const owner = ownerContacts.find((contact) => contact.id === value);
+    setManualOwnerEntry(false);
+    setForm((prev) => ({
+      ...prev,
+      ownerId: value,
+      ownerName: owner?.name || prev.ownerName || '',
+      ownerPhone: owner?.phone || prev.ownerPhone || '',
+    }));
+  };
+
+  const handleLinkedContactChange = (kind, value, source) => {
+    const configMap = {
+      tenant: ['tenantContactId', 'tenantName', 'tenantPhone'],
+      maintenance: ['maintenanceContactId', 'maintenanceContactName', 'maintenanceContactPhone'],
+      buyer: ['buyerContactId', 'buyerName', 'buyerPhone'],
+    };
+    const [idField, nameField, phoneField] = configMap[kind];
+    setForm((prev) => ({
+      ...prev,
+      [idField]: value,
+      [nameField]: source?.name || '',
+      [phoneField]: source?.phone || '',
+    }));
   };
 
   return (
     <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <h3 className="font-bold text-[var(--color-text)] mb-1">
-        {editMode ? 'تعديل العقار' : 'إضافة عقار جديد'}
-      </h3>
-      <p className="text-sm text-[var(--color-muted)] mb-4">
-        {editMode ? 'عدّل البيانات واحفظ التغييرات' : 'سجّل عقاراتك لتتبع الإيجارات والصيانة'}
-      </p>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <h3 className="font-bold text-[var(--color-text)] mb-1">
+            {editMode ? 'تعديل العقار' : 'إضافة عقار جديد'}
+          </h3>
+          <p className="text-sm text-[var(--color-muted)]">
+            {editMode
+              ? 'حدّث بيانات العقار واحفظ التغييرات.'
+              : 'أضف العقار كأصل واضح يمكن الدخول إليه وإدارته.'}
+          </p>
+        </div>
+        {onCancel && (
+          <button
+            type="button"
+            onClick={onCancel}
+            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
+          >
+            إلغاء
+          </button>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-        {/* اسم العقار */}
         <FormField label="اسم العقار" id="prop-name">
           <input
             type="text"
             value={form.name}
             onChange={(e) => handleChange('name', e.target.value)}
-            placeholder="مثال: عمارة النور، فيلا الياسمين"
+            placeholder="مثال: عمارة النور"
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
             maxLength={100}
           />
         </FormField>
 
-        {/* النوع */}
         <FormField label="نوع العقار" id="prop-type">
           <select
             value={form.type}
@@ -65,13 +166,12 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           >
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.icon} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
         </FormField>
 
-        {/* الحالة */}
         <FormField label="الحالة" id="prop-status">
           <select
             value={form.status}
@@ -86,7 +186,26 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           </select>
         </FormField>
 
-        {/* المدينة */}
+        <FormField label="رقم الصك" id="prop-deed-number">
+          <input
+            type="text"
+            value={form.deedNumber}
+            onChange={(e) => handleChange('deedNumber', e.target.value)}
+            placeholder="اختياري"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
+        </FormField>
+
+        <FormField label="العنوان الوطني" id="prop-national-address">
+          <input
+            type="text"
+            value={form.nationalAddress}
+            onChange={(e) => handleChange('nationalAddress', e.target.value)}
+            placeholder="مثال: 1234، حي النرجس"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
+        </FormField>
+
         <FormField label="المدينة" id="prop-city">
           <select
             value={form.city}
@@ -102,41 +221,48 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           </select>
         </FormField>
 
-        {/* الحي */}
         <FormField label="الحي" id="prop-district">
           <input
             type="text"
             value={form.district}
             onChange={(e) => handleChange('district', e.target.value)}
-            placeholder="مثال: حي النرجس، حي العليا"
+            placeholder="مثال: حي العليا"
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
-        {/* المساحة */}
         <FormField label="المساحة (م²)" id="prop-area">
           <input
             type="number"
             value={form.areaSqm}
             onChange={(e) => handleChange('areaSqm', e.target.value)}
+            min="0"
             placeholder="مثال: 250"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
+        </FormField>
+
+        <FormField label="سنة البناء" id="prop-year-built">
+          <input
+            type="number"
+            value={form.yearBuilt}
+            onChange={(e) => handleChange('yearBuilt', e.target.value)}
+            min="0"
+            placeholder="مثال: 2020"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
+        </FormField>
+
+        <FormField label="عدد الطوابق" id="prop-floors">
+          <input
+            type="number"
+            value={form.floors}
+            onChange={(e) => handleChange('floors', e.target.value)}
             min="0"
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
-        {/* عدد الوحدات */}
-        <FormField label="عدد الوحدات" id="prop-units">
-          <input
-            type="number"
-            value={form.unitsCount}
-            onChange={(e) => handleChange('unitsCount', e.target.value)}
-            min="1"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
-          />
-        </FormField>
-
-        {/* غرف النوم */}
         <FormField label="غرف النوم" id="prop-bedrooms">
           <input
             type="number"
@@ -147,54 +273,246 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           />
         </FormField>
 
-        {/* الإيجار الشهري */}
-        <FormField label="الإيجار الشهري (ر.س)" id="prop-rent">
+        <FormField label="عدد الحمامات" id="prop-bathrooms">
           <input
             type="number"
-            value={form.monthlyRent}
-            onChange={(e) => handleChange('monthlyRent', e.target.value)}
-            placeholder="مثال: 3500"
+            value={form.bathrooms}
+            onChange={(e) => handleChange('bathrooms', e.target.value)}
             min="0"
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
-        {/* اسم المالك */}
-        <FormField label="اسم المالك" id="prop-owner">
+        <FormField label="عدد الوحدات" id="prop-units">
           <input
-            type="text"
-            value={form.ownerName}
-            onChange={(e) => handleChange('ownerName', e.target.value)}
-            placeholder="اسم المالك (اختياري)"
+            type="number"
+            value={form.unitsCount}
+            onChange={(e) => handleChange('unitsCount', e.target.value)}
+            min="1"
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
-        {/* جوال المالك */}
+        <FormField label="الإيجار الشهري (ر.س)" id="prop-rent">
+          <input
+            type="number"
+            value={form.monthlyRent}
+            onChange={(e) => handleChange('monthlyRent', e.target.value)}
+            min="0"
+            placeholder="مثال: 3500"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
+        </FormField>
+
+        <FormField label="سعر الشراء (ر.س)" id="prop-purchase-price">
+          <input
+            type="number"
+            value={form.purchasePrice}
+            onChange={(e) => handleChange('purchasePrice', e.target.value)}
+            min="0"
+            placeholder="اختياري"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
+        </FormField>
+
+        <FormField label="المالك" id="prop-owner-id">
+          <select
+            value={form.ownerId || ''}
+            onChange={(e) => handleOwnerChange(e.target.value)}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          >
+            <option value="">إدخال يدوي / غير محدد</option>
+            {ownerContacts.map((owner) => (
+              <option key={owner.id} value={owner.id}>
+                {owner.name}
+                {owner.phone ? ` — ${owner.phone}` : ''}
+              </option>
+            ))}
+          </select>
+        </FormField>
+
+        <FormField label="اسم المالك" id="prop-owner-name">
+          <input
+            type="text"
+            value={form.ownerName}
+            onChange={(e) => {
+              setManualOwnerEntry(true);
+              handleChange('ownerName', e.target.value);
+            }}
+            placeholder="اسم المالك"
+            disabled={!manualOwnerEntry && !!form.ownerId}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm disabled:opacity-60"
+          />
+        </FormField>
+
         <FormField label="جوال المالك" id="prop-owner-phone">
           <input
             type="tel"
             value={form.ownerPhone}
-            onChange={(e) => handleChange('ownerPhone', e.target.value)}
+            onChange={(e) => {
+              setManualOwnerEntry(true);
+              handleChange('ownerPhone', e.target.value);
+            }}
             placeholder="05XXXXXXXX"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+            disabled={!manualOwnerEntry && !!form.ownerId}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left disabled:opacity-60"
           />
         </FormField>
       </div>
 
-      {/* ملاحظات */}
+      {!ownerContacts.length && (
+        <p className="text-xs text-[var(--color-muted)] mt-3">
+          لا توجد جهات اتصال من نوع مالك حاليًا، لذلك يبقى الإدخال اليدوي متاحًا.
+        </p>
+      )}
+
       <div className="mt-3">
         <FormField label="ملاحظات" id="prop-notes">
           <textarea
             value={form.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
-            placeholder="أي ملاحظات إضافية عن العقار..."
-            rows={2}
+            placeholder="أي تفاصيل تشغيلية أو وصف إضافي..."
+            rows={3}
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
           />
         </FormField>
       </div>
+
+      {form.status === 'rented' && (
+        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات المستأجر الحالي</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <FormField label="المستأجر" id="prop-tenant-contact">
+              <select
+                value={form.tenantContactId || ''}
+                onChange={(e) =>
+                  handleLinkedContactChange(
+                    'tenant',
+                    e.target.value,
+                    tenantContacts.find((contact) => contact.id === e.target.value)
+                  )
+                }
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              >
+                <option value="">اختر من العملاء أو اتركه يدويًا</option>
+                {tenantContacts.map((contact) => (
+                  <option key={contact.id} value={contact.id}>
+                    {contact.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField label="اسم المستأجر" id="prop-tenant-name">
+              <input
+                type="text"
+                value={form.tenantName || ''}
+                onChange={(e) => handleChange('tenantName', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              />
+            </FormField>
+            <FormField label="جوال المستأجر" id="prop-tenant-phone">
+              <input
+                type="tel"
+                value={form.tenantPhone || ''}
+                onChange={(e) => handleChange('tenantPhone', e.target.value)}
+                dir="ltr"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+              />
+            </FormField>
+          </div>
+        </div>
+      )}
+
+      {form.status === 'maintenance' && (
+        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات جهة الصيانة</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <FormField label="جهة الصيانة" id="prop-maint-contact">
+              <select
+                value={form.maintenanceContactId || ''}
+                onChange={(e) =>
+                  handleLinkedContactChange(
+                    'maintenance',
+                    e.target.value,
+                    maintenanceContacts.find((contact) => contact.id === e.target.value)
+                  )
+                }
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              >
+                <option value="">اختر جهة أو اتركه يدويًا</option>
+                {maintenanceContacts.map((contact) => (
+                  <option key={contact.id} value={contact.id}>
+                    {contact.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField label="اسم المهندس / الجهة" id="prop-maint-name">
+              <input
+                type="text"
+                value={form.maintenanceContactName || ''}
+                onChange={(e) => handleChange('maintenanceContactName', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              />
+            </FormField>
+            <FormField label="رقم الجوال" id="prop-maint-phone">
+              <input
+                type="tel"
+                value={form.maintenanceContactPhone || ''}
+                onChange={(e) => handleChange('maintenanceContactPhone', e.target.value)}
+                dir="ltr"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+              />
+            </FormField>
+          </div>
+        </div>
+      )}
+
+      {form.status === 'sold' && (
+        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات المشتري</h4>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <FormField label="المشتري" id="prop-buyer-contact">
+              <select
+                value={form.buyerContactId || ''}
+                onChange={(e) =>
+                  handleLinkedContactChange(
+                    'buyer',
+                    e.target.value,
+                    buyerContacts.find((contact) => contact.id === e.target.value)
+                  )
+                }
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              >
+                <option value="">اختر من العملاء أو اتركه يدويًا</option>
+                {buyerContacts.map((contact) => (
+                  <option key={contact.id} value={contact.id}>
+                    {contact.name}
+                  </option>
+                ))}
+              </select>
+            </FormField>
+            <FormField label="اسم المشتري" id="prop-buyer-name">
+              <input
+                type="text"
+                value={form.buyerName || ''}
+                onChange={(e) => handleChange('buyerName', e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              />
+            </FormField>
+            <FormField label="جوال المشتري" id="prop-buyer-phone">
+              <input
+                type="tel"
+                value={form.buyerPhone || ''}
+                onChange={(e) => handleChange('buyerPhone', e.target.value)}
+                dir="ltr"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+              />
+            </FormField>
+          </div>
+        </div>
+      )}
 
       <div className="flex gap-2 mt-4">
         <button
@@ -205,65 +523,48 @@ function PropertyForm({ form, setForm, onSave, onCancel, editMode, saving }) {
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة العقار'}
         </button>
-        {editMode && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm hover:bg-[var(--color-bg)]"
-          >
-            إلغاء
-          </button>
-        )}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════
-// بطاقة عقار
-// ═══════════════════════════════════════
-function PropertyCard({ property, onEdit, onDelete, contractCount, onViewContracts }) {
-  const icon = getPropertyTypeIcon(property.type);
-  const typeLabel = getPropertyTypeLabel(property.type);
-  const statusLabel = getPropertyStatusLabel(property.status);
+function PropertyCard({ property, onEdit, onDelete, contractCount, onOpen }) {
   const statusColor = getPropertyStatusColor(property.status);
 
-  const colorMap = {
-    green: { background: 'var(--color-success-bg)', color: 'var(--color-success)' },
-    blue: { background: 'var(--color-info-bg)', color: 'var(--color-info)' },
-    yellow: { background: 'var(--color-warning-bg)', color: 'var(--color-warning)' },
-    gray: { background: 'var(--color-bg)', color: 'var(--color-muted)' },
-  };
-
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen(property)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen(property);
+        }
+      }}
+      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl flex-shrink-0" aria-hidden="true">
-            {icon}
+          <span className="flex-shrink-0 text-[var(--color-primary)]" aria-hidden="true">
+            <Icons.properties size={24} />
           </span>
           <div className="min-w-0 flex-1">
             <h4 className="font-bold text-[var(--color-text)] truncate">{property.name}</h4>
             <p className="text-sm text-[var(--color-muted)] mt-0.5">
-              {typeLabel}
+              {getPropertyTypeLabel(property.type)}
               {property.city ? ` — ${property.city}` : ''}
               {property.district ? `، ${property.district}` : ''}
             </p>
           </div>
         </div>
-        <span
-          className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium"
-          style={colorMap[statusColor] || colorMap.gray}
-        >
-          {statusLabel}
-        </span>
+        <Badge color={statusColor}>{getPropertyStatusLabel(property.status)}</Badge>
       </div>
 
-      {/* تفاصيل سريعة */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+        {property.deedNumber && <span>صك: {property.deedNumber}</span>}
         {property.unitsCount > 1 && <span>{property.unitsCount} وحدة</span>}
         {property.areaSqm && <span>{property.areaSqm} م²</span>}
-        {property.bedrooms && <span>{property.bedrooms} غرف</span>}
         {property.monthlyRent && (
           <span className="font-medium" style={{ color: 'var(--color-success)' }}>
             {formatCurrency(safeNum(property.monthlyRent))} ر.س/شهر
@@ -271,9 +572,9 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onViewContrac
         )}
       </div>
 
-      {property.ownerName && (
+      {(property.ownerName || property.ownerPhone) && (
         <p className="text-sm text-[var(--color-muted)] mt-2">
-          المالك: {property.ownerName}
+          المالك: {property.ownerName || '—'}
           {property.ownerPhone ? ` (${property.ownerPhone})` : ''}
         </p>
       )}
@@ -282,7 +583,10 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onViewContrac
         <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{property.notes}</p>
       )}
 
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]">
+      <div
+        className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           onClick={() => onEdit(property)}
@@ -300,77 +604,87 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onViewContrac
           حذف
         </button>
         {contractCount > 0 && (
-          <button
-            type="button"
-            onClick={() => onViewContracts(property)}
-            className="text-sm font-medium mr-auto hover:opacity-80"
-            style={{ color: 'var(--color-success)' }}
-          >
+          <span className="text-sm mr-auto" style={{ color: 'var(--color-success)' }}>
             {contractCount} عقد
-          </button>
+          </span>
         )}
       </div>
     </div>
   );
 }
 
-// ═══════════════════════════════════════
-// الصفحة الرئيسية
-// ═══════════════════════════════════════
 export default function PropertiesPage() {
   const navigate = useNavigate();
   const {
     properties,
     propertiesLoading,
+    contacts,
+    contracts,
     createProperty,
     updateProperty,
     deleteProperty,
-    contracts,
   } = useData();
   const toast = useToast();
 
-  // حالة النموذج
+  const ownerContacts = useMemo(
+    () => (contacts || []).filter((contact) => contact.type === 'owner'),
+    [contacts]
+  );
+  const tenantContacts = useMemo(
+    () => (contacts || []).filter((contact) => contact.type === 'tenant'),
+    [contacts]
+  );
+  const maintenanceContacts = useMemo(() => contacts || [], [contacts]);
+  const buyerContacts = useMemo(
+    () => (contacts || []).filter((contact) => contact.type === 'buyer'),
+    [contacts]
+  );
+
   const [form, setForm] = useState(defaultProperty);
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [manualOwnerEntry, setManualOwnerEntry] = useState(true);
 
-  // فلاتر
   const [filterType, setFilterType] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
-
-  // تأكيد الحذف
   const [confirmDelete, setConfirmDelete] = useState(null);
 
-  // العقارات المفلترة
-  const filtered = useMemo(() => {
-    return filterProperties(properties, {
-      type: filterType || undefined,
-      status: filterStatus || undefined,
-      search: searchQuery || undefined,
-    });
-  }, [properties, filterType, filterStatus, searchQuery]);
+  const filtered = useMemo(
+    () =>
+      filterProperties(properties, {
+        type: filterType || undefined,
+        status: filterStatus || undefined,
+        search: searchQuery || undefined,
+      }),
+    [properties, filterType, filterStatus, searchQuery]
+  );
 
-  // الملخص
   const summary = useMemo(() => computePropertiesSummary(properties), [properties]);
 
-  // عدد العقود لكل عقار (للربط بين الصفحات)
   const contractCountMap = useMemo(() => {
     const map = {};
-    (contracts || []).forEach((c) => {
-      const pid = c.propertyId || c.property_id;
-      if (pid) map[pid] = (map[pid] || 0) + 1;
+    (contracts || []).forEach((contract) => {
+      const propertyId = contract.propertyId || contract.property_id;
+      if (propertyId) map[propertyId] = (map[propertyId] || 0) + 1;
     });
     return map;
   }, [contracts]);
 
-  // حفظ (إضافة أو تعديل)
+  const resetFormState = useCallback(() => {
+    setForm(defaultProperty());
+    setEditingId(null);
+    setManualOwnerEntry(true);
+  }, []);
+
   const handleSave = useCallback(async () => {
     const { valid, errors } = validateProperty(form);
     if (!valid) {
       toast.error(errors[0]);
       return;
     }
+
     setSaving(true);
     try {
       if (editingId) {
@@ -382,48 +696,28 @@ export default function PropertiesPage() {
         if (error) throw error;
         toast.success('تم إضافة العقار');
       }
-      setForm(defaultProperty());
-      setEditingId(null);
+      resetFormState();
+      setShowForm(false);
     } catch (err) {
-      toast.error('حدث خطأ أثناء الحفظ');
+      toast.error(err?.message || 'حدث خطأ أثناء الحفظ');
     } finally {
       setSaving(false);
     }
-  }, [form, editingId, createProperty, updateProperty, toast]);
+  }, [form, editingId, createProperty, updateProperty, toast, resetFormState]);
 
-  // تعديل
   const handleEdit = useCallback((property) => {
-    setForm({
-      name: property.name || '',
-      type: property.type || 'apartment',
-      status: property.status || 'available',
-      city: property.city || '',
-      district: property.district || '',
-      address: property.address || '',
-      unitsCount: property.unitsCount || 1,
-      areaSqm: property.areaSqm || '',
-      bedrooms: property.bedrooms || '',
-      bathrooms: property.bathrooms || '',
-      yearBuilt: property.yearBuilt || '',
-      floors: property.floors || '',
-      ownerName: property.ownerName || '',
-      ownerPhone: property.ownerPhone || '',
-      purchasePrice: property.purchasePrice || '',
-      monthlyRent: property.monthlyRent || '',
-      notes: property.notes || '',
-    });
+    setForm({ ...defaultProperty(), ...property });
     setEditingId(property.id);
-    // انتقل لأعلى الصفحة لرؤية النموذج
+    setManualOwnerEntry(!property.ownerId);
+    setShowForm(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // إلغاء التعديل
-  const handleCancelEdit = useCallback(() => {
-    setForm(defaultProperty());
-    setEditingId(null);
-  }, []);
+  const handleCancel = useCallback(() => {
+    resetFormState();
+    setShowForm(false);
+  }, [resetFormState]);
 
-  // حذف
   const handleDelete = useCallback(async () => {
     if (!confirmDelete) return;
     try {
@@ -431,78 +725,76 @@ export default function PropertiesPage() {
       if (error) throw error;
       toast.success('تم حذف العقار');
       if (editingId === confirmDelete.id) {
-        setForm(defaultProperty());
-        setEditingId(null);
+        resetFormState();
+        setShowForm(false);
       }
-    } catch {
-      toast.error('حدث خطأ أثناء الحذف');
+    } catch (err) {
+      toast.error(err?.message || 'حدث خطأ أثناء الحذف');
     } finally {
       setConfirmDelete(null);
     }
-  }, [confirmDelete, deleteProperty, editingId, toast]);
+  }, [confirmDelete, deleteProperty, editingId, toast, resetFormState]);
 
   return (
-    <div
-      className="properties-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-4xl mx-auto"
-      dir="rtl"
-    >
-      {/* العنوان + زر إضافة */}
+    <div className="px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-xl font-bold text-[var(--color-text)]">العقارات</h1>
-        {editingId === null && (
+        {!showForm && (
           <button
             type="button"
             onClick={() => {
-              setForm(defaultProperty());
-              setEditingId(null);
+              resetFormState();
+              setShowForm(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 md:hidden"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
           >
             <Icons.plus size={16} />
-            إضافة
+            إضافة عقار
           </button>
         )}
       </div>
 
-      {/* القسم 1: نموذج الإضافة/التعديل */}
-      <PropertyForm
-        form={form}
-        setForm={setForm}
-        onSave={handleSave}
-        onCancel={handleCancelEdit}
-        editMode={!!editingId}
-        saving={saving}
-      />
+      {showForm && (
+        <PropertyForm
+          form={form}
+          setForm={setForm}
+          onSave={handleSave}
+          onCancel={handleCancel}
+          editMode={!!editingId}
+          saving={saving}
+          ownerContacts={ownerContacts}
+          tenantContacts={tenantContacts}
+          maintenanceContacts={maintenanceContacts}
+          buyerContacts={buyerContacts}
+          manualOwnerEntry={manualOwnerEntry}
+          setManualOwnerEntry={setManualOwnerEntry}
+        />
+      )}
 
-      {/* القسم 2: ملخص */}
       {properties.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold text-[var(--color-text)]">{summary.total}</p>
-            <p className="text-xs text-[var(--color-muted)]">إجمالي العقارات</p>
-          </div>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-info)' }}>
-              {summary.rentedCount}
-            </p>
-            <p className="text-xs text-[var(--color-muted)]">مؤجر</p>
-          </div>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
-              {summary.availableCount}
-            </p>
-            <p className="text-xs text-[var(--color-muted)]">متاح</p>
-          </div>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-3 text-center">
-            <p className="text-2xl font-bold" style={{ color: 'var(--color-success)' }}>
-              {formatCurrency(summary.totalMonthlyRent)}
-            </p>
-            <p className="text-xs text-[var(--color-muted)]">إيراد شهري (ر.س)</p>
-          </div>
+          <SummaryCard label="إجمالي العقارات" value={summary.total} icon={<Icons.properties size={18} />} />
+          <SummaryCard
+            label="مؤجرة"
+            value={summary.rentedCount}
+            color="blue"
+            icon={<Icons.contracts size={18} />}
+          />
+          <SummaryCard
+            label="متاحة"
+            value={summary.availableCount}
+            color="green"
+            icon={<Icons.check size={18} />}
+          />
+          <SummaryCard
+            label="إيراد شهري"
+            value={formatCurrency(summary.totalMonthlyRent)}
+            color="green"
+            icon={<Icons.arrowUp size={18} />}
+          />
         </div>
       )}
 
-      {/* القسم 3: الفلاتر */}
       {properties.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-4">
           <input
@@ -539,18 +831,22 @@ export default function PropertiesPage() {
         </div>
       )}
 
-      {/* القسم 4: قائمة العقارات */}
       {propertiesLoading ? (
         <div className="p-8 text-center text-[var(--color-muted)]">جاري التحميل...</div>
+      ) : properties.length === 0 && !showForm ? (
+        <EmptyState
+          title="لم تُضف أي عقارات بعد"
+          description="أضف أول عقار ليصبح أصلًا واضحًا داخل النظام يمكن الدخول إليه وإدارته."
+          actionLabel="إضافة أول عقار"
+          onAction={() => {
+            resetFormState();
+            setShowForm(true);
+          }}
+        />
       ) : filtered.length === 0 ? (
         <EmptyState
-          title={properties.length === 0 ? 'لم تُضف أي عقارات بعد' : 'لا توجد نتائج مطابقة'}
-          description={
-            properties.length === 0
-              ? 'أضف أول عقار لبدء إدارة ممتلكاتك — عمارة سكنية، فيلا، أو مكتب تجاري.'
-              : 'جرّب تغيير الفلتر أو البحث بكلمة مختلفة.'
-          }
-          icon={<span className="text-3xl">🏢</span>}
+          title="لا توجد نتائج مطابقة"
+          description="جرّب تغيير الفلاتر أو البحث بكلمة مختلفة."
         />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -561,15 +857,15 @@ export default function PropertiesPage() {
               onEdit={handleEdit}
               onDelete={setConfirmDelete}
               contractCount={contractCountMap[property.id] || 0}
-              onViewContracts={() => navigate('/contracts')}
+              onOpen={(item) => navigate(`/properties/${item.id}`)}
             />
           ))}
         </div>
       )}
 
-      {/* تأكيد الحذف */}
       {confirmDelete && (
         <ConfirmDialog
+          open={!!confirmDelete}
           title="حذف العقار"
           message={`هل تريد حذف "${confirmDelete.name}"؟ لا يمكن التراجع عن هذا الإجراء.`}
           confirmLabel="حذف"
@@ -580,12 +876,11 @@ export default function PropertiesPage() {
         />
       )}
 
-      {/* زر إضافة عائم — جوال فقط */}
-      {editingId === null && (
+      {!showForm && (
         <MobileFAB
           onClick={() => {
-            setForm(defaultProperty());
-            setEditingId(null);
+            resetFormState();
+            setShowForm(true);
           }}
           label="إضافة عقار"
         />

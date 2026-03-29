@@ -138,13 +138,13 @@ const LedgersPage = ({ setPage }) => {
   const [tMarketing, setTMarketing] = useState('');
 
   const LEDGER_TYPE_LABELS = {
-    office: '🏢 مكتب',
-    chalet: '🏡 شاليه',
-    apartment: '🏠 شقة',
-    villa: '🏘️ فيلا',
-    building: '🏬 عمارة',
-    personal: '👤 شخصي',
-    other: '📁 أخرى',
+    office: 'مكتب',
+    chalet: 'شاليه',
+    apartment: 'شقة',
+    villa: 'فيلا',
+    building: 'عمارة',
+    personal: 'شخصي',
+    other: 'أخرى',
   };
 
   const normalizeLedgerType = (t) => {
@@ -1276,13 +1276,13 @@ const LedgersPage = ({ setPage }) => {
                   className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
                   aria-label="نوع الدفتر"
                 >
-                  <option value="office">🏢 مكتب</option>
-                  <option value="chalet">🏡 شاليه</option>
-                  <option value="apartment">🏠 شقة</option>
-                  <option value="villa">🏘️ فيلا</option>
-                  <option value="building">🏬 عمارة</option>
-                  <option value="personal">👤 شخصي</option>
-                  <option value="other">📁 أخرى</option>
+                  <option value="office">مكتب</option>
+                  <option value="chalet">شاليه</option>
+                  <option value="apartment">شقة</option>
+                  <option value="villa">فيلا</option>
+                  <option value="building">عمارة</option>
+                  <option value="personal">شخصي</option>
+                  <option value="other">أخرى</option>
                 </select>
               </div>
               <div className="md:col-span-1">
@@ -1343,7 +1343,7 @@ const LedgersPage = ({ setPage }) => {
                         <h4 className="font-bold text-[var(--color-text)] truncate">{l.name}</h4>
                         <div className="flex flex-wrap gap-2 mt-1">
                           <span className="text-xs text-[var(--color-muted)]">
-                            {LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || '🏢 مكتب'}
+                            {LEDGER_TYPE_LABELS[normalizeLedgerType(l.type)] || 'مكتب'}
                           </span>
                           <span className="text-xs text-[var(--color-muted)]">•</span>
                           <span className="text-xs text-[var(--color-muted)]">{l.currency}</span>
@@ -1379,13 +1379,13 @@ const LedgersPage = ({ setPage }) => {
                               className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
                               aria-label="تعديل نوع الدفتر"
                             >
-                              <option value="office">🏢 مكتب</option>
-                              <option value="chalet">🏡 شاليه</option>
-                              <option value="apartment">🏠 شقة</option>
-                              <option value="villa">🏘️ فيلا</option>
-                              <option value="building">🏬 عمارة</option>
-                              <option value="personal">👤 شخصي</option>
-                              <option value="other">📁 أخرى</option>
+                              <option value="office">مكتب</option>
+                              <option value="chalet">شاليه</option>
+                              <option value="apartment">شقة</option>
+                              <option value="villa">فيلا</option>
+                              <option value="building">عمارة</option>
+                              <option value="personal">شخصي</option>
+                              <option value="other">أخرى</option>
                             </select>
                           </div>
                           <div>

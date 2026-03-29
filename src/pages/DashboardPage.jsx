@@ -3,7 +3,7 @@
  * عرض شامل لحالة المكتب العقاري: عقارات، عملاء، عقود، مالية.
  * جميع الألوان تستخدم CSS Variables للتوافق مع Light/Dim/Dark.
  */
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { Icons } from '../ui/ui-common.jsx';
@@ -11,6 +11,8 @@ import { formatCurrency } from '../utils/format.jsx';
 import { computePropertiesSummary } from '../domain/properties.js';
 import { computeContactsSummary } from '../domain/contacts.js';
 import { computeContractsSummary, daysRemaining } from '../domain/contracts.js';
+import { buildOperationalDues, getExpiringContracts } from '../domain/dues.js';
+import ContractQuickPaymentModal from '../ui/ContractQuickPaymentModal.jsx';
 
 // ═══════════════════════════════════════
 // بطاقة KPI تفاعلية — ألوان عبر CSS Variables
@@ -280,14 +282,8 @@ function RecentProperties({ properties, navigate }) {
               key={p.id}
               className="flex items-center gap-3 p-2 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
             >
-              <div className="w-9 h-9 rounded-lg bg-[var(--color-bg)] flex items-center justify-center text-lg flex-shrink-0">
-                {p.type === 'building'
-                  ? '🏢'
-                  : p.type === 'villa'
-                    ? '🏡'
-                    : p.type === 'land'
-                      ? '🗺️'
-                      : '🏠'}
+              <div className="w-9 h-9 rounded-lg bg-[var(--color-bg)] flex items-center justify-center flex-shrink-0 text-[var(--color-primary)]">
+                <Icons.properties size={18} />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-[var(--color-text)] truncate">{p.name}</p>
@@ -309,6 +305,250 @@ function RecentProperties({ properties, navigate }) {
 }
 
 // ═══════════════════════════════════════
+// قسم إجراءات اليوم — المستحقات التشغيلية
+// ═══════════════════════════════════════
+function DueActionRow({ due, navigate, onQuickPay }) {
+  return (
+    <div className="flex items-center gap-2 p-3 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors">
+      <button
+        type="button"
+        onClick={() => navigate(due.actionTarget)}
+        className="flex items-center gap-2 min-w-0 flex-1 text-right"
+      >
+        <span
+          className="flex-shrink-0 w-2 h-2 rounded-full"
+          style={{
+            background:
+              due.status === 'overdue'
+                ? 'var(--color-danger)'
+                : due.status === 'partial'
+                  ? 'var(--color-warning)'
+                  : 'var(--color-info)',
+          }}
+        />
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-[var(--color-text)] truncate">
+            {due.tenantName || 'بدون اسم'}
+            {due.propertyName ? ` — ${due.propertyName}` : ''}
+            {due.unitName ? ` / ${due.unitName}` : ''}
+          </p>
+          <p className="text-xs text-[var(--color-muted)] mt-0.5">
+            {due.contractNumber ? `عقد ${due.contractNumber} · ` : ''}
+            {due.daysOverdue > 0
+              ? `متأخر ${due.daysOverdue} يوم`
+              : due.daysUntil === 0
+                ? 'مستحق اليوم'
+                : `بعد ${due.daysUntil} يوم`}
+          </p>
+        </div>
+        <span
+          className="flex-shrink-0 text-sm font-bold"
+          style={{
+            color:
+              due.status === 'overdue' || due.status === 'partial'
+                ? 'var(--color-danger)'
+                : 'var(--color-text)',
+          }}
+        >
+          {formatCurrency(due.remainingAmount)} ر.س
+        </span>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onQuickPay(due);
+        }}
+        className="flex-shrink-0 px-2 py-1 rounded-md text-xs font-medium hover:opacity-80"
+        style={{ color: 'var(--color-info)' }}
+        title="تسجيل دفعة سريعة"
+      >
+        سجّل
+      </button>
+    </div>
+  );
+}
+
+function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay }) {
+  const { overdue, dueToday, dueThisWeek, summary } = operationalDues;
+  const hasActions =
+    overdue.length > 0 || dueToday.length > 0 || dueThisWeek.length > 0 || expiringContracts.length > 0;
+
+  if (!hasActions) return null;
+
+  return (
+    <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm mb-6">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="font-bold text-[var(--color-text)] flex items-center gap-2">
+          <span
+            className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold"
+            style={{
+              background:
+                overdue.length > 0 ? 'var(--color-danger-bg)' : 'var(--color-info-bg)',
+              color: overdue.length > 0 ? 'var(--color-danger)' : 'var(--color-info)',
+            }}
+          >
+            {summary.overdueCount + summary.dueTodayCount + summary.dueThisWeekCount}
+          </span>
+          إجراءات اليوم
+        </h3>
+        <button
+          type="button"
+          onClick={() => navigate('/inbox')}
+          className="text-xs font-medium"
+          style={{ color: 'var(--color-info)' }}
+        >
+          عرض الكل
+        </button>
+      </div>
+
+      {/* ملخص مالي سريع */}
+      {(summary.overdueTotal > 0 || summary.dueTodayTotal > 0) && (
+        <div
+          className="flex flex-wrap gap-4 mb-3 p-3 rounded-lg"
+          style={{ background: 'var(--color-bg)' }}
+        >
+          {summary.overdueTotal > 0 && (
+            <div className="text-center flex-1 min-w-[100px]">
+              <p className="text-xs text-[var(--color-muted)]">متأخر</p>
+              <p className="text-base font-bold" style={{ color: 'var(--color-danger)' }}>
+                {formatCurrency(summary.overdueTotal)} ر.س
+              </p>
+            </div>
+          )}
+          {summary.dueTodayTotal > 0 && (
+            <div className="text-center flex-1 min-w-[100px]">
+              <p className="text-xs text-[var(--color-muted)]">مستحق اليوم</p>
+              <p className="text-base font-bold" style={{ color: 'var(--color-warning)' }}>
+                {formatCurrency(summary.dueTodayTotal)} ر.س
+              </p>
+            </div>
+          )}
+          {summary.dueThisWeekTotal > 0 && (
+            <div className="text-center flex-1 min-w-[100px]">
+              <p className="text-xs text-[var(--color-muted)]">هذا الأسبوع</p>
+              <p className="text-base font-bold" style={{ color: 'var(--color-info)' }}>
+                {formatCurrency(summary.dueThisWeekTotal)} ر.س
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* الدفعات المتأخرة */}
+      {overdue.length > 0 && (
+        <div className="mb-2">
+          <p
+            className="text-xs font-medium px-1 mb-1"
+            style={{ color: 'var(--color-danger)' }}
+          >
+            متأخرات ({overdue.length})
+          </p>
+          <div className="space-y-0">
+            {overdue.slice(0, 5).map((due) => (
+              <DueActionRow key={due.dueId} due={due} navigate={navigate} onQuickPay={onQuickPay} />
+            ))}
+            {overdue.length > 5 && (
+              <button
+                type="button"
+                onClick={() => navigate('/inbox')}
+                className="w-full text-center text-xs py-2"
+                style={{ color: 'var(--color-info)' }}
+              >
+                +{overdue.length - 5} أخرى
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* مستحق اليوم */}
+      {dueToday.length > 0 && (
+        <div className="mb-2">
+          <p
+            className="text-xs font-medium px-1 mb-1"
+            style={{ color: 'var(--color-warning)' }}
+          >
+            مستحق اليوم ({dueToday.length})
+          </p>
+          <div className="space-y-0">
+            {dueToday.map((due) => (
+              <DueActionRow key={due.dueId} due={due} navigate={navigate} onQuickPay={onQuickPay} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* هذا الأسبوع */}
+      {dueThisWeek.length > 0 && (
+        <div className="mb-2">
+          <p className="text-xs font-medium px-1 mb-1" style={{ color: 'var(--color-info)' }}>
+            هذا الأسبوع ({dueThisWeek.length})
+          </p>
+          <div className="space-y-0">
+            {dueThisWeek.slice(0, 3).map((due) => (
+              <DueActionRow key={due.dueId} due={due} navigate={navigate} onQuickPay={onQuickPay} />
+            ))}
+            {dueThisWeek.length > 3 && (
+              <button
+                type="button"
+                onClick={() => navigate('/inbox')}
+                className="w-full text-center text-xs py-2"
+                style={{ color: 'var(--color-info)' }}
+              >
+                +{dueThisWeek.length - 3} أخرى
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* عقود تنتهي قريباً */}
+      {expiringContracts.length > 0 && (
+        <div className="mt-3 pt-3 border-t border-[var(--color-border)]">
+          <p
+            className="text-xs font-medium px-1 mb-1"
+            style={{ color: 'var(--color-warning)' }}
+          >
+            عقود تنتهي قريباً ({expiringContracts.length})
+          </p>
+          <div className="space-y-0">
+            {expiringContracts.slice(0, 3).map((c) => (
+              <button
+                key={c.contractId}
+                type="button"
+                onClick={() => navigate(c.actionTarget)}
+                className="w-full text-right flex items-center justify-between gap-3 p-3 rounded-lg hover:bg-[var(--color-surface-hover)] transition-colors"
+              >
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-[var(--color-text)] truncate">
+                    {c.propertyName}
+                    {c.tenantName ? ` — ${c.tenantName}` : ''}
+                  </p>
+                  <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                    {c.contractNumber ? `عقد ${c.contractNumber} · ` : ''}
+                    ينتهي خلال {c.daysRemaining} يوم
+                  </p>
+                </div>
+                <span
+                  className="flex-shrink-0 px-2 py-0.5 rounded-full text-xs font-medium"
+                  style={{
+                    background: 'var(--color-warning-bg)',
+                    color: 'var(--color-warning)',
+                  }}
+                >
+                  قريباً
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+// ═══════════════════════════════════════
 // الصفحة الرئيسية
 // ═══════════════════════════════════════
 export default function DashboardPage({ setPage }) {
@@ -317,15 +557,37 @@ export default function DashboardPage({ setPage }) {
     properties,
     contacts,
     contracts,
+    contractPayments,
+    units,
     transactions,
     propertiesLoading,
     contactsLoading,
     contractsLoading,
   } = useData();
+  const [quickPayDue, setQuickPayDue] = useState(null);
 
   const propSummary = useMemo(() => computePropertiesSummary(properties), [properties]);
   const contactSummary = useMemo(() => computeContactsSummary(contacts), [contacts]);
   const contractSummary = useMemo(() => computeContractsSummary(contracts), [contracts]);
+
+  // المستحقات التشغيلية — من طبقة dues.js
+  const operationalDues = useMemo(
+    () =>
+      buildOperationalDues({
+        contracts,
+        contractPayments,
+        contacts,
+        properties,
+        units,
+      }),
+    [contracts, contractPayments, contacts, properties, units]
+  );
+
+  // العقود التي تنتهي قريباً (30 يوم)
+  const expiringContracts = useMemo(
+    () => getExpiringContracts({ contracts, contacts, properties, thresholdDays: 30, referenceDate: new Date() }),
+    [contracts, contacts, properties]
+  );
 
   const financialSummary = useMemo(() => {
     const now = new Date();
@@ -464,6 +726,14 @@ export default function DashboardPage({ setPage }) {
             />
           </div>
 
+          {/* إجراءات اليوم — المستحقات التشغيلية */}
+          <TodayActions
+            operationalDues={operationalDues}
+            expiringContracts={expiringContracts}
+            navigate={navigate}
+            onQuickPay={setQuickPayDue}
+          />
+
           {/* ملخص مالي + شريط حالة العقود */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
@@ -560,6 +830,14 @@ export default function DashboardPage({ setPage }) {
             <RecentProperties properties={properties} navigate={navigate} />
           </div>
         </>
+      )}
+
+      {/* نافذة الدفعة السريعة */}
+      {quickPayDue && (
+        <ContractQuickPaymentModal
+          dueItem={quickPayDue}
+          onClose={() => setQuickPayDue(null)}
+        />
       )}
     </div>
   );

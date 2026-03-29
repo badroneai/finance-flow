@@ -14,11 +14,11 @@ import {
   CONTRACT_TYPE_OPTIONS,
   CONTRACT_STATUS_OPTIONS,
   PAYMENT_CYCLE_OPTIONS,
-  getContractTypeIcon,
   getContractTypeLabel,
   getContractStatusLabel,
   getContractStatusColor,
   getPaymentCycleLabel,
+  getInstallmentCount,
   daysRemaining,
   isExpiringSoon,
   validateContract,
@@ -26,33 +26,78 @@ import {
   filterContracts,
   defaultContract,
 } from '../domain/contracts.js';
+import { getUnitStatusLabel } from '../domain/units.js';
 
 // ═══════════════════════════════════════
 // نموذج إضافة/تعديل العقد
 // ═══════════════════════════════════════
-function ContractForm({ form, setForm, onSave, onCancel, editMode, saving, properties, contacts }) {
+function ContractForm({
+  form,
+  setForm,
+  onSave,
+  onCancel,
+  editMode,
+  saving,
+  properties,
+  contacts,
+  units,
+}) {
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const syncInstallments = (nextForm) => {
+    const nextCount = getInstallmentCount(nextForm);
+    return {
+      ...nextForm,
+      installmentCount: nextForm.paymentCycle === 'custom' ? nextForm.installmentCount : nextCount,
+    };
+  };
+
+  const selectedPropertyUnits = useMemo(
+    () => units.filter((unit) => unit.propertyId === form.propertyId),
+    [units, form.propertyId]
+  );
+
+  const handlePropertyChange = (value) => {
+    const matchingUnits = units.filter((unit) => unit.propertyId === value);
+    setForm((prev) => ({
+      ...prev,
+      propertyId: value,
+      unitId: matchingUnits.some((unit) => unit.id === prev.unitId) ? prev.unitId : '',
+    }));
+  };
+
   // عند تغيير المدة، نحدّث تاريخ النهاية تلقائياً
   const handleDurationChange = (months) => {
-    handleChange('durationMonths', months);
+    const nextForm = { ...form, durationMonths: months };
     if (form.startDate) {
       const start = new Date(form.startDate);
       start.setMonth(start.getMonth() + Number(months));
-      handleChange('endDate', start.toISOString().split('T')[0]);
+      nextForm.endDate = start.toISOString().split('T')[0];
     }
+    setForm(syncInstallments(nextForm));
   };
 
   // عند تغيير الإيجار الشهري، نحدّث الإجمالي تلقائياً
   const handleMonthlyRentChange = (value) => {
-    handleChange('monthlyRent', value);
+    const nextForm = { ...form, monthlyRent: value };
     const months = Number(form.durationMonths) || 12;
     const rent = Number(value) || 0;
     if (rent > 0) {
-      handleChange('totalAmount', String(rent * months));
+      nextForm.totalAmount = String(rent * months);
     }
+    setForm(syncInstallments(nextForm));
+  };
+
+  const handlePaymentCycleChange = (value) => {
+    const nextForm = { ...form, paymentCycle: value };
+    if (value === 'one_time') {
+      nextForm.installmentCount = 1;
+    } else if (value !== 'custom') {
+      nextForm.installmentCount = getInstallmentCount(nextForm);
+    }
+    setForm(nextForm);
   };
 
   return (
@@ -69,7 +114,7 @@ function ContractForm({ form, setForm, onSave, onCancel, editMode, saving, prope
         <FormField label="العقار" id="contract-property">
           <select
             value={form.propertyId}
-            onChange={(e) => handleChange('propertyId', e.target.value)}
+            onChange={(e) => handlePropertyChange(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             <option value="">اختر العقار</option>
@@ -80,6 +125,24 @@ function ContractForm({ form, setForm, onSave, onCancel, editMode, saving, prope
             ))}
           </select>
         </FormField>
+
+        {selectedPropertyUnits.length > 0 && (
+          <FormField label="الوحدة" id="contract-unit">
+            <select
+              value={form.unitId || ''}
+              onChange={(e) => handleChange('unitId', e.target.value)}
+              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+            >
+              <option value="">العقار بالكامل / بدون وحدة محددة</option>
+              {selectedPropertyUnits.map((unit) => (
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                  {unit.status ? ` — ${getUnitStatusLabel(unit.status)}` : ''}
+                </option>
+              ))}
+            </select>
+          </FormField>
+        )}
 
         {/* العميل */}
         <FormField label="العميل" id="contract-contact">
@@ -118,7 +181,7 @@ function ContractForm({ form, setForm, onSave, onCancel, editMode, saving, prope
           >
             {CONTRACT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.icon} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
@@ -143,7 +206,7 @@ function ContractForm({ form, setForm, onSave, onCancel, editMode, saving, prope
         <FormField label="دورة الدفع" id="contract-payment-cycle">
           <select
             value={form.paymentCycle}
-            onChange={(e) => handleChange('paymentCycle', e.target.value)}
+            onChange={(e) => handlePaymentCycleChange(e.target.value)}
             className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {PAYMENT_CYCLE_OPTIONS.map((opt) => (
@@ -152,6 +215,17 @@ function ContractForm({ form, setForm, onSave, onCancel, editMode, saving, prope
               </option>
             ))}
           </select>
+        </FormField>
+
+        <FormField label="عدد الدفعات" id="contract-installment-count">
+          <input
+            type="number"
+            value={form.installmentCount}
+            onChange={(e) => handleChange('installmentCount', e.target.value)}
+            min="1"
+            readOnly={form.paymentCycle !== 'custom'}
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+          />
         </FormField>
 
         {/* تاريخ البداية */}
@@ -280,12 +354,13 @@ function ContractCard({
   contract,
   properties,
   contacts,
+  units,
   onEdit,
   onDelete,
   onViewProperty,
   onViewContact,
+  onOpen,
 }) {
-  const icon = getContractTypeIcon(contract.type);
   const typeLabel = getContractTypeLabel(contract.type);
   const statusLabel = getContractStatusLabel(contract.status);
   const statusColor = getContractStatusColor(contract.status);
@@ -299,6 +374,11 @@ function ContractCard({
     contract.propertyName ||
     properties.find((p) => p.id === contract.propertyId)?.name ||
     'عقار غير محدد';
+  const unitName =
+    contract._unitName ||
+    contract.unitName ||
+    units.find((unit) => unit.id === (contract.unitId || contract.unit_id))?.name ||
+    '';
   const contactName =
     contract._contactName ||
     contract.contactName ||
@@ -314,17 +394,29 @@ function ContractCard({
   };
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen?.()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen?.();
+        }
+      }}
+      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl flex-shrink-0" aria-hidden="true">
-            {icon}
+          <span className="flex-shrink-0 text-[var(--color-primary)]" aria-hidden="true">
+            <Icons.contracts size={24} />
           </span>
           <div className="min-w-0 flex-1">
             <h4 className="font-bold text-[var(--color-text)] truncate">{propertyName}</h4>
             <p className="text-sm text-[var(--color-muted)] mt-0.5">
               {typeLabel} — {contactName}
             </p>
+            {unitName && <p className="text-xs text-[var(--color-info)] mt-1">الوحدة: {unitName}</p>}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
@@ -352,6 +444,7 @@ function ContractCard({
           {contract.startDate} → {contract.endDate}
         </span>
         <span>{cycleLabel}</span>
+        {unitName && <span>{unitName}</span>}
       </div>
 
       {/* المبالغ */}
@@ -377,7 +470,10 @@ function ContractCard({
         <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{contract.notes}</p>
       )}
 
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]">
+      <div
+        className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           onClick={() => onEdit(contract)}
@@ -433,6 +529,7 @@ export default function ContractsPage({ setPage }) {
     updateContract,
     deleteContract,
     properties,
+    units,
     contacts: contactsList,
   } = useData();
   const toast = useToast();
@@ -458,8 +555,9 @@ export default function ContractsPage({ setPage }) {
       ...c,
       _propertyName: c._propertyName || properties.find((p) => p.id === c.propertyId)?.name || '',
       _contactName: c._contactName || contactsList.find((ct) => ct.id === c.contactId)?.name || '',
+      _unitName: c._unitName || units.find((unit) => unit.id === (c.unitId || c.unit_id))?.name || '',
     }));
-  }, [contracts, properties, contactsList]);
+  }, [contracts, properties, contactsList, units]);
 
   // ملخص
   const summary = useMemo(() => computeContractsSummary(enrichedContracts), [enrichedContracts]);
@@ -487,6 +585,7 @@ export default function ContractsPage({ setPage }) {
       // تنظيف الحقول قبل الإرسال
       const payload = { ...form };
       if (!payload.propertyId) delete payload.propertyId;
+      if (!payload.unitId) delete payload.unitId;
       if (!payload.contactId) delete payload.contactId;
 
       if (editMode && editId) {
@@ -589,6 +688,7 @@ export default function ContractsPage({ setPage }) {
           saving={saving}
           properties={properties}
           contacts={contactsList}
+          units={units}
         />
       )}
 
@@ -603,18 +703,18 @@ export default function ContractsPage({ setPage }) {
           <SummaryCard
             label="ساري"
             value={summary.activeCount}
-            icon={<span className="text-lg">✅</span>}
+            icon={<Icons.check size={18} />}
           />
           <SummaryCard
             label="ينتهي قريباً"
             value={summary.expiringSoon}
-            icon={<span className="text-lg">⚠️</span>}
+            icon={<Icons.calendar size={18} />}
             highlight={summary.expiringSoon > 0}
           />
           <SummaryCard
             label="الإيجار الشهري"
             value={`${formatCurrency(summary.totalMonthlyRent)} ر.س`}
-            icon={<span className="text-lg">💰</span>}
+            icon={<Icons.commissions size={18} />}
           />
         </div>
       )}
@@ -639,7 +739,7 @@ export default function ContractsPage({ setPage }) {
             <option value="">كل الأنواع</option>
             {CONTRACT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.icon} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
@@ -689,10 +789,14 @@ export default function ContractsPage({ setPage }) {
             contract={contract}
             properties={properties}
             contacts={contactsList}
+            units={units}
             onEdit={handleEdit}
             onDelete={setConfirmDelete}
-            onViewProperty={() => navigate('/properties')}
-            onViewContact={() => navigate('/contacts')}
+            onOpen={() => navigate(`/contracts/${contract.id}`)}
+            onViewProperty={() =>
+              navigate(`/properties/${contract.propertyId || contract.property_id || ''}`)
+            }
+            onViewContact={() => navigate(`/contacts/${contract.contactId || contract.contact_id || ''}`)}
           />
         ))}
       </div>

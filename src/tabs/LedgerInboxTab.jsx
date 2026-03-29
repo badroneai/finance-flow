@@ -267,7 +267,7 @@ function LedgerInboxTab({
                       className="px-3 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
                       aria-label="سجل"
                     >
-                      🧾 سجل
+                      سجل
                     </button>
                   </div>
                 </div>

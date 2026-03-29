@@ -12,7 +12,6 @@ import {
   CONTACT_TYPE_OPTIONS,
   CONTACT_ID_TYPE_OPTIONS,
   SAUDI_CITIES,
-  getContactTypeIcon,
   getContactTypeLabel,
   getContactIdTypeLabel,
   validateContact,
@@ -62,7 +61,7 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           >
             {CONTACT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.icon} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
@@ -231,8 +230,7 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
 // ═══════════════════════════════════════
 // بطاقة جهة اتصال
 // ═══════════════════════════════════════
-function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts }) {
-  const icon = getContactTypeIcon(contact.type);
+function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts, onOpen }) {
   const typeLabel = getContactTypeLabel(contact.type);
 
   const tags = (contact.tags || '')
@@ -241,11 +239,22 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
     .filter(Boolean);
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={() => onOpen?.()}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onOpen?.();
+        }
+      }}
+      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+    >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="text-2xl flex-shrink-0" aria-hidden="true">
-            {icon}
+          <span className="flex-shrink-0 text-[var(--color-primary)]" aria-hidden="true">
+            <Icons.contacts size={24} />
           </span>
           <div className="min-w-0 flex-1">
             <h4 className="font-bold text-[var(--color-text)] truncate">{contact.name}</h4>
@@ -304,7 +313,10 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
         <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{contact.notes}</p>
       )}
 
-      <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]">
+      <div
+        className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]"
+        onClick={(e) => e.stopPropagation()}
+      >
         <button
           type="button"
           onClick={() => onEdit(contact)}
@@ -478,17 +490,17 @@ export default function ContactsPage({ setPage }) {
           <SummaryCard
             label="مستأجرين"
             value={summary.tenantCount}
-            icon={<span className="text-lg">🏠</span>}
+            icon={<Icons.home size={18} />}
           />
           <SummaryCard
             label="ملاك"
             value={summary.ownerCount}
-            icon={<span className="text-lg">👤</span>}
+            icon={<Icons.contacts size={18} />}
           />
           <SummaryCard
             label="مشترين"
             value={summary.buyerCount}
-            icon={<span className="text-lg">🤝</span>}
+            icon={<Icons.contracts size={18} />}
           />
         </div>
       )}
@@ -513,7 +525,7 @@ export default function ContactsPage({ setPage }) {
             <option value="">كل الأنواع</option>
             {CONTACT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
-                {opt.icon} {opt.label}
+                {opt.label}
               </option>
             ))}
           </select>
@@ -552,6 +564,7 @@ export default function ContactsPage({ setPage }) {
             onEdit={handleEdit}
             onDelete={setConfirmDelete}
             contractCount={contractCountMap[contact.id] || 0}
+            onOpen={() => navigate(`/contacts/${contact.id}`)}
             onViewContracts={() => navigate('/contracts')}
           />
         ))}

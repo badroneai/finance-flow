@@ -2,7 +2,8 @@
   المستحقات — صندوق الوارد (برومبت 2.2)
   يستخدم calculateInbox من inbox-engine، أقسام مطوية، فلتر، تسجيل دفعة، ذكّرني غداً، pull-to-refresh.
 */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { calculateInbox } from '../core/inbox-engine.js';
 import {
   getActiveLedgerId,
@@ -11,7 +12,9 @@ import {
 } from '../core/ledger-store.js';
 import { useData } from '../contexts/DataContext.jsx';
 import { formatCurrency } from '../utils/format.jsx';
+import { buildOperationalDues } from '../domain/dues.js';
 import QuickPaymentModal from '../ui/inbox/QuickPaymentModal.jsx';
+import ContractQuickPaymentModal from '../ui/ContractQuickPaymentModal.jsx';
 
 const SNOOZE_KEY = 'ff_inbox_snooze';
 const PULL_THRESHOLD = 70;
@@ -139,7 +142,13 @@ export default function InboxPage({ setPage }) {
     ledgers: dataLedgers,
     activeLedgerId: dataActiveLedgerId,
     setActiveLedgerId: setDataActiveLedgerId,
+    contracts,
+    contractPayments,
+    contacts,
+    properties,
+    units,
   } = useData();
+  const navigate = useNavigate();
 
   const [inbox, setInbox] = useState(null);
   const [activeLedgerId, setActiveLedgerId] = useState(
@@ -151,8 +160,23 @@ export default function InboxPage({ setPage }) {
   const [openThisMonth, setOpenThisMonth] = useState(false);
   const [selectedDue, setSelectedDue] = useState(null);
   const [snoozeMap, setSnoozeMap] = useState(getSnoozeMap);
+  const [openContractDues, setOpenContractDues] = useState(true);
+  const [contractQuickPayDue, setContractQuickPayDue] = useState(null);
   const [pullY, setPullY] = useState(0);
   const touchStartY = useRef(0);
+
+  // مستحقات العقود — من طبقة dues.js الموحدة
+  const contractDues = useMemo(
+    () =>
+      buildOperationalDues({
+        contracts,
+        contractPayments,
+        contacts,
+        properties,
+        units,
+      }),
+    [contracts, contractPayments, contacts, properties, units]
+  );
 
   // مزامنة الدفتر النشط من DataContext
   useEffect(() => {
@@ -435,11 +459,208 @@ export default function InboxPage({ setPage }) {
         </>
       )}
 
+      {/* ══════════════════════════════════════════════════════
+          مستحقات العقود — قسم مستقل من طبقة dues.js
+          ══════════════════════════════════════════════════════ */}
+      {contractDues.summary.totalCount > 0 && (
+        <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-[var(--color-text)]">مستحقات العقود</h2>
+            <span
+              className="text-xs px-2 py-1 rounded-full font-medium"
+              style={{
+                background:
+                  contractDues.summary.overdueCount > 0
+                    ? 'var(--color-danger-bg)'
+                    : 'var(--color-info-bg)',
+                color:
+                  contractDues.summary.overdueCount > 0
+                    ? 'var(--color-danger)'
+                    : 'var(--color-info)',
+              }}
+            >
+              {contractDues.summary.totalCount} مستحق
+            </span>
+          </div>
+
+          {/* المتأخرات */}
+          {contractDues.overdue.length > 0 && (
+            <InboxSection
+              title="متأخرات العقود"
+              count={contractDues.overdue.length}
+              amountLabel={`${formatCurrency(contractDues.summary.overdueTotal)} ر.س`}
+              open={openContractDues}
+              onToggle={() => setOpenContractDues((v) => !v)}
+            >
+              {contractDues.overdue.map((due) => (
+                <div key={due.dueId} className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
+                      style={{ background: 'var(--color-danger)' }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => navigate(due.actionTarget)}
+                        className="w-full text-right"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-[var(--color-text)]">
+                            {due.tenantName || 'بدون اسم'}
+                            {due.propertyName ? ` — ${due.propertyName}` : ''}
+                          </span>
+                          <span className="font-medium" style={{ color: 'var(--color-danger)' }}>
+                            {formatCurrency(due.remainingAmount)} ر.س
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                          {due.contractNumber ? `عقد ${due.contractNumber} · ` : ''}
+                          متأخر {due.daysOverdue} يوم
+                          {due.unitName ? ` · ${due.unitName}` : ''}
+                        </p>
+                      </button>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setContractQuickPayDue(due)}
+                          className="text-sm font-medium hover:opacity-80"
+                          style={{ color: 'var(--color-info)' }}
+                        >
+                          سجّل دفعة
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </InboxSection>
+          )}
+
+          {/* مستحق اليوم + هذا الأسبوع */}
+          {(contractDues.dueToday.length > 0 || contractDues.dueThisWeek.length > 0) && (
+            <InboxSection
+              title="مستحقات هذا الأسبوع"
+              count={contractDues.dueToday.length + contractDues.dueThisWeek.length}
+              amountLabel={`${formatCurrency(contractDues.summary.dueTodayTotal + contractDues.summary.dueThisWeekTotal)} ر.س`}
+              open={true}
+            >
+              {[...contractDues.dueToday, ...contractDues.dueThisWeek].map((due) => (
+                <div key={due.dueId} className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
+                      style={{
+                        background:
+                          due.daysUntil === 0 ? 'var(--color-warning)' : 'var(--color-info)',
+                      }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => navigate(due.actionTarget)}
+                        className="w-full text-right"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-[var(--color-text)]">
+                            {due.tenantName || 'بدون اسم'}
+                            {due.propertyName ? ` — ${due.propertyName}` : ''}
+                          </span>
+                          <span className="font-medium text-[var(--color-text)]">
+                            {formatCurrency(due.remainingAmount)} ر.س
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                          {due.daysUntil === 0
+                            ? 'مستحق اليوم'
+                            : `بعد ${due.daysUntil} يوم`}
+                          {due.unitName ? ` · ${due.unitName}` : ''}
+                        </p>
+                      </button>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setContractQuickPayDue(due)}
+                          className="text-sm font-medium hover:opacity-80"
+                          style={{ color: 'var(--color-info)' }}
+                        >
+                          سجّل دفعة
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </InboxSection>
+          )}
+
+          {/* خلال 30 يوم */}
+          {contractDues.dueNext30Days.length > 0 && (
+            <InboxSection
+              title="خلال 30 يوم"
+              count={contractDues.dueNext30Days.length}
+              amountLabel={`${formatCurrency(contractDues.summary.dueNext30DaysTotal)} ر.س`}
+              open={false}
+            >
+              {contractDues.dueNext30Days.map((due) => (
+                <div key={due.dueId} className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
+                      style={{ background: 'var(--color-muted)' }}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={() => navigate(due.actionTarget)}
+                        className="w-full text-right"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <span className="font-medium text-[var(--color-text)]">
+                            {due.tenantName || 'بدون اسم'}
+                            {due.propertyName ? ` — ${due.propertyName}` : ''}
+                          </span>
+                          <span className="font-medium text-[var(--color-text)]">
+                            {formatCurrency(due.remainingAmount)} ر.س
+                          </span>
+                        </div>
+                        <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                          بعد {due.daysUntil} يوم
+                          {due.unitName ? ` · ${due.unitName}` : ''}
+                        </p>
+                      </button>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <button
+                          type="button"
+                          onClick={() => setContractQuickPayDue(due)}
+                          className="text-sm font-medium hover:opacity-80"
+                          style={{ color: 'var(--color-info)' }}
+                        >
+                          سجّل دفعة
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </InboxSection>
+          )}
+        </div>
+      )}
+
       {selectedDue && (
         <QuickPaymentModal
           dueItem={selectedDue}
           onClose={() => setSelectedDue(null)}
           onPostpone={() => setSelectedDue(null)}
+        />
+      )}
+
+      {/* نافذة الدفعة السريعة — مستحقات العقود */}
+      {contractQuickPayDue && (
+        <ContractQuickPaymentModal
+          dueItem={contractQuickPayDue}
+          onClose={() => setContractQuickPayDue(null)}
         />
       )}
     </div>

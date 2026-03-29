@@ -30,4 +30,12 @@ export const safeNum = (val, fallback = 0) => {
   return Number.isFinite(n) ? n : fallback;
 };
 
-export default { genId, now, today, isValidDateStr, safeNum };
+/** تحويل الأرقام العربية والفارسية إلى أرقام إنجليزية داخل النص */
+export const normalizeDigits = (value) => {
+  if (value == null) return '';
+  return String(value)
+    .replace(/[٠-٩]/g, (digit) => String('٠١٢٣٤٥٦٧٨٩'.indexOf(digit)))
+    .replace(/[۰-۹]/g, (digit) => String('۰۱۲۳۴۵۶۷۸۹'.indexOf(digit)));
+};
+
+export default { genId, now, today, isValidDateStr, safeNum, normalizeDigits };

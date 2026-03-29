@@ -28,7 +28,10 @@ import {
 const DashboardPage = lazy(() => import('./pages/DashboardPage.jsx'));
 const PulsePage = lazy(() => import('./pages/PulsePage.jsx'));
 const PropertiesPage = lazy(() => import('./pages/PropertiesPage.jsx'));
+const PropertyDetailPage = lazy(() => import('./pages/PropertyDetailPage.jsx'));
+const ContractDetailPage = lazy(() => import('./pages/ContractDetailPage.jsx'));
 const ContactsPage = lazy(() => import('./pages/ContactsPage.jsx'));
+const ContactDetailPage = lazy(() => import('./pages/ContactDetailPage.jsx'));
 const ContractsPage = lazy(() => import('./pages/ContractsPage.jsx'));
 const InboxPage = lazy(() => import('./pages/InboxPage.jsx'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
@@ -55,6 +58,7 @@ import {
 } from './core/theme-ui.js';
 import { dataStore } from './core/dataStore.js';
 import { formatDateHeader } from './utils/dateFormat.js';
+import { normalizeDigits } from './utils/helpers.js';
 
 /** للتطوير فقط: ضع true لاختبار شاشة استعادة الأخطاء (Error Boundary) ثم أعد false قبل النشر. */
 const SIMULATE_RENDER_ERROR = false;
@@ -166,6 +170,46 @@ const App = () => {
       cancelMidnight && cancelMidnight();
     };
   }, [updateHeaderDate, scheduleHeaderDateMidnightRefresh]);
+
+  useEffect(() => {
+    const normalizeTargetValue = (target) => {
+      const nextValue = normalizeDigits(target.value);
+      if (nextValue !== target.value) {
+        target.value = nextValue;
+      }
+    };
+
+    const beforeInputHandler = (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+      if (typeof event.data !== 'string' || !event.data) return;
+      const normalizedData = normalizeDigits(event.data);
+      if (normalizedData === event.data) return;
+
+      event.preventDefault();
+      const start = target.selectionStart ?? target.value.length;
+      const end = target.selectionEnd ?? target.value.length;
+      if (typeof target.setRangeText === 'function') {
+        target.setRangeText(normalizedData, start, end, 'end');
+      } else {
+        target.value = `${target.value.slice(0, start)}${normalizedData}${target.value.slice(end)}`;
+      }
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+    };
+
+    const handler = (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+      normalizeTargetValue(target);
+    };
+
+    document.addEventListener('beforeinput', beforeInputHandler, true);
+    document.addEventListener('input', handler, true);
+    return () => {
+      document.removeEventListener('beforeinput', beforeInputHandler, true);
+      document.removeEventListener('input', handler, true);
+    };
+  }, []);
   // Phase 9.4: تحذير قبل المغادرة عند وجود تغييرات غير محفوظة
   useEffect(() => {
     const handler = (e) => {
@@ -317,6 +361,14 @@ const App = () => {
                       }
                     />
                     <Route
+                      path="/properties/:id"
+                      element={
+                        <ProtectedRoute>
+                          <PropertyDetailPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/contacts"
                       element={
                         <ProtectedRoute>
@@ -325,10 +377,26 @@ const App = () => {
                       }
                     />
                     <Route
+                      path="/contacts/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ContactDetailPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="/contracts"
                       element={
                         <ProtectedRoute>
                           <ContractsPage setPage={setPage} />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="/contracts/:id"
+                      element={
+                        <ProtectedRoute>
+                          <ContractDetailPage setPage={setPage} />
                         </ProtectedRoute>
                       }
                     />

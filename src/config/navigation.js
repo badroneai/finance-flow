@@ -120,6 +120,9 @@ export const BOTTOM_NAV_MORE = [
 /** path إلى id للاستخدام مع useLocation (HashRouter) */
 export function pathToId(pathname) {
   const path = (pathname || '/').replace(/^#/, '').trim() || '/';
+  if (path.startsWith('/properties/')) return 'properties';
+  if (path.startsWith('/contacts/')) return 'contacts';
+  if (path.startsWith('/contracts/')) return 'contracts';
   const item = NAV_ITEMS.find((it) => it.path === path);
   return item ? item.id : 'dashboard';
 }
