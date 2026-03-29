@@ -4,10 +4,10 @@ import { CONTRACT_TYPES, CONTRACT_STATUSES, PAYMENT_CYCLES } from '../constants/
 
 /** أنواع العقود مع أيقونات */
 export const CONTRACT_TYPE_OPTIONS = [
-  { value: 'rent', label: 'إيجار', icon: '🏠' },
-  { value: 'sale', label: 'بيع', icon: '💰' },
-  { value: 'management', label: 'إدارة', icon: '📋' },
-  { value: 'other', label: 'أخرى', icon: '📁' },
+  { value: 'rent', label: 'إيجار', icon: '' },
+  { value: 'sale', label: 'بيع', icon: '' },
+  { value: 'management', label: 'إدارة', icon: '' },
+  { value: 'other', label: 'أخرى', icon: '' },
 ];
 
 /** حالات العقد مع ألوان */
@@ -25,8 +25,31 @@ export const PAYMENT_CYCLE_OPTIONS = [
   { value: 'quarterly', label: 'ربع سنوي' },
   { value: 'semi_annual', label: 'نصف سنوي' },
   { value: 'annual', label: 'سنوي' },
+  { value: 'one_time', label: 'دفعة واحدة' },
   { value: 'custom', label: 'مخصص' },
 ];
+
+export function getCycleMonths(cycle) {
+  if (cycle === 'monthly') return 1;
+  if (cycle === 'quarterly') return 3;
+  if (cycle === 'semi_annual') return 6;
+  if (cycle === 'annual') return 12;
+  return null;
+}
+
+export function getInstallmentCount(contract) {
+  if (!contract) return 1;
+  const explicitCount = Number(contract.installmentCount);
+  if (Number.isFinite(explicitCount) && explicitCount > 0) return Math.floor(explicitCount);
+  if (contract.paymentCycle === 'one_time') return 1;
+
+  const duration = Number(contract.durationMonths);
+  const cycleMonths = getCycleMonths(contract.paymentCycle);
+  if (Number.isFinite(duration) && duration > 0 && cycleMonths) {
+    return Math.max(1, Math.ceil(duration / cycleMonths));
+  }
+  return 1;
+}
 
 /** ترجمة نوع العقد */
 export function getContractTypeLabel(type) {
@@ -36,7 +59,7 @@ export function getContractTypeLabel(type) {
 /** أيقونة نوع العقد */
 export function getContractTypeIcon(type) {
   const opt = CONTRACT_TYPE_OPTIONS.find((o) => o.value === type);
-  return opt ? opt.icon : '📁';
+  return opt ? opt.icon : '';
 }
 
 /** ترجمة حالة العقد */
@@ -82,6 +105,10 @@ export function isExpired(endDate) {
 export function validateContract(contract) {
   const errors = [];
 
+  if (!contract.propertyId) {
+    errors.push('اختيار العقار مطلوب');
+  }
+
   if (!contract.type || !CONTRACT_TYPES[contract.type]) {
     errors.push('نوع العقد غير صالح');
   }
@@ -110,6 +137,19 @@ export function validateContract(contract) {
     if (isNaN(deposit) || deposit < 0) {
       errors.push('مبلغ التأمين يجب أن يكون رقماً موجباً');
     }
+  }
+
+  if (!contract.paymentCycle || !PAYMENT_CYCLES[contract.paymentCycle]) {
+    errors.push('دورة الدفع غير صالحة');
+  }
+
+  const installmentCount = getInstallmentCount(contract);
+  if (!Number.isFinite(installmentCount) || installmentCount < 1) {
+    errors.push('عدد الدفعات يجب أن يكون 1 على الأقل');
+  }
+
+  if (contract.paymentCycle === 'one_time' && installmentCount !== 1) {
+    errors.push('دفعة واحدة يجب أن تحتوي على دفعة واحدة فقط');
   }
 
   return { valid: errors.length === 0, errors };
@@ -165,6 +205,9 @@ export function filterContracts(contracts, filters = {}) {
   if (filters.contactId) {
     list = list.filter((c) => c.contactId === filters.contactId);
   }
+  if (filters.unitId) {
+    list = list.filter((c) => c.unitId === filters.unitId);
+  }
   if (filters.search) {
     const s = filters.search.toLowerCase();
     list = list.filter(
@@ -172,7 +215,8 @@ export function filterContracts(contracts, filters = {}) {
         (c.contractNumber || '').toLowerCase().includes(s) ||
         (c.notes || '').toLowerCase().includes(s) ||
         (c._propertyName || '').toLowerCase().includes(s) ||
-        (c._contactName || '').toLowerCase().includes(s)
+        (c._contactName || '').toLowerCase().includes(s) ||
+        (c._unitName || '').toLowerCase().includes(s)
     );
   }
 
@@ -189,6 +233,7 @@ export function defaultContract() {
 
   return {
     propertyId: '',
+    unitId: '',
     contactId: '',
     contractNumber: '',
     type: 'rent',
@@ -200,6 +245,7 @@ export function defaultContract() {
     monthlyRent: '',
     depositAmount: '',
     paymentCycle: 'monthly',
+    installmentCount: 12,
     autoRenew: false,
     notes: '',
   };

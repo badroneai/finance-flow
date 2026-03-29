@@ -4,12 +4,12 @@ import { CONTACT_TYPES, CONTACT_ID_TYPES } from '../constants/index.js';
 
 /** أنواع جهات الاتصال مع أيقونات */
 export const CONTACT_TYPE_OPTIONS = [
-  { value: 'tenant', label: 'مستأجر', icon: '🏠' },
-  { value: 'owner', label: 'مالك', icon: '👤' },
-  { value: 'buyer', label: 'مشتري', icon: '🤝' },
-  { value: 'agent', label: 'وسيط', icon: '📋' },
-  { value: 'supplier', label: 'مورد', icon: '🔧' },
-  { value: 'other', label: 'أخرى', icon: '📁' },
+  { value: 'tenant', label: 'مستأجر', icon: '' },
+  { value: 'owner', label: 'مالك', icon: '' },
+  { value: 'buyer', label: 'مشتري', icon: '' },
+  { value: 'agent', label: 'وسيط', icon: '' },
+  { value: 'supplier', label: 'مورد', icon: '' },
+  { value: 'other', label: 'أخرى', icon: '' },
 ];
 
 /** أنواع الهوية */
@@ -52,7 +52,7 @@ export function getContactTypeLabel(type) {
 /** أيقونة نوع جهة الاتصال */
 export function getContactTypeIcon(type) {
   const opt = CONTACT_TYPE_OPTIONS.find((o) => o.value === type);
-  return opt ? opt.icon : '📁';
+  return opt ? opt.icon : '';
 }
 
 /** ترجمة نوع الهوية */

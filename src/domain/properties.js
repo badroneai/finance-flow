@@ -4,14 +4,14 @@ import { PROPERTY_TYPES, PROPERTY_STATUSES } from '../constants/index.js';
 
 /** أنواع العقارات مع أيقونات */
 export const PROPERTY_TYPE_OPTIONS = [
-  { value: 'apartment', label: 'شقة', icon: '🏠' },
-  { value: 'villa', label: 'فيلا', icon: '🏡' },
-  { value: 'building', label: 'عمارة', icon: '🏬' },
-  { value: 'office', label: 'مكتب', icon: '🏢' },
-  { value: 'chalet', label: 'شاليه', icon: '🏖️' },
-  { value: 'land', label: 'أرض', icon: '🗺️' },
-  { value: 'warehouse', label: 'مستودع', icon: '🏭' },
-  { value: 'other', label: 'أخرى', icon: '📁' },
+  { value: 'apartment', label: 'شقة', icon: '' },
+  { value: 'villa', label: 'فيلا', icon: '' },
+  { value: 'building', label: 'عمارة', icon: '' },
+  { value: 'office', label: 'مكتب', icon: '' },
+  { value: 'chalet', label: 'شاليه', icon: '' },
+  { value: 'land', label: 'أرض', icon: '' },
+  { value: 'warehouse', label: 'مستودع', icon: '' },
+  { value: 'other', label: 'أخرى', icon: '' },
 ];
 
 /** حالات العقار مع الألوان */
@@ -54,7 +54,7 @@ export function getPropertyTypeLabel(type) {
 /** أيقونة نوع العقار */
 export function getPropertyTypeIcon(type) {
   const opt = PROPERTY_TYPE_OPTIONS.find((o) => o.value === type);
-  return opt ? opt.icon : '📁';
+  return opt ? opt.icon : '';
 }
 
 /** ترجمة حالة العقار */
@@ -169,6 +169,8 @@ export function defaultProperty() {
     name: '',
     type: 'apartment',
     status: 'available',
+    deedNumber: '',
+    nationalAddress: '',
     city: '',
     district: '',
     address: '',
@@ -178,8 +180,18 @@ export function defaultProperty() {
     bathrooms: '',
     yearBuilt: '',
     floors: '',
+    ownerId: '',
     ownerName: '',
     ownerPhone: '',
+    tenantContactId: '',
+    tenantName: '',
+    tenantPhone: '',
+    maintenanceContactId: '',
+    maintenanceContactName: '',
+    maintenanceContactPhone: '',
+    buyerContactId: '',
+    buyerName: '',
+    buyerPhone: '',
     purchasePrice: '',
     monthlyRent: '',
     notes: '',
