@@ -21,6 +21,10 @@ paths:
 - إنشاء قوالب بيانات
 
 ## الملفات الحالية
+
+> **تنبيه**: هذه القائمة قديمة (10 ملفات فقط). الآن يوجد 23 ملف.
+> انظر **`domain-logic-v2.md`** للقائمة الكاملة المحدّثة.
+
 - `transactions.js` — المعاملات
 - `ledgers.js` — الدفاتر
 - `commissions.js` — العمولات
@@ -31,3 +35,6 @@ paths:
 - `letters.js` + `letterTemplates.js` — الخطابات
 - `drafts.js` — المسودات
 - `notes.js` — الملاحظات
+- *(جديد)* `contracts.js`, `contract-finance.js`, `contract-payments.js`, `contract-alerts.js`
+- *(جديد)* `properties.js`, `units.js`, `contacts.js`
+- *(جديد)* `dues.js`, `receipt.js`, `ledgerTemplates.js`, `utils.js`

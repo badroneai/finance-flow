@@ -10,6 +10,12 @@ import {
   SEED_TRANSACTIONS,
   SEED_COMMISSIONS,
   SEED_DRAFTS,
+  SEED_PROPERTIES,
+  SEED_UNITS,
+  SEED_CONTACTS,
+  SEED_CONTRACTS,
+  SEED_CONTRACT_PAYMENTS,
+  SEED_CONTRACT_RECEIPTS,
   STORAGE_ERROR_MESSAGE,
 } from '../constants/index.js';
 import { genId, now } from '../utils/helpers.js';
@@ -138,11 +144,20 @@ export const dataStore = {
   properties: createCrud(KEYS.properties, {
     sortBy: (a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''),
   }),
+  units: createCrud(KEYS.units, {
+    sortBy: (a, b) => (a.name || '').localeCompare(b.name || ''),
+  }),
   contacts: createCrud(KEYS.contacts, {
     sortBy: (a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''),
   }),
   contracts: createCrud(KEYS.contracts, {
     sortBy: (a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''),
+  }),
+  contractPayments: createCrud(KEYS.contractPayments, {
+    sortBy: (a, b) => (b.date || '').localeCompare(a.date || ''),
+  }),
+  contractReceipts: createCrud(KEYS.contractReceipts, {
+    sortBy: (a, b) => (b.issueDate || '').localeCompare(a.issueDate || ''),
   }),
   letters: {
     listDrafts: _draftsCrud.list,
@@ -194,11 +209,53 @@ export const dataStore = {
         createdAt: now(),
         updatedAt: now(),
       }));
+      const properties = SEED_PROPERTIES.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || now(),
+        updatedAt: item.updatedAt || now(),
+      }));
+      const units = SEED_UNITS.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || now(),
+        updatedAt: item.updatedAt || now(),
+      }));
+      const contacts = SEED_CONTACTS.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || now(),
+        updatedAt: item.updatedAt || now(),
+      }));
+      const contracts = SEED_CONTRACTS.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || now(),
+        updatedAt: item.updatedAt || now(),
+      }));
+      const contractPayments = SEED_CONTRACT_PAYMENTS.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || now(),
+        updatedAt: item.updatedAt || now(),
+      }));
+      const contractReceipts = SEED_CONTRACT_RECEIPTS.map((item) => ({
+        ...item,
+        createdAt: item.createdAt || now(),
+        updatedAt: item.updatedAt || now(),
+      }));
       let r = safeSet(KEYS.transactions, txs);
       if (!r.ok) return r;
       r = safeSet(KEYS.commissions, cms);
       if (!r.ok) return r;
       r = safeSet(KEYS.drafts, drs);
+      if (!r.ok) return r;
+      r = safeSet(KEYS.properties, properties);
+      if (!r.ok) return r;
+      r = safeSet(KEYS.units, units);
+      if (!r.ok) return r;
+      r = safeSet(KEYS.contacts, contacts);
+      if (!r.ok) return r;
+      r = safeSet(KEYS.contracts, contracts);
+      if (!r.ok) return r;
+      r = safeSet(KEYS.contractPayments, contractPayments);
+      if (!r.ok) return r;
+      r = safeSet(KEYS.contractReceipts, contractReceipts);
       if (!r.ok) return r;
       r = safeSet(KEYS.settings, SEED_SETTINGS);
       if (!r.ok) return r;
@@ -212,6 +269,35 @@ export const dataStore = {
     ensureSeeded: () => {
       if (!safeGet(KEYS.seeded, false)) {
         dataStore.seed.resetDemo();
+        return;
+      }
+
+      const properties = safeGet(KEYS.properties, []);
+      const units = safeGet(KEYS.units, []);
+      const contacts = safeGet(KEYS.contacts, []);
+      const contracts = safeGet(KEYS.contracts, []);
+      const contractPayments = safeGet(KEYS.contractPayments, []);
+      const hasRealEstateData =
+        (Array.isArray(properties) && properties.length > 0) ||
+        (Array.isArray(units) && units.length > 0) ||
+        (Array.isArray(contacts) && contacts.length > 0) ||
+        (Array.isArray(contracts) && contracts.length > 0);
+
+      if (!hasRealEstateData) {
+        safeSet(KEYS.properties, SEED_PROPERTIES);
+        safeSet(KEYS.units, SEED_UNITS);
+        safeSet(KEYS.contacts, SEED_CONTACTS);
+        safeSet(KEYS.contracts, SEED_CONTRACTS);
+      }
+
+      if (!Array.isArray(contractPayments) || contractPayments.length === 0) {
+        safeSet(KEYS.contractPayments, SEED_CONTRACT_PAYMENTS);
+      }
+
+      // سندات القبض — backward compatible: لن تُمسح بيانات موجودة
+      const contractReceipts = safeGet(KEYS.contractReceipts, []);
+      if (!Array.isArray(contractReceipts) || contractReceipts.length === 0) {
+        safeSet(KEYS.contractReceipts, SEED_CONTRACT_RECEIPTS);
       }
     },
   },

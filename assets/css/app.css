@@ -189,7 +189,11 @@ html[data-theme] .border-slate-200 { border-color: var(--color-border) !importan
 /* Tables: zebra, hover, thead, cell spacing */
 #root table { border-collapse: collapse; }
 #root table thead tr { background: var(--color-bg) !important; border-bottom: 1px solid var(--color-border); }
-#root table thead th { padding: 0.75rem 1rem !important; font-weight: 600; color: var(--color-muted); }
+#root table thead th {
+  padding: 0.75rem 1rem !important;
+  font-weight: 700;
+  color: color-mix(in srgb, var(--color-text) 88%, transparent);
+}
 #root table tbody tr { transition: background 0.15s ease; }
 #root table tbody tr:nth-child(even) { background: var(--color-surface); }
 #root table tbody tr:hover { background: var(--color-bg) !important; }
@@ -461,5 +465,4 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   margin-left: 0;
   margin-right: 0.5rem;
 }
-
 

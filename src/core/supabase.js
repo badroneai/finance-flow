@@ -23,7 +23,7 @@ const hasValidConfig = !isPlaceholder(supabaseUrl) && !isPlaceholder(supabaseAno
 
 if (!hasValidConfig && import.meta.env.DEV) {
   console.warn(
-    '[قيد العقار] ⚠️ إعدادات Supabase غير مكتملة أو وهمية.\n' +
+    '[قيد العقار] إعدادات Supabase غير مكتملة أو وهمية.\n' +
       'التطبيق يعمل بوضع localStorage فقط.\n' +
       'لتفعيل Supabase، عدّل ملف .env.local بالقيم الحقيقية من لوحة تحكم Supabase.'
   );

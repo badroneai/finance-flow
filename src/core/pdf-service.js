@@ -621,3 +621,115 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
   const filename = `كشف_حساب_${safeName}_${todayStr()}.pdf`;
   return htmlToPdf(container, filename);
 }
+
+// ═══════════════════════════════════════
+// 4. تصدير سند قبض / إيصال دفعة عقد
+// ═══════════════════════════════════════
+
+/** CSS خاص بسند القبض */
+const RECEIPT_CSS = `
+  ${SHARED_CSS}
+  .receipt-page { padding: 36px 32px; direction: rtl; text-align: right; max-width: 794px; }
+  .receipt-header { text-align: center; border-bottom: 3px solid #0f1c2e; padding-bottom: 16px; margin-bottom: 20px; }
+  .receipt-header h1 { font-size: 24px; color: #0f1c2e; margin-bottom: 2px; }
+  .receipt-header .receipt-title { font-size: 18px; color: #2563eb; font-weight: 700; margin-top: 8px; }
+  .receipt-header .receipt-number { font-size: 13px; color: #64748b; margin-top: 4px; }
+  .receipt-body { margin-bottom: 24px; }
+  .receipt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+  .receipt-row .label { font-size: 13px; color: #64748b; flex-shrink: 0; min-width: 120px; }
+  .receipt-row .value { font-size: 14px; font-weight: 600; color: #1e293b; text-align: left; }
+  .receipt-amount-box { background: #f0fdf4; border: 2px solid #059669; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0; }
+  .receipt-amount-box .amount-label { font-size: 13px; color: #059669; margin-bottom: 4px; }
+  .receipt-amount-box .amount-value { font-size: 28px; font-weight: 800; color: #059669; }
+  .receipt-note { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #475569; }
+  .receipt-signature { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
+  .receipt-sig-box { text-align: center; width: 45%; }
+  .receipt-sig-box .sig-label { font-size: 12px; color: #64748b; margin-bottom: 40px; }
+  .receipt-sig-box .sig-line { border-bottom: 1px solid #94a3b8; margin-bottom: 4px; }
+  .receipt-sig-box .sig-name { font-size: 11px; color: #94a3b8; }
+`;
+
+/**
+ * تصدير سند قبض PDF من نموذج الإيصال
+ * @param {Object} receipt - نموذج الإيصال من buildReceiptModel
+ * @param {Object} [officeInfo] - { name, logo }
+ * @returns {Promise<boolean>}
+ */
+export async function exportReceiptPdf(receipt, officeInfo = {}) {
+  if (!receipt) throw new Error('لا توجد بيانات إيصال');
+
+  const container = createHiddenContainer();
+
+  safeSetHTML(container, `<style>${RECEIPT_CSS}</style>
+  <div class="receipt-page">
+    <div class="receipt-header">
+      ${logoHtml(officeInfo)}
+      <h1>${esc(receipt.officeName || officeInfo?.name || 'قيد العقار')}</h1>
+      <div class="receipt-title">سند قبض</div>
+      <div class="receipt-number">رقم الإيصال: ${esc(receipt.receiptNumber)}</div>
+    </div>
+
+    <div class="receipt-body">
+      <div class="receipt-row">
+        <span class="label">تاريخ الإصدار</span>
+        <span class="value">${esc(receipt.issueDate)}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">اسم المستأجر</span>
+        <span class="value">${esc(receipt.tenantName) || '—'}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">رقم العقد</span>
+        <span class="value">${esc(receipt.contractNumber) || '—'}</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">العقار</span>
+        <span class="value">${esc(receipt.propertyName) || '—'}</span>
+      </div>
+      ${receipt.unitName ? `<div class="receipt-row">
+        <span class="label">الوحدة</span>
+        <span class="value">${esc(receipt.unitName)}</span>
+      </div>` : ''}
+      <div class="receipt-row">
+        <span class="label">طريقة الدفع</span>
+        <span class="value">${esc(receipt.paymentMethodLabel)}</span>
+      </div>
+      ${receipt.installmentNumber ? `<div class="receipt-row">
+        <span class="label">رقم القسط</span>
+        <span class="value">${esc(receipt.installmentNumber)}</span>
+      </div>` : ''}
+      ${receipt.dueId ? `<div class="receipt-row">
+        <span class="label">مرجع الاستحقاق</span>
+        <span class="value" style="font-size:11px;direction:ltr;">${esc(receipt.dueId)}</span>
+      </div>` : ''}
+    </div>
+
+    <div class="receipt-amount-box">
+      <div class="amount-label">المبلغ المستلم</div>
+      <div class="amount-value">${fmt(receipt.amount)} ر.س</div>
+    </div>
+
+    ${receipt.note ? `<div class="receipt-note"><strong>ملاحظة:</strong> ${esc(receipt.note)}</div>` : ''}
+
+    <div class="receipt-signature">
+      <div class="receipt-sig-box">
+        <div class="sig-label">توقيع المستلم</div>
+        <div class="sig-line"></div>
+        <div class="sig-name">المكتب</div>
+      </div>
+      <div class="receipt-sig-box">
+        <div class="sig-label">توقيع الدافع</div>
+        <div class="sig-line"></div>
+        <div class="sig-name">${esc(receipt.tenantName) || '—'}</div>
+      </div>
+    </div>
+
+    <div class="pdf-footer">
+      تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
+    </div>
+  </div>`);
+
+  const safeNum = (receipt.receiptNumber || '').replace(/[/\\?%*:|"<>]/g, '_');
+  const filename = `سند_قبض_${safeNum}_${todayStr()}.pdf`;
+  return htmlToPdf(container, filename);
+}

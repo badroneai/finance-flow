@@ -114,10 +114,11 @@ const DataContext = createContext(null);
 // المزوّد
 // ═══════════════════════════════════════
 export function DataProvider({ children }) {
-  const { profile } = useAuth();
+  const { profile, isDemo } = useAuth();
   const officeId = profile?.office_id;
   const userId = profile?.id;
-  const isCloud = isSupabaseConfigured && !!officeId;
+  // وضع الديمو يجب أن يبقى محلياً حتى لو كانت مفاتيح Supabase مُعدّة.
+  const isCloud = isSupabaseConfigured && !!officeId && !isDemo;
 
   // ─── الدفاتر ───────────────────────────────────────────
   const [ledgers, setLedgers] = useState([]);
@@ -140,6 +141,10 @@ export function DataProvider({ children }) {
   const [properties, setProperties] = useState([]);
   const [propertiesLoading, setPropertiesLoading] = useState(false);
 
+  // ─── الوحدات — SPR-019 ───────────────────────────────────
+  const [units, setUnits] = useState([]);
+  const [unitsLoading, setUnitsLoading] = useState(false);
+
   // ─── جهات الاتصال — SPR-018 ────────────────────────────
   const [contacts, setContacts] = useState([]);
   const [contactsLoading, setContactsLoading] = useState(false);
@@ -148,14 +153,25 @@ export function DataProvider({ children }) {
   const [contracts, setContracts] = useState([]);
   const [contractsLoading, setContractsLoading] = useState(false);
 
+  // ─── دفعات العقود — المرحلة التشغيلية ────────────────────
+  const [contractPayments, setContractPayments] = useState([]);
+  const [contractPaymentsLoading, setContractPaymentsLoading] = useState(false);
+
+  // ─── سندات القبض — إيصالات محفوظة مرتبطة بالدفعات ──────
+  const [contractReceipts, setContractReceipts] = useState([]);
+  const [contractReceiptsLoading, setContractReceiptsLoading] = useState(false);
+
   // ─── مراجع المقارنة (لمنع إعادة الرسم غير الضرورية) ──
   const ledgersRef = useRef([]);
   const transactionsRef = useRef([]);
   const recurringRef = useRef([]);
   const commissionsRef = useRef([]);
   const propertiesRef = useRef([]);
+  const unitsRef = useRef([]);
   const contactsRef = useRef([]);
   const contractsRef = useRef([]);
+  const contractPaymentsRef = useRef([]);
+  const contractReceiptsRef = useRef([]);
 
   // ═══════════════════════════════════════
   // جلب البيانات
@@ -293,6 +309,24 @@ export function DataProvider({ children }) {
     [isCloud, officeId]
   );
 
+  // ─── جلب الوحدات — SPR-019 ───────────────────────────────
+  const fetchUnits = useCallback(
+    async (propertyId = null) => {
+      setUnitsLoading(true);
+      try {
+        // الوحدات غير موجودة في Supabase بعد، لذا نستخدم التخزين المحلي مؤقتاً في كل الأحوال.
+        const all = dataStore.units?.list?.() || [];
+        const filtered = propertyId ? all.filter((item) => item.propertyId === propertyId) : all;
+        stableSetArray(setUnits, filtered, unitsRef);
+      } catch (err) {
+        console.error('[قيد العقار] fetchUnits:', err);
+      } finally {
+        setUnitsLoading(false);
+      }
+    },
+    []
+  );
+
   // ─── جلب جهات الاتصال — SPR-018 ────────────────────────
   const fetchContacts = useCallback(
     async (filters = {}) => {
@@ -336,6 +370,33 @@ export function DataProvider({ children }) {
     },
     [isCloud, officeId]
   );
+
+  // ─── جلب دفعات العقود — محلي مؤقتاً حتى اكتمال الجداول السحابية ───
+  const fetchContractPayments = useCallback(async (contractId = null) => {
+    setContractPaymentsLoading(true);
+    try {
+      const all = dataStore.contractPayments?.list?.() || [];
+      const filtered = contractId ? all.filter((item) => item.contractId === contractId) : all;
+      stableSetArray(setContractPayments, filtered, contractPaymentsRef);
+    } catch (err) {
+      console.error('[قيد العقار] fetchContractPayments:', err);
+    } finally {
+      setContractPaymentsLoading(false);
+    }
+  }, []);
+
+  // ─── جلب سندات القبض — محلي مؤقتاً ───
+  const fetchContractReceipts = useCallback(async () => {
+    setContractReceiptsLoading(true);
+    try {
+      const all = dataStore.contractReceipts?.list?.() || [];
+      stableSetArray(setContractReceipts, all, contractReceiptsRef);
+    } catch (err) {
+      console.error('[قيد العقار] fetchContractReceipts:', err);
+    } finally {
+      setContractReceiptsLoading(false);
+    }
+  }, []);
 
   // ═══════════════════════════════════════
   // CRUD — الحركات المالية
@@ -702,6 +763,56 @@ export function DataProvider({ children }) {
     [isCloud, officeId, userId, fetchProperties]
   );
 
+  // ═══════════════════════════════════════
+  // CRUD — الوحدات (SPR-019)
+  // ═══════════════════════════════════════
+
+  const createUnit = useCallback(
+    async (unit) => {
+      try {
+        const result = dataStore.units.create(unit);
+        if (!result || !result.ok)
+          return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
+        await fetchUnits();
+        return { data: result.item, error: null };
+      } catch (err) {
+        console.error('[قيد العقار] createUnit:', err);
+        return { data: null, error: err };
+      }
+    },
+    [fetchUnits]
+  );
+
+  const updateUnit = useCallback(
+    async (id, updates) => {
+      try {
+        const result = dataStore.units.update(id, updates);
+        if (!result || !result.ok)
+          return { data: null, error: { message: result?.message || 'فشل التحديث' } };
+        await fetchUnits();
+        return { data: result.item, error: null };
+      } catch (err) {
+        console.error('[قيد العقار] updateUnit:', err);
+        return { data: null, error: err };
+      }
+    },
+    [fetchUnits]
+  );
+
+  const deleteUnit = useCallback(
+    async (id) => {
+      try {
+        dataStore.units.remove(id);
+        await fetchUnits();
+        return { error: null };
+      } catch (err) {
+        console.error('[قيد العقار] deleteUnit:', err);
+        return { error: err };
+      }
+    },
+    [fetchUnits]
+  );
+
   const updateProperty = useCallback(
     async (id, updates) => {
       try {
@@ -913,6 +1024,76 @@ export function DataProvider({ children }) {
   );
 
   // ═══════════════════════════════════════
+  // CRUD — دفعات العقود
+  // ═══════════════════════════════════════
+
+  const createContractPayment = useCallback(
+    async (payment) => {
+      try {
+        const result = dataStore.contractPayments.create(payment);
+        if (!result || !result.ok)
+          return { data: null, error: { message: result?.message || 'فشل حفظ الدفعة' } };
+        await fetchContractPayments();
+        return { data: result.item, error: null };
+      } catch (err) {
+        console.error('[قيد العقار] createContractPayment:', err);
+        return { data: null, error: err };
+      }
+    },
+    [fetchContractPayments]
+  );
+
+  const updateContractPayment = useCallback(
+    async (id, updates) => {
+      try {
+        const result = dataStore.contractPayments.update(id, updates);
+        if (!result || !result.ok)
+          return { data: null, error: { message: result?.message || 'فشل تحديث الدفعة' } };
+        await fetchContractPayments();
+        return { data: result.item, error: null };
+      } catch (err) {
+        console.error('[قيد العقار] updateContractPayment:', err);
+        return { data: null, error: err };
+      }
+    },
+    [fetchContractPayments]
+  );
+
+  const deleteContractPayment = useCallback(
+    async (id) => {
+      try {
+        dataStore.contractPayments.remove(id);
+        await fetchContractPayments();
+        return { error: null };
+      } catch (err) {
+        console.error('[قيد العقار] deleteContractPayment:', err);
+        return { error: err };
+      }
+    },
+    [fetchContractPayments]
+  );
+
+  // ═══════════════════════════════════════
+  // CRUD — سندات القبض
+  // ═══════════════════════════════════════
+
+  const createContractReceipt = useCallback(
+    async (receipt) => {
+      try {
+        const result = dataStore.contractReceipts.create(receipt);
+        if (!result || !result.ok)
+          return { data: null, error: { message: result?.message || 'فشل حفظ سند القبض' } };
+        await fetchContractReceipts();
+        return { data: result.item, error: null };
+      } catch (err) {
+        console.error('[قيد العقار] createContractReceipt:', err);
+        return { data: null, error: err };
+      }
+    },
+    [fetchContractReceipts]
+  );
+
+  // ═══════════════════════════════════════
   // إعدادات المكتب
   // ═══════════════════════════════════════
 
@@ -959,22 +1140,32 @@ export function DataProvider({ children }) {
 
   useEffect(() => {
     if (isSupabaseConfigured && !officeId) return; // ننتظر AuthContext
+    if (!isCloud) {
+      dataStore.seed.ensureSeeded();
+    }
     fetchLedgers();
     fetchTransactions();
     fetchRecurringItems();
     fetchCommissions();
     fetchProperties();
+    fetchUnits();
     fetchContacts();
     fetchContracts();
+    fetchContractPayments();
+    fetchContractReceipts();
   }, [
+    isCloud,
     officeId,
     fetchLedgers,
     fetchTransactions,
     fetchRecurringItems,
     fetchCommissions,
     fetchProperties,
+    fetchUnits,
     fetchContacts,
     fetchContracts,
+    fetchContractPayments,
+    fetchContractReceipts,
   ]);
 
   // تحديد الدفتر النشط الأولي
@@ -1000,8 +1191,11 @@ export function DataProvider({ children }) {
       recurringItems,
       commissions,
       properties,
+      units,
       contacts,
       contracts,
+      contractPayments,
+      contractReceipts,
 
       // حالة التحميل
       ledgersLoading,
@@ -1009,8 +1203,11 @@ export function DataProvider({ children }) {
       recurringLoading,
       commissionsLoading,
       propertiesLoading,
+      unitsLoading,
       contactsLoading,
       contractsLoading,
+      contractPaymentsLoading,
+      contractReceiptsLoading,
 
       // جلب البيانات (إعادة التحميل)
       fetchLedgers,
@@ -1018,8 +1215,11 @@ export function DataProvider({ children }) {
       fetchRecurringItems,
       fetchCommissions,
       fetchProperties,
+      fetchUnits,
       fetchContacts,
       fetchContracts,
+      fetchContractPayments,
+      fetchContractReceipts,
 
       // CRUD — حركات
       createTransaction,
@@ -1046,6 +1246,11 @@ export function DataProvider({ children }) {
       updateProperty,
       deleteProperty,
 
+      // CRUD — وحدات
+      createUnit,
+      updateUnit,
+      deleteUnit,
+
       // CRUD — جهات اتصال
       createContact,
       updateContact,
@@ -1055,6 +1260,14 @@ export function DataProvider({ children }) {
       createContract,
       updateContract,
       deleteContract,
+
+      // CRUD — دفعات العقود
+      createContractPayment,
+      updateContractPayment,
+      deleteContractPayment,
+
+      // CRUD — سندات القبض
+      createContractReceipt,
 
       // إعدادات
       updateOfficeSettings,
@@ -1074,22 +1287,31 @@ export function DataProvider({ children }) {
       recurringItems,
       commissions,
       properties,
+      units,
       contacts,
       contracts,
+      contractPayments,
+      contractReceipts,
       ledgersLoading,
       transactionsLoading,
       recurringLoading,
       commissionsLoading,
       propertiesLoading,
+      unitsLoading,
       contactsLoading,
       contractsLoading,
+      contractPaymentsLoading,
+      contractReceiptsLoading,
       fetchLedgers,
       fetchTransactions,
       fetchRecurringItems,
       fetchCommissions,
       fetchProperties,
+      fetchUnits,
       fetchContacts,
       fetchContracts,
+      fetchContractPayments,
+      fetchContractReceipts,
       createTransaction,
       updateTransaction,
       deleteTransaction,
@@ -1105,12 +1327,19 @@ export function DataProvider({ children }) {
       createProperty,
       updateProperty,
       deleteProperty,
+      createUnit,
+      updateUnit,
+      deleteUnit,
       createContact,
       updateContact,
       deleteContact,
       createContract,
       updateContract,
       deleteContract,
+      createContractPayment,
+      updateContractPayment,
+      deleteContractPayment,
+      createContractReceipt,
       updateOfficeSettings,
       isCloud,
     ]
