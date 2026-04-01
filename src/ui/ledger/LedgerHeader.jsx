@@ -14,7 +14,7 @@ export function LedgerHeader({ tab, onTabSelect }) {
     if (id) onTabSelect(id);
   };
   return (
-    <div className="panel-card bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 mb-4">
+    <div className="panel-card ledgers-header bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 mb-4">
       <div className="page-header mb-0">
         <div className="page-header-copy">
           <span className="page-kicker">المحفظة التشغيلية</span>
@@ -25,7 +25,7 @@ export function LedgerHeader({ tab, onTabSelect }) {
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-2 mt-4" role="tablist" aria-label="تبويبات الدفاتر">
+      <div className="ledgers-header-tabs" role="tablist" aria-label="تبويبات الدفاتر">
         {LEDGER_TABS.map(({ id, label }) => (
           <button
             key={id}
@@ -36,7 +36,7 @@ export function LedgerHeader({ tab, onTabSelect }) {
             aria-selected={tab === id}
             aria-controls={`tabpanel-${id}`}
             onClick={handleClick}
-            className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === id ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] shadow-sm' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted)] hover:bg-[var(--color-surface-hover)]'}`}
+            className={`ledgers-header-tab ${tab === id ? 'is-active' : ''}`}
           >
             {label}
           </button>

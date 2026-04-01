@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { useData } from '../contexts/DataContext.jsx';
@@ -12,7 +12,7 @@ import LedgerRecurringTab from '../tabs/LedgerRecurringTab.jsx';
 import LedgerPerformanceTab from '../tabs/LedgerPerformanceTab.jsx';
 import LedgerReportsTab from '../tabs/LedgerReportsTab.jsx';
 import LedgerCompare from '../ui/ledger/LedgerCompare.jsx';
-import { invariant, assertFn } from '../core/contracts.js';
+import { assertFn } from '../core/contracts.js';
 import {
   getLedgers,
   setLedgers,
@@ -42,7 +42,6 @@ import {
   computePL,
   computeTopBuckets,
   filterTransactionsForLedgerByMeta,
-  getBucketForRecurring,
   getLast4MonthsTable,
   targetsEvaluation,
 } from '../core/ledger-analytics.js';
@@ -57,9 +56,6 @@ import {
   calculateNext90DayRisk,
   calculateDisciplineTrend,
   detectHighRiskCluster,
-  getBurnBreakdown,
-  getPressureBreakdown,
-  getRiskBreakdown90d,
   getDailyPlaybook,
   getBenchmarkComparison,
 } from '../core/ledger-health.js';
@@ -75,7 +71,6 @@ import {
 
 import {
   pushHistoryEntry,
-  summarizePayNow,
   lastPayNowAt,
   daysSince,
 } from '../core/ledger-item-history.js';
@@ -84,13 +79,28 @@ import {
   monthKeyFromDate,
   computeSpendByBucketFromHistory,
   computeBudgetUtilization,
-  wouldBreachHardLock,
   normalizeBudgets as normalizeAuthorityBudgets,
 } from '../core/ledger-budget-authority.js';
 
 import { dataStore } from '../core/dataStore.js';
-import { KEYS, MSG } from '../constants/index.js';
+import { MSG } from '../constants/index.js';
 import { today, isValidDateStr, safeNum } from '../utils/helpers.js';
+
+function LedgersSectionHeader({ title, subtitle, actionLabel, onAction }) {
+  return (
+    <div className="ledgers-section-header">
+      <div>
+        <h2 className="ledgers-section-title">{title}</h2>
+        {subtitle ? <p className="ledgers-section-subtitle">{subtitle}</p> : null}
+      </div>
+      {actionLabel && onAction ? (
+        <button type="button" onClick={onAction} className="btn-ghost ledgers-section-action">
+          {actionLabel}
+        </button>
+      ) : null}
+    </div>
+  );
+}
 
 // ============================================
 // LEDGERS PAGE
@@ -106,7 +116,6 @@ const LedgersPage = ({ setPage }) => {
     recurringItems: dataRecurringItems,
     createLedger: createDataLedger,
     updateLedger: updateDataLedger,
-    deleteLedger: deleteDataLedger,
     createRecurringItem,
     updateRecurringItem,
     deleteRecurringItem,
@@ -114,7 +123,6 @@ const LedgersPage = ({ setPage }) => {
     fetchRecurringItems: fetchDataRecurringItems,
     fetchTransactions: fetchDataTransactions,
     createTransaction: createDataTransaction,
-    isCloudMode,
   } = useData();
 
   // SPR-009: قراءة تبويب من URL parameter (مثلاً #/ledgers?tab=recurring)
@@ -338,12 +346,15 @@ const LedgersPage = ({ setPage }) => {
         setTab(openTab);
         sessionStorage.removeItem('ff_ledgers_open_tab');
       }
-    } catch (_) {}
+    } catch {}
   }, [location.search]);
 
   // Keep budget form in sync with active ledger
   useEffect(() => {
-    const b = normalizeBudgets(activeLedger?.budgets);
+    const currentActiveLedger =
+      (Array.isArray(ledgers) ? ledgers : []).find((ledger) => ledger.id === activeId) || null;
+
+    const b = normalizeBudgets(currentActiveLedger?.budgets);
     setBudgetForm({
       monthlyTarget: b.monthlyTarget ? String(b.monthlyTarget) : '',
       yearlyTarget: b.yearlyTarget ? String(b.yearlyTarget) : '',
@@ -351,8 +362,8 @@ const LedgersPage = ({ setPage }) => {
 
     // Load saved incomeModel (if any) from ledger object
     const im =
-      activeLedger?.incomeModel && typeof activeLedger.incomeModel === 'object'
-        ? activeLedger.incomeModel
+      currentActiveLedger?.incomeModel && typeof currentActiveLedger.incomeModel === 'object'
+        ? currentActiveLedger.incomeModel
         : null;
     if (im) {
       const m = String(im.mode || 'fixed');
@@ -387,7 +398,7 @@ const LedgersPage = ({ setPage }) => {
       for (const k of months) if (next[k] == null) next[k] = '0';
       return next;
     });
-  }, [activeId]);
+  }, [activeId, ledgers]);
 
   const createLedger = async () => {
     const t = (newName || '').trim();
@@ -630,7 +641,7 @@ const LedgersPage = ({ setPage }) => {
   });
 
   const [inboxFilter, setInboxFilter] = useState('all'); // all|overdue|soon|unpriced|high
-  const [historyModal, setHistoryModal] = useState(null); // null | { item }
+  const [, setHistoryModal] = useState(null); // null | { item }
   const [authorityOpen, setAuthorityOpen] = useState(true);
 
   const inboxView = (() => {
@@ -865,11 +876,6 @@ const LedgersPage = ({ setPage }) => {
     large: 1.25,
   };
 
-  const applySaudiAutoPricing = ({ city, size, onlyUnpriced }) => {
-    if (!activeId) return { ok: false, message: 'اختر دفترًا نشطًا أولًا' };
-    return applySaudiAutoPricingForLedger({ ledgerId: activeId, city, size, onlyUnpriced });
-  };
-
   const applySaudiAutoPricingForLedger = ({ ledgerId, city, size, onlyUnpriced }) => {
     const lid = String(ledgerId || '').trim();
     if (!lid) return { ok: false, message: 'دفتر غير صالح' };
@@ -1036,7 +1042,7 @@ const LedgersPage = ({ setPage }) => {
             meta: { dueDate: paySource?.nextDueDate, method: paymentMethod },
           }
         );
-      } catch (err) {}
+      } catch {}
 
       setPayOpen(false);
       toast.success('تم تسجيل الدفعة');
@@ -1216,33 +1222,30 @@ const LedgersPage = ({ setPage }) => {
       <LedgerHeader tab={tab} onTabSelect={handleLedgerTabSelect} />
       {setPage && (
         <div
-          className="flex flex-wrap items-center gap-2 px-4 py-2 border-b border-[var(--color-border)] bg-[var(--color-bg)]/80 no-print"
+          className="ledgers-quick-links no-print"
           dir="rtl"
         >
-          <span className="text-[var(--color-muted)] text-sm">سريع:</span>
+          <span className="ledgers-quick-links-label">سريع:</span>
           <button
             type="button"
             onClick={() => setPage('pulse')}
-            className="text-sm font-medium transition-opacity duration-200 hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="btn-ghost !min-h-0 !px-0 !py-0 text-sm"
           >
             النبض المالي
           </button>
-          <span className="text-[var(--color-muted)]">|</span>
+          <span className="ledgers-quick-links-sep">|</span>
           <button
             type="button"
             onClick={() => setPage('inbox')}
-            className="text-sm font-medium transition-opacity duration-200 hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="btn-ghost !min-h-0 !px-0 !py-0 text-sm"
           >
             المستحقات
           </button>
-          <span className="text-[var(--color-muted)]">|</span>
+          <span className="ledgers-quick-links-sep">|</span>
           <button
             type="button"
             onClick={() => setPage('transactions')}
-            className="text-sm font-medium transition-opacity duration-200 hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="btn-ghost !min-h-0 !px-0 !py-0 text-sm"
           >
             الحركات
           </button>
@@ -1251,69 +1254,122 @@ const LedgersPage = ({ setPage }) => {
 
       {tab === 'ledgers' && (
         <div id="tabpanel-ledgers" role="tabpanel" aria-labelledby="tab-ledgers" tabIndex={0}>
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-            <div className="grid md:grid-cols-3 gap-3 items-end">
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+          <section className="ledgers-composer mb-6">
+            <div className="panel-card ledgers-create-card">
+              <LedgersSectionHeader
+                title="إنشاء دفتر جديد"
+                subtitle="ابدأ بإضافة دفتر جديد أو جهّز مساحة تشغيلية مختلفة لنشاط آخر."
+              />
+              <div className="grid md:grid-cols-3 gap-3 items-end">
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                   اسم الدفتر الجديد
-                </label>
-                <input
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  maxLength={120}
-                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
-                  aria-label="اسم الدفتر"
-                  placeholder="مثال: مكتب قيد العقار"
-                />
-              </div>
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  </label>
+                  <input
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    maxLength={120}
+                    className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                    aria-label="اسم الدفتر"
+                    placeholder="مثال: مكتب قيد العقار"
+                  />
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                   اختر نوع الدفتر
-                </label>
-                <select
-                  value={newType}
-                  onChange={(e) => setNewType(e.target.value)}
-                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
-                  aria-label="نوع الدفتر"
-                >
-                  <option value="office">مكتب</option>
-                  <option value="chalet">شاليه</option>
-                  <option value="apartment">شقة</option>
-                  <option value="villa">فيلا</option>
-                  <option value="building">عمارة</option>
-                  <option value="personal">شخصي</option>
-                  <option value="other">أخرى</option>
-                </select>
-              </div>
-              <div className="md:col-span-1">
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
+                  </label>
+                  <select
+                    value={newType}
+                    onChange={(e) => setNewType(e.target.value)}
+                    className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+                    aria-label="نوع الدفتر"
+                  >
+                    <option value="office">مكتب</option>
+                    <option value="chalet">شاليه</option>
+                    <option value="apartment">شقة</option>
+                    <option value="villa">فيلا</option>
+                    <option value="building">عمارة</option>
+                    <option value="personal">شخصي</option>
+                    <option value="other">أخرى</option>
+                  </select>
+                </div>
+                <div className="md:col-span-1">
+                  <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
                   وصف مختصر (اختياري)
-                </label>
-                <input
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  maxLength={200}
-                  className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
-                  aria-label="وصف مختصر"
-                  placeholder="وصف مختصر (اختياري)"
-                />
+                  </label>
+                  <input
+                    value={newNote}
+                    onChange={(e) => setNewNote(e.target.value)}
+                    maxLength={200}
+                    className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+                    aria-label="وصف مختصر"
+                    placeholder="وصف مختصر (اختياري)"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end mt-4">
+                <button
+                  type="button"
+                  onClick={() => createLedger()}
+                  className="btn-primary"
+                  aria-label="إضافة دفتر"
+                >
+                  + إضافة دفتر
+                </button>
               </div>
             </div>
-            <div className="flex justify-end mt-3">
-              <button
-                type="button"
-                onClick={() => createLedger()}
-                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
-                aria-label="إضافة دفتر"
-              >
-                + إضافة دفتر
-              </button>
-            </div>
-          </div>
+
+            <aside className="panel-card ledgers-overview-card">
+              <LedgersSectionHeader
+                title="الدفتر النشط الآن"
+                subtitle="هذه اللقطة تساعدك على معرفة أين تعمل حالياً قبل الانتقال للتبويبات الأخرى."
+              />
+              {activeLedger ? (
+                <>
+                  <div className="ledgers-overview-head">
+                    <div>
+                      <h3 className="ledgers-overview-name">{activeLedger.name}</h3>
+                      <p className="ledgers-overview-meta">
+                        {LEDGER_TYPE_LABELS[normalizeLedgerType(activeLedger.type)] || 'مكتب'}
+                        {' · '}
+                        {activeLedger.currency || 'SAR'}
+                      </p>
+                    </div>
+                    <Badge color="blue">نشط</Badge>
+                  </div>
+                  <div className="ledgers-overview-stats">
+                    <div className="ledgers-overview-stat">
+                      <span className="ledgers-overview-stat-label">الالتزامات</span>
+                      <strong className="ledgers-overview-stat-value">{activeRecurringRaw.length}</strong>
+                    </div>
+                    <div className="ledgers-overview-stat">
+                      <span className="ledgers-overview-stat-label">المسعّر</span>
+                      <strong className="ledgers-overview-stat-value">{recurringDashboard.pricedItems}</strong>
+                    </div>
+                    <div className="ledgers-overview-stat">
+                      <span className="ledgers-overview-stat-label">الاكتمال</span>
+                      <strong className="ledgers-overview-stat-value">{completeness.pct}%</strong>
+                    </div>
+                  </div>
+                  <p className="ledgers-overview-note">
+                    {String(activeLedger.note || '').trim() || 'لا يوجد وصف مختصر لهذا الدفتر حتى الآن.'}
+                  </p>
+                </>
+              ) : (
+                <EmptyState
+                  title="لا يوجد دفتر نشط"
+                  description="اختر أحد الدفاتر الحالية أو أنشئ دفترًا جديدًا ليصبح مركز العمل النشط."
+                />
+              )}
+            </aside>
+          </section>
 
           {!ledgers || ledgers.length === 0 ? (
-            <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
-              <EmptyState message="لا توجد دفاتر" />
+            <div className="panel-card p-6">
+              <EmptyState
+                title="لا توجد دفاتر"
+                description="أنشئ أول دفتر لتبدأ تنظيم الإيرادات والمصروفات والالتزامات في مساحة واحدة."
+              />
               <div className="mt-3 flex justify-center">
                 <button
                   type="button"
@@ -1322,7 +1378,7 @@ const LedgersPage = ({ setPage }) => {
                       new CustomEvent('ui:help', { detail: { section: 'ledgers' } })
                     )
                   }
-                  className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
+                  className="btn-secondary"
                   aria-label="افتح المساعدة"
                 >
                   افتح المساعدة
@@ -1330,13 +1386,19 @@ const LedgersPage = ({ setPage }) => {
               </div>
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <>
+              <LedgersSectionHeader
+                title="كل الدفاتر"
+                subtitle="اختر الدفتر الذي تعمل عليه الآن أو عدّل إعداداته الأساسية من نفس المكان."
+                actionLabel={`${ledgers.filter((l) => !l.archived).length} دفتر`}
+              />
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {ledgers
                 .filter((l) => !l.archived)
                 .map((l) => (
                   <div
                     key={l.id}
-                    className={`bg-[var(--color-surface)] rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-[var(--color-primary)]' : 'border-[var(--color-border)]'}`}
+                    className={`panel-card ledgers-ledger-card p-5 ${l.id === activeId ? 'border-[var(--color-primary)]' : ''}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -1408,7 +1470,7 @@ const LedgersPage = ({ setPage }) => {
                               setEditingId(null);
                               setEditingName('');
                             }}
-                            className="px-4 py-2 rounded-lg bg-[var(--color-bg)] hover:bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium"
+                            className="btn-secondary"
                             aria-label="إلغاء"
                           >
                             إلغاء
@@ -1416,7 +1478,7 @@ const LedgersPage = ({ setPage }) => {
                           <button
                             type="button"
                             onClick={() => saveEdit()}
-                            className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
+                            className="btn-primary"
                             aria-label="حفظ"
                           >
                             حفظ
@@ -1489,7 +1551,7 @@ const LedgersPage = ({ setPage }) => {
                                   },
                                 });
                               }}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+                              className={`btn-secondary ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
                               aria-label="إضافة نموذج الالتزامات"
                             >
                               إضافة نموذج الالتزامات
@@ -1627,7 +1689,7 @@ const LedgersPage = ({ setPage }) => {
                                   },
                                 });
                               }}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium border ${disabled ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+                              className={`btn-secondary ${disabled ? 'cursor-not-allowed opacity-60' : ''}`}
                               aria-label="تفعيل نموذج مكتب كامل (Demo)"
                             >
                               تفعيل نموذج مكتب كامل (Demo)
@@ -1638,7 +1700,7 @@ const LedgersPage = ({ setPage }) => {
                         <button
                           type="button"
                           onClick={() => startEdit(l)}
-                          className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
+                          className="btn-ghost"
                           aria-label="تعديل الاسم"
                         >
                           تعديل الاسم
@@ -1646,7 +1708,7 @@ const LedgersPage = ({ setPage }) => {
                         <button
                           type="button"
                           onClick={() => setActive(l.id)}
-                          className="px-3 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
+                          className="btn-primary"
                           aria-label="تعيين كنشط"
                         >
                           تعيين كنشط
@@ -1655,7 +1717,8 @@ const LedgersPage = ({ setPage }) => {
                     )}
                   </div>
                 ))}
-            </div>
+              </div>
+            </>
           )}
         </div>
       )}
@@ -1665,19 +1728,12 @@ const LedgersPage = ({ setPage }) => {
           // Guard: if activeId isn't loaded yet, show a friendly message instead of crashing
           if (!activeId) {
             return (
-              <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-sm">
-                <p className="text-[var(--color-text)] font-medium">اختر دفتراً نشطاً أولاً</p>
-                <p className="text-sm text-[var(--color-muted)] mt-1">
-                  يجب تحديد دفتر نشط لعرض الالتزامات.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setTab('ledgers')}
-                  className="mt-4 px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
-                >
-                  عرض الدفاتر
-                </button>
-              </div>
+              <EmptyState
+                title="اختر دفتراً نشطاً أولاً"
+                description="يجب تحديد دفتر نشط قبل عرض الالتزامات والتقارير المرتبطة به."
+                actionLabel="عرض الدفاتر"
+                onAction={() => setTab('ledgers')}
+              />
             );
           }
           // Stage 7B: runtime contract guards (dev-only throw, prod warn)
