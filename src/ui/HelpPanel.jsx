@@ -41,7 +41,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
     >
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.45)' }}
+        style={{ background: 'var(--color-overlay)' }}
         onClick={onClose}
       />
       <div
@@ -83,7 +83,8 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
               className="px-3 py-2 rounded-lg border text-sm"
               style={{
                 background: helpSection === x.k ? 'var(--color-info)' : 'transparent',
-                color: helpSection === x.k ? 'white' : 'var(--color-text)',
+                color:
+                  helpSection === x.k ? 'var(--color-text-inverse)' : 'var(--color-text-primary)',
                 borderColor: helpSection === x.k ? 'var(--color-info)' : 'var(--color-border)',
               }}
               aria-label={x.label}

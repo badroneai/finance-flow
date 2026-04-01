@@ -519,7 +519,7 @@ function PropertyForm({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة العقار'}
         </button>
@@ -736,9 +736,15 @@ export default function PropertiesPage() {
   }, [confirmDelete, deleteProperty, editingId, toast, resetFormState]);
 
   return (
-    <div className="px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-bold text-[var(--color-text)]">العقارات</h1>
+    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">الأصول العقارية</span>
+          <h1 className="page-title">العقارات</h1>
+          <p className="page-subtitle">
+            أدر المخزون العقاري ببيانات أوضح، وحافظ على نقطة دخول موحدة لكل أصل.
+          </p>
+        </div>
         {!showForm && (
           <button
             type="button"
@@ -746,7 +752,7 @@ export default function PropertiesPage() {
               resetFormState();
               setShowForm(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="btn-primary"
           >
             <Icons.plus size={16} />
             إضافة عقار
@@ -796,7 +802,7 @@ export default function PropertiesPage() {
       )}
 
       {properties.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-4">
+        <div className="control-toolbar flex flex-wrap gap-2 mb-4 p-3">
           <input
             type="text"
             value={searchQuery}

@@ -22,24 +22,24 @@ function RootErrorFallback({ error, onReload }) {
         justifyContent: 'center',
         padding: 24,
         fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-        background: 'var(--color-bg, #f8fafc)',
-        color: 'var(--color-text, #0f172a)',
+        background: 'var(--color-background)',
+        color: 'var(--color-text-primary)',
       }}
     >
       <div
         style={{
           maxWidth: 420,
-          background: 'var(--color-surface, #fff)',
-          border: '1px solid var(--color-border, #e2e8f0)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
           borderRadius: 12,
           padding: 24,
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.1)',
+          boxShadow: 'var(--shadow)',
         }}
       >
         <h2 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 700 }}>
           حدث خطأ في تحميل التطبيق
         </h2>
-        <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-muted, #64748b)' }}>
+        <p style={{ margin: '0 0 16px', fontSize: 14, color: 'var(--color-text-secondary)' }}>
           يمكنك إعادة تحميل الصفحة أو الرجوع للرابط السابق.
         </p>
         <button
@@ -49,8 +49,8 @@ function RootErrorFallback({ error, onReload }) {
             padding: '10px 20px',
             fontSize: 14,
             fontWeight: 600,
-            color: '#fff',
-            background: '#0F1C2E',
+            color: 'var(--color-text-inverse)',
+            background: 'var(--color-primary)',
             border: 'none',
             borderRadius: 8,
             cursor: 'pointer',
@@ -63,7 +63,7 @@ function RootErrorFallback({ error, onReload }) {
             style={{
               marginTop: 16,
               padding: 12,
-              background: 'var(--color-bg, #f1f5f9)',
+              background: 'var(--color-background)',
               borderRadius: 6,
               fontSize: 12,
               overflow: 'auto',
@@ -130,24 +130,24 @@ function mount() {
     const fallback = document.createElement('div');
     fallback.setAttribute('dir', 'rtl');
     fallback.style.cssText =
-      'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-bg,#f8fafc);color:var(--color-text,#0f172a);';
+      'min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;font-family:"IBM Plex Sans Arabic",sans-serif;background:var(--color-background);color:var(--color-text-primary);';
 
     const card = document.createElement('div');
     card.style.cssText =
-      'max-width:420px;background:var(--color-surface,#fff);border:1px solid var(--color-border,#e2e8f0);border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)';
+      'max-width:420px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:12px;padding:24px;box-shadow:var(--shadow)';
 
     const heading = document.createElement('h2');
     heading.style.cssText = 'margin:0 0 8px;font-size:20px;font-weight:700';
     heading.textContent = 'حدث خطأ في تحميل التطبيق';
 
     const para = document.createElement('p');
-    para.style.cssText = 'margin:0 0 16px;font-size:14px;color:var(--color-muted,#64748b)';
+    para.style.cssText = 'margin:0 0 16px;font-size:14px;color:var(--color-text-secondary)';
     para.textContent = 'اضغط الزر أدناه لإعادة تحميل الصفحة.';
 
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.style.cssText =
-      'padding:10px 20px;font-size:14px;font-weight:600;color:#fff;background:#0F1C2E;border:none;border-radius:8px;cursor:pointer';
+      'padding:10px 20px;font-size:14px;font-weight:600;color:var(--color-text-inverse);background:var(--color-primary);border:none;border-radius:8px;cursor:pointer';
     btn.textContent = 'إعادة تحميل الصفحة';
     btn.addEventListener('click', () => window.location.reload());
 

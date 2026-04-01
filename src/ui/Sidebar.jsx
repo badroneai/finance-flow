@@ -23,12 +23,9 @@ export const Sidebar = ({
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="p-4 border-b border-[var(--color-border)]">
+      <div className="sidebar-brand p-4">
         <div className="flex items-center gap-3">
-          <div
-            className="w-9 h-9 flex items-center justify-center flex-shrink-0 text-white"
-            aria-hidden="true"
-          >
+          <div className="sidebar-brand-mark flex-shrink-0" aria-hidden="true">
             <svg
               viewBox="0 0 100 100"
               fill="none"
@@ -50,8 +47,8 @@ export const Sidebar = ({
           </div>
           {!collapsed && (
             <div>
-              <h1 className="font-bold text-white text-sm leading-tight">قيد العقار</h1>
-              <p className="text-[var(--color-muted)] text-xs">نظام التدفقات المالية</p>
+              <h1 className="sidebar-brand-title leading-tight">قيد العقار</h1>
+              <p className="sidebar-brand-subtitle">نظام التدفقات المالية</p>
             </div>
           )}
         </div>
@@ -67,11 +64,7 @@ export const Sidebar = ({
               onClick={() => handleNav(item.id)}
               aria-label={item.label}
               data-tour-id={`nav-${item.id}`}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm mb-0.5 transition-colors ${collapsed ? 'justify-center' : ''}`}
-              style={{
-                background: page === item.id ? 'var(--color-info)' : 'transparent',
-                color: page === item.id ? 'white' : 'var(--color-muted)',
-              }}
+              className={`sidebar-nav-button text-sm mb-1 ${page === item.id ? 'is-active' : ''} ${collapsed ? 'justify-center' : ''}`}
             >
               <Icon size={18} />
               {!collapsed && <span>{item.label}</span>}
@@ -86,12 +79,12 @@ export const Sidebar = ({
     <>
       <aside
         data-tour-id="sidebar"
-        className={`hidden md:flex flex-col bg-[var(--color-surface)] h-screen sticky top-0 transition-all duration-300 no-print ${collapsed ? 'w-16' : 'w-60'}`}
+        className={`sidebar-shell hidden md:flex flex-col transition-all duration-300 no-print ${collapsed ? 'w-16' : 'w-60'}`}
       >
         {sidebarContent}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="p-3 border-t border-[var(--color-border)] text-[var(--color-muted)] hover:text-white text-xs"
+          className="sidebar-toggle p-3 text-xs"
           aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
         >
           {collapsed ? '◁' : '▷ طي'}
@@ -100,8 +93,11 @@ export const Sidebar = ({
 
       {mobileOpen && (
         <div className="fixed inset-0 z-50 md:hidden">
-          <div className="fixed inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
-          <aside className="fixed right-0 top-0 bottom-0 w-64 bg-[var(--color-surface)] z-50 overflow-y-auto">
+          <div
+            className="sidebar-mobile-overlay fixed inset-0"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside className="sidebar-mobile-drawer fixed right-0 top-0 bottom-0 w-72 z-50 overflow-y-auto">
             {sidebarContent}
           </aside>
         </div>

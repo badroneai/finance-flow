@@ -286,8 +286,8 @@ export const AuthProvider = ({ children }) => {
             alignItems: 'center',
             justifyContent: 'center',
             fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-            background: '#f8fafc',
-            color: '#64748b',
+            background: 'var(--color-background)',
+            color: 'var(--color-text-secondary)',
           }}
         >
           جاري التحميل…

@@ -1,157 +1,157 @@
 /* Qaydalaqar Design Tokens
-   Phase B+3: themes via :root[data-theme]
-   Notes:
-   - Theme is applied on <html> via: document.documentElement.dataset.theme
-   - No external font loads are added here; HTML already loads IBM Plex Sans Arabic.
+   Source of truth for the app theme layer.
+   Tokens are semantic first, with compatibility aliases for existing components.
 */
 
-/* Base (fallback) tokens */
-:root {
-  /* Color system (semantic) */
-  --color-bg: #f8fafc;          /* page background */
-  --color-surface: #ffffff;     /* cards / panels */
-  --color-text: #0f172a;        /* main text */
-  --color-muted: #475569;       /* secondary text */
-  --color-border: #e2e8f0;      /* borders / dividers */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
 
-  /* Brand */
-  --color-primary: #0b2d4a;     /* Qaydalaqar navy */
-  --color-accent: #c9a227;      /* Qaydalaqar gold */
+  /* Core brand */
+  --color-primary: var(--qa-navy);
+  --color-primary-strong: #1a2d45;
+  --color-secondary: var(--qa-gray);
+  --color-accent: var(--qa-gold);
 
-  /* Hover / Alt surfaces */
-  --color-surface-hover: #f1f5f9;  /* hover on cards/rows */
-  --color-input-bg: #ffffff;       /* input fields background */
+  /* Surfaces */
+  --color-background: var(--qa-page-bg);
+  --color-surface: var(--qa-surface);
+  --color-surface-elevated: var(--qa-white);
+  --color-surface-alt: var(--qa-off-white);
+  --color-surface-hover: color-mix(in srgb, var(--qa-gold) 8%, var(--qa-navy-05));
+  --color-input-bg: var(--qa-off-white);
 
-  /* Semantic status colors */
-  --color-success: #059669;
-  --color-success-bg: rgba(5, 150, 105, 0.08);
-  --color-success-light: #10b981;
-  --color-danger: #dc2626;
-  --color-danger-bg: rgba(220, 38, 38, 0.08);
-  --color-danger-light: #ef4444;
-  --color-warning: #d97706;
-  --color-warning-bg: rgba(217, 119, 6, 0.08);
-  --color-warning-light: #f59e0b;
-  --color-info: #2563eb;
-  --color-info-bg: rgba(37, 99, 235, 0.08);
-  --color-info-light: #3b82f6;
+  /* Text */
+  --color-text-primary: var(--qa-text-primary);
+  --color-text-secondary: var(--qa-text-muted);
+  --color-text-inverse: #f8fbff;
 
-  /* Focus ring */
+  /* Structure */
+  --color-muted: var(--color-text-secondary);
+  --color-border: color-mix(in srgb, var(--qa-border-color) 78%, var(--qa-navy) 22%);
+  --color-border-strong: color-mix(in srgb, var(--qa-border-color) 42%, var(--qa-navy) 58%);
+
+  /* Status */
+  --color-success: var(--qa-success);
+  --color-success-bg: rgba(46, 125, 50, 0.08);
+  --color-success-light: #388e3c;
+  --color-warning: var(--qa-warning);
+  --color-warning-bg: rgba(230, 81, 0, 0.08);
+  --color-warning-light: #f57c00;
+  --color-danger: var(--qa-danger);
+  --color-danger-bg: rgba(198, 40, 40, 0.08);
+  --color-danger-light: #d32f2f;
+  --color-info: var(--color-secondary);
+  --color-info-bg: var(--qa-navy-10);
+  --color-info-light: var(--qa-navy-60);
+
+  /* Accent helpers */
+  --color-primary-bg: color-mix(in srgb, var(--qa-navy) 10%, var(--qa-gold) 6%, white);
+  --color-secondary-bg: rgba(138, 143, 152, 0.12);
+  --color-accent-bg: color-mix(in srgb, var(--qa-gold) 18%, white);
+  --color-accent-soft: color-mix(in srgb, var(--qa-gold) 11%, transparent);
+
+  /* Focus / overlays */
   --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(201, 162, 39, 0.25);
+  --color-focus-soft: color-mix(in srgb, var(--qa-gold) 24%, transparent);
+  --color-overlay: rgba(9, 18, 31, 0.42);
 
-  /* Radius + shadow */
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 4px 12px rgba(0,0,0,0.10);
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.10);
+  /* Shadows / radius */
+  --radius-sm: var(--qa-radius-sm);
+  --radius: var(--qa-radius);
+  --radius-lg: var(--qa-radius-lg);
+  --shadow-xs: var(--qa-shadow-sm);
+  --shadow-sm: var(--qa-shadow-sm);
+  --shadow: var(--qa-shadow-md);
+  --shadow-lg: var(--qa-shadow-lg);
 
   /* Typography */
-  --font-ar: "IBM Plex Sans Arabic", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-  --font-en: system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+  --font-ar: 'IBM Plex Sans Arabic', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-en: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+  --font-size-caption: calc(var(--qa-font-size-caption) / 16 * 1rem);
+  --font-size-body: calc(var(--qa-font-size-body) / 16 * 1rem);
+  --font-size-title: calc(var(--qa-font-size-h3) / 16 * 1rem);
+  --font-size-hero: calc(var(--qa-font-size-h2) / 16 * 1rem);
+  --line-height-tight: var(--qa-line-height-h3);
+  --line-height-body: var(--qa-line-height-body);
 
-  /* Numerals / locale formatting (hooks for later JS) */
-  --numerals: "ar"; /* ar | en */
-  --calendar: "gregorian"; /* gregorian | hijri */
+  /* Existing compatibility aliases */
+  --color-bg: var(--color-background);
+  --color-text: var(--color-text-primary);
+  --numerals: 'ar';
+  --calendar: 'gregorian';
 }
 
-/* Light (default) */
-:root[data-theme="light"] {
-  --color-bg: #f8fafc;
-  --color-surface: #ffffff;
-  --color-text: #0f172a;
-  --color-muted: #475569;
-  --color-border: #e2e8f0;
+:root[data-theme='dim'] {
+  color-scheme: light;
 
-  --color-primary: #0b2d4a;
-  --color-accent: #c9a227;
-  --color-surface-hover: #f1f5f9;
-  --color-input-bg: #ffffff;
+  --color-background: var(--qa-page-bg);
+  --color-surface: var(--qa-surface);
+  --color-surface-elevated: var(--qa-surface);
+  --color-surface-alt: var(--qa-gray-bg);
+  --color-surface-hover: var(--qa-navy-05);
+  --color-input-bg: var(--qa-surface);
 
-  --color-success: #059669;
-  --color-success-bg: rgba(5, 150, 105, 0.08);
-  --color-success-light: #10b981;
-  --color-danger: #dc2626;
-  --color-danger-bg: rgba(220, 38, 38, 0.08);
-  --color-danger-light: #ef4444;
-  --color-warning: #d97706;
-  --color-warning-bg: rgba(217, 119, 6, 0.08);
-  --color-warning-light: #f59e0b;
-  --color-info: #2563eb;
-  --color-info-bg: rgba(37, 99, 235, 0.08);
-  --color-info-light: #3b82f6;
-
-  --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(201, 162, 39, 0.25);
+  --color-text-primary: var(--qa-text-primary);
+  --color-text-secondary: var(--qa-text-muted);
+  --color-border: var(--qa-border-color);
+  --color-border-strong: var(--qa-navy-30);
+  --color-focus-soft: var(--qa-gold-light);
+  --color-primary-bg: var(--qa-navy-10);
+  --color-secondary-bg: rgba(95, 99, 104, 0.12);
+  --color-accent-bg: var(--qa-gold-light);
+  --color-accent-soft: var(--qa-gold-subtle);
+  --shadow-xs: var(--qa-shadow-sm);
+  --shadow-sm: var(--qa-shadow-sm);
+  --shadow: var(--qa-shadow-md);
+  --shadow-lg: var(--qa-shadow-lg);
 }
 
-/* Dim (darker than light, lighter than dark) */
-:root[data-theme="dim"] {
-  /* Navy-dim: clearly darker than light, softer than dark */
-  --color-bg: #081324;
-  --color-surface: #0c1d33;
-  --color-text: #eaf0f8;
-  --color-muted: #c0cad8;
-  --color-border: rgba(234, 240, 248, 0.20);
+:root[data-theme='dark'] {
+  color-scheme: dark;
 
-  /* Accent slightly warmer, to keep identity without feeling "bright" */
-  --color-primary: #0b2d4a;
-  --color-accent: #d2ad43;
-  --color-surface-hover: #112a45;
-  --color-input-bg: #0c1d33;
+  --color-primary: var(--qa-navy);
+  --color-primary-strong: #223550;
+  --color-secondary: var(--qa-gray);
+  --color-accent: var(--qa-gold);
 
-  /* Semantic — lighter for dark backgrounds */
-  --color-success: #34d399;
-  --color-success-bg: rgba(52, 211, 153, 0.12);
-  --color-success-light: #6ee7b7;
-  --color-danger: #f87171;
-  --color-danger-bg: rgba(248, 113, 113, 0.12);
-  --color-danger-light: #fca5a5;
-  --color-warning: #fbbf24;
-  --color-warning-bg: rgba(251, 191, 36, 0.12);
-  --color-warning-light: #fde68a;
-  --color-info: #60a5fa;
-  --color-info-bg: rgba(96, 165, 250, 0.12);
-  --color-info-light: #93c5fd;
+  --color-background: var(--qa-page-bg);
+  --color-surface: var(--qa-surface);
+  --color-surface-elevated: var(--qa-surface);
+  --color-surface-alt: var(--qa-navy-10);
+  --color-surface-hover: rgba(255, 255, 255, 0.06);
+  --color-input-bg: var(--qa-surface);
 
+  --color-text-primary: var(--qa-text-primary);
+  --color-text-secondary: var(--qa-text-muted);
+  --color-text-inverse: var(--qa-white);
+
+  --color-muted: var(--color-text-secondary);
+  --color-border: var(--qa-border-color);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  --color-success: #7fbf83;
+  --color-success-bg: rgba(127, 191, 131, 0.14);
+  --color-success-light: #9ad29d;
+  --color-warning: #d8a75b;
+  --color-warning-bg: rgba(216, 167, 91, 0.14);
+  --color-warning-light: #e3bb7c;
+  --color-danger: #d57a7a;
+  --color-danger-bg: rgba(213, 122, 122, 0.14);
+  --color-danger-light: #e09999;
+  --color-info: var(--qa-gray);
+  --color-info-bg: rgba(138, 143, 152, 0.12);
+  --color-info-light: #b9bec5;
+
+  --color-primary-bg: rgba(255, 255, 255, 0.06);
+  --color-secondary-bg: rgba(138, 143, 152, 0.12);
+  --color-accent-bg: rgba(107, 90, 46, 0.16);
+  --color-accent-soft: rgba(107, 90, 46, 0.08);
   --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(210, 173, 67, 0.26);
-
-  /* Polish via tokens only (no app.css changes) */
-  --radius: 12px;
-  --radius-sm: 8px;
-  --shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.18);
-}
-
-/* Dark */
-:root[data-theme="dark"] {
-  /* Navy-dark: true dark mode with clear surface separation */
-  --color-bg: #050b14;
-  --color-surface: #0a1627;
-  --color-text: #eef3f9;
-  --color-muted: #aab7c8;
-  --color-border: rgba(238, 243, 249, 0.14);
-
-  --color-primary: #0b2d4a;
-  --color-accent: #e0c05a;
-  --color-surface-hover: #0e2035;
-  --color-input-bg: #0a1627;
-
-  /* Semantic — bright enough for true dark backgrounds */
-  --color-success: #34d399;
-  --color-success-bg: rgba(52, 211, 153, 0.10);
-  --color-success-light: #6ee7b7;
-  --color-danger: #f87171;
-  --color-danger-bg: rgba(248, 113, 113, 0.10);
-  --color-danger-light: #fca5a5;
-  --color-warning: #fbbf24;
-  --color-warning-bg: rgba(251, 191, 36, 0.10);
-  --color-warning-light: #fde68a;
-  --color-info: #60a5fa;
-  --color-info-bg: rgba(96, 165, 250, 0.10);
-  --color-info-light: #93c5fd;
-
-  --color-focus: var(--color-accent);
-  --color-focus-soft: rgba(224, 192, 90, 0.28);
+  --color-focus-soft: rgba(107, 90, 46, 0.2);
+  --color-overlay: rgba(3, 8, 15, 0.58);
+  --shadow-xs: var(--qa-shadow-sm);
+  --shadow-sm: var(--qa-shadow-sm);
+  --shadow: var(--qa-shadow-md);
+  --shadow-lg: var(--qa-shadow-lg);
 }

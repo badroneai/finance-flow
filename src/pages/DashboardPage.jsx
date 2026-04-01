@@ -608,10 +608,15 @@ export default function DashboardPage({ setPage }) {
   const isEmpty = properties.length === 0 && contacts.length === 0 && contracts.length === 0;
 
   return (
-    <div className="px-4 md:px-6 max-w-5xl mx-auto py-4" dir="rtl">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[var(--color-text)]">لوحة التحكم</h1>
-        <p className="text-sm text-[var(--color-muted)] mt-1">نظرة شاملة على مكتبك العقاري</p>
+    <div className="page-shell px-4 md:px-6 max-w-5xl mx-auto py-4" dir="rtl">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">الرؤية التنفيذية</span>
+          <h1 className="page-title">لوحة التحكم</h1>
+          <p className="page-subtitle">
+            نظرة شاملة على العقارات والعملاء والعقود والإشارات التي تحتاج قراراً قريباً.
+          </p>
+        </div>
       </div>
 
       {/* حالة التحميل */}
@@ -655,7 +660,7 @@ export default function DashboardPage({ setPage }) {
               type="button"
               onClick={() => navigate('/properties')}
               className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-colors"
-              style={{ background: 'var(--color-info)', color: '#fff' }}
+              style={{ background: 'var(--color-info)', color: 'var(--color-text-inverse)' }}
             >
               <Icons.properties size={16} /> أضف عقار
             </button>

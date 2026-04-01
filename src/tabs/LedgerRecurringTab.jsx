@@ -258,12 +258,12 @@ function LedgerRecurringTab(props) {
 
   // Status helper
   const getStatusInfo = (item) => {
-    if (isPastDue(item)) return { label: 'متأخر', color: 'bg-red-50 border-red-200 text-red-700' };
+    if (isPastDue(item)) return { label: 'متأخر', color: 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]' };
     if (isDueWithinDays(item, 7))
-      return { label: 'مستحق قريباً', color: 'bg-amber-50 border-amber-200 text-amber-700' };
+      return { label: 'مستحق قريباً', color: 'bg-[var(--color-warning-bg)] border-[var(--color-warning)] text-[var(--color-warning)]' };
     if (item.payState === 'paid')
-      return { label: 'مدفوع', color: 'bg-green-50 border-green-200 text-green-700' };
-    return { label: 'نشط', color: 'bg-blue-50 border-blue-200 text-blue-700' };
+      return { label: 'مدفوع', color: 'bg-[var(--color-success-bg)] border-[var(--color-success)] text-[var(--color-success)]' };
+    return { label: 'نشط', color: 'bg-[var(--color-info-bg)] border-[var(--color-border)] text-[var(--color-primary)]' };
   };
 
   return (
@@ -351,7 +351,7 @@ function LedgerRecurringTab(props) {
               <button
                 type="button"
                 onClick={submitPayNow}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
               >
                 تسجيل الدفعة
               </button>
@@ -433,7 +433,7 @@ function LedgerRecurringTab(props) {
               <button
                 type="button"
                 onClick={applyQuickPricing}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
               >
                 حفظ وانتقل للتالي
               </button>
@@ -526,7 +526,7 @@ function LedgerRecurringTab(props) {
                     refresh();
                   } else toast.error(result.message || 'تعذر التطبيق');
                 }}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
               >
                 تطبيق التسعير
               </button>
@@ -629,7 +629,7 @@ function LedgerRecurringTab(props) {
           <button
             type="button"
             onClick={saveRecurring}
-            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
             aria-label={recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
           >
             {recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
@@ -653,7 +653,7 @@ function LedgerRecurringTab(props) {
                 key={f.key}
                 type="button"
                 onClick={() => setListFilter(f.key)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${listFilter === f.key ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] text-[var(--color-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${listFilter === f.key ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] border-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
               >
                 {f.label} {f.count > 0 && <span className="opacity-75">({f.count})</span>}
               </button>
@@ -663,19 +663,19 @@ function LedgerRecurringTab(props) {
 
         {/* أزرار التسعير السريع */}
         {unpricedList && unpricedList.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-xl border border-amber-200 bg-amber-50">
-            <span className="text-sm text-amber-800">{unpricedList.length} التزام بدون مبلغ</span>
+          <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)]">
+            <span className="text-sm text-[var(--color-warning)]">{unpricedList.length} التزام بدون مبلغ</span>
             <button
               type="button"
               onClick={openPricingWizard}
-              className="px-3 py-1.5 rounded-lg bg-amber-600 text-white text-xs font-medium hover:bg-amber-700"
+              className="px-3 py-1.5 rounded-lg bg-[var(--color-warning)] text-[var(--color-text-inverse)] text-xs font-medium hover:bg-[var(--color-warning-light)]"
             >
               معالج التسعير
             </button>
             <button
               type="button"
               onClick={() => setSaPricingOpen(true)}
-              className="px-3 py-1.5 rounded-lg border border-amber-300 text-amber-800 text-xs font-medium hover:bg-amber-100"
+              className="px-3 py-1.5 rounded-lg border border-[var(--color-warning)] text-[var(--color-warning)] text-xs font-medium hover:bg-[var(--color-warning-bg)]"
             >
               تسعير تلقائي (سعودي)
             </button>
@@ -733,7 +733,7 @@ function LedgerRecurringTab(props) {
                           {Number(item.amount) > 0 ? (
                             <Currency value={item.amount} />
                           ) : (
-                            <span className="text-amber-600">غير مسعّر</span>
+                            <span className="text-[var(--color-warning)]">غير مسعّر</span>
                           )}
                         </span>
                       </div>
@@ -753,7 +753,7 @@ function LedgerRecurringTab(props) {
                           if (r) startPayNow(r);
                         }}
                         disabled={Number(item.amount) === 0}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${Number(item.amount) === 0 ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-green-600 text-white border-green-600 hover:bg-green-700'}`}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${Number(item.amount) === 0 ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-success)] text-[var(--color-text-inverse)] border-[var(--color-success)] hover:bg-[var(--color-success-light)]'}`}
                         aria-label="سجّل دفعة"
                       >
                         سجّل دفعة
@@ -769,7 +769,7 @@ function LedgerRecurringTab(props) {
                       <button
                         type="button"
                         onClick={() => deleteRecurring(item.id)}
-                        className="px-3 py-1.5 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50"
+                        className="px-3 py-1.5 rounded-lg border border-[var(--color-danger)] text-[var(--color-danger)] text-xs font-medium hover:bg-[var(--color-danger-bg)]"
                         aria-label="حذف"
                       >
                         حذف
@@ -796,16 +796,16 @@ function LedgerRecurringTab(props) {
             </div>
           </div>
           {overdueTotal > 0 && (
-            <div className="p-3 rounded-xl border border-red-200 bg-red-50">
-              <div className="text-xs text-red-600">متأخر</div>
-              <div className="mt-1 text-lg font-bold text-red-700">
+            <div className="p-3 rounded-xl border border-[var(--color-danger)] bg-[var(--color-danger-bg)]">
+              <div className="text-xs text-[var(--color-danger)]">متأخر</div>
+              <div className="mt-1 text-lg font-bold text-[var(--color-danger)]">
                 <Currency value={overdueTotal} />
               </div>
             </div>
           )}
-          <div className="p-3 rounded-xl border border-amber-200 bg-amber-50">
-            <div className="text-xs text-amber-700">مستحق هذا الشهر</div>
-            <div className="mt-1 text-lg font-bold text-amber-800">
+          <div className="p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)]">
+            <div className="text-xs text-[var(--color-warning)]">مستحق هذا الشهر</div>
+            <div className="mt-1 text-lg font-bold text-[var(--color-warning)]">
               <Currency value={thisMonthDue} />
             </div>
           </div>
@@ -827,7 +827,7 @@ function LedgerRecurringTab(props) {
             {ledgerAlerts.map((a) => (
               <div
                 key={a.id}
-                className="p-3 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-800"
+                className="p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-sm text-[var(--color-warning)]"
               >
                 <span className="font-semibold">{a.title}</span>: {a.reason}
               </div>
@@ -870,7 +870,7 @@ function LedgerRecurringTab(props) {
                       <Currency value={data?.pricedTotal || 0} />
                     </div>
                     {(data?.unpricedCount || 0) > 0 && (
-                      <div className="text-[11px] text-amber-600 mt-1">
+                      <div className="text-[11px] text-[var(--color-warning)] mt-1">
                         {data.unpricedCount} غير مسعّر
                       </div>
                     )}
@@ -898,7 +898,7 @@ function LedgerRecurringTab(props) {
                           </span>
                           <div className="flex-1 h-4 bg-[var(--color-bg)] rounded-full overflow-hidden border border-[var(--color-border)]">
                             <div
-                              className="h-full bg-blue-500 rounded-full"
+                              className="h-full bg-[var(--color-primary)] rounded-full"
                               style={{ width: `${pct}%` }}
                             />
                           </div>
@@ -959,7 +959,7 @@ function LedgerRecurringTab(props) {
                       yearlyTarget: budgetForm.yearlyTarget,
                     })
                   }
-                  className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                  className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
                 >
                   حفظ الميزانية
                 </button>
@@ -967,7 +967,7 @@ function LedgerRecurringTab(props) {
               {budgetsHealth &&
                 (budgetsHealth.monthlyTarget > 0 || budgetsHealth.yearlyTarget > 0) && (
                   <div
-                    className={`mt-2 p-3 rounded-xl border text-sm ${budgetsHealth.status === 'danger' ? 'border-red-200 bg-red-50 text-red-700' : budgetsHealth.status === 'warn' ? 'border-amber-200 bg-amber-50 text-amber-700' : 'border-green-200 bg-green-50 text-green-700'}`}
+                    className={`mt-2 p-3 rounded-xl border text-sm ${budgetsHealth.status === 'danger' ? 'border-[var(--color-danger)] bg-[var(--color-danger-bg)] text-[var(--color-danger)]' : budgetsHealth.status === 'warn' ? 'border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-[var(--color-warning)]' : 'border-[var(--color-success)] bg-[var(--color-success-bg)] text-[var(--color-success)]'}`}
                   >
                     {budgetsHealth.status === 'danger'
                       ? 'تجاوز الميزانية'
@@ -993,7 +993,7 @@ function LedgerRecurringTab(props) {
                   <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] text-center">
                     <div className="text-xs text-[var(--color-muted)]">الدرجة</div>
                     <div
-                      className={`mt-1 text-2xl font-bold ${health.score >= 70 ? 'text-green-700' : health.score >= 40 ? 'text-amber-700' : 'text-red-700'}`}
+                      className={`mt-1 text-2xl font-bold ${health.score >= 70 ? 'text-[var(--color-success)]' : health.score >= 40 ? 'text-[var(--color-warning)]' : 'text-[var(--color-danger)]'}`}
                     >
                       {health.score || 0}
                     </div>

@@ -154,13 +154,13 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
       ref={backdropRef}
       onClick={handleBackdropClick}
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.5)' }}
+      style={{ background: 'var(--color-overlay)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="contract-qp-title"
     >
       <div
-        className="w-full max-w-md bg-[var(--color-surface)] rounded-t-2xl md:rounded-2xl border border-[var(--color-border)] shadow-xl p-5 max-h-[85vh] overflow-y-auto"
+        className="modal-sheet w-full max-w-md bg-[var(--color-surface)] rounded-t-2xl md:rounded-2xl p-5 max-h-[85vh] overflow-y-auto"
         dir="rtl"
       >
         {/* رأس النافذة */}
@@ -307,15 +307,14 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="flex-1 px-4 py-2.5 rounded-lg text-white text-sm font-medium disabled:opacity-60"
-            style={{ background: 'var(--color-primary)' }}
+            className="btn-primary flex-1 disabled:opacity-60"
           >
             {saving ? 'جاري التسجيل...' : 'تسجيل الدفعة'}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2.5 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+            className="btn-secondary"
           >
             إلغاء
           </button>

@@ -504,7 +504,7 @@ export const SummaryCard = ({ label, value, color = 'blue', icon }) => {
   };
   const colorVar = colorMap[color] || colorMap.blue;
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm">
+    <div className="summary-card bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-[var(--color-muted)]">{label}</span>
         {icon && <span style={{ color: `var(${colorVar})` }}>{icon}</span>}
@@ -530,12 +530,12 @@ export const MobileFAB = ({ onClick, label = 'إضافة', icon }) => {
       className="md:hidden fixed z-40 rounded-full shadow-lg flex items-center justify-center no-print transition-transform active:scale-95"
       style={{
         bottom: 'calc(3.5rem + env(safe-area-inset-bottom, 0px) + 1rem)',
-        left: '1rem',
+        insetInlineStart: '1rem',
         width: '3.5rem',
         height: '3.5rem',
         backgroundColor: 'var(--color-primary)',
-        color: '#fff',
-        boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+        color: 'var(--color-text-inverse)',
+        boxShadow: 'var(--shadow)',
       }}
     >
       <FABIcon size={24} />
@@ -544,8 +544,8 @@ export const MobileFAB = ({ onClick, label = 'إضافة', icon }) => {
 };
 
 export const EmptyState = ({ message, icon, title, description, actionLabel, onAction }) => (
-  <div className="flex flex-col items-center justify-center py-12 text-center">
-    <div className="w-16 h-16 rounded-2xl bg-[var(--color-bg)] flex items-center justify-center mb-4">
+  <div className="panel-card flex flex-col items-center justify-center py-12 text-center">
+    <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-alt)] flex items-center justify-center mb-4">
       {icon || <Icons.empty size={40} className="text-[var(--color-muted)]" aria-hidden="true" />}
     </div>
     {title && <h3 className="text-lg font-bold text-[var(--color-text)] mb-1">{title}</h3>}
@@ -555,7 +555,7 @@ export const EmptyState = ({ message, icon, title, description, actionLabel, onA
         type="button"
         onClick={onAction}
         className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors"
-        style={{ backgroundColor: 'var(--color-info)' }}
+        style={{ backgroundColor: 'var(--color-primary)' }}
       >
         {actionLabel}
       </button>

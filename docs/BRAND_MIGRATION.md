@@ -21,9 +21,9 @@
 | **Neutrals** | `--gray` | `#8A8F98` | نصوص ثانوية، تسميات |
 | | `--gray-light` | `#C8CBD0` | placeholder |
 | | `--gray-bg` | `#F4F5F6` | خلفيات محايدة |
-| **Accent** | `--gold` | `#B8A76A` | عناصر تفاعلية مهمة فقط (محدود جداً) |
-| | `--gold-light` | `rgba(184, 167, 106, 0.15)` | focus ring، تمييز خفيف |
-| | `--gold-subtle` | `rgba(184, 167, 106, 0.08)` | badges، خلفيات تسميات |
+| **Accent** | `--gold` | `#6B5A2E` | عناصر تفاعلية مهمة فقط (محدود جداً) |
+| | `--gold-light` | `rgba(107, 90, 46, 0.15)` | focus ring، تمييز خفيف |
+| | `--gold-subtle` | `rgba(107, 90, 46, 0.08)` | badges، خلفيات تسميات |
 | **Backgrounds** | `--white` | `#FFFFFF` | |
 | | `--off-white` | `#FAFBFC` | خلفية الصفحة، حقول الإدخال |
 | **Borders & Shadows** | `--border` | `rgba(15, 28, 46, 0.08)` | حدود رفيعة |

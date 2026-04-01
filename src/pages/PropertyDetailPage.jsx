@@ -494,7 +494,7 @@ function PropertyEditForm({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
         </button>
@@ -628,7 +628,7 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ الوحدة' : 'إضافة الوحدة'}
         </button>
@@ -1003,7 +1003,7 @@ export default function PropertyDetailPage() {
   const propertyStatusColor = getPropertyStatusColor(property.status);
 
   return (
-    <div className="px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
       <div className="text-sm text-[var(--color-muted)] mb-3">
         <button type="button" onClick={() => navigate('/properties')} className="hover:underline">
           العقارات
@@ -1012,13 +1012,14 @@ export default function PropertyDetailPage() {
         <span>{property.name}</span>
       </div>
 
-      <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
+      <div className="detail-hero panel-card bg-[var(--color-surface)] mb-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <span className="text-[var(--color-primary)]" aria-hidden="true">
               <Icons.properties size={30} />
             </span>
             <div className="min-w-0">
+              <span className="page-kicker">ملف الأصل</span>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text)]">
                   {property.name}
@@ -1043,14 +1044,14 @@ export default function PropertyDetailPage() {
             <button
               type="button"
               onClick={openPropertyEditor}
-              className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              className="btn-primary"
             >
               تعديل العقار
             </button>
             <button
               type="button"
               onClick={() => navigate('/properties')}
-              className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+              className="btn-secondary"
             >
               رجوع للقائمة
             </button>
@@ -1101,7 +1102,7 @@ export default function PropertyDetailPage() {
         />
       </div>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات العقار</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <PropertyInfoItem label="النوع" value={getPropertyTypeLabel(property.type)} />
@@ -1125,7 +1126,7 @@ export default function PropertyDetailPage() {
         </div>
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <div className="flex items-center justify-between gap-3 mb-3">
           <h2 className="font-bold text-[var(--color-text)]">المالك</h2>
           {owner?.id && (
@@ -1218,7 +1219,7 @@ export default function PropertyDetailPage() {
           <button
             type="button"
             onClick={startCreateUnit}
-            className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="btn-primary"
           >
             إضافة وحدة
           </button>

@@ -62,9 +62,9 @@ const AppLogo = () => (
 
 // ─── ستايل مشترك للحقول ─────────────────────────────────────────
 const inputStyle = {
-  background: 'var(--color-bg, #f8fafc)',
-  border: '1px solid var(--color-border, #e2e8f0)',
-  color: 'var(--color-text, #0f172a)',
+  background: 'var(--color-background)',
+  border: '1px solid var(--color-border)',
+  color: 'var(--color-text-primary)',
 };
 
 // ─── المكون الرئيسي ─────────────────────────────────────────────
@@ -184,23 +184,23 @@ const AuthPage = () => {
       dir="rtl"
       className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
       style={{
-        background: 'var(--color-bg, #f8fafc)',
-        color: 'var(--color-text, #0f172a)',
+        background: 'var(--color-background)',
+        color: 'var(--color-text-primary)',
         fontFamily: '"IBM Plex Sans Arabic", sans-serif',
       }}
     >
       {/* ── الشعار والعنوان ──────────────────────────────────────── */}
       <div className="text-center mb-8">
         <div
-          className="mx-auto mb-4 w-16 h-16 flex items-center justify-center rounded-2xl"
-          style={{ background: 'var(--color-primary, #0b2d4a)', color: '#fff' }}
+          className="mx-auto mb-4 w-16 h-16 flex items-center justify-center rounded-2xl shadow-sm"
+          style={{ background: 'var(--color-primary)', color: 'var(--color-text-inverse)' }}
         >
           <AppLogo />
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text, #0f172a)' }}>
+        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
           قيد العقار
         </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-muted, #64748b)' }}>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
           إدارة التدفقات المالية لمكتبك العقاري
         </p>
       </div>
@@ -209,13 +209,13 @@ const AuthPage = () => {
       <div
         className="w-full max-w-sm rounded-2xl p-6 shadow-lg"
         style={{
-          background: 'var(--color-surface, #ffffff)',
-          border: '1px solid var(--color-border, #e2e8f0)',
+          background: 'var(--color-surface)',
+          border: '1px solid var(--color-border)',
         }}
       >
         <h2
           className="text-lg font-bold mb-5 text-center"
-          style={{ color: 'var(--color-text, #0f172a)' }}
+          style={{ color: 'var(--color-text-primary)' }}
         >
           {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
         </h2>
@@ -226,7 +226,7 @@ const AuthPage = () => {
             <div className="mb-4">
               <label
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text, #0f172a)' }}
+                style={{ color: 'var(--color-text-primary)' }}
               >
                 اسم المكتب العقاري
               </label>
@@ -248,7 +248,7 @@ const AuthPage = () => {
             <div className="mb-4">
               <label
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text, #0f172a)' }}
+                style={{ color: 'var(--color-text-primary)' }}
               >
                 الاسم الكامل
               </label>
@@ -270,7 +270,7 @@ const AuthPage = () => {
           <div className="mb-4">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: 'var(--color-text, #0f172a)' }}
+              style={{ color: 'var(--color-text-primary)' }}
             >
               البريد الإلكتروني
             </label>
@@ -291,7 +291,7 @@ const AuthPage = () => {
           <div className="mb-4">
             <label
               className="block text-sm font-medium mb-1.5"
-              style={{ color: 'var(--color-text, #0f172a)' }}
+              style={{ color: 'var(--color-text-primary)' }}
             >
               كلمة المرور
             </label>
@@ -313,7 +313,7 @@ const AuthPage = () => {
             <div className="mb-4">
               <label
                 className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text, #0f172a)' }}
+                style={{ color: 'var(--color-text-primary)' }}
               >
                 تأكيد كلمة المرور
               </label>
@@ -337,9 +337,9 @@ const AuthPage = () => {
               className="mb-4 p-3 rounded-lg text-sm text-center"
               role="alert"
               style={{
-                background: 'rgba(239, 68, 68, 0.08)',
-                color: '#dc2626',
-                border: '1px solid rgba(239, 68, 68, 0.2)',
+                background: 'var(--color-danger-bg)',
+                color: 'var(--color-danger)',
+                border: '1px solid color-mix(in srgb, var(--color-danger) 24%, transparent)',
               }}
             >
               {error}
@@ -352,9 +352,9 @@ const AuthPage = () => {
               className="mb-4 p-3 rounded-lg text-sm text-center"
               role="status"
               style={{
-                background: 'rgba(34, 197, 94, 0.08)',
-                color: '#16a34a',
-                border: '1px solid rgba(34, 197, 94, 0.2)',
+                background: 'var(--color-success-bg)',
+                color: 'var(--color-success)',
+                border: '1px solid color-mix(in srgb, var(--color-success) 24%, transparent)',
               }}
             >
               {successMsg}
@@ -367,8 +367,8 @@ const AuthPage = () => {
             disabled={loading}
             className="w-full rounded-lg py-2.5 text-sm font-semibold transition-opacity"
             style={{
-              background: 'var(--color-primary, #0b2d4a)',
-              color: '#fff',
+              background: 'var(--color-primary)',
+              color: 'var(--color-text-inverse)',
               opacity: loading ? 0.6 : 1,
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
@@ -380,25 +380,25 @@ const AuthPage = () => {
         {/* ── تبديل الوضع ─────────────────────────────────────────── */}
         <div className="text-center mt-5">
           {isLogin ? (
-            <p className="text-sm" style={{ color: 'var(--color-muted, #64748b)' }}>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               ليس لديك حساب؟{' '}
               <button
                 type="button"
                 onClick={() => switchMode('signup')}
                 className="font-medium underline hover:no-underline"
-                style={{ color: 'var(--color-primary, #0b2d4a)' }}
+                style={{ color: 'var(--color-primary)' }}
               >
                 أنشئ حساباً جديداً
               </button>
             </p>
           ) : (
-            <p className="text-sm" style={{ color: 'var(--color-muted, #64748b)' }}>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               لديك حساب بالفعل؟{' '}
               <button
                 type="button"
                 onClick={() => switchMode('login')}
                 className="font-medium underline hover:no-underline"
-                style={{ color: 'var(--color-primary, #0b2d4a)' }}
+                style={{ color: 'var(--color-primary)' }}
               >
                 سجّل دخول
               </button>
@@ -408,7 +408,7 @@ const AuthPage = () => {
       </div>
 
       {/* ── تذييل ─────────────────────────────────────────────────── */}
-      <p className="text-xs mt-6" style={{ color: 'var(--color-muted, #64748b)' }}>
+      <p className="text-xs mt-6" style={{ color: 'var(--color-text-secondary)' }}>
         &copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.
       </p>
     </div>

@@ -116,7 +116,7 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
           type="button"
           onClick={onSubmit}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium disabled:opacity-60"
+          className="btn-primary disabled:opacity-60"
         >
           {saving ? 'جاري التسجيل...' : 'تسجيل الدفعة'}
         </button>
@@ -206,7 +206,8 @@ function PaymentsTable({ payments, receiptsMap, onViewReceipt }) {
                     <button
                       type="button"
                       onClick={() => onViewReceipt(receipt)}
-                      className="text-xs px-2 py-1 rounded border border-[var(--color-primary)] text-[var(--color-primary)] hover:bg-[var(--color-primary)] hover:text-white transition-colors"
+                      className="btn-secondary !min-h-0 !px-2 !py-1 text-xs"
+                      style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
                     >
                       عرض السند
                     </button>
@@ -351,7 +352,7 @@ export default function ContractDetailPage() {
   const expiring = isExpiringSoon(contract.endDate);
 
   return (
-    <div className="px-4 md:px-6 max-w-5xl mx-auto py-4" dir="rtl">
+    <div className="page-shell px-4 md:px-6 max-w-5xl mx-auto py-4" dir="rtl">
       <div className="text-sm text-[var(--color-muted)] mb-3">
         <button type="button" onClick={() => navigate('/contracts')} className="hover:underline">
           العقود
@@ -360,13 +361,14 @@ export default function ContractDetailPage() {
         <span>{contract.contractNumber || property?.name || 'تفاصيل العقد'}</span>
       </div>
 
-      <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
+      <div className="detail-hero panel-card bg-[var(--color-surface)] mb-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <span className="text-[var(--color-primary)]" aria-hidden="true">
               <Icons.contracts size={30} />
             </span>
             <div className="min-w-0">
+              <span className="page-kicker">ملف الالتزام</span>
               <div className="flex flex-wrap items-center gap-2 mb-2">
                 <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text)]">
                   {contract.contractNumber ? `عقد #${contract.contractNumber}` : 'تفاصيل العقد'}
@@ -387,7 +389,7 @@ export default function ContractDetailPage() {
           <button
             type="button"
             onClick={() => navigate('/contracts')}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+            className="btn-secondary"
           >
             رجوع للقائمة
           </button>
@@ -427,7 +429,7 @@ export default function ContractDetailPage() {
         />
       </div>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات العقد</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <InfoCard label="رقم العقد" value={contract.contractNumber} />
@@ -455,7 +457,7 @@ export default function ContractDetailPage() {
         </div>
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <h2 className="font-bold text-[var(--color-text)] mb-3">الارتباطات</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">

@@ -127,7 +127,7 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
         <button
           type="button"
           onClick={() => onRecordPayment(due)}
-          className="flex-shrink-0 w-5 h-5 rounded border-2 border-[var(--color-border)] hover:border-blue-500"
+          className="flex-shrink-0 w-5 h-5 rounded border-2 border-[var(--color-border)] hover:border-[var(--color-primary)]"
           aria-label="تسجيل دفعة"
         />
       </div>
@@ -276,7 +276,7 @@ export default function InboxPage({ setPage }) {
 
   return (
     <div
-      className="inbox-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-2xl mx-auto"
+      className="page-shell inbox-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-2xl mx-auto"
       dir="rtl"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -292,9 +292,15 @@ export default function InboxPage({ setPage }) {
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-3 flex-wrap mb-4">
-        <h1 className="text-xl font-bold text-[var(--color-text)]">المستحقات</h1>
-        <div className="flex items-center gap-2">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">المتابعة اليومية</span>
+          <h1 className="page-title">المستحقات</h1>
+          <p className="page-subtitle">
+            راقب البنود المتأخرة وما يستحق خلال الأسبوع والشهر مع إجراءات مباشرة وسريعة.
+          </p>
+        </div>
+        <div className="page-actions">
           {ledgers.length > 0 && (
             <select
               value={activeLedgerId}

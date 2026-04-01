@@ -45,7 +45,8 @@ export const WelcomeBanner = () => {
         <div className="banner-text">
           <strong>مرحبًا بك في قيد العقار!</strong>
           <p>
-            ابدأ بإنشاء دفتر (عقار)، ثم سجّل الدخل والمصروفات، وسيتم احتساب التحليل المالي تلقائيًا.
+            ابدأ بإنشاء دفتر واضح لكل أصل، ثم سجّل الحركات الأساسية ليظهر لك التحليل المالي
+            والتنبيهات التشغيلية تلقائياً.
           </p>
         </div>
         <button type="button" onClick={dismiss} className="banner-close" aria-label="إغلاق">

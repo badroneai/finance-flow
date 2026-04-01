@@ -72,6 +72,9 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
   const zeroY = chartHeight / 2;
   const scale = zeroY / maxAbs;
   const svgWidth = Math.max(280, dayData.length * 48);
+  const incomeColor = 'var(--color-success)';
+  const expenseColor = 'var(--color-danger)';
+  const gridColor = 'var(--color-border)';
 
   return (
     <div
@@ -93,7 +96,7 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
             y1={zeroY + 22}
             x2={svgWidth}
             y2={zeroY + 22}
-            stroke="#e5e7eb"
+            stroke={gridColor}
             strokeWidth="1"
             strokeDasharray="4 2"
           />
@@ -114,7 +117,7 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
                     y={groupZero - incomeH}
                     width="10"
                     height={incomeH}
-                    fill="#10B981"
+                    fill={incomeColor}
                     opacity={opacity}
                     rx="2"
                   />
@@ -126,7 +129,7 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
                     y={groupZero}
                     width="10"
                     height={expenseH}
-                    fill="#EF4444"
+                    fill={expenseColor}
                     opacity={opacity}
                     rx="2"
                   />
@@ -136,7 +139,7 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
                   x={0}
                   y={row.net >= 0 ? groupZero - incomeH - 6 : groupZero + expenseH + 14}
                   textAnchor="middle"
-                  className="fill-gray-600"
+                  fill="var(--color-text-secondary)"
                   style={{ fontSize: 10 }}
                 >
                   {row.net !== 0 ? (row.net >= 0 ? '+' : '') + formatMoney(row.net) : ''}
@@ -146,7 +149,8 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
                   x={0}
                   y={chartHeight + 14}
                   textAnchor="middle"
-                  className={isWeekend ? 'fill-gray-400' : 'fill-gray-700'}
+                  fill={isWeekend ? 'var(--color-text-secondary)' : 'var(--color-text-primary)'}
+                  opacity={isWeekend ? 0.65 : 1}
                   style={{ fontSize: 10 }}
                 >
                   {row.label.slice(0, 3)}

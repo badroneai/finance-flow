@@ -329,7 +329,7 @@ function ContractForm({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة العقد'}
         </button>
@@ -639,10 +639,15 @@ export default function ContractsPage({ setPage }) {
   }, [confirmDelete, deleteContract, toast]);
 
   return (
-    <div className="px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
-      {/* العنوان + زر إضافة */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-[var(--color-text)]">العقود</h2>
+    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">الارتباطات النظامية</span>
+          <h1 className="page-title">العقود</h1>
+          <p className="page-subtitle">
+            اربط العقارات بالعملاء بدقة، وتابع الحالة والتجديد والدفع من واجهة واحدة.
+          </p>
+        </div>
         {!showForm && (
           <button
             type="button"
@@ -652,7 +657,7 @@ export default function ContractsPage({ setPage }) {
               setEditId(null);
               setShowForm(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="btn-primary"
           >
             <Icons.plus size={16} />
             إضافة عقد
@@ -721,7 +726,7 @@ export default function ContractsPage({ setPage }) {
 
       {/* فلاتر */}
       {contracts.length > 0 && (
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="control-toolbar flex flex-wrap gap-3 mb-4 p-3">
           <div className="flex-1 min-w-[180px]">
             <input
               type="text"

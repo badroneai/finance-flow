@@ -1,0 +1,322 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Direction C — مستوحى من Wise / N26
+   ─────────────────────────────────────────────────────────────────
+   مبدأ: العلامة التجارية تتكلم بثقة. الذهبي حاضر ولكن ليس زاعق.
+   • الذهبي هو لون CTA الرئيسي
+   • الكحلي للهيكل والعناوين
+   • بطاقات بخط ذهبي يساري
+   • أزرار واثقة بلا زخرفة
+   • نظيف وبسيط مع شخصية واضحة
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Body ─── */
+[data-direction="c"] body {
+  background: #FAFBFC;
+}
+
+/* ─── Topbar ─── */
+[data-direction="c"] .topbar-shell {
+  background: #fff;
+  border-bottom: 1px solid #E8EAED;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+[data-direction="c"] .topbar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--qa-navy);
+}
+
+[data-direction="c"] .topbar-date {
+  border-radius: 6px;
+  border: 1px solid #E8EAED;
+  background: #FAFBFC;
+  color: #6B7280;
+}
+
+/* ─── Sidebar ─── */
+[data-direction="c"] .sidebar-shell {
+  background: var(--qa-navy);
+  border-inline-start: none;
+  box-shadow: none;
+}
+
+[data-direction="c"] .sidebar-brand {
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+[data-direction="c"] .sidebar-brand-mark {
+  border-radius: 8px;
+  background: var(--qa-gold);
+  color: #fff;
+}
+
+[data-direction="c"] .sidebar-brand-title {
+  color: #fff;
+  font-weight: 600;
+}
+
+[data-direction="c"] .sidebar-brand-subtitle {
+  color: rgba(255,255,255,0.5);
+}
+
+[data-direction="c"] .sidebar-nav-button {
+  color: rgba(255,255,255,0.6);
+  border-radius: 6px;
+  padding: 0.65rem 0.8rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+[data-direction="c"] .sidebar-nav-button:hover {
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
+}
+
+[data-direction="c"] .sidebar-nav-button.is-active {
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: none;
+  outline: none;
+  border-inline-end: 3px solid var(--qa-gold);
+}
+
+[data-direction="c"] .sidebar-toggle {
+  border-top: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.4);
+}
+
+[data-direction="c"] .sidebar-toggle:hover {
+  color: rgba(255,255,255,0.7);
+  background: rgba(255,255,255,0.04);
+}
+
+/* ─── Summary Cards — خط ذهبي يساري ─── */
+[data-direction="c"] .summary-card,
+[data-direction="c"] .page-panel,
+[data-direction="c"] .panel-card {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  border-inline-start: 3px solid var(--qa-gold);
+}
+
+[data-direction="c"] .summary-card::before {
+  display: none;
+}
+
+/* ─── Welcome Banner ─── */
+[data-direction="c"] .welcome-banner {
+  background: var(--qa-navy);
+  border: none;
+  border-radius: 10px;
+  box-shadow: none;
+  padding: 1.25rem 1.5rem;
+  border-inline-start: 4px solid var(--qa-gold);
+}
+
+[data-direction="c"] .welcome-banner::after {
+  display: none;
+}
+
+/* ─── Page Header ─── */
+[data-direction="c"] .page-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--qa-navy);
+}
+
+[data-direction="c"] .page-kicker {
+  background: rgba(107,90,46,0.08);
+  border: none;
+  color: var(--qa-gold);
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* ─── Buttons — الذهبي هو CTA ─── */
+[data-direction="c"] .btn-primary {
+  background: var(--qa-gold);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  font-weight: 600;
+  padding: 0.65rem 1.15rem;
+  min-height: 2.5rem;
+}
+
+[data-direction="c"] .btn-primary:hover {
+  background: #5A4B26;
+  transform: none;
+}
+
+[data-direction="c"] .btn-secondary {
+  background: #fff;
+  color: var(--qa-navy);
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  box-shadow: none;
+  font-weight: 500;
+  min-height: 2.5rem;
+}
+
+[data-direction="c"] .btn-secondary:hover {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+[data-direction="c"] .btn-danger {
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* ─── Table ─── */
+[data-direction="c"] #root table thead tr {
+  background: var(--qa-navy) !important;
+}
+
+[data-direction="c"] #root table thead th {
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.7rem 1rem !important;
+}
+
+[data-direction="c"] #root table tbody tr:nth-child(even) {
+  background: #FAFBFC;
+}
+
+[data-direction="c"] #root table tbody tr:hover {
+  background: rgba(107,90,46,0.04) !important;
+}
+
+[data-direction="c"] #root table tbody td {
+  padding: 0.75rem 1rem !important;
+  font-size: 0.875rem;
+  border-bottom: 1px solid #F3F4F6;
+}
+
+/* ─── Inputs ─── */
+[data-direction="c"] #root input[type='text'],
+[data-direction="c"] #root input[type='search'],
+[data-direction="c"] #root input[type='number'],
+[data-direction="c"] #root input[type='date'],
+[data-direction="c"] #root select,
+[data-direction="c"] #root textarea {
+  border: 1px solid #D1D5DB;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: none;
+  min-height: 2.5rem;
+}
+
+[data-direction="c"] #root input:focus,
+[data-direction="c"] #root select:focus,
+[data-direction="c"] #root textarea:focus {
+  border-color: var(--qa-gold);
+  box-shadow: 0 0 0 3px rgba(107,90,46,0.1);
+}
+
+/* ─── Bottom Nav ─── */
+[data-direction="c"] .bottom-nav-shell {
+  background: #fff;
+  border-top: 1px solid #E8EAED;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+[data-direction="c"] .bottom-nav-item.is-active {
+  color: var(--qa-gold);
+}
+
+[data-direction="c"] .bottom-nav-item.is-active::after {
+  background: var(--qa-gold);
+  height: 3px;
+}
+
+/* ─── Detail sections ─── */
+[data-direction="c"] .detail-hero,
+[data-direction="c"] .detail-section,
+[data-direction="c"] .report-section,
+[data-direction="c"] .modal-sheet {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}
+
+/* ─── Report metrics ─── */
+[data-direction="c"] .report-metric {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: none;
+  border-inline-start: 3px solid var(--qa-gold);
+}
+
+[data-direction="c"] .report-metric::before {
+  display: none;
+}
+
+/* ─── Report table ─── */
+[data-direction="c"] .report-table-wrap {
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+/* ─── Control Toolbar ─── */
+[data-direction="c"] .control-toolbar {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* ─── Empty state ─── */
+[data-direction="c"] .empty-state {
+  background: #fff;
+  border: 1px dashed #D1D5DB;
+  border-radius: 10px;
+  box-shadow: none;
+}
+
+[data-direction="c"] .empty-state .empty-icon {
+  background: rgba(107,90,46,0.08);
+  border-radius: 10px;
+  color: var(--qa-gold);
+}
+
+[data-direction="c"] .empty-state .empty-cta {
+  background: var(--qa-gold);
+  color: #fff;
+  border-radius: 8px;
+  box-shadow: none;
+  font-weight: 600;
+}
+
+[data-direction="c"] .empty-state .empty-cta:hover {
+  background: #5A4B26;
+  transform: none;
+}
+
+/* ─── Dialog ─── */
+[data-direction="c"] #root [role='dialog'] {
+  border: 1px solid #E8EAED;
+  border-radius: 10px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+/* ─── Cards hover ─── */
+[data-direction="c"] #root .bg-white.rounded-xl,
+[data-direction="c"] #root .bg-\[var\(--color-surface\)\].rounded-xl {
+  border: 1px solid #E8EAED;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+}

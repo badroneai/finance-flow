@@ -14,11 +14,16 @@ export function LedgerHeader({ tab, onTabSelect }) {
     if (id) onTabSelect(id);
   };
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <h3 className="font-bold text-[var(--color-text)] mb-1">الدفاتر</h3>
-      <p className="text-sm text-[var(--color-muted)]">
-        أنشئ عدة دفاتر لإدارة أكثر من جهة/مكتب (النسخة الحالية تبدأ بدفتر افتراضي).
-      </p>
+    <div className="panel-card bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 mb-4">
+      <div className="page-header mb-0">
+        <div className="page-header-copy">
+          <span className="page-kicker">المحفظة التشغيلية</span>
+          <h1 className="page-title">الدفاتر</h1>
+          <p className="page-subtitle">
+            أنشئ دفاتر متعددة لإدارة أكثر من جهة أو أصل، ثم انتقل بين الالتزامات والأداء والتقارير.
+          </p>
+        </div>
+      </div>
 
       <div className="flex flex-wrap gap-2 mt-4" role="tablist" aria-label="تبويبات الدفاتر">
         {LEDGER_TABS.map(({ id, label }) => (
@@ -31,7 +36,7 @@ export function LedgerHeader({ tab, onTabSelect }) {
             aria-selected={tab === id}
             aria-controls={`tabpanel-${id}`}
             onClick={handleClick}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === id ? 'bg-blue-600 text-white' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted)] hover:bg-[var(--color-bg)]'}`}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === id ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)]' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted)] hover:bg-[var(--color-bg)]'}`}
           >
             {label}
           </button>

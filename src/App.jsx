@@ -16,6 +16,7 @@ import { TooltipTour, isTourSeen, resetTour } from './ui/TooltipTour.jsx';
 import { Icons } from './ui/ui-common.jsx';
 import { ProtectedRoute } from './ui/ProtectedRoute.jsx';
 import { DemoBanner } from './ui/DemoBanner.jsx';
+import { DirectionSwitcher } from './ui/DirectionSwitcher.jsx';
 
 import {
   NAV_ITEMS as NAV_ITEMS_CONFIG,
@@ -272,10 +273,11 @@ const App = () => {
       <UnsavedContext.Provider value={setDirty}>
         <TrustChecks />
         <DemoBanner />
+        <DirectionSwitcher />
         <div className="app-shell flex min-h-screen">
           <a
             href="#main-content"
-            className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-[var(--color-surface)] focus:text-[var(--color-text)] focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-blue-600 focus:outline-none focus:fixed focus:top-4 focus:start-4"
+            className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-[var(--color-surface)] focus:text-[var(--color-text)] focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none focus:fixed focus:top-4 focus:start-4"
           >
             تخطي إلى المحتوى الرئيسي
           </a>
@@ -294,7 +296,7 @@ const App = () => {
             }}
           />
           <main
-            className="flex-1 min-w-0 flex flex-col pb-20 md:pb-0"
+            className="app-main flex-1 pb-20 md:pb-0"
             id="main-content"
             role="main"
             aria-label="المحتوى الرئيسي"
@@ -308,7 +310,7 @@ const App = () => {
               setPage={setPage}
             />
             <PulseAlertsBanner page={page} onGoToInbox={() => setPage('inbox')} />
-            <div className="px-4 md:px-6 max-w-4xl mx-auto">
+            <div className="app-content-frame px-4 md:px-6">
               {!showOnboarding && <WelcomeBanner />}
             </div>
 
@@ -479,7 +481,7 @@ const App = () => {
             )}
 
             <footer
-              className="no-print border-t border-[var(--color-border)] py-3 px-4 text-center text-sm text-[var(--color-muted)]"
+              className="app-footer no-print py-3 px-4 text-center text-sm"
               role="contentinfo"
             >
               <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>

@@ -28,7 +28,7 @@ function QuickActions({ navigate }) {
       icon: Icons.plus,
       onClick: () => navigate('/transactions'),
       bg: 'var(--color-primary)',
-      color: '#fff',
+      color: 'var(--color-text-inverse)',
     },
     {
       label: 'التقرير الشهري',
@@ -264,8 +264,7 @@ export default function PulsePage({ setPage }) {
             <button
               type="button"
               onClick={() => refresh(true)}
-              className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-              style={{ backgroundColor: 'var(--color-info)' }}
+              className="btn-primary mt-4"
             >
               إعادة المحاولة
             </button>
@@ -290,8 +289,7 @@ export default function PulsePage({ setPage }) {
               <button
                 type="button"
                 onClick={() => setPage('ledgers')}
-                className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-                style={{ backgroundColor: 'var(--color-info)' }}
+                className="btn-primary mt-4"
               >
                 فتح الدفاتر
               </button>
@@ -352,7 +350,7 @@ export default function PulsePage({ setPage }) {
               <button
                 type="button"
                 onClick={() => setPage('transactions')}
-                className="mt-3 px-3 py-1.5 rounded-lg text-white text-sm font-medium hover:opacity-90"
+                className="btn-primary mt-3"
                 style={{ background: 'var(--color-warning)' }}
               >
                 سجّل حركة

@@ -25,7 +25,7 @@ export class LedgerTabErrorBoundary extends React.Component {
             <button
               type="button"
               onClick={this.props.onBack}
-              className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+              className="btn-primary"
               aria-label="العودة للدفاتر"
             >
               العودة إلى الدفاتر
@@ -60,7 +60,7 @@ export class PageLoadErrorBoundary extends React.Component {
               <button
                 type="button"
                 onClick={this.props.onGoHome}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="btn-primary"
                 aria-label="العودة للنبض المالي"
               >
                 العودة للنبض المالي
@@ -121,12 +121,12 @@ export class ErrorBoundary extends React.Component {
               يمكنك إعادة تحميل التطبيق أو نسخ تفاصيل الخطأ للمساعدة الفنية.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <button
-                type="button"
-                onClick={this.handleReload}
-                className="px-5 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700"
-                aria-label="إعادة تحميل التطبيق"
-              >
+            <button
+              type="button"
+              onClick={this.handleReload}
+              className="btn-primary"
+              aria-label="إعادة تحميل التطبيق"
+            >
                 إعادة تحميل التطبيق
               </button>
               <button

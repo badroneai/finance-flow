@@ -260,7 +260,7 @@ function LedgerReportsTab(props) {
               <button
                 type="button"
                 onClick={openMonthlyReport}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
               >
                 عرض التقرير
               </button>
@@ -275,7 +275,7 @@ function LedgerReportsTab(props) {
                   type="button"
                   onClick={exportLedgerPDF}
                   disabled={pdfExporting}
-                  className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                  className="px-3 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
                   aria-label="تصدير كشف حساب PDF"
                 >
                   {pdfExporting ? 'جاري…' : 'كشف حساب PDF'}
@@ -312,13 +312,13 @@ function LedgerReportsTab(props) {
               </div>
               <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
                 <div className="text-xs text-[var(--color-muted)]">دخل 30 يوم</div>
-                <div className="mt-1 text-lg font-bold text-green-700">
+                <div className="mt-1 text-lg font-bold text-[var(--color-success)]">
                   <Currency value={pl30?.income ?? 0} />
                 </div>
               </div>
               <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] col-span-2 md:col-span-1">
                 <div className="text-xs text-[var(--color-muted)]">مصروف 30 يوم</div>
-                <div className="mt-1 text-lg font-bold text-red-700">
+                <div className="mt-1 text-lg font-bold text-[var(--color-danger)]">
                   <Currency value={pl30?.expense ?? 0} />
                 </div>
               </div>
@@ -341,7 +341,7 @@ function LedgerReportsTab(props) {
                   </Badge>
                 </div>
                 {compliance.overdueCount > 0 && (
-                  <span className="text-sm text-amber-700">
+                  <span className="text-sm text-[var(--color-warning)]">
                     استحقاقات متأخرة: {compliance.overdueCount}
                   </span>
                 )}

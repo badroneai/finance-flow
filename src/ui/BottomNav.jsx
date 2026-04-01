@@ -27,11 +27,11 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
 
   return (
     <nav
-      className="md:hidden no-print fixed bottom-0 left-0 right-0 z-40 bg-[var(--color-surface)] border-t border-[var(--color-border)] safe-area-pb"
+      className="bottom-nav-shell md:hidden no-print fixed bottom-0 left-0 right-0 z-40 safe-area-pb"
       aria-label="التنقل الرئيسي"
       dir="rtl"
     >
-      <div className="flex items-center justify-around h-14 max-w-lg mx-auto">
+      <div className="bottom-nav-inner">
         {mainItems.map((item) => {
           const Icon = item.icon;
           const isActive = page === item.id;
@@ -45,8 +45,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
               }}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
-              className="flex flex-col items-center justify-center flex-1 h-full gap-0.5 text-xs transition-colors"
-              style={{ color: isActive ? 'var(--color-info)' : 'var(--color-muted)' }}
+              className={`bottom-nav-item flex-1 text-xs ${isActive ? 'is-active' : ''}`}
             >
               {Icon && <Icon size={22} />}
               <span className="leading-tight">{item.label}</span>
@@ -61,8 +60,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
               onClick={() => setMoreOpen((v) => !v)}
               aria-label="المزيد"
               aria-expanded={moreOpen}
-              className="flex flex-col items-center justify-center w-full h-full gap-0.5 text-xs transition-colors"
-              style={{ color: isMoreActive ? 'var(--color-info)' : 'var(--color-muted)' }}
+              className={`bottom-nav-item w-full h-full text-xs ${isMoreActive ? 'is-active' : ''}`}
             >
               {MoreIcon ? <MoreIcon size={22} /> : <span style={{ fontSize: 18 }}>⋮</span>}
               <span className="leading-tight">المزيد</span>
@@ -70,7 +68,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
 
             {moreOpen && (
               <div
-                className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-[140px] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg overflow-hidden z-50"
+                className="bottom-nav-more-menu absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-[160px] rounded-2xl overflow-hidden z-50"
                 role="menu"
                 aria-label="قائمة المزيد"
               >

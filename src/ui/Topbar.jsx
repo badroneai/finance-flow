@@ -21,8 +21,17 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
     report: 'التقارير',
     settings: 'الإعدادات',
   };
+  const subtitles = {
+    pulse: 'ملخص سريع لصحة التدفق والحركة القادمة.',
+    inbox: 'تابع البنود المستحقة وما يحتاج إجراء اليوم.',
+    ledgers: 'نظّم دفاترك وراجع الأداء والالتزامات.',
+    transactions: 'سجّل الحركات المالية وفلترها بسرعة.',
+    commissions: 'راجع العمولات المستحقة والمنجزة بثقة.',
+    report: 'تقارير شهرية جاهزة للمراجعة والتصدير.',
+    settings: 'إعدادات الواجهة والنسخ الاحتياطي والبيانات.',
+  };
   return (
-    <header className="bg-[var(--color-surface)] border-b border-[var(--color-border)] sticky top-0 z-30 no-print flex flex-col">
+    <header className="topbar-shell no-print">
       {criticalFirst && (
         <CriticalAlertBanner
           criticalFirst={criticalFirst}
@@ -34,8 +43,8 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
           setPage={setPage}
         />
       )}
-      <div className="px-4 py-3 flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3 min-w-0 flex-1">
+      <div className="topbar-body">
+        <div className="flex items-start gap-3 min-w-0 flex-1">
           <button
             className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0"
             onClick={() => setMobileOpen(true)}
@@ -44,11 +53,12 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
           >
             <Icons.menu size={22} />
           </button>
-          <h2 className="text-lg font-bold text-[var(--color-text)] truncate">
-            {titles[page] || ''}
-          </h2>
+          <div className="topbar-heading">
+            <h2 className="topbar-title truncate">{titles[page] || ''}</h2>
+            <span className="topbar-subtitle">{subtitles[page] || 'واجهة تشغيل مالية واضحة.'}</span>
+          </div>
         </div>
-        <div className="flex items-center gap-2 flex-shrink-0">
+        <div className="topbar-meta">
           {setPage && (
             <AlertCenter
               setPage={setPage}
@@ -62,13 +72,11 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
               handleDismissAll={handleDismissAll}
             />
           )}
-          <div
-            className="text-xs text-[var(--color-muted)] text-start max-w-[14rem] sm:max-w-none whitespace-normal leading-snug"
-            dir="auto"
-            aria-label="التاريخ"
-          >
-            {headerDateText || ''}
-          </div>
+          {!!headerDateText && (
+            <div className="topbar-date" dir="auto" aria-label="التاريخ">
+              {headerDateText}
+            </div>
+          )}
         </div>
       </div>
     </header>

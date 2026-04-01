@@ -48,7 +48,7 @@ export default function ReceiptModal({ receipt, onClose }) {
         <title>سند قبض — ${receipt.receiptNumber || ''}</title>
         <style>
           * { box-sizing: border-box; margin: 0; padding: 0; }
-          body { font-family: "IBM Plex Sans Arabic", Tahoma, Arial, sans-serif; direction: rtl; padding: 24px; color: #1a1a2e; }
+          body { font-family: "IBM Plex Sans Arabic", Tahoma, Arial, sans-serif; direction: rtl; padding: 24px; color: #0F1C2E; }
           @media print { body { padding: 0; } }
         </style>
       </head>
@@ -87,13 +87,13 @@ export default function ReceiptModal({ receipt, onClose }) {
       ref={backdropRef}
       onClick={handleBackdropClick}
       className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      style={{ background: 'rgba(0,0,0,0.5)' }}
+      style={{ background: 'var(--color-overlay)' }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="receipt-modal-title"
     >
       <div
-        className="w-full max-w-lg bg-[var(--color-surface)] rounded-t-2xl md:rounded-2xl border border-[var(--color-border)] shadow-xl max-h-[90vh] overflow-y-auto"
+        className="receipt-sheet w-full max-w-lg bg-[var(--color-surface)] rounded-t-2xl md:rounded-2xl max-h-[90vh] overflow-y-auto"
         dir="rtl"
       >
         {/* أزرار التحكم */}
@@ -105,7 +105,7 @@ export default function ReceiptModal({ receipt, onClose }) {
             <button
               type="button"
               onClick={handlePrint}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]"
+              className="btn-secondary"
             >
               طباعة
             </button>
@@ -113,8 +113,7 @@ export default function ReceiptModal({ receipt, onClose }) {
               type="button"
               onClick={handleExportPdf}
               disabled={exporting}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium text-white disabled:opacity-60"
-              style={{ background: 'var(--color-primary)' }}
+              className="btn-primary disabled:opacity-60"
             >
               {exporting ? 'جاري التصدير...' : 'تصدير PDF'}
             </button>
@@ -161,7 +160,7 @@ export default function ReceiptModal({ receipt, onClose }) {
           <div
             className="rounded-xl p-5 text-center my-5"
             style={{
-              background: 'var(--color-success-bg, #f0fdf4)',
+              background: 'var(--color-success-bg)',
               border: '2px solid var(--color-success)',
             }}
           >

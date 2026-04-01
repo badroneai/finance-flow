@@ -1,0 +1,334 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Direction A — مستوحى من Mercury / Ramp
+   ─────────────────────────────────────────────────────────────────
+   مبدأ: الوضوح المالي. لا زخرفة. التايبوغرافي يتكلم.
+   • Sidebar أبيض (مش داكن)
+   • ظلال شبه معدومة
+   • ألوان مسطحة بدون gradients
+   • الذهبي يظهر فقط في العناصر التفاعلية
+   • مساحات بيضاء واسعة
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Body ─── */
+[data-direction="a"] body {
+  background: #F8F9FA;
+}
+
+[data-direction="a"][data-theme="dark"] body,
+[data-direction="a"] [data-theme="dark"] body {
+  background: var(--color-background);
+}
+
+/* ─── Topbar ─── */
+[data-direction="a"] .topbar-shell {
+  background: #fff;
+  border-bottom: 1px solid #E8EAED;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+[data-direction="a"] .topbar-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--qa-navy);
+}
+
+[data-direction="a"] .topbar-subtitle {
+  font-size: 0.8125rem;
+  color: #6B7280;
+}
+
+[data-direction="a"] .topbar-date {
+  background: transparent;
+  border: 1px solid #E8EAED;
+  border-radius: 6px;
+  color: #6B7280;
+  font-size: 0.75rem;
+}
+
+/* ─── Sidebar → أبيض بدل كحلي ─── */
+[data-direction="a"] .sidebar-shell {
+  background: #fff;
+  border-inline-start: 1px solid #E8EAED;
+  box-shadow: none;
+  color: var(--qa-navy);
+}
+
+[data-direction="a"] .sidebar-brand {
+  border-bottom: 1px solid #E8EAED;
+}
+
+[data-direction="a"] .sidebar-brand-mark {
+  background: var(--qa-navy);
+  color: #fff;
+  border-radius: 8px;
+}
+
+[data-direction="a"] .sidebar-brand-title {
+  color: var(--qa-navy);
+  font-weight: 600;
+}
+
+[data-direction="a"] .sidebar-brand-subtitle {
+  color: #9CA3AF;
+}
+
+[data-direction="a"] .sidebar-nav-button {
+  color: #6B7280;
+  border-radius: 6px;
+  padding: 0.6rem 0.75rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+}
+
+[data-direction="a"] .sidebar-nav-button:hover {
+  background: #F3F4F6;
+  color: var(--qa-navy);
+}
+
+[data-direction="a"] .sidebar-nav-button.is-active {
+  background: transparent;
+  color: var(--qa-navy);
+  font-weight: 600;
+  box-shadow: none;
+  outline: none;
+  border-inline-end: 2px solid var(--qa-navy);
+}
+
+[data-direction="a"] .sidebar-toggle {
+  border-top: 1px solid #E8EAED;
+  color: #9CA3AF;
+}
+
+[data-direction="a"] .sidebar-toggle:hover {
+  color: var(--qa-navy);
+  background: #F3F4F6;
+}
+
+/* ─── Summary Cards ─── */
+[data-direction="a"] .summary-card,
+[data-direction="a"] .page-panel,
+[data-direction="a"] .panel-card {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+[data-direction="a"] .summary-card::before {
+  display: none;
+}
+
+/* ─── Welcome Banner ─── */
+[data-direction="a"] .welcome-banner {
+  background: var(--qa-navy);
+  border: none;
+  border-radius: 8px;
+  box-shadow: none;
+  padding: 1.25rem 1.5rem;
+}
+
+[data-direction="a"] .welcome-banner::after {
+  display: none;
+}
+
+/* ─── Page Header ─── */
+[data-direction="a"] .page-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+[data-direction="a"] .page-kicker {
+  background: #F3F4F6;
+  border: none;
+  border-radius: 4px;
+  color: #6B7280;
+  font-size: 0.6875rem;
+  font-weight: 600;
+}
+
+/* ─── Buttons ─── */
+[data-direction="a"] .btn-primary {
+  background: var(--qa-navy);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  box-shadow: none;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  min-height: 2.5rem;
+}
+
+[data-direction="a"] .btn-primary:hover {
+  background: #1A2D45;
+  transform: none;
+}
+
+[data-direction="a"] .btn-secondary {
+  background: #fff;
+  color: var(--qa-navy);
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  box-shadow: none;
+  font-weight: 500;
+  padding: 0.6rem 1rem;
+  min-height: 2.5rem;
+}
+
+[data-direction="a"] .btn-secondary:hover {
+  background: #F9FAFB;
+  border-color: #9CA3AF;
+}
+
+[data-direction="a"] .btn-danger {
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+/* ─── Table ─── */
+[data-direction="a"] #root table thead tr {
+  background: transparent !important;
+  border-bottom: 2px solid var(--qa-navy);
+}
+
+[data-direction="a"] #root table thead th {
+  color: var(--qa-navy);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.6rem 1rem !important;
+}
+
+[data-direction="a"] #root table tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+[data-direction="a"] #root table tbody tr {
+  border-bottom: 1px solid #F3F4F6;
+}
+
+[data-direction="a"] #root table tbody tr:hover {
+  background: #F9FAFB !important;
+}
+
+[data-direction="a"] #root table tbody td {
+  padding: 0.75rem 1rem !important;
+  font-size: 0.875rem;
+  color: #374151;
+}
+
+/* ─── Inputs ─── */
+[data-direction="a"] #root input[type='text'],
+[data-direction="a"] #root input[type='search'],
+[data-direction="a"] #root input[type='number'],
+[data-direction="a"] #root input[type='date'],
+[data-direction="a"] #root select,
+[data-direction="a"] #root textarea {
+  border: 1px solid #D1D5DB;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+  min-height: 2.5rem;
+}
+
+[data-direction="a"] #root input:focus,
+[data-direction="a"] #root select:focus,
+[data-direction="a"] #root textarea:focus {
+  border-color: var(--qa-navy);
+  box-shadow: 0 0 0 3px rgba(15,28,46,0.08);
+}
+
+/* ─── Bottom Nav ─── */
+[data-direction="a"] .bottom-nav-shell {
+  background: #fff;
+  border-top: 1px solid #E8EAED;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+[data-direction="a"] .bottom-nav-item.is-active {
+  color: var(--qa-navy);
+}
+
+[data-direction="a"] .bottom-nav-item.is-active::after {
+  background: var(--qa-navy);
+  height: 2px;
+}
+
+/* ─── Detail sections ─── */
+[data-direction="a"] .detail-hero,
+[data-direction="a"] .detail-section,
+[data-direction="a"] .report-section,
+[data-direction="a"] .modal-sheet {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+/* ─── Report metrics ─── */
+[data-direction="a"] .report-metric {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+[data-direction="a"] .report-metric::before {
+  display: none;
+}
+
+/* ─── Report table ─── */
+[data-direction="a"] .report-table-wrap {
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* ─── Control Toolbar ─── */
+[data-direction="a"] .control-toolbar {
+  background: #fff;
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+/* ─── Empty state ─── */
+[data-direction="a"] .empty-state {
+  background: #fff;
+  border: 1px dashed #D1D5DB;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+[data-direction="a"] .empty-state .empty-icon {
+  background: #F3F4F6;
+  border-radius: 8px;
+  color: var(--qa-navy);
+}
+
+[data-direction="a"] .empty-state .empty-cta {
+  background: var(--qa-navy);
+  color: #fff;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+/* ─── Cards hover ─── */
+[data-direction="a"] #root .bg-white.rounded-xl,
+[data-direction="a"] #root .bg-\[var\(--color-surface\)\].rounded-xl {
+  border: 1px solid #E8EAED;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+
+[data-direction="a"] #root .bg-white.rounded-xl:hover,
+[data-direction="a"] #root .bg-\[var\(--color-surface\)\].rounded-xl:hover {
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+/* ─── Dialog ─── */
+[data-direction="a"] #root [role='dialog'] {
+  border: 1px solid #E8EAED;
+  border-radius: 8px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}

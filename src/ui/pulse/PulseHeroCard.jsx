@@ -14,10 +14,10 @@ const STATUS_LABELS = {
 };
 
 const HEALTH_COLORS = {
-  high: '#10B981', // 80-100
-  good: '#3B82F6', // 60-79
-  warn: '#F59E0B', // 40-59
-  low: '#EF4444', // 0-39
+  high: 'var(--color-success)', // 80-100
+  good: 'var(--color-info)', // 60-79
+  warn: 'var(--color-warning)', // 40-59
+  low: 'var(--color-danger)', // 0-39
 };
 
 function getHealthColor(score) {
@@ -93,8 +93,11 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
   if (isUnknown) {
     return (
       <div
-        className="rounded-2xl shadow-lg p-6 md:p-8 text-center min-h-[200px] flex flex-col justify-center"
-        style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)' }}
+        className="panel-card rounded-2xl p-6 md:p-8 text-center min-h-[200px] flex flex-col justify-center"
+        style={{
+          background:
+            'linear-gradient(135deg, var(--color-warning-bg) 0%, color-mix(in srgb, var(--color-warning-bg) 60%, var(--color-surface) 40%) 100%)',
+        }}
         dir="rtl"
       >
         <p className="font-medium text-lg mb-2" style={{ color: 'var(--color-warning)' }}>
@@ -124,8 +127,9 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
     <div
       className="rounded-2xl shadow-lg p-4 md:p-6 transition-colors"
       style={{
-        background: `linear-gradient(135deg, ${circleColor}08 0%, ${circleColor}14 50%, transparent 100%)`,
-        border: `1px solid ${circleColor}20`,
+        background: `linear-gradient(135deg, color-mix(in srgb, ${circleColor} 12%, var(--color-surface) 88%) 0%, color-mix(in srgb, ${circleColor} 6%, transparent) 50%, transparent 100%)`,
+        border: `1px solid color-mix(in srgb, ${circleColor} 18%, transparent)`,
+        boxShadow: 'var(--shadow)',
       }}
       dir="rtl"
     >
@@ -178,7 +182,10 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
           <span
             key={i}
             className="w-1.5 h-1.5 rounded-full"
-            style={{ backgroundColor: i < Math.round(displayScore / 10) ? circleColor : '#e5e7eb' }}
+            style={{
+              backgroundColor:
+                i < Math.round(displayScore / 10) ? circleColor : 'var(--color-border)',
+            }}
           />
         ))}
       </div>

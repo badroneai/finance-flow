@@ -27,6 +27,17 @@ const MONTH_NAMES = [
   'ديسمبر',
 ];
 
+const REPORT_PIE_COLORS = [
+  'var(--color-primary)',
+  'var(--color-accent)',
+  'var(--color-secondary)',
+  'var(--color-success)',
+  'var(--color-warning)',
+  'var(--color-danger)',
+  'var(--color-info-light)',
+  'var(--color-border-strong)',
+];
+
 function PieChart({ items, total, size = 120, strokeWidth = 12 }) {
   if (!total || !Array.isArray(items) || items.length === 0) {
     return (
@@ -42,7 +53,7 @@ function PieChart({ items, total, size = 120, strokeWidth = 12 }) {
           cy={size / 2}
           r={(size - strokeWidth) / 2}
           fill="none"
-          stroke="#e5e7eb"
+          stroke="var(--color-border)"
           strokeWidth={strokeWidth}
         />
       </svg>
@@ -52,20 +63,10 @@ function PieChart({ items, total, size = 120, strokeWidth = 12 }) {
   const cx = size / 2;
   const cy = size / 2;
   let offset = 0;
-  const colors = [
-    '#059669',
-    '#2563eb',
-    '#7c3aed',
-    '#dc2626',
-    '#ea580c',
-    '#ca8a04',
-    '#0891b2',
-    '#4f46e5',
-  ];
   const segments = items.map((item, i) => {
     const pct = total > 0 ? item.amount / total : 0;
     const dash = 2 * Math.PI * r * pct;
-    const seg = { dash, color: colors[i % colors.length], offset };
+    const seg = { dash, color: REPORT_PIE_COLORS[i % REPORT_PIE_COLORS.length], offset };
     offset += dash;
     return seg;
   });
@@ -205,12 +206,12 @@ export function MonthlyReportView({
   return (
     <div className="max-w-[210mm] mx-auto bg-[var(--color-surface)]" dir="rtl">
       {/* أزرار التصدير والمشاركة (تُخفى عند الطباعة) */}
-      <div className="no-print flex flex-wrap gap-2 mb-4 sticky top-0 z-10 bg-[var(--color-surface)]/95 py-2 border-b border-[var(--color-border)]">
+      <div className="no-print report-toolbar">
         <button
           type="button"
           onClick={handleExportPdf}
           disabled={pdfExporting}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
           aria-label="تصدير PDF"
         >
           {pdfExporting ? 'جاري التصدير…' : 'تصدير PDF'}
@@ -218,7 +219,7 @@ export function MonthlyReportView({
         <button
           type="button"
           onClick={handlePrint}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+          className="btn-secondary"
           aria-label="طباعة"
         >
           طباعة
@@ -227,7 +228,7 @@ export function MonthlyReportView({
           <button
             type="button"
             onClick={handleShare}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+            className="btn-secondary"
             aria-label="مشاركة"
           >
             مشاركة
@@ -237,7 +238,7 @@ export function MonthlyReportView({
           <button
             type="button"
             onClick={() => (onBack ? onBack() : setPage?.('ledgers'))}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-muted)] text-sm hover:bg-[var(--color-bg)]"
+            className="btn-secondary"
           >
             رجوع
           </button>
@@ -246,47 +247,47 @@ export function MonthlyReportView({
 
       <div
         ref={printRef}
-        className="monthly-report-print bg-[var(--color-surface)] text-[var(--color-text)] p-6 md:p-8 rounded-xl border border-[var(--color-border)]"
+        className="monthly-report-print receipt-sheet bg-[var(--color-surface)] text-[var(--color-text)] p-6 md:p-8"
       >
         {/* شعار وعنوان */}
         <header className="text-center border-b border-[var(--color-border)] pb-4 mb-6">
-          <h1 className="text-xl font-bold text-[var(--qa-navy,#0F1C2E)]">قيد العقار</h1>
+          <h1 className="text-xl font-bold text-[var(--color-primary)]">قيد العقار</h1>
           <p className="text-sm text-[var(--color-muted)] mt-1">التقرير الشهري</p>
           <p className="font-semibold text-[var(--color-text)] mt-2">{meta.ledgerName}</p>
           <p className="text-sm text-[var(--color-muted)]">{monthLabel}</p>
         </header>
 
         {/* ملخص */}
-        <section className="mb-6">
+        <section className="report-section mb-6">
           <h2 className="text-base font-bold text-[var(--color-text)] mb-3">ملخص الشهر</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
-              <div className="text-xs text-[var(--color-muted)]">رصيد الافتتاح</div>
-              <div className="text-lg font-bold">{formatNumber(summary.openingBalance)} ر.س</div>
+            <div className="report-metric">
+              <div className="report-metric__label">رصيد الافتتاح</div>
+              <div className="report-metric__value">{formatNumber(summary.openingBalance)} ر.س</div>
             </div>
-            <div className="p-3 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
-              <div className="text-xs text-[var(--color-muted)]">رصيد الإغلاق</div>
-              <div className="text-lg font-bold">{formatNumber(summary.closingBalance)} ر.س</div>
+            <div className="report-metric">
+              <div className="report-metric__label">رصيد الإغلاق</div>
+              <div className="report-metric__value">{formatNumber(summary.closingBalance)} ر.س</div>
             </div>
             <div
-              className="p-3 rounded-xl border border-[var(--color-border)]"
+              className="report-metric"
               style={{ background: 'var(--color-success-bg)' }}
             >
-              <div className="text-xs" style={{ color: 'var(--color-success)' }}>
+              <div className="report-metric__label" style={{ color: 'var(--color-success)' }}>
                 إجمالي الدخل
               </div>
-              <div className="text-lg font-bold" style={{ color: 'var(--color-success)' }}>
+              <div className="report-metric__value" style={{ color: 'var(--color-success)' }}>
                 {formatNumber(summary.totalIncome)} ر.س
               </div>
             </div>
             <div
-              className="p-3 rounded-xl border border-[var(--color-border)]"
+              className="report-metric"
               style={{ background: 'var(--color-danger-bg)' }}
             >
-              <div className="text-xs" style={{ color: 'var(--color-danger)' }}>
+              <div className="report-metric__label" style={{ color: 'var(--color-danger)' }}>
                 إجمالي المصروف
               </div>
-              <div className="text-lg font-bold" style={{ color: 'var(--color-danger)' }}>
+              <div className="report-metric__value" style={{ color: 'var(--color-danger)' }}>
                 {formatNumber(summary.totalExpense)} ر.س
               </div>
             </div>
@@ -312,10 +313,10 @@ export function MonthlyReportView({
         </section>
 
         {/* تفصيل الدخل */}
-        <section className="mb-6">
+        <section className="report-section mb-6">
           <h2 className="text-base font-bold text-[var(--color-text)] mb-3">تفصيل الدخل</h2>
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 overflow-x-auto">
+            <div className="report-table-wrap flex-1 overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--color-border)]">
@@ -344,10 +345,10 @@ export function MonthlyReportView({
         </section>
 
         {/* تفصيل المصروفات */}
-        <section className="mb-6">
+        <section className="report-section mb-6">
           <h2 className="text-base font-bold text-[var(--color-text)] mb-3">تفصيل المصروفات</h2>
           <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 overflow-x-auto">
+            <div className="report-table-wrap flex-1 overflow-x-auto">
               <table className="w-full text-sm border-collapse">
                 <thead>
                   <tr className="border-b border-[var(--color-border)]">
@@ -376,15 +377,15 @@ export function MonthlyReportView({
         </section>
 
         {/* الالتزامات */}
-        <section className="mb-6">
+        <section className="report-section mb-6">
           <h2 className="text-base font-bold text-[var(--color-text)] mb-3">الالتزامات</h2>
-          <div className="p-4 rounded-xl bg-[var(--color-bg)] border border-[var(--color-border)]">
+          <div className="report-metric">
             <div className="flex flex-wrap justify-between gap-2 mb-2 text-sm">
               <span>مستحقات الشهر: {formatNumber(commitments?.totalDue || 0)} ر.س</span>
               <span>مدفوع: {formatNumber(commitments?.totalPaid || 0)} ر.س</span>
               <span>متأخر: {formatNumber(commitments?.totalOverdue || 0)} ر.س</span>
             </div>
-            <div className="h-3 bg-[var(--color-bg)] rounded-full overflow-hidden">
+            <div className="h-3 bg-[var(--color-background)] rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all"
                 style={{
@@ -404,20 +405,19 @@ export function MonthlyReportView({
         </section>
 
         {/* أبرز الأحداث */}
-        <section className="mb-6">
+        <section className="report-section mb-6">
           <h2 className="text-base font-bold text-[var(--color-text)] mb-3">أبرز الأحداث</h2>
           <ul className="space-y-1">
             {(highlights || []).map((h, i) => (
               <li
                 key={i}
-                className="px-3 py-2 rounded-lg text-sm"
-                style={
+                className={`report-highlight ${
                   h.type === 'positive'
-                    ? { background: 'var(--color-success-bg)', color: 'var(--color-success)' }
+                    ? 'report-highlight--positive'
                     : h.type === 'negative'
-                      ? { background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }
-                      : { background: 'var(--color-bg)', color: 'var(--color-text)' }
-                }
+                      ? 'report-highlight--negative'
+                      : 'report-highlight--neutral'
+                }`}
               >
                 {h.message}
               </li>
@@ -426,9 +426,9 @@ export function MonthlyReportView({
         </section>
 
         {/* توقعات الشهر القادم */}
-        <section className="mb-6">
+        <section className="report-section mb-6">
           <h2 className="text-base font-bold text-[var(--color-text)] mb-3">توقعات الشهر القادم</h2>
-          <div className="p-4 rounded-xl border border-[var(--color-border)]">
+          <div className="report-metric">
             <div className="flex flex-wrap gap-4 text-sm mb-2">
               <span>دخل متوقع: {formatNumber(nextMonthForecast?.expectedIncome || 0)} ر.س</span>
               <span>مصروف متوقع: {formatNumber(nextMonthForecast?.expectedExpense || 0)} ر.س</span>
@@ -451,11 +451,11 @@ export function MonthlyReportView({
 
         {/* حركات الشهر (ملخص) */}
         {Array.isArray(transactions) && transactions.length > 0 && (
-          <section className="mb-4">
+          <section className="report-section mb-4">
             <h2 className="text-base font-bold text-[var(--color-text)] mb-3">
               حركات الشهر ({transactions.length})
             </h2>
-            <div className="max-h-48 overflow-y-auto border border-[var(--color-border)] rounded-lg">
+            <div className="report-table-wrap max-h-48 overflow-y-auto">
               <table className="w-full text-sm border-collapse">
                 <thead className="sticky top-0 bg-[var(--color-bg)]">
                   <tr className="border-b border-[var(--color-border)]">

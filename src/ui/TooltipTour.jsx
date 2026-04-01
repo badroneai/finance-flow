@@ -223,7 +223,7 @@ export function TooltipTour({ active, onComplete }) {
           y="0"
           width="100%"
           height="100%"
-          fill="rgba(0,0,0,0.5)"
+          fill="var(--color-overlay)"
           mask="url(#tour-spotlight)"
           style={{ pointerEvents: 'all' }}
           onClick={handleSkip}
@@ -236,10 +236,11 @@ export function TooltipTour({ active, onComplete }) {
           className="absolute rounded-lg"
           style={{
             top: targetRect.top,
-            left: targetRect.left,
+            insetInlineStart: targetRect.left,
             width: targetRect.width,
             height: targetRect.height,
-            boxShadow: '0 0 0 3px rgba(59,130,246,0.5), 0 0 20px rgba(59,130,246,0.3)',
+            boxShadow:
+              '0 0 0 3px color-mix(in srgb, var(--color-accent) 42%, transparent), 0 0 24px color-mix(in srgb, var(--color-primary) 20%, transparent)',
             borderRadius: '8px',
             pointerEvents: 'none',
             transition: 'all 0.3s ease',
@@ -254,11 +255,11 @@ export function TooltipTour({ active, onComplete }) {
           dir="rtl"
           style={{
             top: tooltipPos.top,
-            left: tooltipPos.left,
+            insetInlineStart: tooltipPos.left,
             width: 300,
-            background: 'var(--color-surface, #fff)',
-            borderColor: 'var(--color-border, #e2e8f0)',
-            color: 'var(--color-text, #1a1a2e)',
+            background: 'var(--color-surface)',
+            borderColor: 'var(--color-border)',
+            color: 'var(--color-text-primary)',
             padding: '16px',
             transition: 'all 0.3s ease',
             zIndex: 61,
@@ -266,7 +267,7 @@ export function TooltipTour({ active, onComplete }) {
         >
           {/* مؤشر التقدم */}
           <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium" style={{ color: 'var(--color-muted, #64748b)' }}>
+            <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
               {step + 1} / {TOUR_STEPS.length}
             </span>
             <div className="flex gap-1">
@@ -277,8 +278,7 @@ export function TooltipTour({ active, onComplete }) {
                   style={{
                     width: 8,
                     height: 8,
-                    background:
-                      i === step ? 'var(--color-primary, #2563eb)' : 'var(--color-border, #e2e8f0)',
+                    background: i === step ? 'var(--color-accent)' : 'var(--color-border)',
                     transition: 'background 0.2s',
                   }}
                 />
@@ -289,7 +289,7 @@ export function TooltipTour({ active, onComplete }) {
           <h4 className="font-bold text-sm mb-1">{currentStep.title}</h4>
           <p
             className="text-sm leading-relaxed mb-4"
-            style={{ color: 'var(--color-muted, #64748b)' }}
+            style={{ color: 'var(--color-text-secondary)' }}
           >
             {currentStep.text}
           </p>
@@ -299,7 +299,7 @@ export function TooltipTour({ active, onComplete }) {
               type="button"
               onClick={handleSkip}
               className="text-xs px-2 py-1"
-              style={{ color: 'var(--color-muted, #64748b)' }}
+              style={{ color: 'var(--color-text-secondary)' }}
             >
               تخطي
             </button>
@@ -310,8 +310,8 @@ export function TooltipTour({ active, onComplete }) {
                   onClick={handlePrev}
                   className="px-3 py-1.5 rounded-lg text-sm border"
                   style={{
-                    borderColor: 'var(--color-border, #e2e8f0)',
-                    color: 'var(--color-text, #1a1a2e)',
+                    borderColor: 'var(--color-border)',
+                    color: 'var(--color-text-primary)',
                     background: 'transparent',
                   }}
                 >
@@ -323,8 +323,8 @@ export function TooltipTour({ active, onComplete }) {
                 onClick={handleNext}
                 className="px-3 py-1.5 rounded-lg text-sm font-medium"
                 style={{
-                  background: 'var(--color-primary, #2563eb)',
-                  color: '#fff',
+                  background: 'var(--color-primary)',
+                  color: 'var(--color-text-inverse)',
                   border: 'none',
                 }}
               >

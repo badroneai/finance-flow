@@ -16,9 +16,9 @@
     --gray: #8A8F98;
     --gray-light: #C8CBD0;
     --gray-bg: #F4F5F6;
-    --gold: #B8A76A;
-    --gold-light: rgba(184, 167, 106, 0.15);
-    --gold-subtle: rgba(184, 167, 106, 0.08);
+    --gold: #6B5A2E;
+    --gold-light: rgba(107, 90, 46, 0.15);
+    --gold-subtle: rgba(107, 90, 46, 0.08);
     --white: #FFFFFF;
     --off-white: #FAFBFC;
     --border: rgba(15, 28, 46, 0.08);
@@ -60,7 +60,7 @@
     left: -10%;
     width: 60%;
     height: 60%;
-    background: radial-gradient(ellipse, rgba(184, 167, 106, 0.06) 0%, transparent 70%);
+    background: radial-gradient(ellipse, rgba(107, 90, 46, 0.06) 0%, transparent 70%);
     pointer-events: none;
   }
 
@@ -121,7 +121,7 @@
     margin-top: 48px;
     display: inline-block;
     padding: 8px 24px;
-    border: 1px solid rgba(184, 167, 106, 0.3);
+    border: 1px solid rgba(107, 90, 46, 0.3);
     border-radius: 100px;
     color: var(--gold);
     font-size: 13px;
@@ -212,7 +212,7 @@
   .logo-card:hover { box-shadow: var(--shadow-md); }
   .logo-card.dark { background: var(--navy); border-color: rgba(255,255,255,0.06); }
   .logo-card.light { background: var(--white); }
-  .logo-card.gold-bg { background: linear-gradient(135deg, #B8A76A 0%, #A89555 100%); border-color: transparent; }
+  .logo-card.gold-bg { background: linear-gradient(135deg, #6B5A2E 0%, #8A7A4A 100%); border-color: transparent; }
   .logo-card.gray-bg { background: var(--gray-bg); }
   .logo-card svg { width: 64px; height: 64px; }
 
@@ -506,7 +506,7 @@
     right: 0;
     width: 50%;
     height: 100%;
-    background: radial-gradient(ellipse at top right, rgba(184, 167, 106, 0.04) 0%, transparent 60%);
+    background: radial-gradient(ellipse at top right, rgba(107, 90, 46, 0.04) 0%, transparent 60%);
   }
 
   .mockup-container { max-width: 1200px; margin: 0 auto; position: relative; z-index: 1; }
@@ -693,8 +693,8 @@
   <div class="hero-content">
     <div class="hero-logo">
       <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 18L22 42V78H40V58H60V78H78V42L50 18Z" stroke="#B8A76A" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
-        <path d="M62 28V22H70V36" stroke="#B8A76A" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+        <path d="M50 18L22 42V78H40V58H60V78H78V42L50 18Z" stroke="#6B5A2E" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
+        <path d="M62 28V22H70V36" stroke="#6B5A2E" stroke-width="2.2" fill="none" stroke-linejoin="round"/>
         <path d="M18 82H82" stroke="rgba(255,255,255,0.4)" stroke-width="2" stroke-linecap="round"/>
         <path d="M24 86L20 82L24 78H76L80 82L76 86H24Z" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
         <path d="M28 78V86" stroke="rgba(255,255,255,0.2)" stroke-width="1"/>
@@ -796,7 +796,7 @@
         <div class="color-name">ذهبي زيتوني</div>
         <div class="color-name-en">Soft Olive Gold — Accent</div>
         <div class="color-values">
-          <span class="color-val">HEX: #B8A76A</span>
+          <span class="color-val">HEX: #6B5A2E</span>
           <span class="color-val">RGB: 184, 167, 106</span>
         </div>
         <div class="color-usage">يُستخدم باعتدال شديد للتمييز والعناصر التفاعلية المهمة فقط.</div>

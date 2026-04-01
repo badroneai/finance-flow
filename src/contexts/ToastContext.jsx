@@ -41,13 +41,24 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className={`px-4 py-3 rounded-lg shadow-lg text-white text-sm font-medium transition-all animate-slideIn ${
-              t.type === 'success'
-                ? 'bg-green-600'
-                : t.type === 'error'
-                  ? 'bg-red-600'
-                  : 'bg-yellow-500 text-[var(--color-text)]'
-            }`}
+            className="px-4 py-3 rounded-2xl text-sm font-medium transition-all animate-slideIn"
+            style={{
+              color:
+                t.type === 'warning' ? 'var(--color-text-primary)' : 'var(--color-text-inverse)',
+              background:
+                t.type === 'success'
+                  ? 'var(--color-success)'
+                  : t.type === 'error'
+                    ? 'var(--color-danger)'
+                    : t.type === 'info'
+                      ? 'var(--color-secondary)'
+                      : 'var(--color-warning)',
+              boxShadow: 'var(--shadow)',
+              border:
+                t.type === 'warning'
+                  ? '1px solid color-mix(in srgb, var(--color-warning) 55%, transparent)'
+                  : '1px solid transparent',
+            }}
             role="status"
           >
             {t.message}

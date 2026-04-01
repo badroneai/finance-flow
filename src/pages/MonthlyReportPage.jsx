@@ -27,7 +27,7 @@ function MonthlyReportPage({ setPage }) {
   const handleBack = () => setPage?.('ledgers');
 
   return (
-    <div className="px-4 md:px-6 py-4">
+    <div className="page-shell px-4 md:px-6 py-4">
       <MonthlyReportView
         ledgerId={ledgerId}
         month={month || undefined}

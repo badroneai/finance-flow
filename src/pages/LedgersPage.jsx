@@ -1303,7 +1303,7 @@ const LedgersPage = ({ setPage }) => {
               <button
                 type="button"
                 onClick={() => createLedger()}
-                className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
                 aria-label="إضافة دفتر"
               >
                 + إضافة دفتر
@@ -1336,7 +1336,7 @@ const LedgersPage = ({ setPage }) => {
                 .map((l) => (
                   <div
                     key={l.id}
-                    className={`bg-[var(--color-surface)] rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-blue-300' : 'border-[var(--color-border)]'}`}
+                    className={`bg-[var(--color-surface)] rounded-xl border p-5 shadow-sm ${l.id === activeId ? 'border-[var(--color-primary)]' : 'border-[var(--color-border)]'}`}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0">
@@ -1416,7 +1416,7 @@ const LedgersPage = ({ setPage }) => {
                           <button
                             type="button"
                             onClick={() => saveEdit()}
-                            className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                            className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
                             aria-label="حفظ"
                           >
                             حفظ
@@ -1646,7 +1646,7 @@ const LedgersPage = ({ setPage }) => {
                         <button
                           type="button"
                           onClick={() => setActive(l.id)}
-                          className="px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                          className="px-3 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
                           aria-label="تعيين كنشط"
                         >
                           تعيين كنشط
@@ -1673,7 +1673,7 @@ const LedgersPage = ({ setPage }) => {
                 <button
                   type="button"
                   onClick={() => setTab('ledgers')}
-                  className="mt-4 px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                  className="mt-4 px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
                 >
                   عرض الدفاتر
                 </button>

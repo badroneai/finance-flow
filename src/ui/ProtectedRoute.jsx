@@ -38,7 +38,7 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
         className="flex items-center justify-center min-h-[50vh]"
         style={{
           fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-          color: 'var(--color-muted, #64748b)',
+          color: 'var(--color-text-secondary)',
         }}
       >
         جاري التحميل…
@@ -59,7 +59,7 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
         className="flex items-center justify-center min-h-[50vh]"
         style={{
           fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-          color: 'var(--color-muted, #64748b)',
+          color: 'var(--color-text-secondary)',
         }}
       >
         جاري تحميل بيانات الحساب…
@@ -75,18 +75,18 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
         className="flex flex-col items-center justify-center min-h-[50vh] px-4"
         style={{
           fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-          color: 'var(--color-text, #0f172a)',
+          color: 'var(--color-text-primary)',
         }}
       >
         <div
           className="max-w-sm w-full rounded-2xl p-6 text-center shadow-lg"
           style={{
-            background: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-border, #e2e8f0)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
           }}
         >
           <h2 className="text-lg font-bold mb-3">حسابك معلّق</h2>
-          <p className="text-sm mb-4" style={{ color: 'var(--color-muted, #64748b)' }}>
+          <p className="text-sm mb-4" style={{ color: 'var(--color-text-secondary)' }}>
             تم تعليق حسابك. تواصل مع مالك المكتب أو الدعم الفني لمزيد من المعلومات.
           </p>
         </div>
@@ -102,18 +102,18 @@ export const ProtectedRoute = ({ children, allowedRoles }) => {
         className="flex flex-col items-center justify-center min-h-[50vh] px-4"
         style={{
           fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-          color: 'var(--color-text, #0f172a)',
+          color: 'var(--color-text-primary)',
         }}
       >
         <div
           className="max-w-sm w-full rounded-2xl p-6 text-center shadow-lg"
           style={{
-            background: 'var(--color-surface, #ffffff)',
-            border: '1px solid var(--color-border, #e2e8f0)',
+            background: 'var(--color-surface)',
+            border: '1px solid var(--color-border)',
           }}
         >
           <h2 className="text-lg font-bold mb-3">غير مصرّح</h2>
-          <p className="text-sm" style={{ color: 'var(--color-muted, #64748b)' }}>
+          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
             ليس لديك صلاحية الوصول لهذه الصفحة.
           </p>
         </div>

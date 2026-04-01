@@ -209,7 +209,7 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+          className="btn-primary disabled:opacity-50"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة جهة الاتصال'}
         </button>
@@ -450,10 +450,15 @@ export default function ContactsPage({ setPage }) {
   }, [confirmDelete, deleteContact, toast]);
 
   return (
-    <div className="px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
-      {/* العنوان + زر إضافة */}
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-xl font-bold text-[var(--color-text)]">العملاء</h2>
+    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">العلاقات</span>
+          <h1 className="page-title">العملاء</h1>
+          <p className="page-subtitle">
+            أدر الملاك والمستأجرين والمشترين من سجل موحد يدعم البحث والربط بالعقود.
+          </p>
+        </div>
         {!showForm && (
           <button
             type="button"
@@ -463,7 +468,7 @@ export default function ContactsPage({ setPage }) {
               setEditId(null);
               setShowForm(true);
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+            className="btn-primary"
           >
             <Icons.plus size={16} />
             إضافة عميل
@@ -507,7 +512,7 @@ export default function ContactsPage({ setPage }) {
 
       {/* فلاتر */}
       {contacts.length > 0 && (
-        <div className="flex flex-wrap gap-3 mb-4">
+        <div className="control-toolbar flex flex-wrap gap-3 mb-4 p-3">
           <div className="flex-1 min-w-[180px]">
             <input
               type="text"

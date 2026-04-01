@@ -249,7 +249,7 @@ function LedgerPerformanceTab(props) {
                   <button
                     type="button"
                     onClick={saveIncomeModelToLedger}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700"
+                    className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
                     aria-label="حفظ نموذج الدخل"
                   >
                     حفظ
@@ -302,7 +302,7 @@ function LedgerPerformanceTab(props) {
                             <td className="py-2">
                               <Currency value={r.actual.expense} />
                             </td>
-                            <td className={`py-2 ${v < 0 ? 'text-red-700' : 'text-green-700'}`}>
+                            <td className={`py-2 ${v < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
                               {status}
                               <Currency value={v} />
                             </td>
@@ -403,11 +403,11 @@ function LedgerPerformanceTab(props) {
                             : 'بدون هدف';
                     const cls =
                       s.status === 'ok'
-                        ? 'bg-green-50 border-green-100 text-green-700'
+                        ? 'bg-[var(--color-success-bg)] border-[var(--color-success)] text-[var(--color-success)]'
                         : s.status === 'warn'
-                          ? 'bg-amber-50 border-amber-100 text-amber-800'
+                          ? 'bg-[var(--color-warning-bg)] border-[var(--color-warning)] text-[var(--color-warning)]'
                           : s.status === 'bad'
-                            ? 'bg-red-50 border-red-100 text-red-700'
+                            ? 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]'
                             : 'bg-[var(--color-bg)] border-[var(--color-border)] text-[var(--color-text)]';
                     return (
                       <div key={k} className={`p-3 rounded-xl border ${cls}`}>

@@ -62,7 +62,7 @@ const MONTH_NAMES = [
 ];
 
 const STATUS_LABELS = { pending: 'مستحقة', partial: 'مدفوعة جزئياً', paid: 'مدفوعة' };
-const STATUS_COLORS = { pending: '#f59e0b', partial: '#3b82f6', paid: '#059669' };
+const STATUS_COLORS = { pending: '#b8872d', partial: '#0f1c2e', paid: '#2e7d32' };
 
 /**
  * حقن HTML آمن باستخدام DOMPurify
@@ -79,7 +79,7 @@ function safeSetHTML(el, html) {
 function createHiddenContainer() {
   const el = document.createElement('div');
   el.style.cssText =
-    'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;color:#1a1a2e;direction:rtl;padding:0;margin:0;z-index:-1;';
+    'position:fixed;left:-9999px;top:0;width:794px;background:#fff;font-family:"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif;color:#0f1c2e;direction:rtl;padding:0;margin:0;z-index:-1;';
   document.body.appendChild(el);
   return el;
 }
@@ -134,25 +134,25 @@ const SHARED_CSS = `
   .pdf-page { padding: 32px 28px; direction: rtl; text-align: right; }
   .pdf-header { text-align: center; border-bottom: 3px solid #0f1c2e; padding-bottom: 16px; margin-bottom: 24px; }
   .pdf-header h1 { font-size: 22px; color: #0f1c2e; margin-bottom: 4px; }
-  .pdf-header .subtitle { font-size: 14px; color: #64748b; margin-bottom: 8px; }
-  .pdf-header .period { font-size: 16px; font-weight: 700; color: #1e293b; }
-  .pdf-header .office-name { font-size: 13px; color: #475569; margin-top: 4px; }
+  .pdf-header .subtitle { font-size: 14px; color: #8a8f98; margin-bottom: 8px; }
+  .pdf-header .period { font-size: 16px; font-weight: 700; color: #0f1c2e; }
+  .pdf-header .office-name { font-size: 13px; color: #676d76; margin-top: 4px; }
   .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
-  .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; }
-  .summary-card .label { font-size: 11px; color: #64748b; margin-bottom: 4px; }
+  .summary-card { background: #f7f6f2; border: 1px solid #e3e0d7; border-radius: 10px; padding: 12px; text-align: center; }
+  .summary-card .label { font-size: 11px; color: #8a8f98; margin-bottom: 4px; }
   .summary-card .value { font-size: 18px; font-weight: 700; }
-  .summary-card .value.green { color: #059669; }
+  .summary-card .value.green { color: #2e7d32; }
   .summary-card .value.red { color: #dc2626; }
-  .summary-card .value.blue { color: #2563eb; }
-  .section-title { font-size: 15px; font-weight: 700; color: #0f1c2e; margin-bottom: 12px; margin-top: 20px; border-right: 4px solid #2563eb; padding-right: 8px; }
+  .summary-card .value.blue { color: #0f1c2e; }
+  .section-title { font-size: 15px; font-weight: 700; color: #0f1c2e; margin-bottom: 12px; margin-top: 20px; border-right: 4px solid #b8a76a; padding-right: 8px; }
   table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
   th { background: #0f1c2e; color: #fff; padding: 8px 10px; text-align: right; font-weight: 600; font-size: 11px; }
-  td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; text-align: right; }
-  tr:nth-child(even) td { background: #f8fafc; }
+  td { padding: 7px 10px; border-bottom: 1px solid #e3e0d7; text-align: right; }
+  tr:nth-child(even) td { background: #faf9f6; }
   .status-badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 10px; font-weight: 600; color: #fff; }
-  .amount-green { color: #059669; font-weight: 600; }
+  .amount-green { color: #2e7d32; font-weight: 600; }
   .amount-red { color: #dc2626; font-weight: 600; }
-  .pdf-footer { text-align: center; border-top: 2px solid #e2e8f0; padding-top: 12px; margin-top: 24px; font-size: 10px; color: #94a3b8; }
+  .pdf-footer { text-align: center; border-top: 2px solid #e3e0d7; padding-top: 12px; margin-top: 24px; font-size: 10px; color: #8a8f98; }
   .summary-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
   .summary-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 24px; }
 `;
@@ -632,21 +632,21 @@ const RECEIPT_CSS = `
   .receipt-page { padding: 36px 32px; direction: rtl; text-align: right; max-width: 794px; }
   .receipt-header { text-align: center; border-bottom: 3px solid #0f1c2e; padding-bottom: 16px; margin-bottom: 20px; }
   .receipt-header h1 { font-size: 24px; color: #0f1c2e; margin-bottom: 2px; }
-  .receipt-header .receipt-title { font-size: 18px; color: #2563eb; font-weight: 700; margin-top: 8px; }
-  .receipt-header .receipt-number { font-size: 13px; color: #64748b; margin-top: 4px; }
+  .receipt-header .receipt-title { font-size: 18px; color: #b8a76a; font-weight: 700; margin-top: 8px; }
+  .receipt-header .receipt-number { font-size: 13px; color: #8a8f98; margin-top: 4px; }
   .receipt-body { margin-bottom: 24px; }
-  .receipt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
-  .receipt-row .label { font-size: 13px; color: #64748b; flex-shrink: 0; min-width: 120px; }
-  .receipt-row .value { font-size: 14px; font-weight: 600; color: #1e293b; text-align: left; }
-  .receipt-amount-box { background: #f0fdf4; border: 2px solid #059669; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0; }
-  .receipt-amount-box .amount-label { font-size: 13px; color: #059669; margin-bottom: 4px; }
-  .receipt-amount-box .amount-value { font-size: 28px; font-weight: 800; color: #059669; }
-  .receipt-note { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #475569; }
-  .receipt-signature { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e2e8f0; }
+  .receipt-row { display: flex; justify-content: space-between; align-items: baseline; padding: 10px 0; border-bottom: 1px solid #e3e0d7; }
+  .receipt-row .label { font-size: 13px; color: #8a8f98; flex-shrink: 0; min-width: 120px; }
+  .receipt-row .value { font-size: 14px; font-weight: 600; color: #0f1c2e; text-align: left; }
+  .receipt-amount-box { background: #f3f8f3; border: 2px solid #2e7d32; border-radius: 12px; padding: 20px; text-align: center; margin: 24px 0; }
+  .receipt-amount-box .amount-label { font-size: 13px; color: #2e7d32; margin-bottom: 4px; }
+  .receipt-amount-box .amount-value { font-size: 28px; font-weight: 800; color: #2e7d32; }
+  .receipt-note { background: #faf9f6; border: 1px solid #e3e0d7; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: #676d76; }
+  .receipt-signature { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 20px; border-top: 2px solid #e3e0d7; }
   .receipt-sig-box { text-align: center; width: 45%; }
-  .receipt-sig-box .sig-label { font-size: 12px; color: #64748b; margin-bottom: 40px; }
-  .receipt-sig-box .sig-line { border-bottom: 1px solid #94a3b8; margin-bottom: 4px; }
-  .receipt-sig-box .sig-name { font-size: 11px; color: #94a3b8; }
+  .receipt-sig-box .sig-label { font-size: 12px; color: #8a8f98; margin-bottom: 40px; }
+  .receipt-sig-box .sig-line { border-bottom: 1px solid #b3b8c0; margin-bottom: 4px; }
+  .receipt-sig-box .sig-name { font-size: 11px; color: #8a8f98; }
 `;
 
 /**

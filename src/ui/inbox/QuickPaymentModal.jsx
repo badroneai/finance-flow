@@ -233,7 +233,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                className="w-full py-3 rounded-lg text-white font-medium disabled:opacity-50"
+                className="btn-primary w-full disabled:opacity-50"
                 style={{ background: 'var(--color-info)' }}
               >
                 {submitting ? 'جاري التسجيل…' : 'تسجيل الدفعة'}
@@ -247,7 +247,8 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                       onPostpone(dueItem);
                       onClose?.();
                     }}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
+                    className="font-medium"
+                    style={{ color: 'var(--color-primary)' }}
                   >
                     تأجيل لتاريخ آخر
                   </button>

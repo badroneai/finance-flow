@@ -13,57 +13,15 @@ export const DemoBanner = () => {
   if (!isDemo) return null;
 
   return (
-    <div
-      dir="rtl"
-      role="status"
-      aria-live="polite"
-      style={{
-        background: 'linear-gradient(135deg, #0F1C2E 0%, #1A2A42 100%)',
-        color: '#fff',
-        padding: '10px 16px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '12px',
-        flexWrap: 'wrap',
-        fontSize: '14px',
-        fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-        position: 'sticky',
-        top: 0,
-        zIndex: 9999,
-        boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-      }}
-    >
-      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+    <div dir="rtl" role="status" aria-live="polite" className="demo-banner">
+      <span className="demo-banner__text">
         <span style={{ fontSize: '16px' }} aria-hidden="true">
           &#9888;
         </span>
         أنت في <strong style={{ margin: '0 4px' }}>الوضع التجريبي</strong> — البيانات لن تُحفظ بعد
         إغلاق المتصفح
       </span>
-      <button
-        type="button"
-        onClick={exitDemo}
-        style={{
-          background: '#6B5A2E',
-          color: '#fff',
-          border: 'none',
-          borderRadius: '6px',
-          padding: '6px 16px',
-          fontSize: '13px',
-          fontWeight: 600,
-          cursor: 'pointer',
-          fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-          transition: 'background 0.2s',
-          whiteSpace: 'nowrap',
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.background = '#7d6b38';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.background = '#6B5A2E';
-        }}
-      >
+      <button type="button" onClick={exitDemo} className="demo-banner__button">
         سجّل حسابك الآن
       </button>
     </div>

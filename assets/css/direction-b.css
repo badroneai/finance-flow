@@ -1,0 +1,374 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Direction B — مستوحى من Linear / Vercel
+   ─────────────────────────────────────────────────────────────────
+   مبدأ: أداة دقيقة. كثافة معلومات عالية. كل بكسل له وظيفة.
+   • Sidebar داكن ومضغوط
+   • زوايا حادة 6px
+   • نصوص أصغر وأكثف
+   • الحالة النشطة = حد يساري فقط
+   • ظلال خفيفة جداً
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Body ─── */
+[data-direction="b"] body {
+  background: #F6F6F7;
+}
+
+/* ─── Topbar ─── */
+[data-direction="b"] .topbar-shell {
+  background: #fff;
+  border-bottom: 1px solid #E4E4E7;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+[data-direction="b"] .topbar-body {
+  padding: 0.7rem 1rem;
+}
+
+[data-direction="b"] .topbar-title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+[data-direction="b"] .topbar-subtitle {
+  font-size: 0.75rem;
+}
+
+[data-direction="b"] .topbar-date {
+  border-radius: 4px;
+  border: 1px solid #E4E4E7;
+  background: #FAFAFA;
+  font-size: 0.6875rem;
+  padding: 0.3rem 0.55rem;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Sidebar ─── */
+[data-direction="b"] .sidebar-shell {
+  background: #18181B;
+  border-inline-start: 1px solid #27272A;
+  box-shadow: none;
+}
+
+[data-direction="b"] .sidebar-brand {
+  border-bottom: 1px solid #27272A;
+}
+
+[data-direction="b"] .sidebar-brand-mark {
+  border-radius: 6px;
+  background: #27272A;
+  color: #fff;
+}
+
+[data-direction="b"] .sidebar-brand-title {
+  color: #FAFAFA;
+  font-weight: 600;
+  font-size: 0.8125rem;
+}
+
+[data-direction="b"] .sidebar-brand-subtitle {
+  color: #71717A;
+  font-size: 0.6875rem;
+}
+
+[data-direction="b"] .sidebar-nav-button {
+  color: #A1A1AA;
+  border-radius: 4px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  margin-inline-start: 2px;
+  border-inline-start: 2px solid transparent;
+}
+
+[data-direction="b"] .sidebar-nav-button:hover {
+  background: #27272A;
+  color: #E4E4E7;
+}
+
+[data-direction="b"] .sidebar-nav-button.is-active {
+  background: transparent;
+  color: #FAFAFA;
+  font-weight: 600;
+  border-inline-start: 2px solid #fff;
+  box-shadow: none;
+  outline: none;
+}
+
+[data-direction="b"] .sidebar-toggle {
+  border-top: 1px solid #27272A;
+  color: #71717A;
+}
+
+[data-direction="b"] .sidebar-toggle:hover {
+  color: #A1A1AA;
+  background: #27272A;
+}
+
+/* ─── Summary Cards ─── */
+[data-direction="b"] .summary-card,
+[data-direction="b"] .page-panel,
+[data-direction="b"] .panel-card {
+  background: #fff;
+  border: 1px solid #E4E4E7;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+[data-direction="b"] .summary-card::before {
+  display: none;
+}
+
+/* ─── Welcome Banner ─── */
+[data-direction="b"] .welcome-banner {
+  background: #18181B;
+  border: 1px solid #27272A;
+  border-radius: 6px;
+  box-shadow: none;
+  padding: 1rem 1.25rem;
+}
+
+[data-direction="b"] .welcome-banner::after {
+  display: none;
+}
+
+[data-direction="b"] .welcome-banner .banner-text strong {
+  font-size: 0.9375rem;
+}
+
+[data-direction="b"] .welcome-banner .banner-text p {
+  font-size: 0.8125rem;
+  color: #A1A1AA;
+}
+
+/* ─── Page Header ─── */
+[data-direction="b"] .page-shell {
+  padding: 1rem 0.85rem 1.5rem;
+}
+
+[data-direction="b"] .page-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+[data-direction="b"] .page-subtitle {
+  font-size: 0.8125rem;
+}
+
+[data-direction="b"] .page-kicker {
+  background: #F4F4F5;
+  border: 1px solid #E4E4E7;
+  color: #52525B;
+  border-radius: 3px;
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.5rem;
+}
+
+/* ─── Buttons ─── */
+[data-direction="b"] .btn-primary,
+[data-direction="b"] .btn-secondary,
+[data-direction="b"] .btn-danger {
+  border-radius: 6px;
+  min-height: 2.25rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+[data-direction="b"] .btn-primary {
+  background: #18181B;
+  color: #fff;
+  border: 1px solid #18181B;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+[data-direction="b"] .btn-primary:hover {
+  background: #27272A;
+  transform: none;
+}
+
+[data-direction="b"] .btn-secondary {
+  background: #fff;
+  color: #18181B;
+  border: 1px solid #D4D4D8;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+[data-direction="b"] .btn-secondary:hover {
+  background: #FAFAFA;
+  border-color: #A1A1AA;
+}
+
+[data-direction="b"] .btn-danger {
+  border-radius: 6px;
+}
+
+/* ─── Table ─── */
+[data-direction="b"] #root table thead tr {
+  background: #FAFAFA !important;
+  border-bottom: 1px solid #E4E4E7;
+}
+
+[data-direction="b"] #root table thead th {
+  color: #71717A;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.55rem 0.85rem !important;
+}
+
+[data-direction="b"] #root table tbody tr {
+  border-bottom: 1px solid #F4F4F5;
+}
+
+[data-direction="b"] #root table tbody tr:nth-child(even) {
+  background: transparent;
+}
+
+[data-direction="b"] #root table tbody tr:hover {
+  background: #FAFAFA !important;
+}
+
+[data-direction="b"] #root table tbody td {
+  padding: 0.55rem 0.85rem !important;
+  font-size: 0.8125rem;
+}
+
+/* ─── Inputs ─── */
+[data-direction="b"] #root input[type='text'],
+[data-direction="b"] #root input[type='search'],
+[data-direction="b"] #root input[type='number'],
+[data-direction="b"] #root input[type='date'],
+[data-direction="b"] #root select,
+[data-direction="b"] #root textarea {
+  border: 1px solid #D4D4D8;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  min-height: 2.25rem;
+  font-size: 0.8125rem;
+}
+
+[data-direction="b"] #root input:focus,
+[data-direction="b"] #root select:focus,
+[data-direction="b"] #root textarea:focus {
+  border-color: #18181B;
+  box-shadow: 0 0 0 2px rgba(24,24,27,0.08);
+}
+
+/* ─── Bottom Nav ─── */
+[data-direction="b"] .bottom-nav-shell {
+  background: #fff;
+  border-top: 1px solid #E4E4E7;
+  backdrop-filter: none;
+  box-shadow: none;
+}
+
+[data-direction="b"] .bottom-nav-item {
+  font-size: 0.625rem;
+}
+
+[data-direction="b"] .bottom-nav-item.is-active {
+  color: #18181B;
+}
+
+[data-direction="b"] .bottom-nav-item.is-active::after {
+  background: #18181B;
+  height: 2px;
+  width: 1.25rem;
+}
+
+/* ─── Detail sections ─── */
+[data-direction="b"] .detail-hero,
+[data-direction="b"] .detail-section,
+[data-direction="b"] .report-section,
+[data-direction="b"] .modal-sheet {
+  background: #fff;
+  border: 1px solid #E4E4E7;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+/* ─── Report metrics ─── */
+[data-direction="b"] .report-metric {
+  background: #fff;
+  border: 1px solid #E4E4E7;
+  border-radius: 6px;
+  box-shadow: none;
+  padding: 0.7rem 0.85rem;
+}
+
+[data-direction="b"] .report-metric::before {
+  display: none;
+}
+
+[data-direction="b"] .report-metric__label {
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+[data-direction="b"] .report-metric__value {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Report table ─── */
+[data-direction="b"] .report-table-wrap {
+  border: 1px solid #E4E4E7;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+/* ─── Control Toolbar ─── */
+[data-direction="b"] .control-toolbar {
+  background: #fff;
+  border: 1px solid #E4E4E7;
+  border-radius: 6px;
+  box-shadow: none;
+}
+
+/* ─── Empty state ─── */
+[data-direction="b"] .empty-state {
+  background: #fff;
+  border: 1px dashed #D4D4D8;
+  border-radius: 6px;
+  box-shadow: none;
+  padding: 2.5rem 1.5rem;
+}
+
+[data-direction="b"] .empty-state .empty-icon {
+  background: #F4F4F5;
+  border-radius: 6px;
+  color: #52525B;
+  width: 3.5rem;
+  height: 3.5rem;
+}
+
+[data-direction="b"] .empty-state .empty-cta {
+  background: #18181B;
+  color: #fff;
+  border-radius: 6px;
+  box-shadow: none;
+  font-size: 0.8125rem;
+  padding: 0.5rem 1rem;
+}
+
+/* ─── Dialog ─── */
+[data-direction="b"] #root [role='dialog'] {
+  border: 1px solid #E4E4E7;
+  border-radius: 8px;
+  box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+}
+
+/* ─── Hamburger ─── */
+[data-direction="b"] .hamburger-btn {
+  border-radius: 6px !important;
+}

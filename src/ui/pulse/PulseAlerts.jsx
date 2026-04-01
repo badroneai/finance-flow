@@ -115,7 +115,7 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
 
 function AlertRow({ alert, index, onAction, onDismiss }) {
   const isCritical = alert.severity === 'critical';
-  const dotStyle = SEVERITY_DOT[alert.severity] || { background: '#d1d5db' };
+  const dotStyle = SEVERITY_DOT[alert.severity] || { background: 'var(--color-border-strong)' };
   const amountStr = formatAmount(alert.amount);
   const daysStr = getDaysText(alert.dueDate);
 

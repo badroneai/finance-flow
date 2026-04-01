@@ -381,9 +381,18 @@ export function CommissionsPage({ setPage }) {
   const canWrite = !agentOnly;
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto" dir="rtl">
+    <div className="page-shell p-4 md:p-6 max-w-6xl mx-auto" dir="rtl">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">العوائد والوساطة</span>
+          <h1 className="page-title">العمولات</h1>
+          <p className="page-subtitle">
+            راقب المستحق والمدفوع والمتبقي بتدفق بصري أوضح، مع تصدير ومراجعة أسهل.
+          </p>
+        </div>
+      </div>
       {/* ═══ تبويبات ═══ */}
-      <div className="flex gap-1 mb-4 bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+      <div className="control-toolbar flex gap-1 mb-4 rounded-lg p-1 border border-[var(--color-border)]">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -403,10 +412,10 @@ export function CommissionsPage({ setPage }) {
       {/* ═══ عرض الوكيل — شريط تنبيه ═══ */}
       {agentOnly && (
         <div
-          className="border rounded-lg p-3 mb-4 text-sm flex items-center gap-2"
+          className="panel-card rounded-lg p-3 mb-4 text-sm flex items-center gap-2"
           style={{
             background: 'var(--color-info-bg)',
-            borderColor: 'var(--color-info-bg)',
+            borderColor: 'color-mix(in srgb, var(--color-info) 18%, var(--color-border))',
             color: 'var(--color-info)',
           }}
         >
@@ -456,7 +465,7 @@ export function CommissionsPage({ setPage }) {
           </div>
 
           {/* ═══ شريط الفلاتر ═══ */}
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+          <div className="control-toolbar p-4 mb-4">
             <div className="flex flex-wrap gap-2 items-center">
               <div className="relative flex-1 min-w-[180px]">
                 <Icons.search
@@ -602,7 +611,7 @@ export function CommissionsPage({ setPage }) {
                       }
                     }}
                     disabled={pdfExporting}
-                    className="px-4 py-2 rounded-lg bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2"
+                    className="btn-primary disabled:opacity-50"
                     aria-label="تصدير PDF"
                   >
                     <Icons.download size={16} />
@@ -613,7 +622,7 @@ export function CommissionsPage({ setPage }) {
                       exportCSV(filtered, ledgerName);
                       toast.success('تم تصدير الملف بنجاح');
                     }}
-                    className="px-4 py-2 rounded-lg bg-[var(--color-surface)] text-[var(--color-text)] text-sm font-medium border border-[var(--color-border)] hover:bg-[var(--color-bg)] flex items-center gap-2"
+                    className="btn-secondary"
                     aria-label="تصدير CSV"
                   >
                     <Icons.download size={16} />
@@ -624,7 +633,7 @@ export function CommissionsPage({ setPage }) {
               {canWrite && (
                 <button
                   onClick={() => setModal('add')}
-                  className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium hover:opacity-90 flex items-center gap-2"
+                  className="btn-primary"
                   aria-label="إضافة عمولة"
                 >
                   <Icons.plus size={16} />
@@ -1246,7 +1255,7 @@ function EmptyCommissions({ onAdd }) {
         <button
           type="button"
           onClick={onAdd}
-          className="px-5 py-2.5 rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium hover:opacity-90 flex items-center gap-2"
+          className="btn-primary"
         >
           <Icons.plus size={16} />
           أضف أول عمولة
@@ -1455,13 +1464,13 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium border border-[var(--color-border)]"
+          className="btn-secondary"
         >
           إلغاء
         </button>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-white text-sm font-medium hover:opacity-90"
+          className="btn-primary"
         >
           {isEdit ? 'حفظ التعديلات' : 'إضافة العمولة'}
         </button>
@@ -1572,13 +1581,13 @@ function PaymentForm({ commission, onSave, onCancel }) {
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 py-2 rounded-lg bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium border border-[var(--color-border)]"
+          className="btn-secondary"
         >
           إلغاء
         </button>
         <button
           type="submit"
-          className="px-4 py-2 rounded-lg text-white text-sm font-medium"
+          className="btn-primary"
           style={{ background: 'var(--color-success)' }}
           onMouseEnter={(e) => (e.target.style.opacity = '0.9')}
           onMouseLeave={(e) => (e.target.style.opacity = '1')}

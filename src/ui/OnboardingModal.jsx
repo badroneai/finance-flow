@@ -35,7 +35,7 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
     >
       <div
         className="absolute inset-0"
-        style={{ background: 'rgba(0,0,0,0.45)' }}
+        style={{ background: 'var(--color-overlay)' }}
         onClick={onClose}
       />
       <div
@@ -100,7 +100,7 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
               padding: '0.9rem 1rem',
               borderRadius: 'var(--radius)',
               background: 'var(--color-primary)',
-              color: '#fff',
+              color: 'var(--color-text-inverse)',
             }}
             onClick={goToLedgers}
           >

@@ -7,7 +7,7 @@
 | اللون | الكود | الاستخدام |
 |-------|-------|-----------|
 | Navy | `#0F1C2E` | اللون الأساسي (backgrounds, headers) |
-| Gold | `#B8A76A` | لون التمييز (accent, CTAs, premium) |
+| Gold | `#6B5A2E` | لون التمييز (accent, CTAs, premium) — WCAG AA على أبيض |
 | Gray | `#8A8F98` | النصوص الثانوية والعناصر المحايدة |
 | White | `#FFFFFF` | الخلفيات والمساحات |
 

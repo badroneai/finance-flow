@@ -119,11 +119,11 @@ function LedgerForecastTab({
                       <td className="py-2">
                         <Currency value={r.inflow} />
                       </td>
-                      <td className={`py-2 ${r.net < 0 ? 'text-red-700' : 'text-green-700'}`}>
+                      <td className={`py-2 ${r.net < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
                         <Currency value={r.net} />
                       </td>
                       <td
-                        className={`py-2 ${r.cumulative < 0 ? 'text-red-700' : 'text-[var(--color-text)]'}`}
+                        className={`py-2 ${r.cumulative < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-text)]'}`}
                       >
                         <Currency value={r.cumulative} />
                       </td>
@@ -141,7 +141,7 @@ function LedgerForecastTab({
               <button
                 type="button"
                 onClick={() => setForecastPreset('optimistic')}
-                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'optimistic' ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
+                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'optimistic' ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] border-[var(--color-primary)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
                 aria-label="متفائل"
               >
                 متفائل
@@ -149,7 +149,7 @@ function LedgerForecastTab({
               <button
                 type="button"
                 onClick={() => setForecastPreset('realistic')}
-                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'realistic' ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
+                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'realistic' ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] border-[var(--color-primary)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
                 aria-label="واقعي"
               >
                 واقعي
@@ -157,7 +157,7 @@ function LedgerForecastTab({
               <button
                 type="button"
                 onClick={() => setForecastPreset('stressed')}
-                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'stressed' ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
+                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'stressed' ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] border-[var(--color-primary)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
                 aria-label="ضاغط"
               >
                 ضاغط
@@ -165,7 +165,7 @@ function LedgerForecastTab({
               <button
                 type="button"
                 onClick={() => setForecastPreset('custom')}
-                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'custom' ? 'bg-blue-600 text-white border-blue-600' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
+                className={`px-3 py-2 rounded-lg border text-sm font-medium ${forecastPreset === 'custom' ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] border-[var(--color-primary)]' : 'bg-[var(--color-surface)] border-[var(--color-border)] text-[var(--color-text)] hover:bg-[var(--color-bg)]'}`}
                 aria-label="مخصص"
               >
                 مخصص

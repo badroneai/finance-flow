@@ -64,7 +64,7 @@ export function PulseAlertsBanner({ page, onGoToInbox, className = '' }) {
         <button
           type="button"
           onClick={onGoToInbox}
-          className="flex-shrink-0 px-3 py-1.5 rounded-lg text-white text-sm font-medium transition-colors"
+          className="btn-primary flex-shrink-0"
           style={{ background: 'var(--color-warning)' }}
         >
           عرض المستحقات

@@ -121,7 +121,16 @@ export function TransactionsPage({ setPage }) {
     setFilters({ fromDate: '', toDate: '', type: '', category: '', paymentMethod: '', search: '' });
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto print-container" dir="rtl">
+    <div className="page-shell p-4 md:p-6 max-w-6xl mx-auto print-container" dir="rtl">
+      <div className="page-header">
+        <div className="page-header-copy">
+          <span className="page-kicker">السجل المالي</span>
+          <h1 className="page-title">الحركات المالية</h1>
+          <p className="page-subtitle">
+            سجّل الدخل والمصروفات بسرعة، ثم فلترها وراجع صافي الأداء بدون تشويش بصري.
+          </p>
+        </div>
+      </div>
       {setPage && (
         <div className="flex justify-end mb-4 no-print">
           <button
@@ -158,7 +167,7 @@ export function TransactionsPage({ setPage }) {
       </div>
 
       {/* Filters + Actions — موبايل: فلاتر قابلة للطي (الدفعة 3) */}
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4 no-print">
+      <div className="control-toolbar bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4 no-print">
         <div className="flex flex-wrap gap-2 items-center">
           <div className="relative flex-1 min-w-[180px]">
             <Icons.search
