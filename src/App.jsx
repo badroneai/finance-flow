@@ -47,6 +47,8 @@ const MonthlyReportPage = lazy(() => import('./pages/MonthlyReportPage.jsx'));
 const CommissionsPage = lazy(() =>
   import('./pages/CommissionsPage.jsx').then((m) => ({ default: m.CommissionsPage }))
 );
+const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage.jsx'));
+const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage.jsx'));
 
 import { storageFacade } from './core/storage-facade.js';
 import {
@@ -458,6 +460,10 @@ const App = () => {
                         </ProtectedRoute>
                       }
                     />
+                    {/* صفحات عامة — بدون ProtectedRoute */}
+                    <Route path="/privacy" element={<PrivacyPolicyPage />} />
+                    <Route path="/terms" element={<TermsOfServicePage />} />
+
                     <Route
                       path="*"
                       element={

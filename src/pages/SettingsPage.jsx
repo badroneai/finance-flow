@@ -887,6 +887,58 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
         </div>
       )}
 
+      {/* ── روابط قانونية ── */}
+      <div
+        className="rounded-2xl p-5"
+        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
+      >
+        <h3 className="text-base font-bold text-[var(--color-text)] mb-4">معلومات قانونية</h3>
+        <div className="flex flex-wrap gap-3">
+          <a
+            href="/privacy"
+            className="text-sm px-4 py-2 rounded-lg"
+            style={{
+              color: 'var(--color-primary)',
+              background: 'var(--color-bg)',
+              border: '1px solid var(--color-border)',
+              textDecoration: 'none',
+            }}
+          >
+            🔒 سياسة الخصوصية
+          </a>
+          <a
+            href="/terms"
+            className="text-sm px-4 py-2 rounded-lg"
+            style={{
+              color: 'var(--color-primary)',
+              background: 'var(--color-bg)',
+              border: '1px solid var(--color-border)',
+              textDecoration: 'none',
+            }}
+          >
+            📋 شروط الاستخدام
+          </a>
+          <a
+            href="mailto:support@qaydalaqar.com"
+            className="text-sm px-4 py-2 rounded-lg"
+            style={{
+              color: 'var(--color-text-secondary)',
+              background: 'var(--color-bg)',
+              border: '1px solid var(--color-border)',
+              textDecoration: 'none',
+            }}
+          >
+            📧 support@qaydalaqar.com
+          </a>
+        </div>
+        <p
+          className="text-xs mt-3"
+          style={{ color: 'var(--color-text-secondary)' }}
+        >
+          © 2024–2026 إلكسار الرقمية — سجل تجاري: 7008837028
+        </p>
+      </div>
+
       <ConfirmDialog
         open={!!confirm}
         title={confirm?.title}
