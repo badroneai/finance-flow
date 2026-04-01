@@ -3,6 +3,7 @@
  * تعرض إيصال الدفعة بتنسيق احترافي مع خيارات الطباعة والتصدير
  */
 import { useState, useCallback, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import { formatCurrency } from '../utils/format.jsx';
 
 /**
@@ -52,7 +53,7 @@ export default function ReceiptModal({ receipt, onClose }) {
           @media print { body { padding: 0; } }
         </style>
       </head>
-      <body>${content.innerHTML}</body>
+      <body>${DOMPurify.sanitize(content.innerHTML, { FORCE_BODY: true })}</body>
       </html>
     `);
     printWin.document.close();
