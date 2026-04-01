@@ -49,6 +49,7 @@ const CommissionsPage = lazy(() =>
 );
 const PrivacyPolicyPage = lazy(() => import('./pages/PrivacyPolicyPage.jsx'));
 const TermsOfServicePage = lazy(() => import('./pages/TermsOfServicePage.jsx'));
+const ResetPasswordPage = lazy(() => import('./pages/ResetPasswordPage.jsx'));
 
 import { storageFacade } from './core/storage-facade.js';
 import {
@@ -242,8 +243,9 @@ const App = () => {
     },
   };
 
-  // صفحة المصادقة تُعرض بدون layout (بدون Sidebar/Topbar/BottomNav)
+  // صفحات المصادقة تُعرض بدون layout (بدون Sidebar/Topbar/BottomNav)
   const isAuthPage = location.pathname === '/auth';
+  const isResetPasswordPage = location.pathname === '/reset-password';
 
   if (isAuthPage) {
     return (
@@ -255,6 +257,20 @@ const App = () => {
         }
       >
         <AuthPage />
+      </Suspense>
+    );
+  }
+
+  if (isResetPasswordPage) {
+    return (
+      <Suspense
+        fallback={
+          <div className="p-6 text-center text-[var(--color-muted)]" dir="rtl">
+            جاري التحميل…
+          </div>
+        }
+      >
+        <ResetPasswordPage />
       </Suspense>
     );
   }

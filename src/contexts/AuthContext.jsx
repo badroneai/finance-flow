@@ -5,7 +5,8 @@
   يدير حالة المستخدم والجلسة عبر Supabase Auth.
   يجلب بيانات الـ profile والمكتب بعد تسجيل الدخول.
   يوفّر: user, session, profile, office, loading, signUp, signIn, signOut, isAuthenticated,
-         isOwner, isManager, isAgent, isSuperAdmin, profileLoading.
+         isOwner, isManager, isAgent, isSuperAdmin, profileLoading,
+         resetPassword (إرسال بريد الاستعادة), updatePassword (تغيير كلمة المرور الجديدة).
   إذا لم يكن Supabase مُعدّاً (placeholder)، يعمل التطبيق بدون مصادقة (localStorage فقط).
 */
 
@@ -192,6 +193,44 @@ export const AuthProvider = ({ children }) => {
     [fetchUserData]
   );
 
+  // ── إرسال بريد استعادة كلمة المرور ──────────────────────────
+  const resetPassword = useCallback(async (email) => {
+    if (!supabase) {
+      return { error: { message: 'Supabase غير مُعدّ. عدّل ملف .env.local.' } };
+    }
+    try {
+      // redirectTo: الصفحة التي يُعاد توجيه المستخدم إليها بعد الضغط على الرابط في البريد
+      const redirectTo = `${window.location.origin}${window.location.pathname.replace(/\/$/, '')}#/reset-password`;
+      const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo,
+      });
+      if (error) {
+        console.error('[قيد العقار] resetPassword Error:', error);
+      }
+      return { data, error };
+    } catch (err) {
+      console.error('[قيد العقار] resetPassword Exception:', err);
+      return { error: { message: err.message || 'خطأ غير متوقع' } };
+    }
+  }, []);
+
+  // ── تغيير كلمة المرور الجديدة (بعد فتح رابط الاستعادة) ──────
+  const updatePassword = useCallback(async (newPassword) => {
+    if (!supabase) {
+      return { error: { message: 'Supabase غير مُعدّ.' } };
+    }
+    try {
+      const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) {
+        console.error('[قيد العقار] updatePassword Error:', error);
+      }
+      return { data, error };
+    } catch (err) {
+      console.error('[قيد العقار] updatePassword Exception:', err);
+      return { error: { message: err.message || 'خطأ غير متوقع' } };
+    }
+  }, []);
+
   // ── تسجيل خروج ───────────────────────────────────────────────
   const signOut = useCallback(async () => {
     if (!supabase) {
@@ -246,6 +285,8 @@ export const AuthProvider = ({ children }) => {
       signUp,
       signIn,
       signOut,
+      resetPassword,
+      updatePassword,
       getProfile,
       isAuthenticated: effectiveIsAuthenticated,
       isSupabaseConfigured,
@@ -267,6 +308,8 @@ export const AuthProvider = ({ children }) => {
       signUp,
       signIn,
       signOut,
+      resetPassword,
+      updatePassword,
       getProfile,
       effectiveRole,
       effectiveIsAuthenticated,

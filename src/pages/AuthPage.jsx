@@ -33,6 +33,10 @@ const translateError = (msg) => {
     return 'تم تجاوز عدد المحاولات. حاول لاحقاً' + devSuffix;
   if (lower.includes('invalid email') || lower.includes('unable to validate email'))
     return 'صيغة البريد الإلكتروني غير صحيحة' + devSuffix;
+  if (lower.includes('email link is invalid') || lower.includes('token has expired'))
+    return 'رابط الاستعادة منتهي الصلاحية أو غير صالح. أرسل طلباً جديداً' + devSuffix;
+  if (lower.includes('new password should be different'))
+    return 'يجب أن تختلف كلمة المرور الجديدة عن القديمة' + devSuffix;
   if (lower.includes('signup is not allowed') || lower.includes('signups not allowed'))
     return 'التسجيل غير متاح حالياً' + devSuffix;
   if (lower.includes('signup requires a valid password')) return 'أدخل كلمة مرور صالحة' + devSuffix;
@@ -70,9 +74,9 @@ const inputStyle = {
 // ─── المكون الرئيسي ─────────────────────────────────────────────
 const AuthPage = () => {
   const navigate = useNavigate();
-  const { signIn, signUp, isAuthenticated } = useAuth();
+  const { signIn, signUp, resetPassword, isAuthenticated } = useAuth();
 
-  const [mode, setMode] = useState('login'); // 'login' | 'signup'
+  const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'forgot'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -100,6 +104,28 @@ const AuthPage = () => {
     resetMessages();
     setPassword('');
     setConfirmPassword('');
+  };
+
+  // ── نسيت كلمة المرور ─────────────────────────────────────────
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    resetMessages();
+
+    if (!email.trim()) {
+      setError('أدخل بريدك الإلكتروني لإرسال رابط الاستعادة');
+      return;
+    }
+
+    setLoading(true);
+    const { error: err } = await resetPassword(email.trim());
+    setLoading(false);
+
+    if (err) {
+      setError(translateError(err.message));
+    } else {
+      // نُظهر رسالة نجاح بدون الكشف إذا كان الإيميل مسجلاً أم لا (أمان)
+      setSuccessMsg('إذا كان البريد مسجّلاً لدينا، ستصل رسالة الاستعادة خلال دقائق. تحقق من صندوق الوارد والبريد غير المرغوب.');
+    }
   };
 
   // ── تسجيل دخول ───────────────────────────────────────────────
@@ -178,6 +204,7 @@ const AuthPage = () => {
   };
 
   const isLogin = mode === 'login';
+  const isForgot = mode === 'forgot';
 
   return (
     <div
@@ -217,10 +244,93 @@ const AuthPage = () => {
           className="text-lg font-bold mb-5 text-center"
           style={{ color: 'var(--color-text-primary)' }}
         >
-          {isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
+          {isForgot ? 'استعادة كلمة المرور' : isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
         </h2>
 
-        <form onSubmit={isLogin ? handleSignIn : handleSignUp} noValidate>
+        {/* ── نموذج نسيت كلمة المرور ─────────────────────────────── */}
+        {isForgot && (
+          <form onSubmit={handleForgotPassword} noValidate>
+            <p className="text-sm mb-4 text-center" style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+              أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور
+            </p>
+            <div className="mb-4">
+              <label
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--color-text-primary)' }}
+              >
+                البريد الإلكتروني
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="example@email.com"
+                dir="ltr"
+                required
+                autoComplete="email"
+                autoFocus
+                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
+                style={inputStyle}
+              />
+            </div>
+
+            {error && (
+              <div
+                className="mb-4 p-3 rounded-lg text-sm text-center"
+                role="alert"
+                style={{
+                  background: 'var(--color-danger-bg)',
+                  color: 'var(--color-danger)',
+                  border: '1px solid color-mix(in srgb, var(--color-danger) 24%, transparent)',
+                }}
+              >
+                {error}
+              </div>
+            )}
+
+            {successMsg && (
+              <div
+                className="mb-4 p-3 rounded-lg text-sm text-center"
+                role="status"
+                style={{
+                  background: 'var(--color-success-bg)',
+                  color: 'var(--color-success)',
+                  border: '1px solid color-mix(in srgb, var(--color-success) 24%, transparent)',
+                  lineHeight: 1.6,
+                }}
+              >
+                {successMsg}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || !!successMsg}
+              className="w-full rounded-lg py-2.5 text-sm font-semibold transition-opacity"
+              style={{
+                background: 'var(--color-primary)',
+                color: 'var(--color-text-inverse)',
+                opacity: loading || successMsg ? 0.6 : 1,
+                cursor: loading || successMsg ? 'not-allowed' : 'pointer',
+              }}
+            >
+              {loading ? 'جاري الإرسال…' : 'إرسال رابط الاستعادة'}
+            </button>
+
+            <div className="text-center mt-5">
+              <button
+                type="button"
+                onClick={() => switchMode('login')}
+                className="text-sm font-medium underline hover:no-underline"
+                style={{ color: 'var(--color-primary)' }}
+              >
+                العودة لتسجيل الدخول
+              </button>
+            </div>
+          </form>
+        )}
+
+        <form onSubmit={isLogin ? handleSignIn : handleSignUp} noValidate style={{ display: isForgot ? 'none' : undefined }}>
           {/* ── اسم المكتب (إنشاء حساب فقط) ────────────────────── */}
           {!isLogin && (
             <div className="mb-4">
@@ -378,19 +488,29 @@ const AuthPage = () => {
         </form>
 
         {/* ── تبديل الوضع ─────────────────────────────────────────── */}
-        <div className="text-center mt-5">
+        <div className="text-center mt-5" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
           {isLogin ? (
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-              ليس لديك حساب؟{' '}
+            <>
+              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+                ليس لديك حساب؟{' '}
+                <button
+                  type="button"
+                  onClick={() => switchMode('signup')}
+                  className="font-medium underline hover:no-underline"
+                  style={{ color: 'var(--color-primary)' }}
+                >
+                  أنشئ حساباً جديداً
+                </button>
+              </p>
               <button
                 type="button"
-                onClick={() => switchMode('signup')}
-                className="font-medium underline hover:no-underline"
-                style={{ color: 'var(--color-primary)' }}
+                onClick={() => switchMode('forgot')}
+                className="text-sm underline hover:no-underline"
+                style={{ color: 'var(--color-text-secondary)' }}
               >
-                أنشئ حساباً جديداً
+                نسيت كلمة المرور؟
               </button>
-            </p>
+            </>
           ) : (
             <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
               لديك حساب بالفعل؟{' '}
