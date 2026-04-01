@@ -36,7 +36,7 @@ export function LedgerHeader({ tab, onTabSelect }) {
             aria-selected={tab === id}
             aria-controls={`tabpanel-${id}`}
             onClick={handleClick}
-            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${tab === id ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)]' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted)] hover:bg-[var(--color-bg)]'}`}
+            className={`px-3.5 py-2 rounded-xl text-sm font-semibold transition-colors ${tab === id ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] shadow-sm' : 'bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-muted)] hover:bg-[var(--color-surface-hover)]'}`}
           >
             {label}
           </button>

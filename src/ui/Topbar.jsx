@@ -55,7 +55,9 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
           </button>
           <div className="topbar-heading">
             <h2 className="topbar-title truncate">{titles[page] || ''}</h2>
-            <span className="topbar-subtitle">{subtitles[page] || 'واجهة تشغيل مالية واضحة.'}</span>
+            <span className="topbar-subtitle">
+              {subtitles[page] || 'واجهة تشغيل مالية واضحة.'}
+            </span>
           </div>
         </div>
         <div className="topbar-meta">

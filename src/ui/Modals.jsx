@@ -64,12 +64,12 @@ export const ConfirmDialog = ({
 
   return (
     <div
-      className="confirm-overlay fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
+      className="confirm-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
       onClick={onCancel}
     >
       <div
         ref={dialogRef}
-        className={`confirm-modal bg-[var(--color-surface)] rounded-xl shadow-2xl p-6 max-w-sm w-full ${danger ? 'confirm-modal danger' : ''}`}
+        className={`confirm-modal max-w-sm w-full p-6 ${danger ? 'confirm-modal danger' : ''}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -137,30 +137,30 @@ export const Modal = ({ open, onClose, title, children, wide = false }) => {
 
   return (
     <div
-      className="fixed inset-0 z-40 flex items-start justify-center bg-black/50 p-4 overflow-y-auto"
+      className="modal-overlay fixed inset-0 z-40 flex items-start justify-center p-4 overflow-y-auto"
       onClick={onClose}
     >
       <div
         ref={dialogRef}
-        className={`bg-[var(--color-surface)] rounded-xl shadow-2xl mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`}
+        className={`modal-dialog mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modalTitle"
       >
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
-          <h3 id="modalTitle" className="text-lg font-bold">
+        <div className="modal-header">
+          <h3 id="modalTitle" className="modal-title">
             {title}
           </h3>
           <button
             onClick={onClose}
-            className="p-1 rounded-lg hover:bg-[var(--color-bg)]"
+            className="modal-close"
             aria-label="إغلاق"
           >
             <Icons.x size={20} />
           </button>
         </div>
-        <div className="p-4">{children}</div>
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );

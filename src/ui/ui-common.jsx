@@ -459,23 +459,22 @@ export const FormField = ({ label, error, children, id: fieldId }) => {
         })
       : children;
   return (
-    <div className="mb-3">
+    <div className="field-group">
       {fieldId ? (
         <label
-          className="block text-sm font-medium text-[var(--color-text)] mb-1"
+          className="field-label"
           htmlFor={fieldId}
         >
           {label}
         </label>
       ) : (
-        <label className="block text-sm font-medium text-[var(--color-text)] mb-1">{label}</label>
+        <label className="field-label">{label}</label>
       )}
       {enhancedChild}
       {error && (
         <p
           id={errorId}
-          className="text-xs mt-1"
-          style={{ color: 'var(--color-danger)' }}
+          className="field-error"
           role="alert"
         >
           {error}
@@ -486,8 +485,8 @@ export const FormField = ({ label, error, children, id: fieldId }) => {
 };
 
 export const SettingsField = ({ label, children }) => (
-  <div className="mb-4">
-    <label className="block text-sm font-medium text-[var(--color-text)] mb-1">{label}</label>
+  <div className="settings-field">
+    <label className="field-label">{label}</label>
     {children}
   </div>
 );
@@ -504,12 +503,16 @@ export const SummaryCard = ({ label, value, color = 'blue', icon }) => {
   };
   const colorVar = colorMap[color] || colorMap.blue;
   return (
-    <div className="summary-card bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+    <div className={`summary-card summary-card--${color} bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4`}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-medium text-[var(--color-muted)]">{label}</span>
-        {icon && <span style={{ color: `var(${colorVar})` }}>{icon}</span>}
+        <span className="summary-card__label">{label}</span>
+        {icon && (
+          <span className="summary-card__icon" style={{ color: `var(${colorVar})` }}>
+            {icon}
+          </span>
+        )}
       </div>
-      <div className="text-xl font-bold" style={{ color: `var(${colorVar})` }}>
+      <div className="summary-card__value" style={{ color: `var(${colorVar})` }}>
         {value}
       </div>
     </div>
@@ -587,7 +590,7 @@ export const Badge = ({ children, color = 'blue' }) => {
   const colorVar = colorMap[color] || colorMap.blue;
   return (
     <span
-      className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+      className={`badge badge--${color} inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium`}
       style={{ backgroundColor: colorVar.bg, color: colorVar.text }}
     >
       {children}

@@ -12,7 +12,6 @@ export const Sidebar = ({
   setCollapsed,
   mobileOpen,
   setMobileOpen,
-  onOpenHelp,
 }) => {
   const items = Array.isArray(navItems) ? navItems : [];
 
@@ -23,7 +22,7 @@ export const Sidebar = ({
 
   const sidebarContent = (
     <div className="flex flex-col h-full">
-      <div className="sidebar-brand p-4">
+      <div className="sidebar-brand p-5">
         <div className="flex items-center gap-3">
           <div className="sidebar-brand-mark flex-shrink-0" aria-hidden="true">
             <svg
@@ -54,7 +53,7 @@ export const Sidebar = ({
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-3 px-2" aria-label="القائمة الرئيسية">
+      <nav className="flex-1 overflow-y-auto py-4 px-3" aria-label="القائمة الرئيسية">
         {items.map((item) => {
           const Icon = item.icon || Icons?.list;
           return (
@@ -84,10 +83,10 @@ export const Sidebar = ({
         {sidebarContent}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="sidebar-toggle p-3 text-xs"
-          aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-        >
-          {collapsed ? '◁' : '▷ طي'}
+        className="sidebar-toggle p-4 text-xs font-medium"
+        aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+      >
+        {collapsed ? '◁' : '▷ طي'}
         </button>
       </aside>
 
