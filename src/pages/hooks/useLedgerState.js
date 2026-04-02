@@ -8,18 +8,13 @@ import {
   setLedgers,
   getActiveLedgerId,
   getRecurringItems,
-  setRecurringItems,
 } from '../../core/ledger-store.js';
 import {
   computeLedgerCompleteness,
   computeRecurringDashboard,
-  groupRecurringBySections,
   isPastDue,
   isSeededRecurring,
   normalizeCategory as normalizeRecurringCategory,
-  normalizeRisk as normalizeRecurringRisk,
-  sectionStats,
-  sortRecurringInSection,
   isDueWithinDays,
 } from '../../core/recurring-intelligence.js';
 import {
@@ -34,10 +29,7 @@ import {
 } from '../../core/ledger-analytics.js';
 import {
   computeLedgerHealth,
-  computeLedgerProjection,
-  computeScenario,
   isSeededOnly,
-  computeComplianceShield,
   calculateBurnRateBundle,
   calculateCashPressureScore,
   calculateNext90DayRisk,
@@ -46,16 +38,7 @@ import {
   getDailyPlaybook,
   getBenchmarkComparison,
 } from '../../core/ledger-health.js';
-import { buildLedgerInbox, addDaysISO, computeCashPlan } from '../../core/ledger-planner.js';
-import { lastPayNowAt, daysSince } from '../../core/ledger-item-history.js';
-import {
-  monthKeyFromDate,
-  computeSpendByBucketFromHistory,
-  computeBudgetUtilization,
-  normalizeBudgets as normalizeAuthorityBudgets,
-} from '../../core/ledger-budget-authority.js';
 import { dataStore } from '../../core/dataStore.js';
-import { seedRecurringForLedger } from '../../domain/ledgerTemplates.js';
 
 // Sub-hooks
 import useLedgerCRUD, { normalizeLedgerType } from './useLedgerCRUD.js';
@@ -63,12 +46,7 @@ import useRecurringCRUD from './useRecurringCRUD.js';
 import usePricing from './usePricing.js';
 import usePayment from './usePayment.js';
 import useForecast from './useForecast.js';
-import {
-  LEDGER_TYPE_LABELS,
-  CATEGORY_LABEL,
-  sections,
-  parseRecurringAmount,
-} from './ledger-helpers.js';
+import { LEDGER_TYPE_LABELS, parseRecurringAmount } from './ledger-helpers.js';
 
 // ============================================
 // الـ Hook الرئيسي (orchestrator)
@@ -113,18 +91,6 @@ export default function useLedgerState() {
   const [tOperational, setTOperational] = useState('');
   const [tMaintenance, setTMaintenance] = useState('');
   const [tMarketing, setTMarketing] = useState('');
-
-  // Intelligence UI (display-only)
-  const [healthHelpOpen, setHealthHelpOpen] = useState(false);
-  const [simRentPct, setSimRentPct] = useState(0);
-  const [simBillsPct, setSimBillsPct] = useState(0);
-  const [simMaintPct, setSimMaintPct] = useState(0);
-  const [brainDetails, setBrainDetails] = useState(null);
-
-  // Inbox + authority
-  const [inboxFilter, setInboxFilter] = useState('all');
-  const [, setHistoryModal] = useState(null);
-  const [authorityOpen, setAuthorityOpen] = useState(true);
 
   // ============================================
   // Effects
@@ -230,8 +196,6 @@ export default function useLedgerState() {
   const activeRecurring = [...activeRecurringRaw];
   const recurringDashboard = computeRecurringDashboard(activeRecurring);
   const completeness = computeLedgerCompleteness(activeRecurring);
-  const recurringSections = groupRecurringBySections(activeRecurring);
-  const grouped = recurringSections;
   const seededOnlyList = activeRecurring.filter(isSeededOnly);
   const unpricedList = activeRecurring.filter((x) => Number(x?.amount) === 0);
 
@@ -275,68 +239,6 @@ export default function useLedgerState() {
       benchmarks: getBenchmarkComparison(activeId, brainCtx),
     };
   }, [activeId, brainCtx]);
-
-  const projection = computeLedgerProjection({ recurringItems: seededOnlyList });
-
-  const inbox = buildLedgerInbox({
-    ledgerId: activeId,
-    recurringItems: recurring,
-    now: new Date(),
-  });
-  const cashPlan = computeCashPlan({
-    ledgerId: activeId,
-    recurringItems: recurring,
-    now: new Date(),
-  });
-
-  const budgets = normalizeAuthorityBudgets(activeLedger?.budgets);
-  const spendByBucket = computeSpendByBucketFromHistory({
-    ledgerId: activeId,
-    recurringItems: Array.isArray(recurring) ? recurring : [],
-    monthKey: monthKeyFromDate(new Date()),
-  });
-  const budgetAuth = computeBudgetUtilization({ budgets, spendByBucket, softThreshold: 0.8 });
-  const complianceShield = computeComplianceShield({
-    ledgerId: activeId,
-    recurringItems: Array.isArray(recurring) ? recurring : [],
-    now: new Date(),
-  });
-
-  const inboxView = (() => {
-    const list = Array.isArray(inbox) ? inbox : [];
-    if (inboxFilter === 'overdue')
-      return list.filter((x) => String(x.reason || '').includes('متأخر'));
-    if (inboxFilter === 'soon')
-      return list.filter(
-        (x) => String(x.reason || '').includes('7') || String(x.reason || '').includes('14')
-      );
-    if (inboxFilter === 'unpriced') return list.filter((x) => Number(x.amount) === 0);
-    if (inboxFilter === 'high') return list.filter((x) => String(x.reason || '').includes('خطر'));
-    return list;
-  })();
-
-  const operatorMode = (() => {
-    const list = activeRecurring;
-    const overdue = list.filter((x) => isPastDue(x));
-    const upcoming14 = list.filter((x) => !isPastDue(x) && isDueWithinDays(x, 14));
-    const byDueAsc = (a, b) => {
-      const da = new Date(String(a?.nextDueDate || '') + 'T00:00:00').getTime();
-      const db = new Date(String(b?.nextDueDate || '') + 'T00:00:00').getTime();
-      return (da || 0) - (db || 0);
-    };
-    return {
-      priorityNow: [...overdue.sort(byDueAsc), ...upcoming14.sort(byDueAsc)].slice(0, 10),
-      overdueCount: overdue.length,
-      upcoming14Count: upcoming14.length,
-      pricedCount: list.filter((x) => Number(x?.amount) > 0).length,
-      unpricedCount: list.filter((x) => Number(x?.amount) === 0).length,
-      monthlyTotal: list
-        .filter(
-          (x) => String(x.frequency || '').toLowerCase() === 'monthly' && Number(x.amount) > 0
-        )
-        .reduce((a, x) => a + Number(x.amount), 0),
-    };
-  })();
 
   const outlook = (() => {
     const list = activeRecurring;
@@ -499,7 +401,7 @@ export default function useLedgerState() {
   const handleLedgerTabSelect = useCallback((tabId) => setTab(tabId), []);
 
   // ============================================
-  // القيمة المُرجَعة — تجميع كل شيء
+  // القيمة المُرجَعة
   // ============================================
   return {
     // أساسي
@@ -527,11 +429,8 @@ export default function useLedgerState() {
     // الالتزامات (من useRecurringCRUD)
     ...recurringCRUD,
 
-    // الميزانيات (محسوبة)
-    budgets,
-    budgetAuth,
+    // الميزانيات
     budgetsHealth,
-    spendByBucket,
 
     // التسعير (من usePricing)
     ...pricing,
@@ -542,32 +441,14 @@ export default function useLedgerState() {
 
     // الذكاء والصحة
     health,
-    healthHelpOpen,
-    setHealthHelpOpen,
-    projection,
-    simRentPct,
-    setSimRentPct,
-    simBillsPct,
-    setSimBillsPct,
-    simMaintPct,
-    setSimMaintPct,
     brain,
-    brainDetails,
-    setBrainDetails,
+    completeness,
+    outlook,
+    actuals,
+    ledgerAlerts,
 
     // التوقعات (من useForecast)
     ...forecastHook,
-
-    // الوارد والسلطة
-    inbox,
-    cashPlan,
-    inboxFilter,
-    setInboxFilter,
-    inboxView,
-    setHistoryModal,
-    authorityOpen,
-    setAuthorityOpen,
-    compliance: complianceShield,
 
     // الأداء
     incomeMode,
@@ -591,40 +472,18 @@ export default function useLedgerState() {
 
     // القيم المحسوبة
     recurringDashboard,
-    completeness,
-    recurringSections,
-    grouped,
-    sections,
-    seededOnlyList,
-    operatorMode,
-    outlook,
-    actuals,
-    ledgerAlerts,
     ledgerReports,
     allTxsForLedgerCards,
     allTransactionsRef,
-    CATEGORY_LABEL,
 
     // المساعدات
     parseRecurringAmount,
     normalizeRecurringCategory,
-    normalizeRecurringRisk,
-    sectionStats,
-    sortRecurringInSection,
-    isSeededRecurring,
-    isSeededOnly,
     isPastDue,
     isDueWithinDays,
-    normalizeBudgets,
-    computeScenario,
-    lastPayNowAt,
-    daysSince,
-    addDaysISO,
     filterTransactionsForLedgerByMeta,
     dataStore,
     setLedgers,
-    setRecurringItems,
-    seedRecurringForLedger,
     createRecurringItem,
     createDataTransaction,
     getLast4MonthsTable,
