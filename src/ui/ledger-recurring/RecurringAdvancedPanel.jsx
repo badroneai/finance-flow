@@ -1,12 +1,4 @@
-const CATEGORY_LABELS_AR = {
-  system: 'إيجار ورسوم',
-  operational: 'تشغيل ومرافق',
-  maintenance: 'صيانة',
-  marketing: 'تسويق وإعلان',
-  adhoc: 'عند الحاجة',
-  uncategorized: 'أخرى',
-  other: 'أخرى',
-};
+import { CATEGORY_LABELS_AR } from './recurring-labels.js';
 
 // لوحة التحليلات المتقدمة — مطوية افتراضياً
 function RecurringAdvancedPanel({
