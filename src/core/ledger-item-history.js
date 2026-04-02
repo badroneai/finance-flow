@@ -9,14 +9,9 @@
   - No external libs
 */
 
-const MAX_HISTORY = 20;
+import { toIsoMs as toMs } from './ledger-shared.js';
 
-const toMs = (iso) => {
-  const s = String(iso || '').trim();
-  if (!s) return null;
-  const ms = new Date(s).getTime();
-  return Number.isNaN(ms) ? null : ms;
-};
+const MAX_HISTORY = 20;
 
 export function clampHistory(history, max = MAX_HISTORY) {
   const list = Array.isArray(history) ? history : [];

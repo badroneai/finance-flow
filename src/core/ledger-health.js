@@ -3,22 +3,19 @@
   (Refactor Plan 0.2 — نفس أسماء الدوال والثوابت المُصدّرة)
 */
 
-// ---------- Helpers shared across sections ----------
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
+import {
+  toDateOnlyMs as toMs,
+  startOfDayMs,
+  clamp,
+  freqMultiplier,
+  monthlyEquivalent,
+  normalizeCategoryToOther as normalizeCategoryBrain,
+  isRentLike as isRentLikeBrain,
+  isUtilitiesLike,
+  isMaintenanceLike,
+} from './ledger-shared.js';
 
-const toMs = (dateStr) => {
-  const s = String(dateStr || '').trim();
-  if (!s) return null;
-  const d = new Date(s + 'T00:00:00');
-  const ms = d.getTime();
-  return Number.isNaN(ms) ? null : ms;
-};
-
-const startOfDayMs = (d = new Date()) => {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x.getTime();
-};
+// ---------- Helpers local to this file ----------
 
 const startOfTodayMs = () => startOfDayMs(new Date());
 
@@ -130,15 +127,8 @@ export const isSeededOnly = (r) => {
   return false;
 };
 
-export const freqMultiplier = (freq) => {
-  const f = String(freq || '').toLowerCase();
-  if (f === 'monthly') return 12;
-  if (f === 'quarterly') return 4;
-  if (f === 'semiannual' || f === 'semi-annually') return 2;
-  if (f === 'yearly' || f === 'annual') return 1;
-  if (f === 'adhoc') return 0;
-  return 0;
-};
+// freqMultiplier re-exported from ledger-shared.js
+export { freqMultiplier };
 
 export function computeLedgerHealth({ recurringItems = [], transactions = [] } = {}) {
   const seeded = (Array.isArray(recurringItems) ? recurringItems : []).filter(isSeededOnly);
@@ -256,11 +246,6 @@ const isBillsLike = (r) => {
     hint.includes('انترنت') ||
     hint.includes('هاتف')
   );
-};
-
-const isMaintenanceLike = (r) => {
-  const cat = String(r?.category || '').toLowerCase();
-  return cat === 'maintenance';
 };
 
 export function computeScenario({
@@ -502,21 +487,6 @@ export function calculateBurnRateBundle(ledgerId, ctx = {}) {
   };
 }
 
-const normalizeCategoryBrain = (c) => {
-  const x = String(c || '').toLowerCase();
-  return x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing'
-    ? x
-    : 'other';
-};
-
-const monthlyEquivalent = (r) => {
-  const amt = Number(r?.amount) || 0;
-  if (amt <= 0) return 0;
-  const m = freqMultiplier(r?.frequency);
-  if (m <= 0) return 0;
-  return (amt * m) / 12;
-};
-
 export function getBurnBreakdown(ledgerId, ctx = {}) {
   const items = filterLedgerRecurring(ledgerId, ctx.recurringItems).filter(
     (r) => Number(r?.amount) > 0
@@ -660,33 +630,6 @@ export const SAUDI_BENCHMARKS = {
   building: { rentRatioMax: 0.35, utilitiesRatioMax: 0.1, marketingRatioMax: 0.12 },
   villa: { rentRatioMax: 0.5, utilitiesRatioMax: 0.14, marketingRatioMax: 0.08 },
   personal: { rentRatioMax: 0.5, utilitiesRatioMax: 0.15, marketingRatioMax: 0.05 },
-};
-
-const isRentLikeBrain = (r) => {
-  const hint = String(r?.saHint || '').toLowerCase();
-  if (hint.includes('إيجار') || hint.includes('ايجار')) return true;
-  const title = String(r?.title || '').toLowerCase();
-  if (title.includes('إيجار') || title.includes('ايجار')) return true;
-  return false;
-};
-
-const isUtilitiesLike = (r) => {
-  const hint = String(r?.saHint || '').toLowerCase();
-  const title = String(r?.title || '').toLowerCase();
-  return (
-    hint.includes('كهرب') ||
-    hint.includes('ماء') ||
-    hint.includes('اتصال') ||
-    hint.includes('إنترنت') ||
-    hint.includes('انترنت') ||
-    hint.includes('هاتف') ||
-    title.includes('كهرب') ||
-    title.includes('ماء') ||
-    title.includes('اتصال') ||
-    title.includes('إنترنت') ||
-    title.includes('انترنت') ||
-    title.includes('هاتف')
-  );
 };
 
 export function getBenchmarkComparison(ledgerId, ctx = {}) {

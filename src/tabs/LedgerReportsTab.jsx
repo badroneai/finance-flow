@@ -47,19 +47,27 @@ const MONTHS_REPORT = [
   { value: 12, label: 'ديسمبر' },
 ];
 
-function LedgerReportsTab(props) {
+/**
+ * @param {object} props — مُجمّعة في مجالين
+ * @param {object} props.data — بيانات الدفتر والحركات والتقارير
+ * @param {object} props.ui — مكونات مشتركة وأدوات مساعدة
+ */
+function LedgerReportsTab({ data, ui }) {
   const {
-    toast,
     activeId,
     activeLedger,
-    Badge = fallbackBadge,
-    EmptyState = fallbackEmpty,
-    Currency = fallbackCurrency,
     dataStore,
     filterTransactionsForLedgerByMeta,
     ledgerReports = null,
     budgetsHealth = null,
-  } = props;
+  } = data;
+
+  const {
+    Badge = fallbackBadge,
+    EmptyState = fallbackEmpty,
+    Currency = fallbackCurrency,
+    toast,
+  } = ui;
 
   const navigate = useNavigate();
   const now = new Date();

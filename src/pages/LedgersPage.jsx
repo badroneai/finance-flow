@@ -1,6 +1,6 @@
 // صفحة الدفاتر — shell رقيقة تربط useLedgerState بالمكونات الفرعية
 import { ConfirmDialog } from '../ui/Modals.jsx';
-import { EmptyState, Badge, Icons } from '../ui/ui-common.jsx';
+import { EmptyState, Badge } from '../ui/ui-common.jsx';
 import { Currency } from '../utils/format.jsx';
 import { LedgerTabErrorBoundary } from '../ui/ErrorBoundaries.jsx';
 import { LedgerHeader } from '../ui/ledger/LedgerHeader.jsx';
@@ -21,7 +21,7 @@ const LedgersPage = ({ setPage }) => {
   const state = useLedgerState();
 
   const {
-    // أساسي
+    // أساسي — مستخدم مباشرة في هذا الملف
     toast,
     tab,
     setTab,
@@ -29,7 +29,7 @@ const LedgersPage = ({ setPage }) => {
     setConfirm,
     refresh,
 
-    // الدفاتر
+    // الدفاتر — LedgerListTab
     ledgers,
     activeId,
     activeLedger,
@@ -40,7 +40,7 @@ const LedgersPage = ({ setPage }) => {
     LEDGER_TYPE_LABELS,
     normalizeLedgerType,
 
-    // CRUD الدفاتر
+    // CRUD الدفاتر — LedgerListTab
     newName,
     setNewName,
     newType,
@@ -60,7 +60,7 @@ const LedgersPage = ({ setPage }) => {
     saveEdit,
     setActive,
 
-    // الالتزامات
+    // الالتزامات — LedgerRecurringTab
     recForm,
     setRecForm,
     recEditingId,
@@ -69,22 +69,17 @@ const LedgersPage = ({ setPage }) => {
     startEditRecurring,
     saveRecurring,
     deleteRecurring,
-    updateRecurringOps,
 
-    // الميزانيات
+    // الميزانيات — مشترك بين recurring + reports
     budgetForm,
     setBudgetForm,
     saveLedgerBudgets,
-    budgets,
-    budgetAuth,
     budgetsHealth,
-    spendByBucket,
 
-    // التسعير
+    // التسعير — LedgerRecurringTab
     pricingOpen,
     setPricingOpen,
     pricingIndex,
-    setPricingIndex,
     pricingAmount,
     setPricingAmount,
     pricingDate,
@@ -94,7 +89,7 @@ const LedgersPage = ({ setPage }) => {
     openPricingWizard,
     applyQuickPricing,
 
-    // التسعير السعودي
+    // التسعير السعودي — LedgerRecurringTab + LedgerListTab
     saPricingOpen,
     setSaPricingOpen,
     saCity,
@@ -105,63 +100,27 @@ const LedgersPage = ({ setPage }) => {
     setSaOnlyUnpriced,
     applySaudiAutoPricingForLedger,
 
-    // الدفع
+    // الدفع — LedgerRecurringTab
     payOpen,
     setPayOpen,
     paySource,
-    setPaySource,
     payForm,
     setPayForm,
     startPayNow,
     submitPayNow,
 
-    // الذكاء والصحة
+    // الذكاء والصحة — LedgerRecurringTab
     health,
-    healthHelpOpen,
-    setHealthHelpOpen,
-    projection,
-    simRentPct,
-    setSimRentPct,
-    simBillsPct,
-    setSimBillsPct,
-    simMaintPct,
-    setSimMaintPct,
     brain,
-    brainDetails,
-    setBrainDetails,
+    completeness,
+    outlook,
+    actuals,
+    ledgerAlerts,
 
-    // التوقعات
-    forecastPreset,
-    setForecastPreset,
-    assumedInflow,
-    setAssumedInflow,
-    scRent,
-    setScRent,
-    scUtilities,
-    setScUtilities,
-    scMaintenance,
-    setScMaintenance,
-    scMarketing,
-    setScMarketing,
-    scOther,
-    setScOther,
-    forecastRunRate,
+    // التوقعات — LedgerPerformanceTab
     forecast,
-    cashGap,
-    forecastInsights,
 
-    // الوارد والسلطة
-    inbox,
-    cashPlan,
-    inboxFilter,
-    setInboxFilter,
-    inboxView,
-    setHistoryModal,
-    authorityOpen,
-    setAuthorityOpen,
-    compliance,
-
-    // الأداء
+    // الأداء — LedgerPerformanceTab
     incomeMode,
     setIncomeMode,
     incomeFixed,
@@ -181,41 +140,22 @@ const LedgersPage = ({ setPage }) => {
     tMarketing,
     setTMarketing,
 
-    // القيم المحسوبة
+    // القيم المحسوبة — LedgerListTab
     recurringDashboard,
-    completeness,
-    recurringSections,
-    grouped,
-    sections,
-    seededOnlyList,
-    operatorMode,
-    outlook,
-    actuals,
-    ledgerAlerts,
-    ledgerReports,
     allTxsForLedgerCards,
     allTransactionsRef,
-    CATEGORY_LABEL,
 
-    // المساعدات
-    parseRecurringAmount,
-    normalizeRecurringCategory,
-    normalizeRecurringRisk,
-    sectionStats,
-    sortRecurringInSection,
-    isSeededRecurring,
-    isSeededOnly,
-    isPastDue,
-    isDueWithinDays,
-    normalizeBudgets,
-    computeScenario,
-    lastPayNowAt,
-    daysSince,
-    addDaysISO,
+    // التقارير — LedgerReportsTab
+    ledgerReports,
     filterTransactionsForLedgerByMeta,
     dataStore,
+
+    // المساعدات — مشتركة بين التبويبات
+    parseRecurringAmount,
+    normalizeRecurringCategory,
+    isPastDue,
+    isDueWithinDays,
     setLedgers,
-    seedRecurringForLedger,
     createRecurringItem,
     createDataTransaction,
     getLast4MonthsTable,
@@ -318,91 +258,41 @@ const LedgersPage = ({ setPage }) => {
               tabIndex={0}
             >
               <LedgerRecurringTab
-                {...{
-                  Currency,
-                  Badge,
-                  EmptyState,
-
+                recurringCrud={{
                   activeId,
-                  activeLedger,
                   recurring,
-                  startPayNow,
-                  startEditRecurring,
-                  deleteRecurring,
-                  resetRecForm,
-                  saveRecurring,
+                  activeRecurring,
                   recForm,
                   setRecForm,
                   recEditingId,
                   setRecEditingId,
-
-                  authorityOpen,
-                  setAuthorityOpen,
-                  budgets,
-                  saveLedgerBudgets,
-                  budgetAuth,
-                  compliance,
-                  brain,
-                  spendByBucket,
-
-                  inbox,
-                  cashPlan,
-                  inboxFilter,
-                  setInboxFilter,
-                  inboxView,
-                  lastPayNowAt,
-                  daysSince,
-                  addDaysISO,
-                  setHistoryModal,
-
-                  forecastRunRate,
-                  cashGap,
-                  assumedInflow,
-                  setAssumedInflow,
-                  forecastPreset,
-                  setForecastPreset,
-                  scRent,
-                  setScRent,
-                  scUtilities,
-                  setScUtilities,
-                  scMaintenance,
-                  setScMaintenance,
-                  scMarketing,
-                  setScMarketing,
-                  scOther,
-                  setScOther,
-                  forecastInsights,
-
-                  brainDetails,
-                  setBrainDetails,
-                  seededOnlyList,
-                  isPastDue,
-                  operatorMode,
-                  openPricingWizard,
-
-                  health,
-                  healthHelpOpen,
-                  setHealthHelpOpen,
-                  projection,
-                  simRentPct,
-                  setSimRentPct,
-                  simBillsPct,
-                  setSimBillsPct,
-                  simMaintPct,
-                  setSimMaintPct,
-                  computeScenario,
-
+                  saveRecurring,
+                  resetRecForm,
+                  deleteRecurring,
+                  startEditRecurring,
+                  startPayNow,
+                }}
+                payment={{
+                  payOpen,
+                  setPayOpen,
+                  paySource,
+                  payForm,
+                  setPayForm,
+                  submitPayNow,
+                }}
+                pricing={{
                   pricingOpen,
                   setPricingOpen,
                   pricingIndex,
-                  setPricingIndex,
                   pricingAmount,
                   setPricingAmount,
                   pricingDate,
                   setPricingDate,
                   pricingList,
                   applyQuickPricing,
-
+                  openPricingWizard,
+                }}
+                saPricing={{
                   saPricingOpen,
                   setSaPricingOpen,
                   saCity,
@@ -412,49 +302,29 @@ const LedgersPage = ({ setPage }) => {
                   saOnlyUnpriced,
                   setSaOnlyUnpriced,
                   applySaudiAutoPricingForLedger,
-
-                  payOpen,
-                  setPayOpen,
-                  paySource,
-                  setPaySource,
-                  payForm,
-                  setPayForm,
-                  submitPayNow,
-
-                  toast,
-                  refresh,
-                  setConfirm,
-                  seedRecurringForLedger,
-                  filterTransactionsForLedgerByMeta,
-                  dataStore,
-                  normalizeLedgerType,
-                  parseRecurringAmount,
-                  normalizeRecurringCategory,
-                  normalizeRecurringRisk,
-                  sections,
-                  sectionStats,
-                  grouped,
-                  sortRecurringInSection,
-                  isSeededRecurring,
-                  isSeededOnly,
-                  isDueWithinDays,
+                }}
+                intelligence={{
+                  brain,
+                  health,
                   completeness,
-                  recurringDashboard,
-                  updateRecurringOps,
-
-                  unpricedList,
                   outlook,
-                  actuals,
-                  budgetsHealth,
                   ledgerAlerts,
+                  unpricedList,
+                  budgetsHealth,
+                  actuals,
+                }}
+                budget={{
                   budgetForm,
                   setBudgetForm,
-                  normalizeBudgets,
-                  ledgers,
-                  setLedgers,
-                  activeRecurring,
-                  recurringSections,
-                  CATEGORY_LABEL,
+                  saveLedgerBudgets,
+                }}
+                ui={{
+                  Currency,
+                  toast,
+                  refresh,
+                  isPastDue,
+                  isDueWithinDays,
+                  normalizeRecurringCategory,
                 }}
               />
             </div>
@@ -468,38 +338,48 @@ const LedgersPage = ({ setPage }) => {
           tabIndex={0}
         >
           <LedgerPerformanceTab
-            activeId={activeId}
-            activeLedger={activeLedger}
-            Badge={Badge}
-            EmptyState={EmptyState}
-            Currency={Currency}
-            incomeMode={incomeMode}
-            setIncomeMode={setIncomeMode}
-            incomeFixed={incomeFixed}
-            setIncomeFixed={setIncomeFixed}
-            incomePeak={incomePeak}
-            setIncomePeak={setIncomePeak}
-            incomeBase={incomeBase}
-            setIncomeBase={setIncomeBase}
-            incomeManual={incomeManual}
-            setIncomeManual={setIncomeManual}
-            incomeSave={incomeSave}
-            setIncomeSave={setIncomeSave}
-            tOperational={tOperational}
-            setTOperational={setTOperational}
-            tMaintenance={tMaintenance}
-            setTMaintenance={setTMaintenance}
-            tMarketing={tMarketing}
-            setTMarketing={setTMarketing}
-            parseRecurringAmount={parseRecurringAmount}
-            forecast={forecast}
-            dataStore={dataStore}
-            getLast4MonthsTable={getLast4MonthsTable}
-            targetsEvaluation={targetsEvaluation}
-            ledgers={ledgers}
-            setLedgers={setLedgers}
-            toast={toast}
-            refresh={refresh}
+            income={{
+              incomeMode,
+              setIncomeMode,
+              incomeFixed,
+              setIncomeFixed,
+              incomePeak,
+              setIncomePeak,
+              incomeBase,
+              setIncomeBase,
+              incomeManual,
+              setIncomeManual,
+              incomeSave,
+              setIncomeSave,
+            }}
+            targets={{
+              tOperational,
+              setTOperational,
+              tMaintenance,
+              setTMaintenance,
+              tMarketing,
+              setTMarketing,
+            }}
+            analytics={{
+              forecast,
+              dataStore,
+              getLast4MonthsTable,
+              targetsEvaluation,
+              parseRecurringAmount,
+            }}
+            ledgerData={{
+              activeId,
+              activeLedger,
+              ledgers,
+              setLedgers,
+            }}
+            ui={{
+              Badge,
+              EmptyState,
+              Currency,
+              toast,
+              refresh,
+            }}
           />
         </div>
       )}
@@ -514,33 +394,19 @@ const LedgersPage = ({ setPage }) => {
         <div id="tabpanel-reports" role="tabpanel" aria-labelledby="tab-reports" tabIndex={0}>
           <LedgerTabErrorBoundary onBack={() => setTab('ledgers')}>
             <LedgerReportsTab
-              {...{
-                toast,
+              data={{
                 activeId,
                 activeLedger,
-                Badge,
-                EmptyState,
-                Currency,
-                Icons,
-
                 dataStore,
-                recurring,
-                parseRecurringAmount,
-                forecast,
-                getLast4MonthsTable,
-                targetsEvaluation,
-                normalizeRecurringCategory,
-                normalizeRecurringRisk,
-                seededOnlyList,
-                isPastDue,
-                normalizeLedgerType,
                 filterTransactionsForLedgerByMeta,
                 ledgerReports,
                 budgetsHealth,
-                setTab,
-
-                confirm,
-                setConfirm,
+              }}
+              ui={{
+                Badge,
+                EmptyState,
+                Currency,
+                toast,
               }}
             />
           </LedgerTabErrorBoundary>

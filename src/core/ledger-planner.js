@@ -3,20 +3,13 @@
   (Refactor Plan 0.2 — نفس أسماء الدوال المُصدّرة)
 */
 
-// ---------- Helpers shared across Inbox + Cash Plan ----------
-const toMs = (dateStr) => {
-  const s = String(dateStr || '').trim();
-  if (!s) return null;
-  const d = new Date(s + 'T00:00:00');
-  const ms = d.getTime();
-  return Number.isNaN(ms) ? null : ms;
-};
-
-const startOfDayMs = (d = new Date()) => {
-  const x = new Date(d);
-  x.setHours(0, 0, 0, 0);
-  return x.getTime();
-};
+import {
+  toDateOnlyMs as toMs,
+  startOfDayMs,
+  clamp,
+  monthlyEquivalent,
+  normalizeCategoryToOther as normalizeCategory,
+} from './ledger-shared.js';
 
 const normalizeRisk = (risk) => {
   const x = String(risk || '').toLowerCase();
@@ -24,12 +17,6 @@ const normalizeRisk = (risk) => {
 };
 
 // ==================== SECTION: Inbox (from ledger-inbox.js) ====================
-
-const startOfToday = () => {
-  const d = new Date();
-  d.setHours(0, 0, 0, 0);
-  return d.getTime();
-};
 
 const isPastDueInbox = (r, nowMs) => {
   if (!r || Number(r?.amount) <= 0) return false;
@@ -232,34 +219,6 @@ export function computeCashPlan({ ledgerId, recurringItems = [], now = new Date(
 }
 
 // ==================== SECTION: Forecast (from ledger-forecast.js) ====================
-
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-
-const normalizeCategory = (c) => {
-  const x = String(c || '').toLowerCase();
-  return x === 'system' || x === 'operational' || x === 'maintenance' || x === 'marketing'
-    ? x
-    : 'other';
-};
-
-const freqMultiplierYearly = (freq) => {
-  const f = String(freq || '').toLowerCase();
-  if (f === 'weekly') return 52;
-  if (f === 'monthly') return 12;
-  if (f === 'quarterly') return 4;
-  if (f === 'semiannual' || f === 'semi-annually') return 2;
-  if (f === 'annual' || f === 'yearly') return 1;
-  if (f === 'adhoc') return 0;
-  return 0;
-};
-
-const monthlyEquivalent = (r) => {
-  const amt = Number(r?.amount) || 0;
-  if (amt <= 0) return 0;
-  const m = freqMultiplierYearly(r?.frequency);
-  if (m <= 0) return 0;
-  return (amt * m) / 12;
-};
 
 const monthKeyFromDate = (d) => {
   const yyyy = d.getFullYear();

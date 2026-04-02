@@ -12,14 +12,9 @@
   - No storage reads/writes here.
 */
 
-const BUCKETS = ['system', 'operational', 'maintenance', 'marketing'];
+import { toIsoMs as toMs } from './ledger-shared.js';
 
-const toMs = (iso) => {
-  const s = String(iso || '').trim();
-  if (!s) return null;
-  const ms = new Date(s).getTime();
-  return Number.isNaN(ms) ? null : ms;
-};
+const BUCKETS = ['system', 'operational', 'maintenance', 'marketing'];
 
 export function normalizeBudgets(budgets) {
   const b = budgets && typeof budgets === 'object' ? budgets : {};

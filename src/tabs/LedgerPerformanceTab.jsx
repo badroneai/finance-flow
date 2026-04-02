@@ -1,16 +1,15 @@
 import React from 'react';
 
-function LedgerPerformanceTab(props) {
+/**
+ * @param {object} props — مُجمّعة في 5 مجالات
+ * @param {object} props.income — نموذج الدخل (ثابت/موسمي/يدوي)
+ * @param {object} props.targets — أهداف المصروفات الشهرية
+ * @param {object} props.analytics — بيانات التوقعات والحسابات
+ * @param {object} props.ledgerData — بيانات الدفتر الأساسية
+ * @param {object} props.ui — مكونات مشتركة وأدوات مساعدة
+ */
+function LedgerPerformanceTab({ income, targets, analytics, ledgerData, ui }) {
   const {
-    toast,
-    refresh,
-
-    activeId,
-    activeLedger,
-    Badge,
-    EmptyState,
-    Currency,
-
     incomeMode,
     setIncomeMode,
     incomeFixed,
@@ -19,26 +18,27 @@ function LedgerPerformanceTab(props) {
     setIncomePeak,
     incomeBase,
     setIncomeBase,
-    incomeSave,
-    setIncomeSave,
     incomeManual,
     setIncomeManual,
+    incomeSave,
+    setIncomeSave,
+  } = income;
 
+  const {
     tOperational,
     setTOperational,
     tMaintenance,
     setTMaintenance,
     tMarketing,
     setTMarketing,
+  } = targets;
 
-    parseRecurringAmount,
-    forecast,
-    dataStore,
-    getLast4MonthsTable,
-    ledgers,
-    setLedgers,
-    targetsEvaluation,
-  } = props;
+  const { forecast, dataStore, getLast4MonthsTable, targetsEvaluation, parseRecurringAmount } =
+    analytics;
+
+  const { activeId, activeLedger, ledgers, setLedgers } = ledgerData;
+
+  const { Badge, EmptyState, Currency, toast, refresh } = ui;
 
   return (
     <>

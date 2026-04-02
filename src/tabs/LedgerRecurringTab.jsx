@@ -30,25 +30,44 @@ const FREQUENCY_LABELS = {
   adhoc: 'عند الحاجة',
 };
 
-function LedgerRecurringTab(props) {
+/**
+ * @param {object} props — مُجمّعة في 8 مجالات بدلاً من قائمة مسطّحة
+ * @param {object} props.recurringCrud — بيانات وعمليات البنود المتكررة
+ * @param {object} props.payment — مودال تسجيل الدفعة
+ * @param {object} props.pricing — معالج التسعير السريع
+ * @param {object} props.saPricing — التسعير التلقائي السعودي
+ * @param {object} props.intelligence — صحة الدفتر والتحليلات
+ * @param {object} props.budget — أهداف الميزانية
+ * @param {object} props.ui — مكونات UI مشتركة وأدوات مساعدة
+ */
+function LedgerRecurringTab({
+  recurringCrud,
+  payment,
+  pricing,
+  saPricing,
+  intelligence,
+  budget,
+  ui,
+}) {
+  // فك تجميع المجالات — يوفّر وصول مباشر مثل الواجهة القديمة
   const {
-    Currency,
     activeId,
     recurring,
-    startPayNow,
-    startEditRecurring,
-    deleteRecurring,
-    resetRecForm,
-    saveRecurring,
+    activeRecurring,
     recForm,
     setRecForm,
     recEditingId,
     setRecEditingId,
-    saveLedgerBudgets,
-    brain,
-    isPastDue,
-    openPricingWizard,
-    health,
+    saveRecurring,
+    resetRecForm,
+    deleteRecurring,
+    startEditRecurring,
+    startPayNow,
+  } = recurringCrud;
+
+  const { payOpen, setPayOpen, paySource, payForm, setPayForm, submitPayNow } = payment;
+
+  const {
     pricingOpen,
     setPricingOpen,
     pricingIndex,
@@ -58,7 +77,10 @@ function LedgerRecurringTab(props) {
     setPricingDate,
     pricingList,
     applyQuickPricing,
+    openPricingWizard,
+  } = pricing;
 
+  const {
     saPricingOpen,
     setSaPricingOpen,
     saCity,
@@ -68,26 +90,22 @@ function LedgerRecurringTab(props) {
     saOnlyUnpriced,
     setSaOnlyUnpriced,
     applySaudiAutoPricingForLedger,
-    payOpen,
-    setPayOpen,
-    paySource,
-    payForm,
-    setPayForm,
-    submitPayNow,
-    toast,
-    refresh,
-    normalizeRecurringCategory,
-    isDueWithinDays,
+  } = saPricing;
+
+  const {
+    brain,
+    health,
     completeness,
-    unpricedList,
     outlook,
-    actuals,
-    budgetsHealth,
     ledgerAlerts,
-    budgetForm,
-    setBudgetForm,
-    activeRecurring,
-  } = props;
+    unpricedList,
+    budgetsHealth,
+    actuals,
+  } = intelligence;
+
+  const { budgetForm, setBudgetForm, saveLedgerBudgets } = budget;
+
+  const { Currency, toast, refresh, isPastDue, isDueWithinDays, normalizeRecurringCategory } = ui;
 
   // State: advanced section collapsed by default
   const [advancedOpen, setAdvancedOpen] = useState(false);
