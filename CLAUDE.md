@@ -80,6 +80,12 @@ VITE_SUPABASE_ANON_KEY=eyJ...
 
 إذا كانت القيم فارغة أو وهمية، التطبيق يعمل بوضع localStorage فقط.
 
+## بوابات الجودة
+
+- **Pre-commit**: Husky + lint-staged — يمنع commit كود غير منسق أو فيه أخطاء ESLint
+- **CI**: GitHub Actions (`ci.yml`) — يشغّل lint + test + build على كل PR
+- **القواعد الهندسية**: راجع `.claude/rules/engineering-standards.md` — حدود الحجم والتعقيد وقواعد الاستخراج
+
 ## تذكيرات
 
 - لا مفاتيح أو أسرار في الكود — استخدم `import.meta.env.VITE_*`
