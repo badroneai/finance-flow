@@ -7,4 +7,4 @@ export * as ledgerForecast from './ledger-planner.js';
 export * as ledgerVariance from './ledger-analytics.js';
 export * as ledgerIntelligenceV1 from './ledger-health.js';
 
-// Optional: keep adding exports here over time (without breaking).
+// أضف المزيد من الصادرات هنا حسب الحاجة (بدون كسر).
