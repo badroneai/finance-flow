@@ -1,1 +1,6 @@
-npx lint-staged
+# شغّل prettier + eslint على الملفات المعدلة فقط
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR -- 'src/**/*.js' 'src/**/*.jsx')
+if [ -n "$STAGED" ]; then
+  echo "$STAGED" | xargs npx prettier --check || exit 1
+  echo "$STAGED" | xargs npx eslint --max-warnings=0 --no-warn-ignored || exit 1
+fi

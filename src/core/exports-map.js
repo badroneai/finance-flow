@@ -8,3 +8,4 @@ export * as ledgerVariance from './ledger-analytics.js';
 export * as ledgerIntelligenceV1 from './ledger-health.js';
 
 // أضف المزيد من الصادرات هنا حسب الحاجة (بدون كسر).
+const unusedVar = 'this should trigger eslint warning';
