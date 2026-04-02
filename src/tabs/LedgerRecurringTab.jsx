@@ -30,24 +30,10 @@ const FREQUENCY_LABELS = {
   adhoc: 'عند الحاجة',
 };
 
-const CATEGORY_OPTIONS = [
-  { value: 'system', label: 'إيجار ورسوم' },
-  { value: 'operational', label: 'تشغيل ومرافق' },
-  { value: 'maintenance', label: 'صيانة' },
-  { value: 'marketing', label: 'تسويق وإعلان' },
-  { value: 'adhoc', label: 'أخرى' },
-];
-
 function LedgerRecurringTab(props) {
   const {
-    // Common UI
     Currency,
-    Badge,
-    EmptyState,
-
-    // Recurring/ledger context + actions
     activeId,
-    activeLedger,
     recurring,
     startPayNow,
     startEditRecurring,
@@ -58,72 +44,14 @@ function LedgerRecurringTab(props) {
     setRecForm,
     recEditingId,
     setRecEditingId,
-
-    // Authority layer (moved to advanced)
-    authorityOpen,
-    setAuthorityOpen,
-    budgets,
     saveLedgerBudgets,
-    budgetAuth,
-    compliance,
     brain,
-    spendByBucket,
-
-    // Inbox + forecast (moved to advanced)
-    inbox,
-    cashPlan,
-    inboxFilter,
-    setInboxFilter,
-    inboxView,
-    lastPayNowAt,
-    daysSince,
-    addDaysISO,
-    setHistoryModal,
-
-    forecastRunRate,
-    cashGap,
-    assumedInflow,
-    setAssumedInflow,
-    forecastPreset,
-    setForecastPreset,
-    scRent,
-    setScRent,
-    scUtilities,
-    setScUtilities,
-    scMaintenance,
-    setScMaintenance,
-    scMarketing,
-    setScMarketing,
-    scOther,
-    setScOther,
-    forecastInsights,
-
-    // Brain dashboard
-    brainDetails,
-    setBrainDetails,
-    seededOnlyList,
     isPastDue,
-    operatorMode,
     openPricingWizard,
-
-    // Intelligence v1
     health,
-    healthHelpOpen,
-    setHealthHelpOpen,
-    projection,
-    simRentPct,
-    setSimRentPct,
-    simBillsPct,
-    setSimBillsPct,
-    simMaintPct,
-    setSimMaintPct,
-    computeScenario,
-
-    // Pricing wizards
     pricingOpen,
     setPricingOpen,
     pricingIndex,
-    setPricingIndex,
     pricingAmount,
     setPricingAmount,
     pricingDate,
@@ -140,38 +68,17 @@ function LedgerRecurringTab(props) {
     saOnlyUnpriced,
     setSaOnlyUnpriced,
     applySaudiAutoPricingForLedger,
-
-    // Pay modal
     payOpen,
     setPayOpen,
     paySource,
-    setPaySource,
     payForm,
     setPayForm,
     submitPayNow,
-
-    // Misc
     toast,
     refresh,
-    setConfirm,
-    seedRecurringForLedger,
-    filterTransactionsForLedgerByMeta,
-    dataStore,
-    normalizeLedgerType,
-    parseRecurringAmount,
     normalizeRecurringCategory,
-    normalizeRecurringRisk,
-    sections,
-    sectionStats,
-    grouped,
-    sortRecurringInSection,
-    isSeededRecurring,
-    isSeededOnly,
     isDueWithinDays,
     completeness,
-    recurringDashboard,
-    updateRecurringOps,
-
     unpricedList,
     outlook,
     actuals,
@@ -179,12 +86,7 @@ function LedgerRecurringTab(props) {
     ledgerAlerts,
     budgetForm,
     setBudgetForm,
-    normalizeBudgets,
-    ledgers,
-    setLedgers,
     activeRecurring,
-    recurringSections,
-    CATEGORY_LABEL,
   } = props;
 
   // State: advanced section collapsed by default
@@ -258,12 +160,28 @@ function LedgerRecurringTab(props) {
 
   // Status helper
   const getStatusInfo = (item) => {
-    if (isPastDue(item)) return { label: 'متأخر', color: 'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]' };
+    if (isPastDue(item))
+      return {
+        label: 'متأخر',
+        color:
+          'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]',
+      };
     if (isDueWithinDays(item, 7))
-      return { label: 'مستحق قريباً', color: 'bg-[var(--color-warning-bg)] border-[var(--color-warning)] text-[var(--color-warning)]' };
+      return {
+        label: 'مستحق قريباً',
+        color:
+          'bg-[var(--color-warning-bg)] border-[var(--color-warning)] text-[var(--color-warning)]',
+      };
     if (item.payState === 'paid')
-      return { label: 'مدفوع', color: 'bg-[var(--color-success-bg)] border-[var(--color-success)] text-[var(--color-success)]' };
-    return { label: 'نشط', color: 'bg-[var(--color-info-bg)] border-[var(--color-border)] text-[var(--color-primary)]' };
+      return {
+        label: 'مدفوع',
+        color:
+          'bg-[var(--color-success-bg)] border-[var(--color-success)] text-[var(--color-success)]',
+      };
+    return {
+      label: 'نشط',
+      color: 'bg-[var(--color-info-bg)] border-[var(--color-border)] text-[var(--color-primary)]',
+    };
   };
 
   return (
@@ -664,7 +582,9 @@ function LedgerRecurringTab(props) {
         {/* أزرار التسعير السريع */}
         {unpricedList && unpricedList.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)]">
-            <span className="text-sm text-[var(--color-warning)]">{unpricedList.length} التزام بدون مبلغ</span>
+            <span className="text-sm text-[var(--color-warning)]">
+              {unpricedList.length} التزام بدون مبلغ
+            </span>
             <button
               type="button"
               onClick={openPricingWizard}

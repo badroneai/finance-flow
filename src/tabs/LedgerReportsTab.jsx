@@ -3,23 +3,14 @@ import { useNavigate } from 'react-router-dom';
 
 import { computePL, computeTopBuckets } from '../core/ledger-analytics.js';
 import { downloadCSV } from '../utils/csvExport.js';
+import { Currency as AppCurrency } from '../utils/format.jsx';
 // pdf-service يُحمّل ديناميكياً لتقليل حجم الحزمة الأولية
 const loadPdfService = () => import('../core/pdf-service.js');
 
 /** Minimal, stable Reports tab (Stage 6 stability).
  *  هدفه منع أي crash/white-screen وتقديم تقارير أساسية + CSV تصدير.
  */
-const fallbackCurrency = ({ value }) => (
-  <span>
-    {Number(value) != null
-      ? Number(value).toLocaleString('ar-SA', {
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2,
-        })
-      : '0'}{' '}
-    ر.س
-  </span>
-);
+const fallbackCurrency = ({ value }) => <AppCurrency value={value} symbolClassName="w-3.5 h-3.5" />;
 const fallbackEmpty = ({ message }) => (
   <div className="flex flex-col items-center justify-center py-16 text-[var(--color-muted)]">
     <p className="mt-4 text-sm">{message}</p>
@@ -64,7 +55,6 @@ function LedgerReportsTab(props) {
     Badge = fallbackBadge,
     EmptyState = fallbackEmpty,
     Currency = fallbackCurrency,
-    Icons = {},
     dataStore,
     filterTransactionsForLedgerByMeta,
     ledgerReports = null,

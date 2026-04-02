@@ -1,4 +1,3 @@
-
 // Stage 6.2 (1:1 refactor): extracted from LedgersPage header block. P2 #19: تبويبات ثابتة + معالج واحد.
 const LEDGER_TABS = [
   { id: 'ledgers', label: 'الدفاتر' },
@@ -14,7 +13,7 @@ export function LedgerHeader({ tab, onTabSelect }) {
     if (id) onTabSelect(id);
   };
   return (
-    <div className="panel-card ledgers-header bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 mb-4">
+    <div className="panel-card ledgers-header ledgers-header-shell mb-4">
       <div className="page-header mb-0">
         <div className="page-header-copy">
           <span className="page-kicker">المحفظة التشغيلية</span>

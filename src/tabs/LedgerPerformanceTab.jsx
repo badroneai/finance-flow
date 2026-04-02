@@ -35,7 +35,6 @@ function LedgerPerformanceTab(props) {
     forecast,
     dataStore,
     getLast4MonthsTable,
-    activeIdState,
     ledgers,
     setLedgers,
     targetsEvaluation,
@@ -93,7 +92,6 @@ function LedgerPerformanceTab(props) {
             incomeModel,
           });
 
-          const thisMonthKey = table.rows[table.rows.length - 1]?.monthKey;
           const expectedThisMonth = table.rows[table.rows.length - 1]?.expected;
           const targets = {
             operationalMax: Number(parseRecurringAmount(tOperational)) || 0,
@@ -302,7 +300,9 @@ function LedgerPerformanceTab(props) {
                             <td className="py-2">
                               <Currency value={r.actual.expense} />
                             </td>
-                            <td className={`py-2 ${v < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}>
+                            <td
+                              className={`py-2 ${v < 0 ? 'text-[var(--color-danger)]' : 'text-[var(--color-success)]'}`}
+                            >
                               {status}
                               <Currency value={v} />
                             </td>

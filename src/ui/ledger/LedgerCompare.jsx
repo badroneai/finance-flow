@@ -2,7 +2,7 @@
   مقارنة الدفاتر — برومبت 4.2
   بطاقات متجاورة (horizontal scroll)، أشرطة صحة ديناميكية، ROI ملون، توصيات، multi-select.
 */
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { getLedgers } from '../../core/ledger-store.js';
 import { compareLedgers } from '../../core/ledger-compare.js';
 import { formatNumber } from '../../utils/format.jsx';
@@ -26,6 +26,7 @@ export default function LedgerCompare() {
   const [compareResult, setCompareResult] = useState(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+  const selectedIdsKey = useMemo(() => selectedIds.join(','), [selectedIds]);
 
   const allLedgers = (getLedgers && getLedgers()) || [];
 
@@ -35,7 +36,7 @@ export default function LedgerCompare() {
     } else {
       setCompareResult(null);
     }
-  }, [selectedIds.join(',')]);
+  }, [selectedIds, selectedIdsKey]);
 
   useEffect(() => {
     if (!dropdownOpen) return;
@@ -58,17 +59,14 @@ export default function LedgerCompare() {
     'اختر الدفاتر';
 
   return (
-    <div
-      className="ledger-compare rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm p-4 md:p-5"
-      dir="rtl"
-    >
+    <div className="panel-card ledger-compare ledger-compare-shell" dir="rtl">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <h3 className="text-lg font-bold text-[var(--color-text)]">مقارنة الدفاتر</h3>
         <div className="relative" ref={dropdownRef}>
           <button
             type="button"
             onClick={() => setDropdownOpen((v) => !v)}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm font-medium text-[var(--color-text)] hover:bg-[var(--color-bg)] min-w-[160px] text-right"
+            className="btn-secondary ledger-compare__trigger u-text-start"
             aria-haspopup="listbox"
             aria-expanded={dropdownOpen}
           >
@@ -78,10 +76,7 @@ export default function LedgerCompare() {
             </span>
           </button>
           {dropdownOpen && (
-            <div
-              role="listbox"
-              className="absolute top-full end-0 mt-1 w-56 max-h-64 overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-2 z-10"
-            >
+            <div role="listbox" className="ledger-compare__menu">
               {allLedgers.map((l) => {
                 const checked = selectedIds.includes(l.id);
                 const disabled = !checked && selectedIds.length >= 5;
@@ -118,17 +113,14 @@ export default function LedgerCompare() {
       {compareResult && compareResult.ledgers.length > 0 && (
         <>
           <div className="overflow-x-auto -mx-1 pb-2">
-            <div className="flex gap-4 min-w-max px-1">
+            <div className="ledger-compare__cards">
               {compareResult.ledgers.map((l) => {
                 const isBest = compareResult.bestPerformer?.ledgerId === l.id;
                 const isWorst =
                   compareResult.worstPerformer?.ledgerId === l.id &&
                   (l.roi < 1 || l.overdueCount > 0);
                 return (
-                  <div
-                    key={l.id}
-                    className="w-44 flex-shrink-0 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/50 p-4"
-                  >
+                  <div key={l.id} className="ledger-compare__card">
                     <p className="font-bold text-[var(--color-text)] truncate mb-3" title={l.name}>
                       {l.name}
                     </p>
@@ -202,7 +194,7 @@ export default function LedgerCompare() {
 
           {compareResult.recommendations && compareResult.recommendations.length > 0 && (
             <div
-              className="mt-4 p-4 rounded-xl border"
+              className="ledger-compare__notice report-highlight report-highlight--neutral"
               style={{ background: 'var(--color-warning-bg)', borderColor: 'var(--color-warning)' }}
             >
               <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-warning)' }}>
