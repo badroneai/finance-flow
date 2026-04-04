@@ -19,7 +19,7 @@ export const formatNumber = (value, options = {}) => {
 };
 
 export const formatCurrency = (value) =>
-  `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
+  `${formatNumber(value, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ﷼`;
 
 /** أيقونة الريال السعودي (SAMA) */
 export const SarSymbol = ({ className = 'w-4 h-4', title = 'ريال سعودي' }) => (

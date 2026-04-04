@@ -16,8 +16,6 @@
  *  - تحذف العنصر المؤقت وتُنزّل الملف
  */
 
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
 import DOMPurify from 'dompurify';
 
 // ═══════════════════════════════════════
@@ -86,6 +84,11 @@ function createHiddenContainer() {
 
 /** تحويل HTML → PDF (دعم صفحات متعددة) */
 async function htmlToPdf(container, filename) {
+  const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+    import('html2canvas'),
+    import('jspdf'),
+  ]);
+
   // انتظار تحميل الخطوط والصور
   await new Promise((r) => setTimeout(r, 200));
 
@@ -205,7 +208,9 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
   const officeName = officeInfo?.name || 'مكتب عقاري';
 
   const container = createHiddenContainer();
-  safeSetHTML(container, `<style>${SHARED_CSS}</style>
+  safeSetHTML(
+    container,
+    `<style>${SHARED_CSS}</style>
   <div class="pdf-page">
     <div class="pdf-header">
       ${logoHtml(officeInfo)}
@@ -344,7 +349,8 @@ export async function exportMonthlyReport(reportData, officeInfo = {}) {
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`);
+  </div>`
+  );
 
   const safeName = (meta?.ledgerName || 'دفتر').replace(/[/\\?%*:|"<>]/g, '_');
   const filename = `تقرير_${safeName}_${meta?.month}_${meta?.year}.pdf`;
@@ -413,7 +419,9 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
   else if (filters.dateTo) periodLabel = `حتى ${filters.dateTo}`;
 
   const container = createHiddenContainer();
-  safeSetHTML(container, `<style>${SHARED_CSS}</style>
+  safeSetHTML(
+    container,
+    `<style>${SHARED_CSS}</style>
   <div class="pdf-page">
     <div class="pdf-header">
       ${logoHtml(officeInfo)}
@@ -493,7 +501,8 @@ export async function exportCommissionsReport(commissions, officeInfo = {}, filt
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`);
+  </div>`
+  );
 
   const filename = `عمولات_${officeName.replace(/[/\\?%*:|"<>]/g, '_')}_${todayStr()}.pdf`;
   return htmlToPdf(container, filename);
@@ -557,7 +566,9 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
   });
 
   const container = createHiddenContainer();
-  safeSetHTML(container, `<style>${SHARED_CSS}
+  safeSetHTML(
+    container,
+    `<style>${SHARED_CSS}
     .balance-row td { font-weight: 700; background: #f1f5f9 !important; }
   </style>
   <div class="pdf-page">
@@ -615,7 +626,8 @@ export async function exportLedgerStatement(ledger, transactions, officeInfo = {
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`);
+  </div>`
+  );
 
   const safeName = ledgerName.replace(/[/\\?%*:|"<>]/g, '_');
   const filename = `كشف_حساب_${safeName}_${todayStr()}.pdf`;
@@ -660,7 +672,9 @@ export async function exportReceiptPdf(receipt, officeInfo = {}) {
 
   const container = createHiddenContainer();
 
-  safeSetHTML(container, `<style>${RECEIPT_CSS}</style>
+  safeSetHTML(
+    container,
+    `<style>${RECEIPT_CSS}</style>
   <div class="receipt-page">
     <div class="receipt-header">
       ${logoHtml(officeInfo)}
@@ -686,28 +700,63 @@ export async function exportReceiptPdf(receipt, officeInfo = {}) {
         <span class="label">العقار</span>
         <span class="value">${esc(receipt.propertyName) || '—'}</span>
       </div>
-      ${receipt.unitName ? `<div class="receipt-row">
+      ${
+        receipt.unitName
+          ? `<div class="receipt-row">
         <span class="label">الوحدة</span>
         <span class="value">${esc(receipt.unitName)}</span>
-      </div>` : ''}
+      </div>`
+          : ''
+      }
       <div class="receipt-row">
         <span class="label">طريقة الدفع</span>
         <span class="value">${esc(receipt.paymentMethodLabel)}</span>
       </div>
-      ${receipt.installmentNumber ? `<div class="receipt-row">
+      ${
+        receipt.installmentNumber
+          ? `<div class="receipt-row">
         <span class="label">رقم القسط</span>
         <span class="value">${esc(receipt.installmentNumber)}</span>
-      </div>` : ''}
-      ${receipt.dueId ? `<div class="receipt-row">
+      </div>`
+          : ''
+      }
+      ${
+        receipt.dueId
+          ? `<div class="receipt-row">
         <span class="label">مرجع الاستحقاق</span>
         <span class="value" style="font-size:11px;direction:ltr;">${esc(receipt.dueId)}</span>
-      </div>` : ''}
+      </div>`
+          : ''
+      }
     </div>
 
     <div class="receipt-amount-box">
       <div class="amount-label">المبلغ المستلم</div>
       <div class="amount-value">${fmt(receipt.amount)} ر.س</div>
     </div>
+
+    ${
+      receipt.vatAmount > 0
+        ? `<div class="receipt-body" style="margin-top:8px;">
+      <div class="receipt-row">
+        <span class="label">ضريبة القيمة المضافة (15%)</span>
+        <span class="value">${fmt(receipt.vatAmount)} ر.س</span>
+      </div>
+      <div class="receipt-row">
+        <span class="label">الإجمالي شامل الضريبة</span>
+        <span class="value" style="font-weight:700;">${fmt(receipt.totalWithVat)} ر.س</span>
+      </div>
+      ${
+        receipt.sellerTaxNumber
+          ? `<div class="receipt-row">
+        <span class="label">الرقم الضريبي</span>
+        <span class="value" style="direction:ltr;">${esc(receipt.sellerTaxNumber)}</span>
+      </div>`
+          : ''
+      }
+    </div>`
+        : ''
+    }
 
     ${receipt.note ? `<div class="receipt-note"><strong>ملاحظة:</strong> ${esc(receipt.note)}</div>` : ''}
 
@@ -727,7 +776,8 @@ export async function exportReceiptPdf(receipt, officeInfo = {}) {
     <div class="pdf-footer">
       تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')} &nbsp;|&nbsp; تم إنشاؤه بواسطة قيد العقار
     </div>
-  </div>`);
+  </div>`
+  );
 
   const safeNum = (receipt.receiptNumber || '').replace(/[/\\?%*:|"<>]/g, '_');
   const filename = `سند_قبض_${safeNum}_${todayStr()}.pdf`;

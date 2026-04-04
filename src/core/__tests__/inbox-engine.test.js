@@ -1,7 +1,7 @@
 /**
  * اختبارات محرك صندوق الوارد (inbox-engine)
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 
 // Mock dependencies
 vi.mock('../ledger-store.js', () => ({

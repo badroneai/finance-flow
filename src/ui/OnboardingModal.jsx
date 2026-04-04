@@ -39,14 +39,10 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-md rounded-2xl border p-5 shadow-lg"
-        style={{
-          background: 'var(--color-surface)',
-          borderColor: 'var(--color-border)',
-          color: 'var(--color-text)',
-        }}
+        className="modal-sheet modal-surface modal-surface--md onboarding-modal"
+        style={{ color: 'var(--color-text)' }}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="onboarding-modal__header">
           <div className="min-w-0">
             <h3 className="text-lg font-bold" style={{ margin: 0 }}>
               مرحبًا بك في قيد العقار
@@ -55,20 +51,14 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
               ابدأ خلال دقيقة:
             </p>
           </div>
-          <button
-            type="button"
-            className="text-sm"
-            style={{ color: 'var(--color-muted)' }}
-            aria-label="إغلاق"
-            onClick={onClose}
-          >
+          <button type="button" className="modal-sheet__close" aria-label="إغلاق" onClick={onClose}>
             ×
           </button>
         </div>
 
         <ol
-          className="mt-4 text-sm space-y-2"
-          style={{ paddingInlineStart: '1.2rem', margin: '1rem 0 0', color: 'var(--color-text)' }}
+          className="onboarding-modal__list mt-4 text-sm space-y-2"
+          style={{ color: 'var(--color-text)' }}
         >
           <li>أنشئ أول دفتر (عقار) — لتجميع حركاتك المالية في مكان واحد.</li>
           <li>أضف أول حركة مالية (دخل أو مصروف).</li>
@@ -82,8 +72,8 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
 
         <button
           type="button"
-          className="mt-4 text-sm"
-          style={{ color: 'var(--color-primary)', textAlign: 'start' }}
+          className="btn-ghost mt-4 text-sm u-text-start"
+          style={{ color: 'var(--color-primary)' }}
           onClick={() => {
             onClose();
             onOpenSettings?.();
@@ -92,32 +82,11 @@ export function OnboardingModal({ onClose, onOpenSettings }) {
           افتح الإعدادات
         </button>
 
-        <div className="mt-4 flex flex-col gap-2">
-          <button
-            type="button"
-            className="btn-primary w-full"
-            style={{
-              padding: '0.9rem 1rem',
-              borderRadius: 'var(--radius)',
-              background: 'var(--color-primary)',
-              color: 'var(--color-text-inverse)',
-            }}
-            onClick={goToLedgers}
-          >
+        <div className="onboarding-modal__actions flex-col">
+          <button type="button" className="btn-primary w-full" onClick={goToLedgers}>
             أنشئ أول دفتر
           </button>
-          <button
-            type="button"
-            className="w-full"
-            style={{
-              padding: '0.75rem 1rem',
-              borderRadius: 'var(--radius)',
-              border: '1px solid var(--color-border)',
-              background: 'transparent',
-              color: 'var(--color-muted)',
-            }}
-            onClick={onClose}
-          >
+          <button type="button" className="btn-secondary w-full" onClick={onClose}>
             لا تُظهر مرة أخرى
           </button>
         </div>

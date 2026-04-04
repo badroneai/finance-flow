@@ -461,10 +461,7 @@ export const FormField = ({ label, error, children, id: fieldId }) => {
   return (
     <div className="field-group">
       {fieldId ? (
-        <label
-          className="field-label"
-          htmlFor={fieldId}
-        >
+        <label className="field-label" htmlFor={fieldId}>
           {label}
         </label>
       ) : (
@@ -472,11 +469,7 @@ export const FormField = ({ label, error, children, id: fieldId }) => {
       )}
       {enhancedChild}
       {error && (
-        <p
-          id={errorId}
-          className="field-error"
-          role="alert"
-        >
+        <p id={errorId} className="field-error" role="alert">
           {error}
         </p>
       )}
@@ -503,7 +496,7 @@ export const SummaryCard = ({ label, value, color = 'blue', icon }) => {
   };
   const colorVar = colorMap[color] || colorMap.blue;
   return (
-    <div className={`summary-card summary-card--${color} bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4`}>
+    <div className={`summary-card summary-card--${color}`}>
       <div className="flex items-center justify-between mb-2">
         <span className="summary-card__label">{label}</span>
         {icon && (
@@ -547,19 +540,14 @@ export const MobileFAB = ({ onClick, label = 'إضافة', icon }) => {
 };
 
 export const EmptyState = ({ message, icon, title, description, actionLabel, onAction }) => (
-  <div className="panel-card flex flex-col items-center justify-center py-12 text-center">
-    <div className="w-16 h-16 rounded-2xl bg-[var(--color-surface-alt)] flex items-center justify-center mb-4">
+  <div className="empty-state">
+    <div className="empty-icon">
       {icon || <Icons.empty size={40} className="text-[var(--color-muted)]" aria-hidden="true" />}
     </div>
-    {title && <h3 className="text-lg font-bold text-[var(--color-text)] mb-1">{title}</h3>}
-    <p className="text-sm text-[var(--color-muted)] max-w-sm">{message || description}</p>
+    {title && <h3>{title}</h3>}
+    <p>{message || description}</p>
     {actionLabel && onAction && (
-      <button
-        type="button"
-        onClick={onAction}
-        className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-colors"
-        style={{ backgroundColor: 'var(--color-primary)' }}
-      >
+      <button type="button" onClick={onAction} className="btn-primary mt-4">
         {actionLabel}
       </button>
     )}
@@ -567,16 +555,13 @@ export const EmptyState = ({ message, icon, title, description, actionLabel, onA
 );
 
 export const EnhancedEmptyState = ({ icon, title, description, ctaText, onCtaClick }) => (
-  <div className="empty-state">
-    {icon ? <div className="empty-icon">{icon}</div> : null}
-    <h3>{title}</h3>
-    <p>{description}</p>
-    {ctaText && onCtaClick && (
-      <button type="button" onClick={onCtaClick} className="empty-cta">
-        {ctaText}
-      </button>
-    )}
-  </div>
+  <EmptyState
+    icon={icon}
+    title={title}
+    description={description}
+    actionLabel={ctaText}
+    onAction={onCtaClick}
+  />
 );
 
 export const Badge = ({ children, color = 'blue' }) => {

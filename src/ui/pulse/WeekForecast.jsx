@@ -3,6 +3,7 @@
   رسم أعمدة (SVG) + ملخص رقمي + شارة الحالة (safe/tight/danger)
 */
 import { useMemo } from 'react';
+import { formatCurrency } from '../../utils/format.jsx';
 
 const DAY_NAMES = ['الأحد', 'الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -19,11 +20,6 @@ function formatMoney(n) {
   const abs = Math.abs(n);
   if (abs >= 1000) return `${(n / 1000).toLocaleString('ar-SA', { maximumFractionDigits: 1 })}k`;
   return n.toLocaleString('ar-SA', { maximumFractionDigits: 0 });
-}
-
-function formatFull(n) {
-  if (n == null || !Number.isFinite(n)) return '0';
-  return n.toLocaleString('ar-SA', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
 }
 
 export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
@@ -77,10 +73,7 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
   const gridColor = 'var(--color-border)';
 
   return (
-    <div
-      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden p-4"
-      dir="rtl"
-    >
+    <div className="panel-card pulse-card" dir="rtl">
       <h2 className="font-semibold text-[var(--color-text)] mb-4">نظرة الأسبوع</h2>
 
       {/* رسم الأعمدة */}
@@ -166,13 +159,13 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
         <div className="flex justify-between items-center">
           <span className="text-[var(--color-muted)]">متوقع الدخل:</span>
           <span className="font-medium" style={{ color: 'var(--color-success)' }}>
-            {formatFull(expectedIncome)} ر.س
+            {formatCurrency(expectedIncome)}
           </span>
         </div>
         <div className="flex justify-between items-center">
           <span className="text-[var(--color-muted)]">متوقع المصروف:</span>
           <span className="font-medium" style={{ color: 'var(--color-danger)' }}>
-            {formatFull(expectedExpenses)} ر.س
+            {formatCurrency(expectedExpenses)}
           </span>
         </div>
         <div className="flex justify-between items-center pt-1 border-t border-[var(--color-border)]">
@@ -182,7 +175,7 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
             style={{ color: netCashflow >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}
           >
             {netCashflow >= 0 ? '' : '-'}
-            {formatFull(Math.abs(netCashflow))} ر.س
+            {formatCurrency(Math.abs(netCashflow))}
           </span>
         </div>
       </div>

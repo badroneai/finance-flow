@@ -9,7 +9,7 @@ import { printReport, getReportFilename, shareReport } from '../../utils/report-
 // pdf-service يُحمّل ديناميكياً لتقليل حجم الحزمة الأولية
 const loadPdfService = () => import('../../core/pdf-service.js');
 import { useAuth } from '../../contexts/AuthContext.jsx';
-import { formatNumber } from '../../utils/format.jsx';
+import { formatCurrency, formatNumber } from '../../utils/format.jsx';
 
 const MONTH_NAMES = [
   '',
@@ -45,7 +45,7 @@ function PieChart({ items, total, size = 120, strokeWidth = 12 }) {
         width={size}
         height={size}
         viewBox={`0 0 ${size} ${size}`}
-        className="block mx-auto"
+        className="report-pie"
         aria-hidden="true"
       >
         <circle
@@ -75,7 +75,7 @@ function PieChart({ items, total, size = 120, strokeWidth = 12 }) {
       width={size}
       height={size}
       viewBox={`0 0 ${size} ${size}`}
-      className="block mx-auto"
+      className="report-pie"
       aria-hidden="true"
     >
       {segments.map((seg, i) => (
@@ -167,21 +167,17 @@ export function MonthlyReportView({
 
   if (loading) {
     return (
-      <div className="min-h-[40vh] flex items-center justify-center" dir="rtl">
-        <p className="text-[var(--color-muted)]">جاري تحميل التقرير…</p>
+      <div className="report-loading" dir="rtl">
+        <p className="report-loading__text">جاري تحميل التقرير…</p>
       </div>
     );
   }
   if (error || !report) {
     return (
-      <div className="min-h-[40vh] flex flex-col items-center justify-center gap-3" dir="rtl">
-        <p style={{ color: 'var(--color-danger)' }}>{error || 'لا توجد بيانات التقرير'}</p>
+      <div className="report-error" dir="rtl">
+        <p className="report-error__text">{error || 'لا توجد بيانات التقرير'}</p>
         {onBack && (
-          <button
-            type="button"
-            onClick={onBack}
-            className="px-4 py-2 rounded-lg bg-[var(--color-bg)] text-[var(--color-text)]"
-          >
+          <button type="button" onClick={onBack} className="report-back-btn">
             رجوع
           </button>
         )}
@@ -204,33 +200,23 @@ export function MonthlyReportView({
   const expenseTotal = summary?.totalExpense || 0;
 
   return (
-    <div className="max-w-[210mm] mx-auto bg-[var(--color-surface)]" dir="rtl">
+    <div className="report-page" dir="rtl">
       {/* أزرار التصدير والمشاركة (تُخفى عند الطباعة) */}
       <div className="no-print report-toolbar">
         <button
           type="button"
           onClick={handleExportPdf}
           disabled={pdfExporting}
-          className="btn-primary disabled:opacity-50"
+          className={`btn-primary${pdfExporting ? ' report-btn--disabled' : ''}`}
           aria-label="تصدير PDF"
         >
           {pdfExporting ? 'جاري التصدير…' : 'تصدير PDF'}
         </button>
-        <button
-          type="button"
-          onClick={handlePrint}
-          className="btn-secondary"
-          aria-label="طباعة"
-        >
+        <button type="button" onClick={handlePrint} className="btn-secondary" aria-label="طباعة">
           طباعة
         </button>
         {typeof navigator !== 'undefined' && navigator.share && (
-          <button
-            type="button"
-            onClick={handleShare}
-            className="btn-secondary"
-            aria-label="مشاركة"
-          >
+          <button type="button" onClick={handleShare} className="btn-secondary" aria-label="مشاركة">
             مشاركة
           </button>
         )}
@@ -245,151 +231,131 @@ export function MonthlyReportView({
         )}
       </div>
 
-      <div
-        ref={printRef}
-        className="monthly-report-print receipt-sheet bg-[var(--color-surface)] text-[var(--color-text)] p-6 md:p-8"
-      >
+      <div ref={printRef} className="monthly-report-print receipt-sheet report-sheet">
         {/* شعار وعنوان */}
-        <header className="text-center border-b border-[var(--color-border)] pb-4 mb-6">
-          <h1 className="text-xl font-bold text-[var(--color-primary)]">قيد العقار</h1>
-          <p className="text-sm text-[var(--color-muted)] mt-1">التقرير الشهري</p>
-          <p className="font-semibold text-[var(--color-text)] mt-2">{meta.ledgerName}</p>
-          <p className="text-sm text-[var(--color-muted)]">{monthLabel}</p>
+        <header className="report-header">
+          <h1 className="report-header__title">قيد العقار</h1>
+          <p className="report-header__subtitle">التقرير الشهري</p>
+          <p className="report-header__ledger">{meta.ledgerName}</p>
+          <p className="report-header__period">{monthLabel}</p>
         </header>
 
         {/* ملخص */}
-        <section className="report-section mb-6">
-          <h2 className="text-base font-bold text-[var(--color-text)] mb-3">ملخص الشهر</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <section className="report-section report-section--spaced">
+          <h2 className="report-section__title">ملخص الشهر</h2>
+          <div className="report-metric-grid">
             <div className="report-metric">
               <div className="report-metric__label">رصيد الافتتاح</div>
-              <div className="report-metric__value">{formatNumber(summary.openingBalance)} ر.س</div>
+              <div className="report-metric__value">{formatCurrency(summary.openingBalance)}</div>
             </div>
             <div className="report-metric">
               <div className="report-metric__label">رصيد الإغلاق</div>
-              <div className="report-metric__value">{formatNumber(summary.closingBalance)} ر.س</div>
+              <div className="report-metric__value">{formatCurrency(summary.closingBalance)}</div>
             </div>
-            <div
-              className="report-metric"
-              style={{ background: 'var(--color-success-bg)' }}
-            >
-              <div className="report-metric__label" style={{ color: 'var(--color-success)' }}>
-                إجمالي الدخل
-              </div>
-              <div className="report-metric__value" style={{ color: 'var(--color-success)' }}>
-                {formatNumber(summary.totalIncome)} ر.س
-              </div>
+            <div className="report-metric report-metric--success">
+              <div className="report-metric__label">إجمالي الدخل</div>
+              <div className="report-metric__value">{formatCurrency(summary.totalIncome)}</div>
             </div>
-            <div
-              className="report-metric"
-              style={{ background: 'var(--color-danger-bg)' }}
-            >
-              <div className="report-metric__label" style={{ color: 'var(--color-danger)' }}>
-                إجمالي المصروف
-              </div>
-              <div className="report-metric__value" style={{ color: 'var(--color-danger)' }}>
-                {formatNumber(summary.totalExpense)} ر.س
-              </div>
+            <div className="report-metric report-metric--danger">
+              <div className="report-metric__label">إجمالي المصروف</div>
+              <div className="report-metric__value">{formatCurrency(summary.totalExpense)}</div>
             </div>
           </div>
-          <div className="mt-3 flex flex-wrap gap-4">
-            <span className="text-sm">
+          <div className="report-summary-row">
+            <span className="report-summary-row__item">
               صافي التدفق:{' '}
               <strong
                 style={{
                   color: summary.netCashflow >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
                 }}
               >
-                {formatNumber(summary.netCashflow)} ر.س
+                {formatCurrency(summary.netCashflow)}
               </strong>
             </span>
-            <span className="text-sm text-[var(--color-muted)]">
+            <span className="report-summary-row__item--muted">
               درجة الصحة: {summary.healthScore}
             </span>
-            <span className="text-sm text-[var(--color-muted)]">
-              الاتجاه: {summary.healthTrend}
-            </span>
+            <span className="report-summary-row__item--muted">الاتجاه: {summary.healthTrend}</span>
           </div>
         </section>
 
         {/* تفصيل الدخل */}
-        <section className="report-section mb-6">
-          <h2 className="text-base font-bold text-[var(--color-text)] mb-3">تفصيل الدخل</h2>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="report-table-wrap flex-1 overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+        <section className="report-section report-section--spaced">
+          <h2 className="report-section__title">تفصيل الدخل</h2>
+          <div className="report-breakdown">
+            <div className="report-table-wrap report-breakdown__table">
+              <table className="report-data-table">
                 <thead>
-                  <tr className="border-b border-[var(--color-border)]">
-                    <th className="text-right py-2 px-2">المصدر</th>
-                    <th className="text-left py-2 px-2">المبلغ</th>
-                    <th className="text-left py-2 px-2">النسبة</th>
-                    <th className="text-left py-2 px-2">العدد</th>
+                  <tr>
+                    <th className="u-text-start">المصدر</th>
+                    <th className="u-text-end">المبلغ</th>
+                    <th className="u-text-end">النسبة</th>
+                    <th className="u-text-end">العدد</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(incomeBreakdown || []).map((row, i) => (
-                    <tr key={i} className="border-b border-[var(--color-border)]">
-                      <td className="py-1.5 px-2">{row.source || '—'}</td>
-                      <td className="py-1.5 px-2">{formatNumber(row.amount)} ر.س</td>
-                      <td className="py-1.5 px-2">{formatNumber(row.percentage)}%</td>
-                      <td className="py-1.5 px-2">{row.count ?? 0}</td>
+                    <tr key={i}>
+                      <td>{row.source || '—'}</td>
+                      <td>{formatCurrency(row.amount)}</td>
+                      <td>{formatNumber(row.percentage)}%</td>
+                      <td>{row.count ?? 0}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="flex-shrink-0">
+            <div className="report-breakdown__chart">
               <PieChart items={incomeBreakdown || []} total={incomeTotal} size={120} />
             </div>
           </div>
         </section>
 
         {/* تفصيل المصروفات */}
-        <section className="report-section mb-6">
-          <h2 className="text-base font-bold text-[var(--color-text)] mb-3">تفصيل المصروفات</h2>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="report-table-wrap flex-1 overflow-x-auto">
-              <table className="w-full text-sm border-collapse">
+        <section className="report-section report-section--spaced">
+          <h2 className="report-section__title">تفصيل المصروفات</h2>
+          <div className="report-breakdown">
+            <div className="report-table-wrap report-breakdown__table">
+              <table className="report-data-table">
                 <thead>
-                  <tr className="border-b border-[var(--color-border)]">
-                    <th className="text-right py-2 px-2">الفئة</th>
-                    <th className="text-left py-2 px-2">المبلغ</th>
-                    <th className="text-left py-2 px-2">النسبة</th>
-                    <th className="text-left py-2 px-2">العدد</th>
+                  <tr>
+                    <th className="u-text-start">الفئة</th>
+                    <th className="u-text-end">المبلغ</th>
+                    <th className="u-text-end">النسبة</th>
+                    <th className="u-text-end">العدد</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(expenseBreakdown || []).map((row, i) => (
-                    <tr key={i} className="border-b border-[var(--color-border)]">
-                      <td className="py-1.5 px-2">{row.category || '—'}</td>
-                      <td className="py-1.5 px-2">{formatNumber(row.amount)} ر.س</td>
-                      <td className="py-1.5 px-2">{formatNumber(row.percentage)}%</td>
-                      <td className="py-1.5 px-2">{row.count ?? 0}</td>
+                    <tr key={i}>
+                      <td>{row.category || '—'}</td>
+                      <td>{formatCurrency(row.amount)}</td>
+                      <td>{formatNumber(row.percentage)}%</td>
+                      <td>{row.count ?? 0}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
-            <div className="flex-shrink-0">
+            <div className="report-breakdown__chart">
               <PieChart items={expenseBreakdown || []} total={expenseTotal} size={120} />
             </div>
           </div>
         </section>
 
         {/* الالتزامات */}
-        <section className="report-section mb-6">
-          <h2 className="text-base font-bold text-[var(--color-text)] mb-3">الالتزامات</h2>
+        <section className="report-section report-section--spaced">
+          <h2 className="report-section__title">الالتزامات</h2>
           <div className="report-metric">
-            <div className="flex flex-wrap justify-between gap-2 mb-2 text-sm">
-              <span>مستحقات الشهر: {formatNumber(commitments?.totalDue || 0)} ر.س</span>
-              <span>مدفوع: {formatNumber(commitments?.totalPaid || 0)} ر.س</span>
-              <span>متأخر: {formatNumber(commitments?.totalOverdue || 0)} ر.س</span>
+            <div className="report-commitments__stats">
+              <span>مستحقات الشهر: {formatCurrency(commitments?.totalDue || 0)}</span>
+              <span>مدفوع: {formatCurrency(commitments?.totalPaid || 0)}</span>
+              <span>متأخر: {formatCurrency(commitments?.totalOverdue || 0)}</span>
             </div>
-            <div className="h-3 bg-[var(--color-background)] rounded-full overflow-hidden">
+            <div className="report-commitments__bar">
               <div
-                className="h-full rounded-full transition-all"
+                className="report-commitments__fill"
                 style={{
-                  background: 'var(--color-success)',
                   width: `${Math.min(100, commitments?.complianceRate ?? 0)}%`,
                 }}
                 role="progressbar"
@@ -398,16 +364,16 @@ export function MonthlyReportView({
                 aria-valuemax={100}
               />
             </div>
-            <p className="text-sm text-[var(--color-muted)] mt-1">
+            <p className="report-commitments__note">
               نسبة الالتزام: {commitments?.complianceRate ?? 0}%
             </p>
           </div>
         </section>
 
         {/* أبرز الأحداث */}
-        <section className="report-section mb-6">
-          <h2 className="text-base font-bold text-[var(--color-text)] mb-3">أبرز الأحداث</h2>
-          <ul className="space-y-1">
+        <section className="report-section report-section--spaced">
+          <h2 className="report-section__title">أبرز الأحداث</h2>
+          <ul className="report-highlights">
             {(highlights || []).map((h, i) => (
               <li
                 key={i}
@@ -426,21 +392,18 @@ export function MonthlyReportView({
         </section>
 
         {/* توقعات الشهر القادم */}
-        <section className="report-section mb-6">
-          <h2 className="text-base font-bold text-[var(--color-text)] mb-3">توقعات الشهر القادم</h2>
+        <section className="report-section report-section--spaced">
+          <h2 className="report-section__title">توقعات الشهر القادم</h2>
           <div className="report-metric">
-            <div className="flex flex-wrap gap-4 text-sm mb-2">
-              <span>دخل متوقع: {formatNumber(nextMonthForecast?.expectedIncome || 0)} ر.س</span>
-              <span>مصروف متوقع: {formatNumber(nextMonthForecast?.expectedExpense || 0)} ر.س</span>
+            <div className="report-forecast__stats">
+              <span>دخل متوقع: {formatCurrency(nextMonthForecast?.expectedIncome || 0)}</span>
+              <span>مصروف متوقع: {formatCurrency(nextMonthForecast?.expectedExpense || 0)}</span>
               <span>
-                صافي متوقع: <strong>{formatNumber(nextMonthForecast?.expectedNet || 0)} ر.س</strong>
+                صافي متوقع: <strong>{formatCurrency(nextMonthForecast?.expectedNet || 0)}</strong>
               </span>
             </div>
             {(nextMonthForecast?.risks || []).length > 0 && (
-              <ul
-                className="list-disc list-inside text-sm mt-2"
-                style={{ color: 'var(--color-warning)' }}
-              >
+              <ul className="report-risks">
                 {nextMonthForecast.risks.map((r, i) => (
                   <li key={i}>{r}</li>
                 ))}
@@ -451,52 +414,43 @@ export function MonthlyReportView({
 
         {/* حركات الشهر (ملخص) */}
         {Array.isArray(transactions) && transactions.length > 0 && (
-          <section className="report-section mb-4">
-            <h2 className="text-base font-bold text-[var(--color-text)] mb-3">
-              حركات الشهر ({transactions.length})
-            </h2>
-            <div className="report-table-wrap max-h-48 overflow-y-auto">
-              <table className="w-full text-sm border-collapse">
-                <thead className="sticky top-0 bg-[var(--color-bg)]">
-                  <tr className="border-b border-[var(--color-border)]">
-                    <th className="text-right py-1.5 px-2">التاريخ</th>
-                    <th className="text-right py-1.5 px-2">النوع</th>
-                    <th className="text-right py-1.5 px-2">الفئة</th>
-                    <th className="text-left py-1.5 px-2">المبلغ</th>
+          <section className="report-section report-section--spaced">
+            <h2 className="report-section__title">حركات الشهر ({transactions.length})</h2>
+            <div className="report-table-wrap report-tx-scroll">
+              <table className="report-data-table">
+                <thead>
+                  <tr>
+                    <th className="u-text-start">التاريخ</th>
+                    <th className="u-text-start">النوع</th>
+                    <th className="u-text-start">الفئة</th>
+                    <th className="u-text-end">المبلغ</th>
                   </tr>
                 </thead>
                 <tbody>
                   {transactions.slice(0, 50).map((t) => (
-                    <tr
-                      key={t.id || t.date + t.amount}
-                      className="border-b border-[var(--color-border)]"
-                    >
-                      <td className="py-1 px-2">{t.date}</td>
-                      <td className="py-1 px-2">{t.type === 'income' ? 'دخل' : 'مصروف'}</td>
-                      <td className="py-1 px-2">{t.category || '—'}</td>
+                    <tr key={t.id || t.date + t.amount}>
+                      <td>{t.date}</td>
+                      <td>{t.type === 'income' ? 'دخل' : 'مصروف'}</td>
+                      <td>{t.category || '—'}</td>
                       <td
-                        className="py-1 px-2 font-medium"
-                        style={{
-                          color:
-                            t.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
-                        }}
+                        className={
+                          t.type === 'income' ? 'report-cell--income' : 'report-cell--expense'
+                        }
                       >
-                        {formatNumber(t.amount)} ر.س
+                        {formatCurrency(t.amount)}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
               {transactions.length > 50 && (
-                <p className="text-xs text-[var(--color-muted)] p-2">
-                  عرض 50 من {transactions.length} حركة
-                </p>
+                <p className="report-tx-note">عرض 50 من {transactions.length} حركة</p>
               )}
             </div>
           </section>
         )}
 
-        <footer className="text-center text-xs text-[var(--color-muted)] pt-4 border-t border-[var(--color-border)]">
+        <footer className="report-footer">
           تم إنشاء التقرير في{' '}
           {meta.generatedAt ? new Date(meta.generatedAt).toLocaleString('ar-SA') : '—'}
         </footer>

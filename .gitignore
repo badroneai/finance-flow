@@ -12,6 +12,7 @@ build/
 .cache/
 
 # Environment variables (Supabase keys, etc.)
+.env
 .env.local
 .env*.local
 

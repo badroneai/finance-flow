@@ -18,13 +18,13 @@ describe('format', () => {
     expect(formatNumber(undefined)).toMatch(/[0٠]/);
   });
 
-  it('formatCurrency appends ر.س', () => {
+  it('formatCurrency appends ﷼', () => {
     const result = formatCurrency(1000);
-    expect(result).toContain('ر.س');
+    expect(result).toContain('﷼');
     expect(result.length).toBeGreaterThan(3);
   });
 
-  it('formatCurrency(0) contains ر.س', () => {
-    expect(formatCurrency(0)).toContain('ر.س');
+  it('formatCurrency(0) contains ﷼', () => {
+    expect(formatCurrency(0)).toContain('﷼');
   });
 });

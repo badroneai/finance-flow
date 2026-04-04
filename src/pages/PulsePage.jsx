@@ -105,14 +105,7 @@ function writeCache(activeId, pulse) {
 
 export default function PulsePage({ setPage }) {
   const navigate = useNavigate();
-  const {
-    transactions,
-    recurringItems,
-    ledgers,
-    activeLedgerId: dataActiveLedgerId,
-    transactionsLoading,
-    isCloudMode,
-  } = useData();
+  const { transactions, recurringItems, ledgers, activeLedgerId: dataActiveLedgerId } = useData();
 
   const [pulse, setPulse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -190,7 +183,7 @@ export default function PulsePage({ setPage }) {
     const id = getActiveLedgerId() || '';
     setActiveLedgerId(id);
     runCalculate(id, false);
-  }, []);
+  }, [runCalculate]);
 
   // استماع حدث تغيير الدفتر النشط
   useEffect(() => {
@@ -261,11 +254,7 @@ export default function PulsePage({ setPage }) {
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center shadow-sm">
             <p className="text-[var(--color-text)] font-medium">حدث خطأ أثناء تحميل النبض</p>
             <p className="text-sm text-[var(--color-muted)] mt-1">{error}</p>
-            <button
-              type="button"
-              onClick={() => refresh(true)}
-              className="btn-primary mt-4"
-            >
+            <button type="button" onClick={() => refresh(true)} className="btn-primary mt-4">
               إعادة المحاولة
             </button>
           </div>
@@ -286,11 +275,7 @@ export default function PulsePage({ setPage }) {
               اختر دفتراً نشطاً من الدفاتر لرؤية النبض المالي
             </p>
             {setPage && (
-              <button
-                type="button"
-                onClick={() => setPage('ledgers')}
-                className="btn-primary mt-4"
-              >
+              <button type="button" onClick={() => setPage('ledgers')} className="btn-primary mt-4">
                 فتح الدفاتر
               </button>
             )}

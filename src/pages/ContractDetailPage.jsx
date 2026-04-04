@@ -35,7 +35,7 @@ function InfoCard({ label, value }) {
 
 function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
   return (
-    <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+    <section className="detail-section mb-4">
       <div className="flex items-center gap-2 mb-3">
         <span className="text-[var(--color-primary)]" aria-hidden="true">
           <Icons.plus size={18} />
@@ -153,11 +153,17 @@ function DueTable({ schedule }) {
         <tbody>
           {schedule.map((due) => (
             <tr key={due.id} className="border-b border-[var(--color-border)] last:border-b-0">
-              <td className="py-3 px-2 font-medium text-[var(--color-text)]">{due.installmentNumber}</td>
+              <td className="py-3 px-2 font-medium text-[var(--color-text)]">
+                {due.installmentNumber}
+              </td>
               <td className="py-3 px-2 text-[var(--color-muted)]">{due.dueDate || '—'}</td>
               <td className="py-3 px-2 text-[var(--color-text)]">{formatCurrency(due.amount)}</td>
-              <td className="py-3 px-2 text-[var(--color-success)]">{formatCurrency(due.paidAmount)}</td>
-              <td className="py-3 px-2 text-[var(--color-text)]">{formatCurrency(due.remainingAmount)}</td>
+              <td className="py-3 px-2 text-[var(--color-success)]">
+                {formatCurrency(due.paidAmount)}
+              </td>
+              <td className="py-3 px-2 text-[var(--color-text)]">
+                {formatCurrency(due.remainingAmount)}
+              </td>
               <td className="py-3 px-2">
                 <Badge color={getDueStatusColor(due.status)}>{getDueStatusLabel(due.status)}</Badge>
               </td>
@@ -171,7 +177,9 @@ function DueTable({ schedule }) {
 
 function PaymentsTable({ payments, receiptsMap, onViewReceipt }) {
   if (!payments.length) {
-    return <div className="text-sm text-[var(--color-muted)]">لا توجد دفعات مسجلة لهذا العقد بعد.</div>;
+    return (
+      <div className="text-sm text-[var(--color-muted)]">لا توجد دفعات مسجلة لهذا العقد بعد.</div>
+    );
   }
 
   return (
@@ -191,7 +199,10 @@ function PaymentsTable({ payments, receiptsMap, onViewReceipt }) {
           {payments.map((payment) => {
             const receipt = receiptsMap?.[payment.id];
             return (
-              <tr key={payment.id} className="border-b border-[var(--color-border)] last:border-b-0">
+              <tr
+                key={payment.id}
+                className="border-b border-[var(--color-border)] last:border-b-0"
+              >
                 <td className="py-3 px-2 text-[var(--color-text)]">{payment.date || '—'}</td>
                 <td className="py-3 px-2 font-medium text-[var(--color-success)]">
                   {formatCurrency(payment.amount)}
@@ -199,7 +210,9 @@ function PaymentsTable({ payments, receiptsMap, onViewReceipt }) {
                 <td className="py-3 px-2 text-[var(--color-muted)]">
                   {getPaymentMethodLabel(payment.paymentMethod)}
                 </td>
-                <td className="py-3 px-2 text-[var(--color-muted)]">{payment.dueId || 'توزيع تلقائي'}</td>
+                <td className="py-3 px-2 text-[var(--color-muted)]">
+                  {payment.dueId || 'توزيع تلقائي'}
+                </td>
                 <td className="py-3 px-2 text-[var(--color-muted)]">{payment.note || '—'}</td>
                 <td className="py-3 px-2">
                   {receipt ? (
@@ -235,6 +248,7 @@ export default function ContractDetailPage() {
     units,
     contractPayments,
     createContractPayment,
+    updateContractPayment,
     deleteContractPayment,
     createTransaction,
     contractReceipts,
@@ -254,7 +268,8 @@ export default function ContractDetailPage() {
   const contract = useMemo(() => contracts.find((item) => item.id === id), [contracts, id]);
   const property = useMemo(
     () =>
-      properties.find((item) => item.id === (contract?.propertyId || contract?.property_id)) || null,
+      properties.find((item) => item.id === (contract?.propertyId || contract?.property_id)) ||
+      null,
     [properties, contract]
   );
   const contact = useMemo(
@@ -282,7 +297,9 @@ export default function ContractDetailPage() {
     const map = {};
     contractReceipts
       .filter((r) => r.contractId === id)
-      .forEach((r) => { map[r.contractPaymentId] = r; });
+      .forEach((r) => {
+        map[r.contractPaymentId] = r;
+      });
     return map;
   }, [contractReceipts, id]);
 
@@ -293,6 +310,12 @@ export default function ContractDetailPage() {
   const handleSubmitPayment = useCallback(async () => {
     if (!contract) return;
     setSavingPayment(true);
+
+    // استخراج الحالة الحالية للقسط المحدد — للـ rollback الآمن
+    const selectedDue =
+      paymentForm.dueId && finance?.schedule
+        ? finance.schedule.find((d) => d.id === paymentForm.dueId)
+        : null;
 
     const result = await recordContractPayment({
       contract,
@@ -306,7 +329,14 @@ export default function ContractDetailPage() {
       propertyName: property?.name,
       unitName: unit?.name,
       tenantName: contact?.name,
+      currentDueStatus: selectedDue?.status,
+      currentPaidAmount: selectedDue?.paidAmount,
+      // تاريخ آخر دفعة على القسط — من مصفوفة payments المحسوبة في buildContractSchedule
+      currentPaidDate: selectedDue?.payments?.length
+        ? selectedDue.payments[selectedDue.payments.length - 1]?.date || null
+        : null,
       createContractPayment,
+      updateContractPayment,
       deleteContractPayment,
       createTransaction,
       createContractReceipt,
@@ -333,11 +363,24 @@ export default function ContractDetailPage() {
     } else {
       toast.error(result.error?.message || 'تعذر تسجيل الدفعة');
     }
-  }, [contract, contact, createContractPayment, deleteContractPayment, createTransaction, createContractReceipt, paymentForm, property, toast, unit]);
+  }, [
+    contract,
+    contact,
+    finance,
+    createContractPayment,
+    updateContractPayment,
+    deleteContractPayment,
+    createTransaction,
+    createContractReceipt,
+    paymentForm,
+    property,
+    toast,
+    unit,
+  ]);
 
   if (!contract) {
     return (
-      <div className="px-4 md:px-6 max-w-5xl mx-auto py-6" dir="rtl">
+      <div className="page-shell page-shell--wide" dir="rtl">
         <EmptyState
           title="عقد غير موجود"
           description="قد يكون العقد حُذف أو أن الرابط غير صحيح."
@@ -352,7 +395,7 @@ export default function ContractDetailPage() {
   const expiring = isExpiringSoon(contract.endDate);
 
   return (
-    <div className="page-shell px-4 md:px-6 max-w-5xl mx-auto py-4" dir="rtl">
+    <div className="page-shell page-shell--wide" dir="rtl">
       <div className="text-sm text-[var(--color-muted)] mb-3">
         <button type="button" onClick={() => navigate('/contracts')} className="hover:underline">
           العقود
@@ -361,7 +404,7 @@ export default function ContractDetailPage() {
         <span>{contract.contractNumber || property?.name || 'تفاصيل العقد'}</span>
       </div>
 
-      <div className="detail-hero panel-card bg-[var(--color-surface)] mb-4">
+      <div className="detail-hero mb-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <span className="text-[var(--color-primary)]" aria-hidden="true">
@@ -386,17 +429,13 @@ export default function ContractDetailPage() {
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate('/contracts')}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={() => navigate('/contracts')} className="btn-secondary">
             رجوع للقائمة
           </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+      <div className="route-summary-grid route-summary-grid--five mb-4">
         <SummaryCard
           label="إجمالي العقد"
           value={formatCurrency(finance.total)}
@@ -451,16 +490,22 @@ export default function ContractDetailPage() {
             label="مبلغ التأمين"
             value={contract.depositAmount ? formatCurrency(safeNum(contract.depositAmount)) : '—'}
           />
-          <InfoCard label="المدة" value={contract.durationMonths ? `${contract.durationMonths} شهر` : '—'} />
+          <InfoCard
+            label="المدة"
+            value={contract.durationMonths ? `${contract.durationMonths} شهر` : '—'}
+          />
           <InfoCard label="تجديد تلقائي" value={contract.autoRenew ? 'نعم' : 'لا'} />
-          <InfoCard label="الأيام المتبقية" value={remainingDays != null ? String(remainingDays) : '—'} />
+          <InfoCard
+            label="الأيام المتبقية"
+            value={remainingDays != null ? String(remainingDays) : '—'}
+          />
         </div>
       </section>
 
       <section className="detail-section mb-4">
         <h2 className="font-bold text-[var(--color-text)] mb-3">الارتباطات</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+          <div className="report-highlight report-highlight--neutral">
             <div className="text-xs text-[var(--color-muted)] mb-1">العقار</div>
             <div className="font-medium text-[var(--color-text)]">{property?.name || '—'}</div>
             {property?.id && (
@@ -475,16 +520,22 @@ export default function ContractDetailPage() {
             )}
           </div>
 
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+          <div className="report-highlight report-highlight--neutral">
             <div className="text-xs text-[var(--color-muted)] mb-1">الوحدة</div>
-            <div className="font-medium text-[var(--color-text)]">{unit?.name || 'العقار بالكامل'}</div>
-            {unit && <div className="text-sm text-[var(--color-muted)] mt-2">{unit.type || ''}</div>}
+            <div className="font-medium text-[var(--color-text)]">
+              {unit?.name || 'العقار بالكامل'}
+            </div>
+            {unit && (
+              <div className="text-sm text-[var(--color-muted)] mt-2">{unit.type || ''}</div>
+            )}
           </div>
 
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
+          <div className="report-highlight report-highlight--neutral">
             <div className="text-xs text-[var(--color-muted)] mb-1">العميل</div>
             <div className="font-medium text-[var(--color-text)]">{contact?.name || '—'}</div>
-            <div className="text-sm text-[var(--color-muted)] mt-2">{contact?.phone || 'لا يوجد جوال'}</div>
+            <div className="text-sm text-[var(--color-muted)] mt-2">
+              {contact?.phone || 'لا يوجد جوال'}
+            </div>
             {contact?.id && (
               <button
                 type="button"
@@ -507,22 +558,18 @@ export default function ContractDetailPage() {
         schedule={finance.schedule.filter((due) => due.remainingAmount > 0)}
       />
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <div className="flex items-center justify-between gap-3 mb-3">
           <h2 className="font-bold text-[var(--color-text)]">جدول الاستحقاقات</h2>
-          <div className="text-xs text-[var(--color-muted)]">
-            {finance.schedule.length} استحقاق
-          </div>
+          <div className="text-xs text-[var(--color-muted)]">{finance.schedule.length} استحقاق</div>
         </div>
         <DueTable schedule={finance.schedule} />
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <div className="flex items-center justify-between gap-3 mb-3">
           <h2 className="font-bold text-[var(--color-text)]">سجل الدفعات</h2>
-          <div className="text-xs text-[var(--color-muted)]">
-            {linkedPayments.length} دفعة
-          </div>
+          <div className="text-xs text-[var(--color-muted)]">{linkedPayments.length} دفعة</div>
         </div>
         <PaymentsTable
           payments={linkedPayments}
@@ -531,7 +578,7 @@ export default function ContractDetailPage() {
         />
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+      <section className="detail-section">
         <h2 className="font-bold text-[var(--color-text)] mb-3">ملاحظات</h2>
         <div className="text-sm text-[var(--color-text)] whitespace-pre-wrap">
           {contract.notes || 'لا توجد ملاحظات على هذا العقد.'}
@@ -539,12 +586,7 @@ export default function ContractDetailPage() {
       </section>
 
       {/* نافذة سند القبض — تظهر بعد نجاح تسجيل الدفعة */}
-      {receipt && (
-        <ReceiptModal
-          receipt={receipt}
-          onClose={() => setReceipt(null)}
-        />
-      )}
+      {receipt && <ReceiptModal receipt={receipt} onClose={() => setReceipt(null)} />}
     </div>
   );
 }

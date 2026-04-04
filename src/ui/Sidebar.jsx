@@ -1,4 +1,3 @@
-
 /**
  * القائمة الجانبية — سطح المكتب + درج موبايل (برومبت 0.3)
  * SPR-010: فُصلت Topbar و BottomNav إلى ملفات مستقلة.
@@ -65,8 +64,10 @@ export const Sidebar = ({
               data-tour-id={`nav-${item.id}`}
               className={`sidebar-nav-button text-sm mb-1 ${page === item.id ? 'is-active' : ''} ${collapsed ? 'justify-center' : ''}`}
             >
-              <Icon size={18} />
-              {!collapsed && <span>{item.label}</span>}
+              <span className="sidebar-nav-icon" aria-hidden="true">
+                <Icon size={18} />
+              </span>
+              {!collapsed && <span className="sidebar-nav-label">{item.label}</span>}
             </button>
           );
         })}
@@ -82,11 +83,12 @@ export const Sidebar = ({
       >
         {sidebarContent}
         <button
+          type="button"
           onClick={() => setCollapsed(!collapsed)}
-        className="sidebar-toggle p-4 text-xs font-medium"
-        aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
-      >
-        {collapsed ? '◁' : '▷ طي'}
+          className="sidebar-toggle p-4 text-xs font-medium"
+          aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
+        >
+          {collapsed ? '◁' : '▷ طي'}
         </button>
       </aside>
 
@@ -96,9 +98,7 @@ export const Sidebar = ({
             className="sidebar-mobile-overlay fixed inset-0"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="sidebar-mobile-drawer fixed right-0 top-0 bottom-0 w-72 z-50 overflow-y-auto">
-            {sidebarContent}
-          </aside>
+          <aside className="sidebar-mobile-drawer z-50 overflow-y-auto">{sidebarContent}</aside>
         </div>
       )}
     </>

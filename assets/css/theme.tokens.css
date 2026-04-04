@@ -95,6 +95,14 @@
   --input-height: 2.85rem;
   --card-padding: 1rem;
   --card-padding-lg: 1.25rem;
+  --ledger-panel-padding: 1rem;
+  --ledger-panel-padding-lg: 1.25rem;
+  --ledger-section-gap: 1rem;
+  --ledger-metric-padding: 0.9rem;
+  --ledger-chip-height: 2rem;
+  --ledger-row-padding: 0.9rem;
+  --ledger-table-cell-y: 0.7rem;
+  --ledger-table-cell-x: 0.1rem;
 
   /* Existing compatibility aliases */
   --color-bg: var(--color-background);

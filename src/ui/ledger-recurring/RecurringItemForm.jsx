@@ -8,45 +8,49 @@ function RecurringItemForm({
   resetRecForm,
 }) {
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <h4 className="font-bold text-[var(--color-text)] mb-3">
-        {recEditingId ? 'تعديل الالتزام' : 'إضافة التزام جديد'}
-      </h4>
-      <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div className="panel-card ledger-panel ledger-control-panel">
+      <div className="ledger-panel__header">
         <div>
-          <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-            اسم الالتزام
-          </label>
+          <span className="ledger-panel__eyebrow">منطقة الإدخال</span>
+          <h4 className="ledger-panel__title">
+            {recEditingId ? 'تعديل الالتزام' : 'إضافة التزام جديد'}
+          </h4>
+          <p className="ledger-panel__subtitle">
+            أدخل بيانات الالتزام الأساسية ثم انتقل لإدارته من القائمة أدناه.
+          </p>
+        </div>
+      </div>
+      <div className="ledger-form-grid">
+        <div className="ledger-create-form__field">
+          <label className="ledger-form-label">اسم الالتزام</label>
           <input
             type="text"
             value={recForm.title}
             onChange={(e) => setRecForm((p) => ({ ...p, title: e.target.value }))}
             maxLength={200}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="ledger-form-input"
             aria-label="اسم الالتزام"
             placeholder="مثال: إيجار المكتب"
           />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-            المبلغ (ر.س)
-          </label>
+        <div className="ledger-create-form__field">
+          <label className="ledger-form-label">المبلغ (ر.س)</label>
           <input
             type="text"
             inputMode="decimal"
             value={recForm.amount}
             onChange={(e) => setRecForm((p) => ({ ...p, amount: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="ledger-form-input"
             aria-label="المبلغ"
             placeholder="0"
           />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-[var(--color-text)] mb-1">التكرار</label>
+        <div className="ledger-create-form__field">
+          <label className="ledger-form-label">التكرار</label>
           <select
             value={recForm.frequency}
             onChange={(e) => setRecForm((p) => ({ ...p, frequency: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+            className="ledger-form-input ledger-form-select"
             aria-label="التكرار"
           >
             <option value="monthly">شهري</option>
@@ -55,53 +59,54 @@ function RecurringItemForm({
             <option value="adhoc">عند الحاجة</option>
           </select>
         </div>
-        <div>
-          <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-            تاريخ الاستحقاق القادم
-          </label>
+        <div className="ledger-create-form__field">
+          <label className="ledger-form-label">تاريخ الاستحقاق القادم</label>
           <input
             type="date"
             value={recForm.nextDueDate}
             onChange={(e) => setRecForm((p) => ({ ...p, nextDueDate: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="ledger-form-input"
             aria-label="تاريخ الاستحقاق القادم"
           />
         </div>
-        <div className="md:col-span-2 lg:col-span-2">
-          <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-            ملاحظات (اختياري)
-          </label>
+        <div className="ledger-create-form__field ledger-form-grid--span-rest">
+          <label className="ledger-form-label">ملاحظات (اختياري)</label>
           <input
             type="text"
             value={recForm.notes || ''}
             onChange={(e) => setRecForm((p) => ({ ...p, notes: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="ledger-form-input"
             aria-label="ملاحظات"
             placeholder="ملاحظة اختيارية"
           />
         </div>
       </div>
-      <div className="flex gap-2 justify-end mt-3">
-        {recEditingId && (
+      <div className="ledger-panel__toolbar">
+        <p className="ledger-muted-note">
+          أدخل البيانات الأساسية أولاً ثم استخدم القائمة أدناه لإدارة التفاصيل والسداد.
+        </p>
+        <div className="ledger-panel__toolbar-group">
+          {recEditingId && (
+            <button
+              type="button"
+              onClick={() => {
+                setRecEditingId(null);
+                resetRecForm();
+              }}
+              className="btn-secondary"
+            >
+              إلغاء
+            </button>
+          )}
           <button
             type="button"
-            onClick={() => {
-              setRecEditingId(null);
-              resetRecForm();
-            }}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+            onClick={saveRecurring}
+            className="btn-primary"
+            aria-label={recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
           >
-            إلغاء
+            {recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
           </button>
-        )}
-        <button
-          type="button"
-          onClick={saveRecurring}
-          className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
-          aria-label={recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
-        >
-          {recEditingId ? 'حفظ التعديل' : 'إضافة التزام'}
-        </button>
+        </div>
       </div>
     </div>
   );

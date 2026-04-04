@@ -8,11 +8,16 @@ function PayNowModal({ payOpen, paySource, payForm, setPayForm, submitPayNow, se
       onClick={() => setPayOpen(false)}
     >
       <div
-        className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md"
+        className="panel-card modal-surface modal-surface--md"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h4 className="font-bold text-[var(--color-text)] mb-3">تسجيل دفعة — {paySource.title}</h4>
+        <div className="ledger-panel__header">
+          <div>
+            <h4 className="ledger-panel__title">تسجيل دفعة — {paySource.title}</h4>
+            <p className="ledger-panel__subtitle">أدخل عملية الدفع كما ستظهر في السجل المالي.</p>
+          </div>
+        </div>
         <div className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
@@ -68,18 +73,10 @@ function PayNowModal({ payOpen, paySource, payForm, setPayForm, submitPayNow, se
           </div>
         </div>
         <div className="flex gap-2 justify-end mt-4">
-          <button
-            type="button"
-            onClick={() => setPayOpen(false)}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
-          >
+          <button type="button" onClick={() => setPayOpen(false)} className="btn-secondary">
             إلغاء
           </button>
-          <button
-            type="button"
-            onClick={submitPayNow}
-            className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
-          >
+          <button type="button" onClick={submitPayNow} className="btn-primary">
             تسجيل الدفعة
           </button>
         </div>

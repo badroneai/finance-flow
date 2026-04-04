@@ -6,7 +6,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { FormField, SummaryCard, Icons, EmptyState, MobileFAB } from '../ui/ui-common.jsx';
+import { FormField, SummaryCard, Icons, EmptyState, MobileFAB, Badge } from '../ui/ui-common.jsx';
 import { ConfirmDialog } from '../ui/Modals.jsx';
 import { formatCurrency } from '../utils/format.jsx';
 import { safeNum } from '../utils/helpers.js';
@@ -101,7 +101,7 @@ function ContractForm({
   };
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
+    <div className="panel-card contracts-page__form-shell mb-4">
       <h3 className="font-bold text-[var(--color-text)] mb-1">
         {editMode ? 'تعديل العقد' : 'إضافة عقد جديد'}
       </h3>
@@ -109,7 +109,7 @@ function ContractForm({
         {editMode ? 'عدّل البيانات واحفظ التغييرات' : 'اربط العقار بالعميل وحدد شروط التعاقد'}
       </p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="contracts-page__form-grid">
         {/* العقار */}
         <FormField label="العقار" id="contract-property">
           <select
@@ -168,7 +168,7 @@ function ContractForm({
             onChange={(e) => handleChange('contractNumber', e.target.value)}
             placeholder="مثال: 2026-001"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
           />
         </FormField>
 
@@ -334,11 +334,7 @@ function ContractForm({
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة العقد'}
         </button>
         {editMode && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm hover:bg-[var(--color-bg)]"
-          >
+          <button type="button" onClick={onCancel} className="btn-secondary">
             إلغاء
           </button>
         )}
@@ -385,14 +381,6 @@ function ContractCard({
     contacts.find((c) => c.id === contract.contactId)?.name ||
     'عميل غير محدد';
 
-  const colorMap = {
-    green: { background: 'var(--color-success-bg)', color: 'var(--color-success)' },
-    blue: { background: 'var(--color-info-bg)', color: 'var(--color-info)' },
-    yellow: { background: 'var(--color-warning-bg)', color: 'var(--color-warning)' },
-    red: { background: 'var(--color-danger-bg)', color: 'var(--color-danger)' },
-    gray: { background: 'var(--color-bg)', color: 'var(--color-muted)' },
-  };
-
   return (
     <div
       role="button"
@@ -404,7 +392,7 @@ function ContractCard({
           onOpen?.();
         }
       }}
-      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+      className="panel-card contracts-page__card cursor-pointer hover:border-[var(--color-primary)] transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -416,24 +404,14 @@ function ContractCard({
             <p className="text-sm text-[var(--color-muted)] mt-0.5">
               {typeLabel} — {contactName}
             </p>
-            {unitName && <p className="text-xs text-[var(--color-info)] mt-1">الوحدة: {unitName}</p>}
+            {unitName && (
+              <p className="text-xs text-[var(--color-info)] mt-1">الوحدة: {unitName}</p>
+            )}
           </div>
         </div>
         <div className="flex flex-col items-end gap-1 flex-shrink-0">
-          <span
-            className="px-2 py-0.5 rounded-full text-xs font-medium"
-            style={colorMap[statusColor] || colorMap.gray}
-          >
-            {statusLabel}
-          </span>
-          {expiring && (
-            <span
-              className="px-2 py-0.5 rounded-full text-xs font-medium"
-              style={{ background: 'var(--color-warning-bg)', color: 'var(--color-warning)' }}
-            >
-              ينتهي خلال {remaining} يوم
-            </span>
-          )}
+          <Badge color={statusColor === 'gray' ? 'gray' : statusColor}>{statusLabel}</Badge>
+          {expiring && <Badge color="yellow">ينتهي خلال {remaining} يوم</Badge>}
         </div>
       </div>
 
@@ -450,18 +428,18 @@ function ContractCard({
       {/* المبالغ */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
         {contract.monthlyRent > 0 && (
-          <span className="font-medium" style={{ color: 'var(--color-success)' }}>
-            {formatCurrency(safeNum(contract.monthlyRent))} ر.س/شهر
+          <span className="font-medium text-[var(--color-success)]">
+            {formatCurrency(safeNum(contract.monthlyRent))}/شهر
           </span>
         )}
         {contract.totalAmount > 0 && (
           <span className="text-[var(--color-muted)]">
-            الإجمالي: {formatCurrency(safeNum(contract.totalAmount))} ر.س
+            الإجمالي: {formatCurrency(safeNum(contract.totalAmount))}
           </span>
         )}
         {contract.depositAmount > 0 && (
           <span className="text-[var(--color-muted)]">
-            تأمين: {formatCurrency(safeNum(contract.depositAmount))} ر.س
+            تأمين: {formatCurrency(safeNum(contract.depositAmount))}
           </span>
         )}
       </div>
@@ -470,33 +448,27 @@ function ContractCard({
         <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{contract.notes}</p>
       )}
 
-      <div
-        className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="contracts-page__card-actions" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={() => onEdit(contract)}
-          className="text-sm font-medium hover:opacity-80"
-          style={{ color: 'var(--color-info)' }}
+          className="btn-ghost contracts-page__card-action text-sm"
         >
           تعديل
         </button>
         <button
           type="button"
           onClick={() => onDelete(contract)}
-          className="text-sm font-medium hover:opacity-80"
-          style={{ color: 'var(--color-danger)' }}
+          className="btn-ghost contracts-page__card-action text-sm text-[var(--color-danger)]"
         >
           حذف
         </button>
-        <div className="mr-auto flex items-center gap-2">
+        <div className="contracts-page__card-links u-push-inline-start">
           {(contract.propertyId || contract.property_id) && (
             <button
               type="button"
               onClick={() => onViewProperty?.()}
-              className="text-xs font-medium hover:opacity-80"
-              style={{ color: 'var(--color-muted)' }}
+              className="btn-ghost contracts-page__card-action text-xs"
             >
               العقار
             </button>
@@ -505,8 +477,7 @@ function ContractCard({
             <button
               type="button"
               onClick={() => onViewContact?.()}
-              className="text-xs font-medium hover:opacity-80"
-              style={{ color: 'var(--color-muted)' }}
+              className="btn-ghost contracts-page__card-action text-xs"
             >
               العميل
             </button>
@@ -520,7 +491,7 @@ function ContractCard({
 // ═══════════════════════════════════════
 // الصفحة الرئيسية
 // ═══════════════════════════════════════
-export default function ContractsPage({ setPage }) {
+export default function ContractsPage() {
   const navigate = useNavigate();
   const {
     contracts,
@@ -555,7 +526,8 @@ export default function ContractsPage({ setPage }) {
       ...c,
       _propertyName: c._propertyName || properties.find((p) => p.id === c.propertyId)?.name || '',
       _contactName: c._contactName || contactsList.find((ct) => ct.id === c.contactId)?.name || '',
-      _unitName: c._unitName || units.find((unit) => unit.id === (c.unitId || c.unit_id))?.name || '',
+      _unitName:
+        c._unitName || units.find((unit) => unit.id === (c.unitId || c.unit_id))?.name || '',
     }));
   }, [contracts, properties, contactsList, units]);
 
@@ -639,7 +611,7 @@ export default function ContractsPage({ setPage }) {
   }, [confirmDelete, deleteContract, toast]);
 
   return (
-    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+    <div className="page-shell page-shell--regular" dir="rtl">
       <div className="page-header">
         <div className="page-header-copy">
           <span className="page-kicker">الارتباطات النظامية</span>
@@ -670,14 +642,7 @@ export default function ContractsPage({ setPage }) {
         contactsList.length === 0 &&
         !showForm &&
         contracts.length === 0 && (
-          <div
-            className="rounded-lg p-4 mb-4 text-sm"
-            style={{
-              background: 'var(--color-warning-bg)',
-              color: 'var(--color-warning)',
-              border: '1px solid var(--color-warning)',
-            }}
-          >
+          <div className="panel-card contracts-page__notice mb-4 text-sm">
             أضف عقارات وعملاء أولاً قبل إنشاء العقود. انتقل لصفحة «العقارات» أو «العملاء» للبدء.
           </div>
         )}
@@ -699,17 +664,13 @@ export default function ContractsPage({ setPage }) {
 
       {/* ملخص */}
       {contracts.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <div className="route-summary-grid route-summary-grid--quad mb-4">
           <SummaryCard
             label="إجمالي العقود"
             value={summary.total}
             icon={<Icons.contracts size={20} />}
           />
-          <SummaryCard
-            label="ساري"
-            value={summary.activeCount}
-            icon={<Icons.check size={18} />}
-          />
+          <SummaryCard label="ساري" value={summary.activeCount} icon={<Icons.check size={18} />} />
           <SummaryCard
             label="ينتهي قريباً"
             value={summary.expiringSoon}
@@ -718,7 +679,7 @@ export default function ContractsPage({ setPage }) {
           />
           <SummaryCard
             label="الإيجار الشهري"
-            value={`${formatCurrency(summary.totalMonthlyRent)} ر.س`}
+            value={formatCurrency(summary.totalMonthlyRent)}
             icon={<Icons.commissions size={18} />}
           />
         </div>
@@ -726,20 +687,21 @@ export default function ContractsPage({ setPage }) {
 
       {/* فلاتر */}
       {contracts.length > 0 && (
-        <div className="control-toolbar flex flex-wrap gap-3 mb-4 p-3">
-          <div className="flex-1 min-w-[180px]">
+        <div className="control-toolbar control-toolbar--compact contracts-page__toolbar mb-4">
+          <div className="contracts-page__search">
+            <Icons.search size={16} className="field-icon-inline-start" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث برقم العقد، اسم العقار أو العميل..."
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              className="contracts-page__search-input text-sm bg-[var(--color-bg)] text-[var(--color-text)]"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+            className="contracts-page__filter-control text-sm bg-[var(--color-bg)] text-[var(--color-text)]"
           >
             <option value="">كل الأنواع</option>
             {CONTRACT_TYPE_OPTIONS.map((opt) => (
@@ -751,7 +713,7 @@ export default function ContractsPage({ setPage }) {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+            className="contracts-page__filter-control text-sm bg-[var(--color-bg)] text-[var(--color-text)]"
           >
             <option value="">كل الحالات</option>
             {CONTRACT_STATUS_OPTIONS.map((opt) => (
@@ -765,7 +727,9 @@ export default function ContractsPage({ setPage }) {
 
       {/* حالة التحميل */}
       {contractsLoading && (
-        <div className="text-center py-8 text-[var(--color-muted)]">جاري التحميل...</div>
+        <div className="panel-card contracts-page__state py-8 text-[var(--color-muted)]">
+          جاري التحميل...
+        </div>
       )}
 
       {/* حالة فارغة */}
@@ -783,11 +747,20 @@ export default function ContractsPage({ setPage }) {
 
       {/* لا نتائج */}
       {!contractsLoading && contracts.length > 0 && filtered.length === 0 && (
-        <div className="text-center py-8 text-[var(--color-muted)]">لا توجد نتائج مطابقة للبحث</div>
+        <EmptyState
+          title="لا توجد نتائج مطابقة"
+          description="غيّر كلمات البحث أو وسّع الفلاتر للعثور على العقود المطلوبة."
+          actionLabel="إعادة ضبط البحث"
+          onAction={() => {
+            setSearchQuery('');
+            setFilterType('');
+            setFilterStatus('');
+          }}
+        />
       )}
 
       {/* قائمة العقود */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="contracts-page__list">
         {filtered.map((contract) => (
           <ContractCard
             key={contract.id}
@@ -801,7 +774,9 @@ export default function ContractsPage({ setPage }) {
             onViewProperty={() =>
               navigate(`/properties/${contract.propertyId || contract.property_id || ''}`)
             }
-            onViewContact={() => navigate(`/contacts/${contract.contactId || contract.contact_id || ''}`)}
+            onViewContact={() =>
+              navigate(`/contacts/${contract.contactId || contract.contact_id || ''}`)
+            }
           />
         ))}
       </div>

@@ -86,7 +86,7 @@ export default function PulseHeader({ onOpenLedgers }) {
             {open && (
               <ul
                 role="listbox"
-                className="absolute top-full right-0 mt-1 min-w-[160px] max-h-56 overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-1 z-10"
+                className="absolute top-full end-0 mt-1 min-w-[160px] max-h-56 overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-1 z-10"
                 aria-label="قائمة الدفاتر"
               >
                 {list.map((l) => (
@@ -94,7 +94,7 @@ export default function PulseHeader({ onOpenLedgers }) {
                     <button
                       type="button"
                       onClick={() => handleSelect(l.id)}
-                      className="w-full text-right px-3 py-2 text-sm"
+                      className="w-full u-text-start px-3 py-2 text-sm"
                       style={{
                         background: l.id === activeId ? 'var(--color-info-bg)' : 'transparent',
                         color: l.id === activeId ? 'var(--color-info)' : 'var(--color-text)',

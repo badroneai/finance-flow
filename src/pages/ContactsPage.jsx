@@ -351,7 +351,7 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
 // ═══════════════════════════════════════
 // الصفحة الرئيسية
 // ═══════════════════════════════════════
-export default function ContactsPage({ setPage }) {
+export default function ContactsPage() {
   const navigate = useNavigate();
   const { contacts, contactsLoading, createContact, updateContact, deleteContact, contracts } =
     useData();

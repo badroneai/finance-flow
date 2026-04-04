@@ -10,16 +10,14 @@ const loadPdfService = () => import('../core/pdf-service.js');
 /** Minimal, stable Reports tab (Stage 6 stability).
  *  هدفه منع أي crash/white-screen وتقديم تقارير أساسية + CSV تصدير.
  */
-const fallbackCurrency = ({ value }) => <AppCurrency value={value} symbolClassName="w-3.5 h-3.5" />;
+const fallbackCurrency = ({ value }) => <AppCurrency value={value} />;
 const fallbackEmpty = ({ message }) => (
-  <div className="flex flex-col items-center justify-center py-16 text-[var(--color-muted)]">
-    <p className="mt-4 text-sm">{message}</p>
+  <div className="ledger-empty-wrap">
+    <p className="ledger-empty-wrap__title">{message}</p>
   </div>
 );
 const fallbackBadge = ({ children }) => (
-  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--color-bg)] text-[var(--color-muted)]">
-    {children}
-  </span>
+  <span className="ledger-item-card__badge ledger-item-card__badge--info">{children}</span>
 );
 
 const BUCKET_LABELS = {
@@ -203,210 +201,279 @@ function LedgerReportsTab({ data, ui }) {
 
   return (
     <>
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <h4 className="font-bold text-[var(--color-text)]">تقارير الدفتر</h4>
-            <p className="text-sm text-[var(--color-muted)] mt-1">
-              دفتر نشط:{' '}
-              <span className="font-medium text-[var(--color-text)]">
-                {activeLedger?.name || '—'}
-              </span>
-            </p>
-            <p className="text-xs text-[var(--color-muted)] mt-1">
-              هذه الصفحة تعرض تقارير مبنية على الحركات المرتبطة بالدفتر (meta).
-            </p>
-          </div>
+      <section className="ledger-layer ledger-layer--summary">
+        <div className="ledger-layer__header">
+          <span className="ledger-layer__label">تقارير الدفتر</span>
+          <p className="ledger-layer__hint">
+            دفتر نشط: <strong>{activeLedger?.name || '—'}</strong>
+            {' — '}
+            هذه الصفحة تعرض تقارير مبنية على الحركات المرتبطة بالدفتر.
+          </p>
           {!activeId && <Badge color="yellow">اختر دفترًا نشطًا</Badge>}
         </div>
-      </div>
+      </section>
 
       {!activeId ? (
-        <EmptyState message="اختر دفترًا نشطًا لعرض التقارير" />
+        <div className="ledger-empty-wrap">
+          <EmptyState message="اختر دفترًا نشطًا لعرض التقارير" />
+        </div>
       ) : (
-        <div className="flex flex-col gap-4">
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
-            <h4 className="font-bold text-[var(--color-text)] mb-3">التقرير الشهري</h4>
-            <p className="text-sm text-[var(--color-muted)] mb-3">
-              عرض تقرير شهري للدفتر مع إمكانية تصدير PDF ومشاركته.
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <select
-                value={reportMonth}
-                onChange={(e) => setReportMonth(Number(e.target.value))}
-                className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text)] bg-[var(--color-surface)]"
-                aria-label="شهر التقرير"
-              >
-                {MONTHS_REPORT.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={reportYear}
-                onChange={(e) => setReportYear(Number(e.target.value))}
-                className="rounded-lg border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-text)] bg-[var(--color-surface)]"
-                aria-label="سنة التقرير"
-              >
-                {Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i).map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={openMonthlyReport}
-                className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)]"
-              >
-                عرض التقرير
-              </button>
+        <div className="ledger-view">
+          <section className="ledger-layer ledger-layer--summary">
+            <div className="ledger-layer__header">
+              <span className="ledger-layer__label">الملخص</span>
+              <p className="ledger-layer__hint">
+                تبدأ القراءة هنا بمؤشرات النشاط والصافي قبل الانتقال إلى أدوات التقرير والتفاصيل.
+              </p>
             </div>
-          </div>
-
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="font-bold text-[var(--color-text)]">ملخص سريع</div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={exportLedgerPDF}
-                  disabled={pdfExporting}
-                  className="px-3 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-dark)] disabled:opacity-50"
-                  aria-label="تصدير كشف حساب PDF"
-                >
-                  {pdfExporting ? 'جاري…' : 'كشف حساب PDF'}
-                </button>
-                <button
-                  type="button"
-                  onClick={exportLedgerTxCSV}
-                  className="px-3 py-2 rounded-lg bg-[var(--color-surface)] border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
-                  aria-label="تصدير CSV"
-                >
-                  تصدير CSV
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-                <div className="text-xs text-[var(--color-muted)]">عدد الحركات</div>
-                <div className="mt-1 text-xl font-bold text-[var(--color-text)]">
-                  {(txs || []).length}
+            <div className="panel-card ledger-panel ledger-summary-panel">
+              <div className="ledger-panel__header">
+                <div>
+                  <span className="ledger-panel__eyebrow">لوحة ملخص</span>
+                  <div className="ledger-panel__title">ملخص سريع</div>
+                  <p className="ledger-panel__subtitle">
+                    مؤشرات سريعة للصافي، النشاط، والدخل والمصروف المرتبطين بالدفتر النشط.
+                  </p>
                 </div>
               </div>
-              <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-                <div className="text-xs text-[var(--color-muted)]">صافي آخر 30 يوم</div>
-                <div className="mt-1 text-xl font-bold text-[var(--color-text)]">
-                  <Currency value={pl30?.net || 0} />
+              <div className="ledger-metric-grid">
+                <div className="ledger-metric-card">
+                  <div className="ledger-metric-card__label">عدد الحركات</div>
+                  <div className="ledger-metric-card__value ledger-metric-card__value--xl">
+                    {(txs || []).length}
+                  </div>
                 </div>
-              </div>
-              <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-                <div className="text-xs text-[var(--color-muted)]">صافي آخر سنة</div>
-                <div className="mt-1 text-xl font-bold text-[var(--color-text)]">
-                  <Currency value={pl365?.net ?? 0} />
+                <div className="ledger-metric-card">
+                  <div className="ledger-metric-card__label">صافي آخر 30 يوم</div>
+                  <div className="ledger-metric-card__value ledger-metric-card__value--xl">
+                    <Currency value={pl30?.net || 0} />
+                  </div>
                 </div>
-              </div>
-              <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-                <div className="text-xs text-[var(--color-muted)]">دخل 30 يوم</div>
-                <div className="mt-1 text-lg font-bold text-[var(--color-success)]">
-                  <Currency value={pl30?.income ?? 0} />
+                <div className="ledger-metric-card">
+                  <div className="ledger-metric-card__label">صافي آخر سنة</div>
+                  <div className="ledger-metric-card__value ledger-metric-card__value--xl">
+                    <Currency value={pl365?.net ?? 0} />
+                  </div>
                 </div>
-              </div>
-              <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] col-span-2 md:col-span-1">
-                <div className="text-xs text-[var(--color-muted)]">مصروف 30 يوم</div>
-                <div className="mt-1 text-lg font-bold text-[var(--color-danger)]">
-                  <Currency value={pl30?.expense ?? 0} />
+                <div className="ledger-metric-card">
+                  <div className="ledger-metric-card__label">دخل 30 يوم</div>
+                  <div className="ledger-metric-card__value ledger-metric-card__value--lg ledger-metric-card__value--success">
+                    <Currency value={pl30?.income ?? 0} />
+                  </div>
+                </div>
+                <div className="ledger-metric-card">
+                  <div className="ledger-metric-card__label">مصروف 30 يوم</div>
+                  <div className="ledger-metric-card__value ledger-metric-card__value--lg ledger-metric-card__value--danger">
+                    <Currency value={pl30?.expense ?? 0} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          </section>
 
-          {compliance != null && (
-            <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
-              <h4 className="font-bold text-[var(--color-text)] mb-2">درجة الالتزام</h4>
-              <p className="text-sm text-[var(--color-muted)] mb-2">{compliance.note}</p>
-              <div className="flex flex-wrap items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold text-[var(--color-text)]">
-                    {compliance.pct ?? 0}%
-                  </span>
-                  <Badge
-                    color={compliance.pct >= 70 ? 'green' : compliance.pct >= 40 ? 'yellow' : 'red'}
+          <section className="ledger-layer ledger-layer--controls">
+            <div className="ledger-layer__header">
+              <span className="ledger-layer__label">الإجراءات</span>
+              <p className="ledger-layer__hint">
+                اختر فترة التقرير أو صدّر المستندات من هذه المنطقة قبل مراجعة التفاصيل التحليلية.
+              </p>
+            </div>
+            <div className="panel-card ledger-panel ledger-control-panel">
+              <div className="ledger-panel__header">
+                <div>
+                  <span className="ledger-panel__eyebrow">التقرير الرسمي</span>
+                  <h4 className="ledger-panel__title">التقرير الشهري</h4>
+                  <p className="ledger-panel__subtitle">
+                    عرض تقرير شهري للدفتر مع إمكانية تصدير PDF ومشاركته.
+                  </p>
+                </div>
+                <div className="ledger-panel__toolbar-group">
+                  <button
+                    type="button"
+                    onClick={exportLedgerPDF}
+                    disabled={pdfExporting}
+                    className="btn-primary"
+                    aria-label="تصدير كشف حساب PDF"
                   >
-                    {compliance.pct >= 70 ? 'جيد' : compliance.pct >= 40 ? 'يحتاج متابعة' : 'ضعيف'}
-                  </Badge>
+                    {pdfExporting ? 'جاري…' : 'كشف حساب PDF'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={exportLedgerTxCSV}
+                    className="btn-secondary"
+                    aria-label="تصدير CSV"
+                  >
+                    تصدير CSV
+                  </button>
                 </div>
-                {compliance.overdueCount > 0 && (
-                  <span className="text-sm text-[var(--color-warning)]">
-                    استحقاقات متأخرة: {compliance.overdueCount}
-                  </span>
-                )}
-                {compliance.completionPct != null && (
-                  <span className="text-xs text-[var(--color-muted)]">
-                    اكتمال التسعير: {compliance.completionPct}%
-                  </span>
-                )}
+              </div>
+              <div className="ledger-panel__toolbar">
+                <div className="ledger-panel__toolbar-group">
+                  <select
+                    value={reportMonth}
+                    onChange={(e) => setReportMonth(Number(e.target.value))}
+                    className="ledger-form-input ledger-form-select"
+                    aria-label="شهر التقرير"
+                  >
+                    {MONTHS_REPORT.map((m) => (
+                      <option key={m.value} value={m.value}>
+                        {m.label}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={reportYear}
+                    onChange={(e) => setReportYear(Number(e.target.value))}
+                    className="ledger-form-input ledger-form-select"
+                    aria-label="سنة التقرير"
+                  >
+                    {Array.from({ length: 10 }, (_, i) => now.getFullYear() - 5 + i).map((y) => (
+                      <option key={y} value={y}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                  <button type="button" onClick={openMonthlyReport} className="btn-primary">
+                    عرض التقرير
+                  </button>
+                </div>
+                <p className="ledger-muted-note">
+                  اختر الفترة ثم افتح التقرير أو صدّر البيانات مباشرة من هنا.
+                </p>
               </div>
             </div>
-          )}
+          </section>
 
-          {budgetsHealth && (budgetsHealth.monthlyTarget > 0 || budgetsHealth.yearlyTarget > 0) && (
-            <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
-              <h4 className="font-bold text-[var(--color-text)] mb-2">الميزانية</h4>
-              <div className="flex flex-wrap gap-3 text-sm">
-                {budgetsHealth.monthlyTarget > 0 && (
-                  <span>
-                    شهري: <Currency value={budgetsHealth.monthlyTarget} /> —{' '}
+          <section className="ledger-layer">
+            <div className="ledger-layer__header">
+              <span className="ledger-layer__label">المحتوى</span>
+              <p className="ledger-layer__hint">
+                في هذه المنطقة تظهر قراءة الالتزام والتوزيع الفعلي بعد ضبط التقرير المطلوب.
+              </p>
+            </div>
+            {compliance != null && (
+              <div className="panel-card ledger-panel ledger-content-panel">
+                <div className="ledger-panel__header">
+                  <div>
+                    <span className="ledger-panel__eyebrow">مؤشر الجودة</span>
+                    <h4 className="ledger-panel__title">درجة الالتزام</h4>
+                    <p className="ledger-panel__subtitle">{compliance.note}</p>
+                  </div>
+                </div>
+                <div className="ledger-row ledger-row--wrap">
+                  <div className="ledger-row">
+                    <strong className="ledger-metric-card__value ledger-metric-card__value--xl">
+                      {compliance.pct ?? 0}%
+                    </strong>
                     <Badge
                       color={
-                        budgetsHealth.status === 'good' || budgetsHealth.status === 'neutral'
-                          ? 'green'
-                          : budgetsHealth.status === 'warn'
-                            ? 'yellow'
-                            : 'red'
+                        compliance.pct >= 70 ? 'green' : compliance.pct >= 40 ? 'yellow' : 'red'
                       }
                     >
-                      {budgetsHealth.status === 'good' || budgetsHealth.status === 'neutral'
-                        ? 'ضمن الهدف'
-                        : budgetsHealth.status === 'warn'
-                          ? 'قريب من الحد'
-                          : 'تجاوز'}
+                      {compliance.pct >= 70
+                        ? 'جيد'
+                        : compliance.pct >= 40
+                          ? 'يحتاج متابعة'
+                          : 'ضعيف'}
                     </Badge>
-                  </span>
-                )}
-                {budgetsHealth.yearlyTarget > 0 && (
-                  <span>
-                    سنوي: <Currency value={budgetsHealth.yearlyTarget} />
-                  </span>
+                  </div>
+                  {compliance.overdueCount > 0 && (
+                    <span className="ledger-callout__text ledger-callout__text--warning">
+                      استحقاقات متأخرة: {compliance.overdueCount}
+                    </span>
+                  )}
+                  {compliance.completionPct != null && (
+                    <span className="ledger-form-hint">
+                      اكتمال التسعير: {compliance.completionPct}%
+                    </span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            <div className="panel-card ledger-panel ledger-content-panel">
+              <div className="ledger-panel__header">
+                <div>
+                  <span className="ledger-panel__eyebrow">تفصيل المصروفات</span>
+                  <h4 className="ledger-panel__title">توزيع المصروفات (حسب الفئة)</h4>
+                  <p className="ledger-panel__subtitle">
+                    قراءة مبسطة للفئات الأعلى صرفًا داخل الدفتر النشط.
+                  </p>
+                </div>
+              </div>
+              <div className="ledger-inline-list">
+                {(topBuckets || []).length === 0 ? (
+                  <div className="ledger-empty-wrap__note">
+                    <p className="ledger-empty-wrap__title">لا توجد مصروفات مصنفة بعد</p>
+                    <p className="ledger-empty-wrap__description">
+                      ستظهر الفئات الأعلى صرفًا هنا بمجرد وجود حركات مصنفة داخل الدفتر.
+                    </p>
+                  </div>
+                ) : (
+                  topBuckets.map((b) => (
+                    <div key={b.bucket} className="ledger-inline-list__row">
+                      <span className="ledger-inline-list__label">
+                        {BUCKET_LABELS[b.bucket] || String(b.bucket || 'أخرى')}
+                      </span>
+                      <span className="ledger-inline-list__value">
+                        <Currency value={b.total || 0} />
+                      </span>
+                    </div>
+                  ))
                 )}
               </div>
             </div>
-          )}
+          </section>
 
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm">
-            <h4 className="font-bold text-[var(--color-text)] mb-3">توزيع المصروفات (حسب الفئة)</h4>
-            <div className="flex flex-col gap-2">
-              {(topBuckets || []).length === 0 ? (
-                <div className="text-sm text-[var(--color-muted)]">لا توجد مصروفات مصنفة بعد.</div>
-              ) : (
-                topBuckets.map((b) => (
-                  <div
-                    key={b.bucket}
-                    className="text-sm text-[var(--color-text)] flex items-center justify-between gap-2 py-1 border-b border-[var(--color-border)] last:border-0"
-                  >
-                    <span className="truncate">
-                      {BUCKET_LABELS[b.bucket] || String(b.bucket || 'أخرى')}
-                    </span>
-                    <span className="font-semibold">
-                      <Currency value={b.total || 0} />
-                    </span>
-                  </div>
-                ))
-              )}
+          <section className="ledger-layer ledger-layer--secondary">
+            <div className="ledger-layer__header">
+              <span className="ledger-layer__label">الثانوي</span>
+              <p className="ledger-layer__hint">
+                حالة الميزانية تأتي هنا كقراءة داعمة بعد استيعاب الملخص والتقرير الرئيسي.
+              </p>
             </div>
-          </div>
+            {budgetsHealth &&
+              (budgetsHealth.monthlyTarget > 0 || budgetsHealth.yearlyTarget > 0) && (
+                <div className="panel-card ledger-panel ledger-control-panel">
+                  <div className="ledger-panel__header">
+                    <div>
+                      <span className="ledger-panel__eyebrow">قراءة داعمة</span>
+                      <h4 className="ledger-panel__title">الميزانية</h4>
+                      <p className="ledger-panel__subtitle">
+                        حالة الأهداف الحالية مقارنة بالسقف الشهري والسنوي المحدد.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="ledger-row ledger-row--wrap">
+                    {budgetsHealth.monthlyTarget > 0 && (
+                      <span>
+                        شهري: <Currency value={budgetsHealth.monthlyTarget} /> —{' '}
+                        <Badge
+                          color={
+                            budgetsHealth.status === 'good' || budgetsHealth.status === 'neutral'
+                              ? 'green'
+                              : budgetsHealth.status === 'warn'
+                                ? 'yellow'
+                                : 'red'
+                          }
+                        >
+                          {budgetsHealth.status === 'good' || budgetsHealth.status === 'neutral'
+                            ? 'ضمن الهدف'
+                            : budgetsHealth.status === 'warn'
+                              ? 'قريب من الحد'
+                              : 'تجاوز'}
+                        </Badge>
+                      </span>
+                    )}
+                    {budgetsHealth.yearlyTarget > 0 && (
+                      <span>
+                        سنوي: <Currency value={budgetsHealth.yearlyTarget} />
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+          </section>
         </div>
       )}
     </>

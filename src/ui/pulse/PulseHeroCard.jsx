@@ -93,7 +93,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
   if (isUnknown) {
     return (
       <div
-        className="panel-card rounded-2xl p-6 md:p-8 text-center min-h-[200px] flex flex-col justify-center"
+        className="panel-card pulse-hero pulse-hero--empty"
         style={{
           background:
             'linear-gradient(135deg, var(--color-warning-bg) 0%, color-mix(in srgb, var(--color-warning-bg) 60%, var(--color-surface) 40%) 100%)',
@@ -125,7 +125,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
 
   return (
     <div
-      className="rounded-2xl shadow-lg p-4 md:p-6 transition-colors"
+      className="pulse-hero transition-colors"
       style={{
         background: `linear-gradient(135deg, color-mix(in srgb, ${circleColor} 12%, var(--color-surface) 88%) 0%, color-mix(in srgb, ${circleColor} 6%, transparent) 50%, transparent 100%)`,
         border: `1px solid color-mix(in srgb, ${circleColor} 18%, transparent)`,
@@ -194,8 +194,8 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
       </p>
 
       {/* البطاقات الثلاث */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-        <div className="bg-[var(--color-surface)]/80 rounded-xl p-3 border border-[var(--color-border)] shadow-sm">
+      <div className="pulse-hero__metrics">
+        <div className="pulse-hero__metric">
           <p className="text-xs text-[var(--color-muted)] mb-0.5">دخل اليوم</p>
           <p
             className="text-base font-bold truncate"
@@ -205,7 +205,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
             {formatAmount(pulse.todayIncome)}
           </p>
         </div>
-        <div className="bg-[var(--color-surface)]/80 rounded-xl p-3 border border-[var(--color-border)] shadow-sm">
+        <div className="pulse-hero__metric">
           <p className="text-xs text-[var(--color-muted)] mb-0.5">مصروف الأسبوع</p>
           <p
             className="text-base font-bold truncate"
@@ -215,7 +215,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
             {formatAmount(pulse.weekExpenses)}
           </p>
         </div>
-        <div className="bg-[var(--color-surface)]/80 rounded-xl p-3 border border-[var(--color-border)] shadow-sm">
+        <div className="pulse-hero__metric">
           <p className="text-xs text-[var(--color-muted)] mb-0.5">الرصيد الحالي</p>
           <p
             className="text-base font-bold text-[var(--color-text)] truncate flex items-center justify-end gap-1"

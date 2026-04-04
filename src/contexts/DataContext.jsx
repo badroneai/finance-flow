@@ -1,13 +1,10 @@
 /*
   قيد العقار (Finance Flow)
-  DataContext.jsx — طبقة البيانات الموحّدة (SPR-004e-2)
+  DataContext.jsx — طبقة البيانات الموحّدة
 
-  يوفّر واجهة موحّدة للبيانات — يتعامل مع Supabase أو localStorage حسب الإعداد.
-  - إذا isSupabaseConfigured → يقرأ/يكتب من supabaseStore
-  - إذا لا → يقرأ/يكتب من dataStore (localStorage)
-
+  يتعامل مع Supabase كقاعدة بيانات وحيدة.
   تحويل أسماء الحقول:
-  - localStorage يستخدم camelCase: ledgerId, paymentMethod, createdAt
+  - الواجهة تستخدم camelCase: ledgerId, paymentMethod, createdAt
   - Supabase يستخدم snake_case: ledger_id, payment_method, created_at
   - toCamelCase/toSnakeCase تحوّل بين الصيغتين تلقائياً
 */
@@ -21,41 +18,19 @@ import {
   useMemo,
   useRef,
 } from 'react';
-import { isSupabaseConfigured } from '../core/supabase.js';
 import { supabaseStore } from '../core/supabase-store.js';
-import { dataStore, getActiveLedgerIdSafe } from '../core/dataStore.js';
-import {
-  getLedgers,
-  setLedgers as setLedgersLocal,
-  getActiveLedgerId,
-  setActiveLedgerId as setActiveLedgerIdLocal,
-  getRecurringItems,
-  setRecurringItems as setRecurringItemsLocal,
-} from '../core/ledger-store.js';
+import { isSupabaseConfigured } from '../core/supabase.js';
+import { safeGet } from '../core/dataStore.js';
+import { KEYS } from '../constants/index.js';
 import { useAuth } from './AuthContext.jsx';
-import { genId, now } from '../utils/helpers.js';
 
 // ═══════════════════════════════════════
 // تحويل أسماء الحقول
 // ═══════════════════════════════════════
 
 /**
- * مقارنة سريعة بين مصفوفتين — تتجنب إعادة ضبط الحالة إذا لم تتغير البيانات.
- * تُعيد true إذا المصفوفتين متطابقتين (نفس الطول + نفس العناصر بالترتيب).
- */
-function arraysShallowEqual(a, b) {
-  if (a === b) return true;
-  if (!Array.isArray(a) || !Array.isArray(b)) return false;
-  if (a.length !== b.length) return false;
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return false;
-  }
-  return true;
-}
-
-/**
  * مُنشئ دالة setState مستقرة — تمنع إعادة الرسم إذا البيانات لم تتغير فعلاً.
- * للبيانات المُحمّلة من localStorage (مراجع جديدة كل مرة)، نقارن بالمحتوى.
+ * للبيانات المُحمّلة من Supabase (مراجع جديدة كل مرة)، نقارن بالمحتوى.
  */
 function stableSetArray(setter, newArr, prevRef) {
   // المقارنة: نفس الأعداد ونفس الـ IDs بنفس الترتيب
@@ -114,51 +89,67 @@ const DataContext = createContext(null);
 // المزوّد
 // ═══════════════════════════════════════
 export function DataProvider({ children }) {
-  const { profile, isDemo } = useAuth();
+  const { profile } = useAuth();
   const officeId = profile?.office_id;
   const userId = profile?.id;
-  // وضع الديمو يجب أن يبقى محلياً حتى لو كانت مفاتيح Supabase مُعدّة.
-  const isCloud = isSupabaseConfigured && !!officeId && !isDemo;
+
+  // ─── localStorage fallback: قراءة البيانات المحلية كحالة ابتدائية ──
+  // عندما لا يكون Supabase مُعداً، نستخدم بيانات seed من localStorage مباشرة
+  const useLocalFallback = !isSupabaseConfigured;
 
   // ─── الدفاتر ───────────────────────────────────────────
   const [ledgers, setLedgers] = useState([]);
   const [activeLedgerId, _setActiveLedgerId] = useState(null);
-  const [ledgersLoading, setLedgersLoading] = useState(true);
+  const [ledgersLoading, setLedgersLoading] = useState(!useLocalFallback);
 
   // ─── الحركات ───────────────────────────────────────────
-  const [transactions, setTransactions] = useState([]);
-  const [transactionsLoading, setTransactionsLoading] = useState(true);
+  const [transactions, setTransactions] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.transactions, []) : []
+  );
+  const [transactionsLoading, setTransactionsLoading] = useState(!useLocalFallback);
 
   // ─── الالتزامات المتكررة ────────────────────────────────
   const [recurringItems, setRecurringItems] = useState([]);
   const [recurringLoading, setRecurringLoading] = useState(false);
 
   // ─── العمولات ──────────────────────────────────────────
-  const [commissions, setCommissions] = useState([]);
+  const [commissions, setCommissions] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.commissions, []) : []
+  );
   const [commissionsLoading, setCommissionsLoading] = useState(false);
 
   // ─── العقارات — SPR-018 ─────────────────────────────────
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.properties, []) : []
+  );
   const [propertiesLoading, setPropertiesLoading] = useState(false);
 
   // ─── الوحدات — SPR-019 ───────────────────────────────────
-  const [units, setUnits] = useState([]);
+  const [units, setUnits] = useState(() => (useLocalFallback ? safeGet(KEYS.units, []) : []));
   const [unitsLoading, setUnitsLoading] = useState(false);
 
   // ─── جهات الاتصال — SPR-018 ────────────────────────────
-  const [contacts, setContacts] = useState([]);
+  const [contacts, setContacts] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.contacts, []) : []
+  );
   const [contactsLoading, setContactsLoading] = useState(false);
 
   // ─── العقود — SPR-018 ──────────────────────────────────
-  const [contracts, setContracts] = useState([]);
+  const [contracts, setContracts] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.contracts, []) : []
+  );
   const [contractsLoading, setContractsLoading] = useState(false);
 
   // ─── دفعات العقود — المرحلة التشغيلية ────────────────────
-  const [contractPayments, setContractPayments] = useState([]);
+  const [contractPayments, setContractPayments] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.contractPayments, []) : []
+  );
   const [contractPaymentsLoading, setContractPaymentsLoading] = useState(false);
 
   // ─── سندات القبض — إيصالات محفوظة مرتبطة بالدفعات ──────
-  const [contractReceipts, setContractReceipts] = useState([]);
+  const [contractReceipts, setContractReceipts] = useState(() =>
+    useLocalFallback ? safeGet(KEYS.contractReceipts, []) : []
+  );
   const [contractReceiptsLoading, setContractReceiptsLoading] = useState(false);
 
   // ─── مراجع المقارنة (لمنع إعادة الرسم غير الضرورية) ──
@@ -180,111 +171,78 @@ export function DataProvider({ children }) {
   const fetchLedgers = useCallback(async () => {
     setLedgersLoading(true);
     try {
-      if (isCloud) {
-        const { data } = await supabaseStore.ledgers.list(officeId);
-        const mapped = (data || []).map(toCamelCase);
-        stableSetArray(setLedgers, mapped, ledgersRef);
-      } else {
-        const local = getLedgers() || [];
-        stableSetArray(setLedgers, local, ledgersRef);
-      }
+      if (!officeId) return;
+      const { data } = await supabaseStore.ledgers.list(officeId);
+      const mapped = (data || []).map(toCamelCase);
+      stableSetArray(setLedgers, mapped, ledgersRef);
     } catch (err) {
       console.error('[قيد العقار] fetchLedgers:', err);
     } finally {
       setLedgersLoading(false);
     }
-  }, [isCloud, officeId]);
+  }, [officeId]);
 
   const fetchTransactions = useCallback(
     async (filters = {}) => {
       setTransactionsLoading(true);
       try {
-        if (isCloud) {
-          // حوّل فلاتر camelCase إلى snake_case لـ Supabase
-          const sbFilters = {};
-          if (filters.ledgerId) sbFilters.ledgerId = filters.ledgerId;
-          if (filters.type) sbFilters.type = filters.type;
-          if (filters.category) sbFilters.category = filters.category;
-          if (filters.paymentMethod) sbFilters.paymentMethod = filters.paymentMethod;
-          if (filters.startDate || filters.fromDate)
-            sbFilters.startDate = filters.startDate || filters.fromDate;
-          if (filters.endDate || filters.toDate)
-            sbFilters.endDate = filters.endDate || filters.toDate;
-          if (filters.search) sbFilters.search = filters.search;
+        if (!officeId) return;
+        // حوّل فلاتر camelCase إلى snake_case لـ Supabase
+        const sbFilters = {};
+        if (filters.ledgerId) sbFilters.ledgerId = filters.ledgerId;
+        if (filters.type) sbFilters.type = filters.type;
+        if (filters.category) sbFilters.category = filters.category;
+        if (filters.paymentMethod) sbFilters.paymentMethod = filters.paymentMethod;
+        if (filters.startDate || filters.fromDate)
+          sbFilters.startDate = filters.startDate || filters.fromDate;
+        if (filters.endDate || filters.toDate)
+          sbFilters.endDate = filters.endDate || filters.toDate;
+        if (filters.search) sbFilters.search = filters.search;
 
-          const { data } = await supabaseStore.transactions.list(officeId, sbFilters);
-          const mapped = (data || []).map(toCamelCase);
-          stableSetArray(setTransactions, mapped, transactionsRef);
-        } else {
-          const all = dataStore.transactions.list() || [];
-          const lid = getActiveLedgerIdSafe();
-          let filtered = lid
-            ? all.filter((t) => String(t?.ledgerId || t?.meta?.ledgerId || '') === lid)
-            : all;
-          // تطبيق الفلاتر محلياً
-          if (filters.fromDate) filtered = filtered.filter((t) => t.date >= filters.fromDate);
-          if (filters.toDate) filtered = filtered.filter((t) => t.date <= filters.toDate);
-          if (filters.type) filtered = filtered.filter((t) => t.type === filters.type);
-          if (filters.category) filtered = filtered.filter((t) => t.category === filters.category);
-          if (filters.paymentMethod)
-            filtered = filtered.filter((t) => t.paymentMethod === filters.paymentMethod);
-          if (filters.search) {
-            const s = filters.search.toLowerCase();
-            filtered = filtered.filter((t) => (t.description || '').toLowerCase().includes(s));
-          }
-          filtered.sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-          stableSetArray(setTransactions, filtered, transactionsRef);
-        }
+        const { data } = await supabaseStore.transactions.list(officeId, sbFilters);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setTransactions, mapped, transactionsRef);
       } catch (err) {
         console.error('[قيد العقار] fetchTransactions:', err);
       } finally {
         setTransactionsLoading(false);
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
   const fetchRecurringItems = useCallback(
     async (ledgerId = null) => {
       setRecurringLoading(true);
       try {
-        if (isCloud) {
-          const { data } = await supabaseStore.recurringItems.list(officeId, ledgerId);
-          const mapped = (data || []).map(toCamelCase);
-          stableSetArray(setRecurringItems, mapped, recurringRef);
-        } else {
-          const items = getRecurringItems() || [];
-          const result = ledgerId ? items.filter((i) => i.ledgerId === ledgerId) : items;
-          stableSetArray(setRecurringItems, result, recurringRef);
-        }
+        if (!officeId) return;
+        const { data } = await supabaseStore.recurringItems.list(officeId, ledgerId);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setRecurringItems, mapped, recurringRef);
       } catch (err) {
         console.error('[قيد العقار] fetchRecurringItems:', err);
       } finally {
         setRecurringLoading(false);
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
   const fetchCommissions = useCallback(
     async (filters = {}) => {
       setCommissionsLoading(true);
       try {
-        if (isCloud) {
-          const { data } = await supabaseStore.commissions.list(officeId, filters);
-          const mapped = (data || []).map(toCamelCase);
-          stableSetArray(setCommissions, mapped, commissionsRef);
-        } else {
-          const all = dataStore.commissions?.list?.() || [];
-          stableSetArray(setCommissions, all, commissionsRef);
-        }
+        if (!officeId) return;
+        const { data } = await supabaseStore.commissions.list(officeId, filters);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setCommissions, mapped, commissionsRef);
       } catch (err) {
         console.error('[قيد العقار] fetchCommissions:', err);
       } finally {
         setCommissionsLoading(false);
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
   // ─── جلب العقارات — SPR-018 ────────────────────────────
@@ -292,39 +250,35 @@ export function DataProvider({ children }) {
     async (filters = {}) => {
       setPropertiesLoading(true);
       try {
-        if (isCloud) {
-          const { data } = await supabaseStore.properties.list(officeId, filters);
-          const mapped = (data || []).map(toCamelCase);
-          stableSetArray(setProperties, mapped, propertiesRef);
-        } else {
-          const all = dataStore.properties?.list?.() || [];
-          stableSetArray(setProperties, all, propertiesRef);
-        }
+        if (!officeId) return;
+        const { data } = await supabaseStore.properties.list(officeId, filters);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setProperties, mapped, propertiesRef);
       } catch (err) {
         console.error('[قيد العقار] fetchProperties:', err);
       } finally {
         setPropertiesLoading(false);
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
-  // ─── جلب الوحدات — SPR-019 ───────────────────────────────
+  // ─── جلب الوحدات ───────────────────────────────────────────
   const fetchUnits = useCallback(
     async (propertyId = null) => {
       setUnitsLoading(true);
       try {
-        // الوحدات غير موجودة في Supabase بعد، لذا نستخدم التخزين المحلي مؤقتاً في كل الأحوال.
-        const all = dataStore.units?.list?.() || [];
-        const filtered = propertyId ? all.filter((item) => item.propertyId === propertyId) : all;
-        stableSetArray(setUnits, filtered, unitsRef);
+        if (!officeId) return;
+        const { data } = await supabaseStore.units.list(officeId, propertyId);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setUnits, mapped, unitsRef);
       } catch (err) {
         console.error('[قيد العقار] fetchUnits:', err);
       } finally {
         setUnitsLoading(false);
       }
     },
-    []
+    [officeId]
   );
 
   // ─── جلب جهات الاتصال — SPR-018 ────────────────────────
@@ -332,21 +286,17 @@ export function DataProvider({ children }) {
     async (filters = {}) => {
       setContactsLoading(true);
       try {
-        if (isCloud) {
-          const { data } = await supabaseStore.contacts.list(officeId, filters);
-          const mapped = (data || []).map(toCamelCase);
-          stableSetArray(setContacts, mapped, contactsRef);
-        } else {
-          const all = dataStore.contacts?.list?.() || [];
-          stableSetArray(setContacts, all, contactsRef);
-        }
+        if (!officeId) return;
+        const { data } = await supabaseStore.contacts.list(officeId, filters);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setContacts, mapped, contactsRef);
       } catch (err) {
         console.error('[قيد العقار] fetchContacts:', err);
       } finally {
         setContactsLoading(false);
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
   // ─── جلب العقود — SPR-018 ──────────────────────────────
@@ -354,49 +304,51 @@ export function DataProvider({ children }) {
     async (filters = {}) => {
       setContractsLoading(true);
       try {
-        if (isCloud) {
-          const { data } = await supabaseStore.contracts.list(officeId, filters);
-          const mapped = (data || []).map(toCamelCase);
-          stableSetArray(setContracts, mapped, contractsRef);
-        } else {
-          const all = dataStore.contracts?.list?.() || [];
-          stableSetArray(setContracts, all, contractsRef);
-        }
+        if (!officeId) return;
+        const { data } = await supabaseStore.contracts.list(officeId, filters);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setContracts, mapped, contractsRef);
       } catch (err) {
         console.error('[قيد العقار] fetchContracts:', err);
       } finally {
         setContractsLoading(false);
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
-  // ─── جلب دفعات العقود — محلي مؤقتاً حتى اكتمال الجداول السحابية ───
-  const fetchContractPayments = useCallback(async (contractId = null) => {
-    setContractPaymentsLoading(true);
-    try {
-      const all = dataStore.contractPayments?.list?.() || [];
-      const filtered = contractId ? all.filter((item) => item.contractId === contractId) : all;
-      stableSetArray(setContractPayments, filtered, contractPaymentsRef);
-    } catch (err) {
-      console.error('[قيد العقار] fetchContractPayments:', err);
-    } finally {
-      setContractPaymentsLoading(false);
-    }
-  }, []);
+  // ─── جلب دفعات العقود ───────────────────────────────────────
+  const fetchContractPayments = useCallback(
+    async (contractId = null) => {
+      setContractPaymentsLoading(true);
+      try {
+        if (!officeId) return;
+        const { data } = await supabaseStore.paymentSchedule.list(officeId, contractId);
+        const mapped = (data || []).map(toCamelCase);
+        stableSetArray(setContractPayments, mapped, contractPaymentsRef);
+      } catch (err) {
+        console.error('[قيد العقار] fetchContractPayments:', err);
+      } finally {
+        setContractPaymentsLoading(false);
+      }
+    },
+    [officeId]
+  );
 
-  // ─── جلب سندات القبض — محلي مؤقتاً ───
+  // ─── جلب سندات القبض ───────────────────────────────────────
   const fetchContractReceipts = useCallback(async () => {
     setContractReceiptsLoading(true);
     try {
-      const all = dataStore.contractReceipts?.list?.() || [];
-      stableSetArray(setContractReceipts, all, contractReceiptsRef);
+      if (!officeId) return;
+      const { data } = await supabaseStore.contractReceipts.list(officeId);
+      const mapped = (data || []).map(toCamelCase);
+      stableSetArray(setContractReceipts, mapped, contractReceiptsRef);
     } catch (err) {
       console.error('[قيد العقار] fetchContractReceipts:', err);
     } finally {
       setContractReceiptsLoading(false);
     }
-  }, []);
+  }, [officeId]);
 
   // ═══════════════════════════════════════
   // CRUD — الحركات المالية
@@ -405,75 +357,51 @@ export function DataProvider({ children }) {
   const createTransaction = useCallback(
     async (tx) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...tx,
-            officeId,
-            ledgerId: tx.ledgerId || tx.ledger_id || activeLedgerId,
-            createdBy: userId,
-          });
-          // حذف المفاتيح غير المطلوبة
-          delete payload.id;
-          delete payload.updated_at;
-          delete payload.created_at;
+        const payload = toSnakeCase({
+          ...tx,
+          officeId,
+          ledgerId: tx.ledgerId || tx.ledger_id || activeLedgerId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        delete payload.updated_at;
+        delete payload.created_at;
 
-          const { data, error } = await supabaseStore.transactions.create(payload);
-          if (error) throw error;
-          await fetchTransactions();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.transactions.create({
-            ...tx,
-            ledgerId: tx.ledgerId || getActiveLedgerIdSafe(),
-          });
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
-          await fetchTransactions();
-          return { data: result.item, error: null };
-        }
+        const { data, error } = await supabaseStore.transactions.create(payload);
+        if (error) throw error;
+        await fetchTransactions();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createTransaction:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, activeLedgerId, fetchTransactions]
+    [officeId, userId, activeLedgerId, fetchTransactions]
   );
 
   const updateTransaction = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.transactions.update(id, payload);
-          if (error) throw error;
-          await fetchTransactions();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.transactions.update(id, updates);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل التحديث' } };
-          await fetchTransactions();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.transactions.update(id, payload);
+        if (error) throw error;
+        await fetchTransactions();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateTransaction:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchTransactions]
+    [fetchTransactions]
   );
 
   const deleteTransaction = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.transactions.remove(id);
-          if (error) throw error;
-        } else {
-          dataStore.transactions.remove(id);
-        }
+        const { error } = await supabaseStore.transactions.remove(id);
+        if (error) throw error;
         await fetchTransactions();
         return { error: null };
       } catch (err) {
@@ -481,7 +409,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchTransactions]
+    [fetchTransactions]
   );
 
   // ═══════════════════════════════════════
@@ -491,72 +419,47 @@ export function DataProvider({ children }) {
   const createLedger = useCallback(
     async (ledger) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...ledger,
-            officeId,
-            createdBy: userId,
-          });
-          delete payload.id;
-          const { data, error } = await supabaseStore.ledgers.create(payload);
-          if (error) throw error;
-          await fetchLedgers();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const item = { ...ledger, id: genId(), createdAt: now(), updatedAt: now() };
-          const all = getLedgers() || [];
-          all.push(item);
-          setLedgersLocal(all);
-          await fetchLedgers();
-          return { data: item, error: null };
-        }
+        const payload = toSnakeCase({
+          ...ledger,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        const { data, error } = await supabaseStore.ledgers.create(payload);
+        if (error) throw error;
+        await fetchLedgers();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createLedger:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, fetchLedgers]
+    [officeId, userId, fetchLedgers]
   );
 
   const updateLedger = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.ledgers.update(id, payload);
-          if (error) throw error;
-          await fetchLedgers();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const all = getLedgers() || [];
-          const idx = all.findIndex((l) => l.id === id);
-          if (idx !== -1) {
-            all[idx] = { ...all[idx], ...updates, updatedAt: now() };
-            setLedgersLocal(all);
-          }
-          await fetchLedgers();
-          return { data: all[idx], error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.ledgers.update(id, payload);
+        if (error) throw error;
+        await fetchLedgers();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateLedger:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchLedgers]
+    [fetchLedgers]
   );
 
   const deleteLedger = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.ledgers.remove(id);
-          if (error) throw error;
-        } else {
-          const all = (getLedgers() || []).filter((l) => l.id !== id);
-          setLedgersLocal(all);
-        }
+        const { error } = await supabaseStore.ledgers.remove(id);
+        if (error) throw error;
         await fetchLedgers();
         return { error: null };
       } catch (err) {
@@ -564,7 +467,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchLedgers]
+    [fetchLedgers]
   );
 
   // ═══════════════════════════════════════
@@ -574,72 +477,47 @@ export function DataProvider({ children }) {
   const createRecurringItem = useCallback(
     async (item) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...item,
-            officeId,
-            createdBy: userId,
-          });
-          delete payload.id;
-          const { data, error } = await supabaseStore.recurringItems.create(payload);
-          if (error) throw error;
-          await fetchRecurringItems();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const all = getRecurringItems() || [];
-          const newItem = { ...item, id: genId(), createdAt: now(), updatedAt: now() };
-          all.push(newItem);
-          setRecurringItemsLocal(all);
-          await fetchRecurringItems();
-          return { data: newItem, error: null };
-        }
+        const payload = toSnakeCase({
+          ...item,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        const { data, error } = await supabaseStore.recurringItems.create(payload);
+        if (error) throw error;
+        await fetchRecurringItems();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createRecurringItem:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, fetchRecurringItems]
+    [officeId, userId, fetchRecurringItems]
   );
 
   const updateRecurringItem = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.recurringItems.update(id, payload);
-          if (error) throw error;
-          await fetchRecurringItems();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const all = getRecurringItems() || [];
-          const idx = all.findIndex((i) => i.id === id);
-          if (idx !== -1) {
-            all[idx] = { ...all[idx], ...updates, updatedAt: now() };
-            setRecurringItemsLocal(all);
-          }
-          await fetchRecurringItems();
-          return { data: all[idx], error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.recurringItems.update(id, payload);
+        if (error) throw error;
+        await fetchRecurringItems();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateRecurringItem:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchRecurringItems]
+    [fetchRecurringItems]
   );
 
   const deleteRecurringItem = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.recurringItems.remove(id);
-          if (error) throw error;
-        } else {
-          const all = (getRecurringItems() || []).filter((i) => i.id !== id);
-          setRecurringItemsLocal(all);
-        }
+        const { error } = await supabaseStore.recurringItems.remove(id);
+        if (error) throw error;
         await fetchRecurringItems();
         return { error: null };
       } catch (err) {
@@ -647,7 +525,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchRecurringItems]
+    [fetchRecurringItems]
   );
 
   // ═══════════════════════════════════════
@@ -657,67 +535,47 @@ export function DataProvider({ children }) {
   const createCommission = useCallback(
     async (commission) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...commission,
-            officeId,
-            createdBy: userId,
-          });
-          delete payload.id;
-          const { data, error } = await supabaseStore.commissions.create(payload);
-          if (error) throw error;
-          await fetchCommissions();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.commissions.create(commission);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
-          await fetchCommissions();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase({
+          ...commission,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        const { data, error } = await supabaseStore.commissions.create(payload);
+        if (error) throw error;
+        await fetchCommissions();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createCommission:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, fetchCommissions]
+    [officeId, userId, fetchCommissions]
   );
 
   const updateCommission = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.commissions.update(id, payload);
-          if (error) throw error;
-          await fetchCommissions();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.commissions.update(id, updates);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل التحديث' } };
-          await fetchCommissions();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.commissions.update(id, payload);
+        if (error) throw error;
+        await fetchCommissions();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateCommission:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchCommissions]
+    [fetchCommissions]
   );
 
   const deleteCommission = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.commissions.remove(id);
-          if (error) throw error;
-        } else {
-          dataStore.commissions.remove(id);
-        }
+        const { error } = await supabaseStore.commissions.remove(id);
+        if (error) throw error;
         await fetchCommissions();
         return { error: null };
       } catch (err) {
@@ -725,7 +583,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchCommissions]
+    [fetchCommissions]
   );
 
   // ═══════════════════════════════════════
@@ -735,32 +593,24 @@ export function DataProvider({ children }) {
   const createProperty = useCallback(
     async (property) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...property,
-            officeId,
-            createdBy: userId,
-          });
-          delete payload.id;
-          delete payload.updated_at;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.properties.create(payload);
-          if (error) throw error;
-          await fetchProperties();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.properties.create(property);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
-          await fetchProperties();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase({
+          ...property,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        delete payload.updated_at;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.properties.create(payload);
+        if (error) throw error;
+        await fetchProperties();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createProperty:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, fetchProperties]
+    [officeId, userId, fetchProperties]
   );
 
   // ═══════════════════════════════════════
@@ -770,27 +620,36 @@ export function DataProvider({ children }) {
   const createUnit = useCallback(
     async (unit) => {
       try {
-        const result = dataStore.units.create(unit);
-        if (!result || !result.ok)
-          return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
+        const payload = toSnakeCase({
+          ...unit,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        delete payload.updated_at;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.units.create(payload);
+        if (error) throw error;
         await fetchUnits();
-        return { data: result.item, error: null };
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createUnit:', err);
         return { data: null, error: err };
       }
     },
-    [fetchUnits]
+    [officeId, userId, fetchUnits]
   );
 
   const updateUnit = useCallback(
     async (id, updates) => {
       try {
-        const result = dataStore.units.update(id, updates);
-        if (!result || !result.ok)
-          return { data: null, error: { message: result?.message || 'فشل التحديث' } };
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.units.update(id, payload);
+        if (error) throw error;
         await fetchUnits();
-        return { data: result.item, error: null };
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateUnit:', err);
         return { data: null, error: err };
@@ -802,7 +661,8 @@ export function DataProvider({ children }) {
   const deleteUnit = useCallback(
     async (id) => {
       try {
-        dataStore.units.remove(id);
+        const { error } = await supabaseStore.units.remove(id);
+        if (error) throw error;
         await fetchUnits();
         return { error: null };
       } catch (err) {
@@ -816,38 +676,26 @@ export function DataProvider({ children }) {
   const updateProperty = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.properties.update(id, payload);
-          if (error) throw error;
-          await fetchProperties();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.properties.update(id, updates);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل التحديث' } };
-          await fetchProperties();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.properties.update(id, payload);
+        if (error) throw error;
+        await fetchProperties();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateProperty:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchProperties]
+    [fetchProperties]
   );
 
   const deleteProperty = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.properties.remove(id);
-          if (error) throw error;
-        } else {
-          dataStore.properties.remove(id);
-        }
+        const { error } = await supabaseStore.properties.remove(id);
+        if (error) throw error;
         await fetchProperties();
         return { error: null };
       } catch (err) {
@@ -855,7 +703,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchProperties]
+    [fetchProperties]
   );
 
   // ═══════════════════════════════════════
@@ -865,69 +713,49 @@ export function DataProvider({ children }) {
   const createContact = useCallback(
     async (contact) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...contact,
-            officeId,
-            createdBy: userId,
-          });
-          delete payload.id;
-          delete payload.updated_at;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.contacts.create(payload);
-          if (error) throw error;
-          await fetchContacts();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.contacts.create(contact);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
-          await fetchContacts();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase({
+          ...contact,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        delete payload.updated_at;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.contacts.create(payload);
+        if (error) throw error;
+        await fetchContacts();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createContact:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, fetchContacts]
+    [officeId, userId, fetchContacts]
   );
 
   const updateContact = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          const { data, error } = await supabaseStore.contacts.update(id, payload);
-          if (error) throw error;
-          await fetchContacts();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.contacts.update(id, updates);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل التحديث' } };
-          await fetchContacts();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        const { data, error } = await supabaseStore.contacts.update(id, payload);
+        if (error) throw error;
+        await fetchContacts();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateContact:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchContacts]
+    [fetchContacts]
   );
 
   const deleteContact = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.contacts.remove(id);
-          if (error) throw error;
-        } else {
-          dataStore.contacts.remove(id);
-        }
+        const { error } = await supabaseStore.contacts.remove(id);
+        if (error) throw error;
         await fetchContacts();
         return { error: null };
       } catch (err) {
@@ -935,7 +763,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchContacts]
+    [fetchContacts]
   );
 
   // ═══════════════════════════════════════
@@ -945,74 +773,54 @@ export function DataProvider({ children }) {
   const createContract = useCallback(
     async (contract) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase({
-            ...contract,
-            officeId,
-            createdBy: userId,
-          });
-          delete payload.id;
-          delete payload.updated_at;
-          delete payload.created_at;
-          // حذف الحقول المحسوبة
-          delete payload._property_name;
-          delete payload._contact_name;
-          const { data, error } = await supabaseStore.contracts.create(payload);
-          if (error) throw error;
-          await fetchContracts();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.contracts.create(contract);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل الحفظ' } };
-          await fetchContracts();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase({
+          ...contract,
+          officeId,
+          createdBy: userId,
+        });
+        delete payload.id;
+        delete payload.updated_at;
+        delete payload.created_at;
+        // حذف الحقول المحسوبة
+        delete payload._property_name;
+        delete payload._contact_name;
+        const { data, error } = await supabaseStore.contracts.create(payload);
+        if (error) throw error;
+        await fetchContracts();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createContract:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, officeId, userId, fetchContracts]
+    [officeId, userId, fetchContracts]
   );
 
   const updateContract = useCallback(
     async (id, updates) => {
       try {
-        if (isCloud) {
-          const payload = toSnakeCase(updates);
-          delete payload.id;
-          delete payload.created_at;
-          delete payload._property_name;
-          delete payload._contact_name;
-          const { data, error } = await supabaseStore.contracts.update(id, payload);
-          if (error) throw error;
-          await fetchContracts();
-          return { data: toCamelCase(data), error: null };
-        } else {
-          const result = dataStore.contracts.update(id, updates);
-          if (!result || !result.ok)
-            return { data: null, error: { message: result?.message || 'فشل التحديث' } };
-          await fetchContracts();
-          return { data: result.item, error: null };
-        }
+        const payload = toSnakeCase(updates);
+        delete payload.id;
+        delete payload.created_at;
+        delete payload._property_name;
+        delete payload._contact_name;
+        const { data, error } = await supabaseStore.contracts.update(id, payload);
+        if (error) throw error;
+        await fetchContracts();
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateContract:', err);
         return { data: null, error: err };
       }
     },
-    [isCloud, fetchContracts]
+    [fetchContracts]
   );
 
   const deleteContract = useCallback(
     async (id) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.contracts.remove(id);
-          if (error) throw error;
-        } else {
-          dataStore.contracts.remove(id);
-        }
+        const { error } = await supabaseStore.contracts.remove(id);
+        if (error) throw error;
         await fetchContracts();
         return { error: null };
       } catch (err) {
@@ -1020,7 +828,7 @@ export function DataProvider({ children }) {
         return { error: err };
       }
     },
-    [isCloud, fetchContracts]
+    [fetchContracts]
   );
 
   // ═══════════════════════════════════════
@@ -1030,27 +838,54 @@ export function DataProvider({ children }) {
   const createContractPayment = useCallback(
     async (payment) => {
       try {
-        const result = dataStore.contractPayments.create(payment);
-        if (!result || !result.ok)
-          return { data: null, error: { message: result?.message || 'فشل حفظ الدفعة' } };
+        // تحويل حقول buildPaymentPayload إلى schema جدول payment_schedule
+        const payload = {
+          office_id: officeId,
+          contract_id: payment.contractId,
+          installment_no: payment.installmentNo || payment.installmentNumber || 0,
+          due_date: payment.date || payment.dueDate,
+          amount: payment.amount || 0,
+          status: payment.status || 'paid',
+          paid_amount: payment.amount || 0,
+          paid_date: payment.date || payment.dueDate,
+          payment_method: payment.paymentMethod || 'cash',
+          notes: payment.note || payment.notes || '',
+        };
+        const { data, error } = await supabaseStore.paymentSchedule.create(payload);
+        if (error) throw error;
         await fetchContractPayments();
-        return { data: result.item, error: null };
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createContractPayment:', err);
         return { data: null, error: err };
       }
     },
-    [fetchContractPayments]
+    [officeId, fetchContractPayments]
   );
 
   const updateContractPayment = useCallback(
     async (id, updates) => {
       try {
-        const result = dataStore.contractPayments.update(id, updates);
-        if (!result || !result.ok)
-          return { data: null, error: { message: result?.message || 'فشل تحديث الدفعة' } };
+        // تحويل يدوي لضمان التوافق مع schema payment_schedule
+        const payload = {};
+        if (updates.amount !== undefined) payload.amount = updates.amount;
+        if (updates.amount !== undefined) payload.paid_amount = updates.amount;
+        if (updates.date !== undefined) {
+          payload.due_date = updates.date;
+          payload.paid_date = updates.date;
+        }
+        if (updates.dueDate !== undefined) payload.due_date = updates.dueDate;
+        if (updates.paidDate !== undefined) payload.paid_date = updates.paidDate;
+        if (updates.paymentMethod !== undefined) payload.payment_method = updates.paymentMethod;
+        if (updates.status !== undefined) payload.status = updates.status;
+        if (updates.note !== undefined) payload.notes = updates.note;
+        if (updates.notes !== undefined) payload.notes = updates.notes;
+        if (updates.installmentNo !== undefined) payload.installment_no = updates.installmentNo;
+        if (updates.paidAmount !== undefined) payload.paid_amount = updates.paidAmount;
+        const { data, error } = await supabaseStore.paymentSchedule.update(id, payload);
+        if (error) throw error;
         await fetchContractPayments();
-        return { data: result.item, error: null };
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] updateContractPayment:', err);
         return { data: null, error: err };
@@ -1062,7 +897,8 @@ export function DataProvider({ children }) {
   const deleteContractPayment = useCallback(
     async (id) => {
       try {
-        dataStore.contractPayments.remove(id);
+        const { error } = await supabaseStore.paymentSchedule.remove(id);
+        if (error) throw error;
         await fetchContractPayments();
         return { error: null };
       } catch (err) {
@@ -1080,17 +916,45 @@ export function DataProvider({ children }) {
   const createContractReceipt = useCallback(
     async (receipt) => {
       try {
-        const result = dataStore.contractReceipts.create(receipt);
-        if (!result || !result.ok)
-          return { data: null, error: { message: result?.message || 'فشل حفظ سند القبض' } };
+        // ربط يدوي لحقول buildReceiptModel مع أعمدة contract_receipts
+        const payload = {
+          office_id: officeId,
+          created_by: userId,
+          contract_id: receipt.contractId || null,
+          payment_id: receipt.dueId || null,
+          contract_payment_id: receipt.contractPaymentId || null,
+          receipt_number: receipt.receiptNumber || '',
+          issue_date: receipt.issueDate || new Date().toISOString().split('T')[0],
+          office_name: receipt.officeName || '',
+          tenant_name: receipt.tenantName || '',
+          contract_number: receipt.contractNumber || '',
+          contract_type: receipt.contractType || '',
+          property_name: receipt.propertyName || '',
+          unit_name: receipt.unitName || '',
+          amount: receipt.amount || 0,
+          payment_method: receipt.paymentMethod || 'cash',
+          payment_method_label: receipt.paymentMethodLabel || '',
+          due_id: receipt.dueId || '',
+          installment_number: receipt.installmentNumber || '',
+          note: receipt.note || '',
+          vat_rate: receipt.vatRate || 0.15,
+          vat_amount: receipt.vatAmount || 0,
+          total_with_vat: receipt.totalWithVat || 0,
+          seller_name: receipt.sellerName || '',
+          seller_tax_number: receipt.sellerTaxNumber || '',
+          notes: receipt.notes || receipt.note || '',
+          date: receipt.issueDate || new Date().toISOString().split('T')[0],
+        };
+        const { data, error } = await supabaseStore.contractReceipts.create(payload);
+        if (error) throw error;
         await fetchContractReceipts();
-        return { data: result.item, error: null };
+        return { data: toCamelCase(data), error: null };
       } catch (err) {
         console.error('[قيد العقار] createContractReceipt:', err);
         return { data: null, error: err };
       }
     },
-    [fetchContractReceipts]
+    [officeId, userId, fetchContractReceipts]
   );
 
   // ═══════════════════════════════════════
@@ -1100,49 +964,31 @@ export function DataProvider({ children }) {
   const updateOfficeSettings = useCallback(
     async (settings) => {
       try {
-        if (isCloud) {
-          const { error } = await supabaseStore.office.updateSettings(officeId, settings);
-          if (error) throw error;
-        } else {
-          if (settings.theme) localStorage.setItem('ui_theme', settings.theme);
-          if (settings.numerals) localStorage.setItem('ui_numerals', settings.numerals);
-          if (settings.date_header) localStorage.setItem('ui_date_header', settings.date_header);
-        }
+        const { error } = await supabaseStore.office.updateSettings(officeId, settings);
+        if (error) throw error;
         return { error: null };
       } catch (err) {
         console.error('[قيد العقار] updateOfficeSettings:', err);
         return { error: err };
       }
     },
-    [isCloud, officeId]
+    [officeId]
   );
 
   // ═══════════════════════════════════════
   // الدفتر النشط
   // ═══════════════════════════════════════
 
-  const setActiveLedgerId = useCallback(
-    (id) => {
-      _setActiveLedgerId(id);
-      // حفظ محلي أيضاً (للمحركات التي تقرأ من localStorage)
-      if (!isCloud) {
-        try {
-          setActiveLedgerIdLocal(id);
-        } catch {}
-      }
-    },
-    [isCloud]
-  );
+  const setActiveLedgerId = useCallback((id) => {
+    _setActiveLedgerId(id);
+  }, []);
 
   // ═══════════════════════════════════════
   // جلب أولي
   // ═══════════════════════════════════════
 
   useEffect(() => {
-    if (isSupabaseConfigured && !officeId) return; // ننتظر AuthContext
-    if (!isCloud) {
-      dataStore.seed.ensureSeeded();
-    }
+    if (!officeId) return; // ننتظر AuthContext — بدون officeId لا بيانات
     fetchLedgers();
     fetchTransactions();
     fetchRecurringItems();
@@ -1154,7 +1000,6 @@ export function DataProvider({ children }) {
     fetchContractPayments();
     fetchContractReceipts();
   }, [
-    isCloud,
     officeId,
     fetchLedgers,
     fetchTransactions,
@@ -1168,14 +1013,27 @@ export function DataProvider({ children }) {
     fetchContractReceipts,
   ]);
 
-  // تحديد الدفتر النشط الأولي
+  // تحديد الدفتر النشط الأولي — أول دفتر متاح
   useEffect(() => {
     if (ledgers.length > 0 && !activeLedgerId) {
-      const localActive = getActiveLedgerId();
-      const match = localActive && ledgers.find((l) => l.id === localActive);
-      _setActiveLedgerId(match ? localActive : ledgers[0].id);
+      _setActiveLedgerId(ledgers[0].id);
     }
   }, [ledgers, activeLedgerId]);
+
+  // ═══════════════════════════════════════
+  // إعادة تحميل البيانات من localStorage
+  // يُستخدم بعد resetDemo أو clearAll — بديل عن reload الصفحة
+  // ═══════════════════════════════════════
+  const reloadFromLocalStorage = useCallback(() => {
+    setProperties(safeGet(KEYS.properties, []));
+    setContacts(safeGet(KEYS.contacts, []));
+    setContracts(safeGet(KEYS.contracts, []));
+    setUnits(safeGet(KEYS.units, []));
+    setTransactions(safeGet(KEYS.transactions, []));
+    setCommissions(safeGet(KEYS.commissions, []));
+    setContractPayments(safeGet(KEYS.contractPayments, []));
+    setContractReceipts(safeGet(KEYS.contractReceipts, []));
+  }, []);
 
   // ═══════════════════════════════════════
   // القيمة المُصدَّرة
@@ -1272,8 +1130,8 @@ export function DataProvider({ children }) {
       // إعدادات
       updateOfficeSettings,
 
-      // هل البيانات من السحابة؟
-      isCloudMode: isCloud,
+      // إعادة تحميل من localStorage
+      reloadFromLocalStorage,
 
       // أدوات التحويل (للاستخدام الخارجي إذا لزم)
       toCamelCase,
@@ -1341,7 +1199,7 @@ export function DataProvider({ children }) {
       deleteContractPayment,
       createContractReceipt,
       updateOfficeSettings,
-      isCloud,
+      reloadFromLocalStorage,
     ]
   );
 

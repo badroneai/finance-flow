@@ -8,14 +8,18 @@
 import { getLedgers, getActiveLedgerId, getRecurringItems } from './ledger-store.js';
 import { generateContractAlerts } from '../domain/contract-alerts.js';
 import { getTransactionsForLedger } from './dataStore.js';
-import { buildLedgerInbox, computeCashPlan } from './ledger-planner.js';
+import { computeCashPlan } from './ledger-planner.js';
 import { computePL } from './ledger-analytics.js';
 import { calculateHealthScore } from './pulse-engine.js';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const STORAGE_KEY = 'ff_alert_state';
-const DISMISS_TTL_DAYS = 7;
 const MAX_ALERTS = 10;
+
+function todayKey(now = new Date()) {
+  const d = new Date(now);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
 
 function getContext(ledgerId, options = {}) {
   const lid =
@@ -34,11 +38,6 @@ function getContext(ledgerId, options = {}) {
     : getTransactionsForLedger(lid);
   const now = new Date();
   return { lid, ledger, recurringList, txs, now };
-}
-
-function todayKey(now = new Date()) {
-  const d = new Date(now);
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
 
 /** يرجع مجموعة معرّفات التنبيهات المخفية (مرفوضة ضمن TTL أو مؤجلة حتى وقت لاحق) */

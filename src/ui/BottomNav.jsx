@@ -27,7 +27,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
 
   return (
     <nav
-      className="bottom-nav-shell md:hidden no-print fixed bottom-0 left-0 right-0 z-40 safe-area-pb"
+      className="bottom-nav-shell md:hidden no-print safe-area-pb"
       aria-label="التنقل الرئيسي"
       dir="rtl"
     >
@@ -67,11 +67,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
             </button>
 
             {moreOpen && (
-              <div
-                className="bottom-nav-more-menu absolute bottom-full mb-2 left-1/2 -translate-x-1/2 min-w-[160px] rounded-2xl overflow-hidden z-50"
-                role="menu"
-                aria-label="قائمة المزيد"
-              >
+              <div className="bottom-nav-more-menu" role="menu" aria-label="قائمة المزيد">
                 {moreItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = page === item.id;

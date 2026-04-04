@@ -64,7 +64,10 @@ export default function ReceiptModal({ receipt, onClose }) {
     };
     // fallback إذا لم يُطلق onload
     setTimeout(() => {
-      try { printWin.print(); printWin.close(); } catch {}
+      try {
+        printWin.print();
+        printWin.close();
+      } catch {}
     }, 500);
   }, [receipt]);
 
@@ -94,20 +97,16 @@ export default function ReceiptModal({ receipt, onClose }) {
       aria-labelledby="receipt-modal-title"
     >
       <div
-        className="receipt-sheet w-full max-w-lg bg-[var(--color-surface)] rounded-t-2xl md:rounded-2xl max-h-[90vh] overflow-y-auto"
+        className="receipt-sheet modal-surface modal-surface--md max-h-[90vh] overflow-y-auto"
         dir="rtl"
       >
         {/* أزرار التحكم */}
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)] sticky top-0 bg-[var(--color-surface)] z-10 rounded-t-2xl">
+        <div className="modal-sheet__header sticky top-0 z-10">
           <h2 id="receipt-modal-title" className="text-lg font-bold text-[var(--color-text)]">
             سند قبض
           </h2>
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handlePrint}
-              className="btn-secondary"
-            >
+            <button type="button" onClick={handlePrint} className="btn-secondary">
               طباعة
             </button>
             <button
@@ -121,7 +120,7 @@ export default function ReceiptModal({ receipt, onClose }) {
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
+              className="modal-sheet__close"
               aria-label="إغلاق"
             >
               ✕
@@ -130,7 +129,7 @@ export default function ReceiptModal({ receipt, onClose }) {
         </div>
 
         {/* محتوى الإيصال القابل للطباعة */}
-        <div ref={printRef} className="p-5">
+        <div ref={printRef} className="receipt-sheet__body">
           {/* رأس الإيصال */}
           <div className="text-center pb-4 mb-4 border-b-2 border-[var(--color-text)]">
             <h3 className="text-xl font-bold text-[var(--color-text)]">
@@ -168,13 +167,27 @@ export default function ReceiptModal({ receipt, onClose }) {
             <p className="text-xs font-medium" style={{ color: 'var(--color-success)' }}>
               المبلغ المستلم
             </p>
-            <p
-              className="text-2xl font-extrabold mt-1"
-              style={{ color: 'var(--color-success)' }}
-            >
+            <p className="text-2xl font-extrabold mt-1" style={{ color: 'var(--color-success)' }}>
               {formatCurrency(receipt.amount)}
             </p>
           </div>
+
+          {/* بيانات ZATCA — الضريبة */}
+          {receipt.vatAmount > 0 && (
+            <div className="space-y-0 mb-4">
+              <ReceiptRow
+                label="ضريبة القيمة المضافة (15%)"
+                value={formatCurrency(receipt.vatAmount)}
+              />
+              <ReceiptRow
+                label="الإجمالي شامل الضريبة"
+                value={formatCurrency(receipt.totalWithVat)}
+              />
+              {receipt.sellerTaxNumber && (
+                <ReceiptRow label="الرقم الضريبي" value={receipt.sellerTaxNumber} />
+              )}
+            </div>
+          )}
 
           {/* ملاحظة */}
           {receipt.note && (

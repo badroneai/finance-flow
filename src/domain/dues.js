@@ -177,6 +177,9 @@ export function buildOperationalDues({
       // تخطي المدفوع بالكامل
       if (due.status === 'paid') continue;
 
+      // استخراج تاريخ آخر دفعة — للـ rollback الآمن عند فشل الحركة المالية
+      const lastPayment = due.payments?.length ? due.payments[due.payments.length - 1] : null;
+
       const dueItem = {
         contractId: contract.id,
         dueId: due.id,
@@ -186,6 +189,7 @@ export function buildOperationalDues({
         amount: safeNum(due.amount),
         remainingAmount: safeNum(due.remainingAmount),
         paidAmount: safeNum(due.paidAmount),
+        paidDate: lastPayment?.date || null,
         dueDate: due.dueDate,
         daysOverdue: calcDaysOverdue(due.dueDate, todayStr),
         daysUntil: calcDaysUntil(due.dueDate, todayStr),
@@ -234,9 +238,15 @@ export function buildOperationalDues({
 
   // إجمالي كل المستحقات غير المسددة
   summary.totalCount =
-    summary.overdueCount + summary.dueTodayCount + summary.dueThisWeekCount + summary.dueNext30DaysCount;
+    summary.overdueCount +
+    summary.dueTodayCount +
+    summary.dueThisWeekCount +
+    summary.dueNext30DaysCount;
   summary.totalAmount =
-    summary.overdueTotal + summary.dueTodayTotal + summary.dueThisWeekTotal + summary.dueNext30DaysTotal;
+    summary.overdueTotal +
+    summary.dueTodayTotal +
+    summary.dueThisWeekTotal +
+    summary.dueNext30DaysTotal;
 
   return { overdue, dueToday, dueThisWeek, dueNext30Days, summary };
 }

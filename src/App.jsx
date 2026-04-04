@@ -16,7 +16,6 @@ import { TooltipTour, isTourSeen, resetTour } from './ui/TooltipTour.jsx';
 import { Icons } from './ui/ui-common.jsx';
 import { ProtectedRoute } from './ui/ProtectedRoute.jsx';
 import { DemoBanner } from './ui/DemoBanner.jsx';
-import { DirectionSwitcher } from './ui/DirectionSwitcher.jsx';
 
 import {
   NAV_ITEMS as NAV_ITEMS_CONFIG,
@@ -36,7 +35,6 @@ const ContactDetailPage = lazy(() => import('./pages/ContactDetailPage.jsx'));
 const ContractsPage = lazy(() => import('./pages/ContractsPage.jsx'));
 const InboxPage = lazy(() => import('./pages/InboxPage.jsx'));
 const AuthPage = lazy(() => import('./pages/AuthPage.jsx'));
-const LedgersPage = lazy(() => import('./pages/LedgersPage.jsx'));
 const TransactionsPage = lazy(() =>
   import('./pages/TransactionsPage.jsx').then((m) => ({ default: m.TransactionsPage }))
 );
@@ -66,6 +64,42 @@ import { normalizeDigits } from './utils/helpers.js';
 
 /** للتطوير فقط: ضع true لاختبار شاشة استعادة الأخطاء (Error Boundary) ثم أعد false قبل النشر. */
 const SIMULATE_RENDER_ERROR = false;
+
+const lazyWithRetry = (importer, retryKey) =>
+  lazy(async () => {
+    try {
+      const mod = await importer();
+      try {
+        window.sessionStorage.removeItem(retryKey);
+      } catch {}
+      return mod;
+    } catch (error) {
+      const message = String(error?.message || '').toLowerCase();
+      const isChunkLoadError =
+        message.includes('failed to fetch dynamically imported module') ||
+        message.includes('importing a module script failed') ||
+        message.includes('chunkloaderror') ||
+        message.includes('loading chunk');
+
+      if (isChunkLoadError) {
+        try {
+          const alreadyRetried = window.sessionStorage.getItem(retryKey) === '1';
+          if (!alreadyRetried) {
+            window.sessionStorage.setItem(retryKey, '1');
+            window.location.reload();
+            return new Promise(() => {});
+          }
+        } catch {}
+      }
+
+      throw error;
+    }
+  });
+
+const LedgersPage = lazyWithRetry(
+  () => import('./pages/LedgersPage.jsx'),
+  'ff_retry_ledgers_page_chunk'
+);
 
 // ربط عناصر التنقل بأيقونات الواجهة (برومبت 0.3)
 const NAV_ITEMS = NAV_ITEMS_CONFIG.map((it) => ({ ...it, icon: Icons[it.iconKey] }));
@@ -291,7 +325,6 @@ const App = () => {
       <UnsavedContext.Provider value={setDirty}>
         <TrustChecks />
         <DemoBanner />
-        <DirectionSwitcher />
         <div className="app-shell flex min-h-screen">
           <a
             href="#main-content"
@@ -314,7 +347,7 @@ const App = () => {
             }}
           />
           <main
-            className="app-main flex-1 pb-20 md:pb-0"
+            className="app-main flex-1"
             id="main-content"
             role="main"
             aria-label="المحتوى الرئيسي"

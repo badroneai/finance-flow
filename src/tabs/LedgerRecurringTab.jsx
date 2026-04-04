@@ -138,28 +138,12 @@ function LedgerRecurringTab({
   })();
 
   const getStatusInfo = (item) => {
-    if (isPastDue(item))
-      return {
-        label: 'متأخر',
-        color:
-          'bg-[var(--color-danger-bg)] border-[var(--color-danger)] text-[var(--color-danger)]',
-      };
+    if (isPastDue(item)) return { label: 'متأخر', modifier: 'ledger-item-card__badge--danger' };
     if (isDueWithinDays(item, 7))
-      return {
-        label: 'مستحق قريباً',
-        color:
-          'bg-[var(--color-warning-bg)] border-[var(--color-warning)] text-[var(--color-warning)]',
-      };
+      return { label: 'مستحق قريباً', modifier: 'ledger-item-card__badge--warning' };
     if (item.payState === 'paid')
-      return {
-        label: 'مدفوع',
-        color:
-          'bg-[var(--color-success-bg)] border-[var(--color-success)] text-[var(--color-success)]',
-      };
-    return {
-      label: 'نشط',
-      color: 'bg-[var(--color-info-bg)] border-[var(--color-border)] text-[var(--color-primary)]',
-    };
+      return { label: 'مدفوع', modifier: 'ledger-item-card__badge--success' };
+    return { label: 'نشط', modifier: 'ledger-item-card__badge--info' };
   };
 
   return (
@@ -201,60 +185,96 @@ function LedgerRecurringTab({
         refresh={refresh}
       />
 
-      <RecurringItemForm
-        recForm={recForm}
-        setRecForm={setRecForm}
-        recEditingId={recEditingId}
-        setRecEditingId={setRecEditingId}
-        saveRecurring={saveRecurring}
-        resetRecForm={resetRecForm}
-      />
+      <div className="ledger-view">
+        <section className="ledger-layer ledger-layer--summary">
+          <div className="ledger-layer__header">
+            <span className="ledger-layer__label">الملخص</span>
+            <p className="ledger-layer__hint">
+              ابدأ من الأرقام والتنبيهات، ثم انتقل للإجراءات والقائمة التشغيلية بالأسفل.
+            </p>
+          </div>
+          <RecurringSummaryBar
+            monthlyTotal={monthlyTotal}
+            overdueTotal={overdueTotal}
+            thisMonthDue={thisMonthDue}
+            yearlyEstimate={yearlyEstimate}
+            itemCount={allItems.length}
+            ledgerAlerts={ledgerAlerts}
+            Currency={Currency}
+          />
+        </section>
 
-      <RecurringItemList
-        filteredItems={filteredItems}
-        allItems={allItems}
-        overdueCount={overdueCount}
-        soonCount={soonCount}
-        listFilter={listFilter}
-        setListFilter={setListFilter}
-        unpricedList={unpricedList}
-        openPricingWizard={openPricingWizard}
-        setSaPricingOpen={setSaPricingOpen}
-        recurring={recurring}
-        startPayNow={startPayNow}
-        startEditRecurring={startEditRecurring}
-        deleteRecurring={deleteRecurring}
-        getStatusInfo={getStatusInfo}
-        normalizeRecurringCategory={normalizeRecurringCategory}
-        Currency={Currency}
-        isPastDue={isPastDue}
-      />
+        <section className="ledger-layer ledger-layer--controls">
+          <div className="ledger-layer__header">
+            <span className="ledger-layer__label">الإجراءات</span>
+            <p className="ledger-layer__hint">
+              أضف بندًا جديدًا أو عدّل البنود الحالية ثم انتقل مباشرة إلى القائمة التشغيلية
+              للمراجعة.
+            </p>
+          </div>
+          <RecurringItemForm
+            recForm={recForm}
+            setRecForm={setRecForm}
+            recEditingId={recEditingId}
+            setRecEditingId={setRecEditingId}
+            saveRecurring={saveRecurring}
+            resetRecForm={resetRecForm}
+          />
+        </section>
 
-      <RecurringSummaryBar
-        monthlyTotal={monthlyTotal}
-        overdueTotal={overdueTotal}
-        thisMonthDue={thisMonthDue}
-        yearlyEstimate={yearlyEstimate}
-        itemCount={allItems.length}
-        ledgerAlerts={ledgerAlerts}
-        Currency={Currency}
-      />
+        <section className="ledger-layer">
+          <div className="ledger-layer__header">
+            <span className="ledger-layer__label">المحتوى</span>
+            <p className="ledger-layer__hint">
+              هنا تظهر الفلاتر، عناصر الالتزام، وحالة كل بند بشكل يمكن مسحه بصرياً بسرعة.
+            </p>
+          </div>
+          <RecurringItemList
+            filteredItems={filteredItems}
+            allItems={allItems}
+            overdueCount={overdueCount}
+            soonCount={soonCount}
+            listFilter={listFilter}
+            setListFilter={setListFilter}
+            unpricedList={unpricedList}
+            openPricingWizard={openPricingWizard}
+            setSaPricingOpen={setSaPricingOpen}
+            recurring={recurring}
+            startPayNow={startPayNow}
+            startEditRecurring={startEditRecurring}
+            deleteRecurring={deleteRecurring}
+            getStatusInfo={getStatusInfo}
+            normalizeRecurringCategory={normalizeRecurringCategory}
+            Currency={Currency}
+            isPastDue={isPastDue}
+          />
+        </section>
 
-      <RecurringAdvancedPanel
-        advancedOpen={advancedOpen}
-        setAdvancedOpen={setAdvancedOpen}
-        outlook={outlook}
-        categoryDist={categoryDist}
-        brain={brain}
-        health={health}
-        completeness={completeness}
-        budgetForm={budgetForm}
-        setBudgetForm={setBudgetForm}
-        saveLedgerBudgets={saveLedgerBudgets}
-        budgetsHealth={budgetsHealth}
-        actuals={actuals}
-        Currency={Currency}
-      />
+        <section className="ledger-layer ledger-layer--secondary">
+          <div className="ledger-layer__header">
+            <span className="ledger-layer__label">المتقدم</span>
+            <p className="ledger-layer__hint">
+              هذه المنطقة للتحليلات الأعمق وأهداف الميزانية عندما تحتاج قراءة أوسع من الإدارة
+              اليومية.
+            </p>
+          </div>
+          <RecurringAdvancedPanel
+            advancedOpen={advancedOpen}
+            setAdvancedOpen={setAdvancedOpen}
+            outlook={outlook}
+            categoryDist={categoryDist}
+            brain={brain}
+            health={health}
+            completeness={completeness}
+            budgetForm={budgetForm}
+            setBudgetForm={setBudgetForm}
+            saveLedgerBudgets={saveLedgerBudgets}
+            budgetsHealth={budgetsHealth}
+            actuals={actuals}
+            Currency={Currency}
+          />
+        </section>
+      </div>
     </>
   );
 }

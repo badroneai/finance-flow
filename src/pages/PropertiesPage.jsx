@@ -123,8 +123,8 @@ function PropertyForm({
   };
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <div className="flex items-start justify-between gap-3 mb-4">
+    <div className="panel-card properties-page__form-shell mb-4">
+      <div className="properties-page__form-header">
         <div>
           <h3 className="font-bold text-[var(--color-text)] mb-1">
             {editMode ? 'تعديل العقار' : 'إضافة عقار جديد'}
@@ -136,17 +136,13 @@ function PropertyForm({
           </p>
         </div>
         {onCancel && (
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
-          >
+          <button type="button" onClick={onCancel} className="btn-secondary">
             إلغاء
           </button>
         )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="properties-page__form-grid">
         <FormField label="اسم العقار" id="prop-name">
           <input
             type="text"
@@ -356,7 +352,7 @@ function PropertyForm({
             placeholder="05XXXXXXXX"
             dir="ltr"
             disabled={!manualOwnerEntry && !!form.ownerId}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left disabled:opacity-60"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start disabled:opacity-60"
           />
         </FormField>
       </div>
@@ -380,9 +376,9 @@ function PropertyForm({
       </div>
 
       {form.status === 'rented' && (
-        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات المستأجر الحالي</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="properties-page__form-section">
+          <h4 className="properties-page__form-section-title">بيانات المستأجر الحالي</h4>
+          <div className="properties-page__form-grid">
             <FormField label="المستأجر" id="prop-tenant-contact">
               <select
                 value={form.tenantContactId || ''}
@@ -417,7 +413,7 @@ function PropertyForm({
                 value={form.tenantPhone || ''}
                 onChange={(e) => handleChange('tenantPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -425,9 +421,9 @@ function PropertyForm({
       )}
 
       {form.status === 'maintenance' && (
-        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات جهة الصيانة</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="properties-page__form-section">
+          <h4 className="properties-page__form-section-title">بيانات جهة الصيانة</h4>
+          <div className="properties-page__form-grid">
             <FormField label="جهة الصيانة" id="prop-maint-contact">
               <select
                 value={form.maintenanceContactId || ''}
@@ -462,7 +458,7 @@ function PropertyForm({
                 value={form.maintenanceContactPhone || ''}
                 onChange={(e) => handleChange('maintenanceContactPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -470,9 +466,9 @@ function PropertyForm({
       )}
 
       {form.status === 'sold' && (
-        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات المشتري</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="properties-page__form-section">
+          <h4 className="properties-page__form-section-title">بيانات المشتري</h4>
+          <div className="properties-page__form-grid">
             <FormField label="المشتري" id="prop-buyer-contact">
               <select
                 value={form.buyerContactId || ''}
@@ -507,7 +503,7 @@ function PropertyForm({
                 value={form.buyerPhone || ''}
                 onChange={(e) => handleChange('buyerPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -542,7 +538,7 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onOpen }) {
           onOpen(property);
         }
       }}
-      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+      className="panel-card properties-page__card cursor-pointer hover:border-[var(--color-primary)] transition-colors"
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-start gap-3 min-w-0 flex-1">
@@ -566,8 +562,8 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onOpen }) {
         {property.unitsCount > 1 && <span>{property.unitsCount} وحدة</span>}
         {property.areaSqm && <span>{property.areaSqm} م²</span>}
         {property.monthlyRent && (
-          <span className="font-medium" style={{ color: 'var(--color-success)' }}>
-            {formatCurrency(safeNum(property.monthlyRent))} ر.س/شهر
+          <span className="font-medium text-[var(--color-success)]">
+            {formatCurrency(safeNum(property.monthlyRent))}/شهر
           </span>
         )}
       </div>
@@ -583,28 +579,23 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onOpen }) {
         <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{property.notes}</p>
       )}
 
-      <div
-        className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]"
-        onClick={(e) => e.stopPropagation()}
-      >
+      <div className="properties-page__card-actions" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={() => onEdit(property)}
-          className="text-sm font-medium hover:opacity-80"
-          style={{ color: 'var(--color-info)' }}
+          className="btn-ghost properties-page__card-action text-sm"
         >
           تعديل
         </button>
         <button
           type="button"
           onClick={() => onDelete(property)}
-          className="text-sm font-medium hover:opacity-80"
-          style={{ color: 'var(--color-danger)' }}
+          className="btn-ghost properties-page__card-action text-sm text-[var(--color-danger)]"
         >
           حذف
         </button>
         {contractCount > 0 && (
-          <span className="text-sm mr-auto" style={{ color: 'var(--color-success)' }}>
+          <span className="text-sm u-push-inline-start text-[var(--color-success)]">
             {contractCount} عقد
           </span>
         )}
@@ -736,7 +727,7 @@ export default function PropertiesPage() {
   }, [confirmDelete, deleteProperty, editingId, toast, resetFormState]);
 
   return (
-    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+    <div className="page-shell page-shell--regular" dir="rtl">
       <div className="page-header">
         <div className="page-header-copy">
           <span className="page-kicker">الأصول العقارية</span>
@@ -778,8 +769,12 @@ export default function PropertiesPage() {
       )}
 
       {properties.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <SummaryCard label="إجمالي العقارات" value={summary.total} icon={<Icons.properties size={18} />} />
+        <div className="route-summary-grid route-summary-grid--quad mb-4">
+          <SummaryCard
+            label="إجمالي العقارات"
+            value={summary.total}
+            icon={<Icons.properties size={18} />}
+          />
           <SummaryCard
             label="مؤجرة"
             value={summary.rentedCount}
@@ -802,18 +797,21 @@ export default function PropertiesPage() {
       )}
 
       {properties.length > 0 && (
-        <div className="control-toolbar flex flex-wrap gap-2 mb-4 p-3">
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="بحث بالاسم أو الحي أو المالك..."
-            className="flex-1 min-w-[200px] px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
-          />
+        <div className="control-toolbar control-toolbar--compact properties-page__toolbar mb-4">
+          <div className="properties-page__search">
+            <Icons.search size={16} className="field-icon-inline-start" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="بحث بالاسم أو الحي أو المالك..."
+              className="properties-page__search-input text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+            />
+          </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+            className="properties-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
           >
             <option value="">كل الأنواع</option>
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
@@ -825,7 +823,7 @@ export default function PropertiesPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+            className="properties-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
           >
             <option value="">كل الحالات</option>
             {PROPERTY_STATUS_OPTIONS.map((opt) => (
@@ -838,7 +836,9 @@ export default function PropertiesPage() {
       )}
 
       {propertiesLoading ? (
-        <div className="p-8 text-center text-[var(--color-muted)]">جاري التحميل...</div>
+        <div className="panel-card properties-page__state p-8 text-[var(--color-muted)]">
+          جاري التحميل...
+        </div>
       ) : properties.length === 0 && !showForm ? (
         <EmptyState
           title="لم تُضف أي عقارات بعد"
@@ -855,7 +855,7 @@ export default function PropertiesPage() {
           description="جرّب تغيير الفلاتر أو البحث بكلمة مختلفة."
         />
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="properties-page__list">
           {filtered.map((property) => (
             <PropertyCard
               key={property.id}

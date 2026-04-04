@@ -60,7 +60,7 @@ function priorityDot(priority) {
   return { background: 'var(--color-muted)' };
 }
 
-function InboxSection({ title, count, total, amountLabel, open, onToggle, children }) {
+function InboxSection({ title, count, amountLabel, open, onToggle, children }) {
   const isOpen = open !== false;
   return (
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden mb-4">
@@ -141,7 +141,6 @@ export default function InboxPage({ setPage }) {
     recurringItems,
     ledgers: dataLedgers,
     activeLedgerId: dataActiveLedgerId,
-    setActiveLedgerId: setDataActiveLedgerId,
     contracts,
     contractPayments,
     contacts,
@@ -397,7 +396,7 @@ export default function InboxPage({ setPage }) {
               title="متأخرة"
               count={overdue.length}
               total={summary.totalOverdueAmount}
-              amountLabel={`${formatCurrency(summary.totalOverdueAmount || 0)} ر.س`}
+              amountLabel={formatCurrency(summary.totalOverdueAmount || 0)}
               open={openOverdue}
               onToggle={() => setOpenOverdue((v) => !v)}
             >
@@ -418,7 +417,7 @@ export default function InboxPage({ setPage }) {
               title="هذا الأسبوع"
               count={thisWeek.length}
               total={summary.totalThisWeekAmount}
-              amountLabel={`${formatCurrency(summary.totalThisWeekAmount || 0)} ر.س`}
+              amountLabel={formatCurrency(summary.totalThisWeekAmount || 0)}
               open={openThisWeek}
               onToggle={() => setOpenThisWeek((v) => !v)}
             >
@@ -439,7 +438,7 @@ export default function InboxPage({ setPage }) {
               title="هذا الشهر"
               count={thisMonth.length}
               total={summary.totalThisMonthAmount}
-              amountLabel={`${formatCurrency(summary.totalThisMonthAmount || 0)} ر.س`}
+              amountLabel={formatCurrency(summary.totalThisMonthAmount || 0)}
               open={openThisMonth}
               onToggle={() => setOpenThisMonth((v) => !v)}
             >
@@ -458,8 +457,7 @@ export default function InboxPage({ setPage }) {
           <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-sm text-[var(--color-muted)]">
             <p className="font-medium text-[var(--color-text)]">الإجمالي المتوقع هذا الشهر</p>
             <p className="mt-1">
-              دخل: {formatCurrency(totalIncomeMonth)} ر.س | مصروف:{' '}
-              {formatCurrency(totalExpenseMonth)} ر.س
+              دخل: {formatCurrency(totalIncomeMonth)} | مصروف: {formatCurrency(totalExpenseMonth)}
             </p>
           </div>
         </>
@@ -494,12 +492,15 @@ export default function InboxPage({ setPage }) {
             <InboxSection
               title="متأخرات العقود"
               count={contractDues.overdue.length}
-              amountLabel={`${formatCurrency(contractDues.summary.overdueTotal)} ر.س`}
+              amountLabel={`${formatCurrency(contractDues.summary.overdueTotal)}`}
               open={openContractDues}
               onToggle={() => setOpenContractDues((v) => !v)}
             >
               {contractDues.overdue.map((due) => (
-                <div key={due.dueId} className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors">
+                <div
+                  key={due.dueId}
+                  className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors"
+                >
                   <div className="flex items-start gap-3">
                     <span
                       className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
@@ -517,7 +518,7 @@ export default function InboxPage({ setPage }) {
                             {due.propertyName ? ` — ${due.propertyName}` : ''}
                           </span>
                           <span className="font-medium" style={{ color: 'var(--color-danger)' }}>
-                            {formatCurrency(due.remainingAmount)} ر.س
+                            {formatCurrency(due.remainingAmount)}
                           </span>
                         </div>
                         <p className="text-sm text-[var(--color-muted)] mt-0.5">
@@ -548,11 +549,14 @@ export default function InboxPage({ setPage }) {
             <InboxSection
               title="مستحقات هذا الأسبوع"
               count={contractDues.dueToday.length + contractDues.dueThisWeek.length}
-              amountLabel={`${formatCurrency(contractDues.summary.dueTodayTotal + contractDues.summary.dueThisWeekTotal)} ر.س`}
+              amountLabel={`${formatCurrency(contractDues.summary.dueTodayTotal + contractDues.summary.dueThisWeekTotal)}`}
               open={true}
             >
               {[...contractDues.dueToday, ...contractDues.dueThisWeek].map((due) => (
-                <div key={due.dueId} className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors">
+                <div
+                  key={due.dueId}
+                  className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors"
+                >
                   <div className="flex items-start gap-3">
                     <span
                       className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
@@ -573,13 +577,11 @@ export default function InboxPage({ setPage }) {
                             {due.propertyName ? ` — ${due.propertyName}` : ''}
                           </span>
                           <span className="font-medium text-[var(--color-text)]">
-                            {formatCurrency(due.remainingAmount)} ر.س
+                            {formatCurrency(due.remainingAmount)}
                           </span>
                         </div>
                         <p className="text-sm text-[var(--color-muted)] mt-0.5">
-                          {due.daysUntil === 0
-                            ? 'مستحق اليوم'
-                            : `بعد ${due.daysUntil} يوم`}
+                          {due.daysUntil === 0 ? 'مستحق اليوم' : `بعد ${due.daysUntil} يوم`}
                           {due.unitName ? ` · ${due.unitName}` : ''}
                         </p>
                       </button>
@@ -605,11 +607,14 @@ export default function InboxPage({ setPage }) {
             <InboxSection
               title="خلال 30 يوم"
               count={contractDues.dueNext30Days.length}
-              amountLabel={`${formatCurrency(contractDues.summary.dueNext30DaysTotal)} ر.س`}
+              amountLabel={`${formatCurrency(contractDues.summary.dueNext30DaysTotal)}`}
               open={false}
             >
               {contractDues.dueNext30Days.map((due) => (
-                <div key={due.dueId} className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors">
+                <div
+                  key={due.dueId}
+                  className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors"
+                >
                   <div className="flex items-start gap-3">
                     <span
                       className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
@@ -627,7 +632,7 @@ export default function InboxPage({ setPage }) {
                             {due.propertyName ? ` — ${due.propertyName}` : ''}
                           </span>
                           <span className="font-medium text-[var(--color-text)]">
-                            {formatCurrency(due.remainingAmount)} ر.س
+                            {formatCurrency(due.remainingAmount)}
                           </span>
                         </div>
                         <p className="text-sm text-[var(--color-muted)] mt-0.5">

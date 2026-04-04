@@ -8,10 +8,10 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useData } from '../contexts/DataContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useToast } from '../contexts/ToastContext.jsx';
-import { FormField, SummaryCard, Icons, Badge } from '../ui/ui-common.jsx';
+import { FormField, SummaryCard, Icons, Badge, EmptyState } from '../ui/ui-common.jsx';
 import { Modal, ConfirmDialog } from '../ui/Modals.jsx';
-import { Currency, formatNumber, formatCurrency } from '../utils/format.jsx';
-import { today, safeNum, genId, now } from '../utils/helpers.js';
+import { Currency, formatCurrency, formatNumber } from '../utils/format.jsx';
+import { today, safeNum } from '../utils/helpers.js';
 // pdf-service يُحمّل ديناميكياً لتقليل حجم الحزمة الأولية
 const loadPdfService = () => import('../core/pdf-service.js');
 
@@ -125,12 +125,12 @@ function exportCSV(data, ledgerNameFn) {
 // ═══════════════════════════════════════
 // CommissionsPage
 // ═══════════════════════════════════════
-export function CommissionsPage({ setPage }) {
+export function CommissionsPage() {
   const toast = useToast();
   const { isAgent, isOwner, isManager, isSuperAdmin, profile, office } = useAuth();
+  const isAgentOnly = isAgent && !isOwner && !isManager && !isSuperAdmin;
   const {
     commissions,
-    commissionsLoading,
     fetchCommissions,
     createCommission,
     updateCommission,
@@ -156,7 +156,6 @@ export function CommissionsPage({ setPage }) {
   const [pdfExporting, setPdfExporting] = useState(false);
 
   // SPR-012: هل المستخدم وكيل (عرض محدود)
-  const agentOnly = isAgent && !isOwner && !isManager && !isSuperAdmin;
   const currentAgentName = profile?.full_name || profile?.fullName || '';
 
   // جلب أولي
@@ -183,7 +182,7 @@ export function CommissionsPage({ setPage }) {
     let list = commissions || [];
 
     // SPR-012: إذا كان وكيلاً — يرى فقط عمولاته
-    if (agentOnly && currentAgentName) {
+    if (isAgentOnly && currentAgentName) {
       list = list.filter((c) => {
         const name = (f(c, 'agentName', 'agent_name') || '').toLowerCase();
         return name === currentAgentName.toLowerCase();
@@ -269,12 +268,12 @@ export function CommissionsPage({ setPage }) {
         break;
     }
     return sorted;
-  }, [commissions, filters, agentOnly, currentAgentName]);
+  }, [commissions, filters, isAgentOnly, currentAgentName]);
 
   // حساب الملخص
   const summary = useMemo(() => {
     const list =
-      agentOnly && currentAgentName
+      isAgentOnly && currentAgentName
         ? (commissions || []).filter(
             (c) =>
               (f(c, 'agentName', 'agent_name') || '').toLowerCase() ===
@@ -297,7 +296,7 @@ export function CommissionsPage({ setPage }) {
       }
     }
     return { totalDue, totalPaid, remaining: totalDue };
-  }, [commissions, agentOnly, currentAgentName]);
+  }, [commissions, isAgentOnly, currentAgentName]);
 
   // اسم الدفتر
   const ledgerName = useCallback(
@@ -378,10 +377,10 @@ export function CommissionsPage({ setPage }) {
     });
 
   // هل يمكن الكتابة (غير وكيل)
-  const canWrite = !agentOnly;
+  const canWrite = !isAgentOnly;
 
   return (
-    <div className="page-shell p-4 md:p-6 max-w-6xl mx-auto" dir="rtl">
+    <div className="page-shell page-shell--wide commissions-page" dir="rtl">
       <div className="page-header">
         <div className="page-header-copy">
           <span className="page-kicker">العوائد والوساطة</span>
@@ -392,13 +391,13 @@ export function CommissionsPage({ setPage }) {
         </div>
       </div>
       {/* ═══ تبويبات ═══ */}
-      <div className="control-toolbar flex gap-1 mb-4 rounded-lg p-1 border border-[var(--color-border)]">
+      <div className="control-toolbar control-toolbar--segmented commissions-page__tabs mb-4">
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`commissions-page__tab py-2 rounded-md text-sm font-medium transition-colors ${
               activeTab === tab.id
                 ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
@@ -410,15 +409,8 @@ export function CommissionsPage({ setPage }) {
       </div>
 
       {/* ═══ عرض الوكيل — شريط تنبيه ═══ */}
-      {agentOnly && (
-        <div
-          className="panel-card rounded-lg p-3 mb-4 text-sm flex items-center gap-2"
-          style={{
-            background: 'var(--color-info-bg)',
-            borderColor: 'color-mix(in srgb, var(--color-info) 18%, var(--color-border))',
-            color: 'var(--color-info)',
-          }}
-        >
+      {isAgentOnly && (
+        <div className="panel-card commissions-page__notice mb-4 text-sm">
           <Icons.info size={16} />
           <span>أنت تشاهد عمولاتك فقط (وضع الوكيل)</span>
         </div>
@@ -427,67 +419,106 @@ export function CommissionsPage({ setPage }) {
       {activeTab === 'list' ? (
         <>
           {/* ═══ بطاقات الملخص ═══ */}
-          <div className="grid grid-cols-2 gap-3 mb-6">
-            <SummaryCard
-              label="إجمالي المستحق"
-              value={
-                <>
-                  <span className="text-lg font-bold">{formatNumber(summary.totalDue)}</span>{' '}
-                  <span className="text-xs">ر.س</span>
-                </>
-              }
-              color="red"
-              icon={<Icons.arrowDown size={16} />}
-            />
-            <SummaryCard
-              label="إجمالي المدفوع"
-              value={
-                <>
-                  <span className="text-lg font-bold">{formatNumber(summary.totalPaid)}</span>{' '}
-                  <span className="text-xs">ر.س</span>
-                </>
-              }
-              color="green"
-              icon={<Icons.arrowUp size={16} />}
-            />
-            <div className="col-span-2">
+          <div className="commissions-page__summary mb-6">
+            <div className="route-summary-grid">
               <SummaryCard
-                label="صافي المتبقي"
-                value={
-                  <>
-                    <span className="text-lg font-bold">{formatNumber(summary.remaining)}</span>{' '}
-                    <span className="text-xs">ر.س</span>
-                  </>
-                }
-                color={summary.remaining > 0 ? 'red' : 'green'}
+                label="إجمالي المستحق"
+                value={<Currency value={summary.totalDue} className="text-lg font-bold" />}
+                color="red"
+                icon={<Icons.arrowDown size={16} />}
               />
+              <SummaryCard
+                label="إجمالي المدفوع"
+                value={<Currency value={summary.totalPaid} className="text-lg font-bold" />}
+                color="green"
+                icon={<Icons.arrowUp size={16} />}
+              />
+              <div className="route-summary-grid__full">
+                <SummaryCard
+                  label="صافي المتبقي"
+                  value={<Currency value={summary.remaining} className="text-lg font-bold" />}
+                  color={summary.remaining > 0 ? 'red' : 'green'}
+                />
+              </div>
             </div>
           </div>
 
           {/* ═══ شريط الفلاتر ═══ */}
-          <div className="control-toolbar p-4 mb-4">
-            <div className="flex flex-wrap gap-2 items-center">
-              <div className="relative flex-1 min-w-[180px]">
-                <Icons.search
-                  size={16}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--color-muted)]"
-                />
+          <div className="control-toolbar control-toolbar--filters commissions-page__toolbar mb-4">
+            <div className="commissions-page__toolbar-top">
+              <div className="commissions-page__search">
+                <Icons.search size={16} className="field-icon-inline-start" />
                 <input
                   type="text"
                   placeholder="بحث بالعميل أو الوكيل..."
                   value={filters.search}
                   onChange={(e) => setFilters((p) => ({ ...p, search: e.target.value }))}
-                  className="w-full border border-[var(--color-border)] rounded-lg ps-9 pe-3 py-2 text-sm bg-[var(--color-input-bg)] text-[var(--color-text)] focus:border-[var(--color-primary)] focus:ring-1 focus:ring-[var(--color-primary)]"
+                  className="commissions-page__search-input text-sm bg-[var(--color-input-bg)] text-[var(--color-text)]"
                   aria-label="بحث"
                 />
               </div>
+              <div className="commissions-page__toolbar-actions">
+                {filtered.length > 0 && (
+                  <>
+                    <button
+                      onClick={async () => {
+                        if (pdfExporting) return;
+                        setPdfExporting(true);
+                        try {
+                          const { exportCommissionsReport } = await loadPdfService();
+                          await exportCommissionsReport(
+                            filtered,
+                            { name: office?.name || office?.office_name || '' },
+                            filters
+                          );
+                          toast.success('تم تصدير PDF بنجاح');
+                        } catch (e) {
+                          toast.error(e?.message || 'خطأ في التصدير');
+                        } finally {
+                          setPdfExporting(false);
+                        }
+                      }}
+                      disabled={pdfExporting}
+                      className="btn-primary disabled:opacity-50"
+                      aria-label="تصدير PDF"
+                    >
+                      <Icons.download size={16} />
+                      {pdfExporting ? 'جاري…' : 'تصدير PDF'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        exportCSV(filtered, ledgerName);
+                        toast.success('تم تصدير الملف بنجاح');
+                      }}
+                      className="btn-secondary"
+                      aria-label="تصدير CSV"
+                    >
+                      <Icons.download size={16} />
+                      تصدير CSV
+                    </button>
+                  </>
+                )}
+                {canWrite && (
+                  <button
+                    onClick={() => setModal('add')}
+                    className="btn-primary"
+                    aria-label="إضافة عمولة"
+                  >
+                    <Icons.plus size={16} />
+                    إضافة عمولة
+                  </button>
+                )}
+              </div>
             </div>
+            <p className="commissions-page__toolbar-note">
+              ابدأ بالبحث، ثم استخدم الحالة أو الدفتر أو الوكيل والتاريخ لتضييق النتائج بشكل أدق.
+            </p>
 
             {/* فلاتر متقدمة — قابلة للطي على الموبايل */}
             <button
               type="button"
               onClick={() => setShowFilters((s) => !s)}
-              className="flex items-center gap-2 text-sm text-[var(--color-muted)] mt-2 md:hidden"
+              className="btn-ghost commissions-page__filters-toggle md:hidden"
               aria-expanded={showFilters}
               aria-label="فلاتر متقدمة"
             >
@@ -499,13 +530,11 @@ export function CommissionsPage({ setPage }) {
               />
             </button>
 
-            <div
-              className={`flex flex-wrap gap-2 items-center mt-2 ${showFilters ? 'flex' : 'hidden'} md:flex`}
-            >
+            <div className={`commissions-page__filters ${showFilters ? 'flex' : 'hidden'} md:flex`}>
               <select
                 value={filters.status}
                 onChange={(e) => setFilters((p) => ({ ...p, status: e.target.value }))}
-                className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+                className="commissions-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
                 aria-label="حالة العمولة"
               >
                 {STATUS_OPTIONS.map((o) => (
@@ -518,7 +547,7 @@ export function CommissionsPage({ setPage }) {
               <select
                 value={filters.ledgerId}
                 onChange={(e) => setFilters((p) => ({ ...p, ledgerId: e.target.value }))}
-                className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+                className="commissions-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
                 aria-label="الدفتر"
               >
                 <option value="">كل الدفاتر</option>
@@ -530,11 +559,11 @@ export function CommissionsPage({ setPage }) {
               </select>
 
               {/* SPR-012: فلتر الوكيل */}
-              {!agentOnly && agentNames.length > 0 && (
+              {!isAgentOnly && agentNames.length > 0 && (
                 <select
                   value={filters.agent}
                   onChange={(e) => setFilters((p) => ({ ...p, agent: e.target.value }))}
-                  className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+                  className="commissions-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
                   aria-label="الوكيل"
                 >
                   <option value="">كل الوكلاء</option>
@@ -551,7 +580,7 @@ export function CommissionsPage({ setPage }) {
                 type="date"
                 value={filters.dateFrom}
                 onChange={(e) => setFilters((p) => ({ ...p, dateFrom: e.target.value }))}
-                className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+                className="commissions-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
                 aria-label="من تاريخ"
                 title="من تاريخ"
               />
@@ -559,7 +588,7 @@ export function CommissionsPage({ setPage }) {
                 type="date"
                 value={filters.dateTo}
                 onChange={(e) => setFilters((p) => ({ ...p, dateTo: e.target.value }))}
-                className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+                className="commissions-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
                 aria-label="إلى تاريخ"
                 title="إلى تاريخ"
               />
@@ -568,7 +597,7 @@ export function CommissionsPage({ setPage }) {
               <select
                 value={filters.sort}
                 onChange={(e) => setFilters((p) => ({ ...p, sort: e.target.value }))}
-                className="border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+                className="commissions-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
                 aria-label="ترتيب"
               >
                 {SORT_OPTIONS.map((o) => (
@@ -579,73 +608,21 @@ export function CommissionsPage({ setPage }) {
               </select>
 
               <button
+                type="button"
                 onClick={resetFilters}
-                className="px-3 py-2 rounded-lg text-sm text-[var(--color-muted)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
+                className="btn-secondary commissions-page__filters-action"
                 aria-label="إعادة تعيين الفلاتر"
                 title="إعادة تعيين"
               >
                 <Icons.filter size={14} />
+                إعادة التعيين
               </button>
-            </div>
-
-            <div className="flex gap-2 mt-3 justify-end">
-              {/* SPR-012: تصدير CSV + SPR-013: تصدير PDF */}
-              {filtered.length > 0 && (
-                <>
-                  <button
-                    onClick={async () => {
-                      if (pdfExporting) return;
-                      setPdfExporting(true);
-                      try {
-                        const { exportCommissionsReport } = await loadPdfService();
-                        await exportCommissionsReport(
-                          filtered,
-                          { name: office?.name || office?.office_name || '' },
-                          filters
-                        );
-                        toast.success('تم تصدير PDF بنجاح');
-                      } catch (e) {
-                        toast.error(e?.message || 'خطأ في التصدير');
-                      } finally {
-                        setPdfExporting(false);
-                      }
-                    }}
-                    disabled={pdfExporting}
-                    className="btn-primary disabled:opacity-50"
-                    aria-label="تصدير PDF"
-                  >
-                    <Icons.download size={16} />
-                    {pdfExporting ? 'جاري…' : 'تصدير PDF'}
-                  </button>
-                  <button
-                    onClick={() => {
-                      exportCSV(filtered, ledgerName);
-                      toast.success('تم تصدير الملف بنجاح');
-                    }}
-                    className="btn-secondary"
-                    aria-label="تصدير CSV"
-                  >
-                    <Icons.download size={16} />
-                    تصدير CSV
-                  </button>
-                </>
-              )}
-              {canWrite && (
-                <button
-                  onClick={() => setModal('add')}
-                  className="btn-primary"
-                  aria-label="إضافة عمولة"
-                >
-                  <Icons.plus size={16} />
-                  إضافة عمولة
-                </button>
-              )}
             </div>
           </div>
 
           {/* ═══ عدد النتائج ═══ */}
           {filtered.length > 0 && (
-            <p className="text-xs text-[var(--color-muted)] mb-3">{filtered.length} عمولة</p>
+            <p className="commissions-page__results-count">{filtered.length} عمولة</p>
           )}
 
           {/* ═══ قائمة العمولات ═══ */}
@@ -653,23 +630,41 @@ export function CommissionsPage({ setPage }) {
             (commissions || []).length === 0 ? (
               <EmptyCommissions onAdd={canWrite ? () => setModal('add') : null} />
             ) : (
-              <div className="flex flex-col items-center justify-center py-16 text-[var(--color-muted)]">
-                <Icons.empty size={64} aria-hidden="true" />
-                <p className="mt-4 text-sm font-medium">لا توجد نتائج مطابقة للفلاتر</p>
-                <button
-                  onClick={resetFilters}
-                  className="mt-4 px-4 py-2 rounded-lg bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium border border-[var(--color-border)]"
-                >
-                  إعادة تعيين الفلاتر
-                </button>
-              </div>
+              <EmptyState
+                title="لا توجد نتائج مطابقة"
+                description="غيّر الفلاتر أو أعد تعيينها لعرض العمولات المتاحة."
+                actionLabel="إعادة تعيين الفلاتر"
+                onAction={resetFilters}
+              />
             )
           ) : (
             <>
+              <div className="commissions-page__results-head">
+                <div>
+                  <h2 className="commissions-page__results-title">نتائج العمولات</h2>
+                  <p className="commissions-page__results-subtitle">
+                    راجع المستحق والمدفوع والمتبقي بسرعة، ثم افتح التعديل أو تسجيل الدفعة عند
+                    الحاجة.
+                  </p>
+                </div>
+                <span className="commissions-page__results-count-badge">
+                  {filtered.length} عمولة
+                </span>
+              </div>
+
               {/* ديسكتوب: جدول */}
-              <div className="hidden md:block relative overflow-hidden rounded-xl border border-[var(--color-border)] shadow-sm">
+              <div className="commissions-page__table-shell hidden md:block panel-card">
+                <div className="commissions-page__table-meta">
+                  <div>
+                    <h2 className="commissions-page__table-title">سجل العمولات</h2>
+                    <p className="commissions-page__table-subtitle">
+                      مراجعة المستحقات والمدفوعات مع وصول أسرع للإجراءات اليومية.
+                    </p>
+                  </div>
+                  <span className="commissions-page__table-count">{filtered.length} عمولة</span>
+                </div>
                 <div className="overflow-x-auto">
-                  <table className="w-full text-sm min-w-[800px]">
+                  <table className="commissions-page__table text-sm min-w-[800px]">
                     <thead>
                       <tr className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
                         <th className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]">
@@ -729,30 +724,40 @@ export function CommissionsPage({ setPage }) {
                             <td className="px-4 py-3 text-[var(--color-muted)]">
                               {ledgerName(f(c, 'ledgerId', 'ledger_id'))}
                             </td>
-                            <td className="px-4 py-3 text-[var(--color-text)]">
-                              {formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س
+                            <td className="commissions-page__money px-4 py-3 text-[var(--color-text)]">
+                              <Currency
+                                value={f(c, 'dealValue', 'deal_value')}
+                                symbolClassName="w-3.5 h-3.5"
+                              />
                             </td>
                             <td className="px-4 py-3 text-[var(--color-muted)]">
                               {f(c, 'officePercent', 'office_percent') || 0}%
                             </td>
-                            <td className="px-4 py-3 font-semibold text-[var(--color-text)]">
-                              {formatNumber(amount)} ر.س
+                            <td className="commissions-page__money px-4 py-3 font-semibold text-[var(--color-text)]">
+                              <Currency value={amount} symbolClassName="w-3.5 h-3.5" />
                             </td>
-                            <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>
-                              {formatNumber(paid)} ر.س
+                            <td
+                              className="commissions-page__money px-4 py-3"
+                              style={{ color: 'var(--color-success)' }}
+                            >
+                              <Currency value={paid} symbolClassName="w-3.5 h-3.5" />
                             </td>
-                            <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>
-                              {formatNumber(remaining)} ر.س
+                            <td
+                              className="commissions-page__money px-4 py-3"
+                              style={{ color: 'var(--color-danger)' }}
+                            >
+                              <Currency value={remaining} symbolClassName="w-3.5 h-3.5" />
                             </td>
                             <td className="px-4 py-3 text-center">
                               <Badge color={st.color}>{st.label}</Badge>
                             </td>
                             {canWrite && (
                               <td className="px-4 py-3">
-                                <div className="flex gap-1 justify-center">
+                                <div className="commissions-page__row-actions">
                                   <button
+                                    type="button"
                                     onClick={() => setModal(c)}
-                                    className="p-1.5 rounded-lg hover:bg-[var(--color-bg)] text-[var(--color-primary)]"
+                                    className="btn-ghost commissions-page__icon-action text-[var(--color-primary)]"
                                     aria-label="تعديل"
                                     title="تعديل"
                                   >
@@ -760,9 +765,9 @@ export function CommissionsPage({ setPage }) {
                                   </button>
                                   {c.status !== 'paid' && (
                                     <button
+                                      type="button"
                                       onClick={() => setPaymentModal(c)}
-                                      className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]"
-                                      style={{ color: 'var(--color-success)' }}
+                                      className="btn-ghost commissions-page__icon-action text-[var(--color-success)]"
                                       aria-label="تسجيل دفعة"
                                       title="تسجيل دفعة"
                                     >
@@ -770,9 +775,9 @@ export function CommissionsPage({ setPage }) {
                                     </button>
                                   )}
                                   <button
+                                    type="button"
                                     onClick={() => handleDelete(c.id)}
-                                    className="p-1.5 rounded-lg hover:bg-[var(--color-bg)]"
-                                    style={{ color: 'var(--color-danger)' }}
+                                    className="btn-ghost commissions-page__icon-action text-[var(--color-danger)]"
                                     aria-label="حذف"
                                     title="حذف"
                                   >
@@ -790,7 +795,7 @@ export function CommissionsPage({ setPage }) {
               </div>
 
               {/* موبايل: بطاقات */}
-              <div className="md:hidden flex flex-col gap-3">
+              <div className="commissions-page__mobile-list md:hidden">
                 {filtered.map((c) => {
                   const amount = calcCommissionAmount(
                     f(c, 'dealValue', 'deal_value'),
@@ -800,13 +805,10 @@ export function CommissionsPage({ setPage }) {
                   const remaining = Math.max(0, amount - paid);
                   const st = STATUS_MAP[c.status] || STATUS_MAP.pending;
                   return (
-                    <div
-                      key={c.id}
-                      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm"
-                    >
-                      <div className="flex items-start justify-between mb-2">
+                    <div key={c.id} className="panel-card">
+                      <div className="commissions-page__mobile-card-head">
                         <div>
-                          <p className="font-semibold text-[var(--color-text)]">
+                          <p className="commissions-page__mobile-card-client text-[var(--color-text)]">
                             {f(c, 'clientName', 'client_name') || '—'}
                           </p>
                           <p className="text-xs text-[var(--color-muted)]">
@@ -815,29 +817,32 @@ export function CommissionsPage({ setPage }) {
                         </div>
                         <Badge color={st.color}>{st.label}</Badge>
                       </div>
-                      <div className="grid grid-cols-2 gap-2 text-sm mb-3">
-                        <div>
+                      <div className="commissions-page__mobile-card-grid text-sm">
+                        <div className="commissions-page__mobile-card-item">
                           <span className="text-[var(--color-muted)]">قيمة الصفقة: </span>
                           <span className="font-medium text-[var(--color-text)]">
-                            {formatNumber(f(c, 'dealValue', 'deal_value'))} ر.س
+                            <Currency
+                              value={f(c, 'dealValue', 'deal_value')}
+                              symbolClassName="w-3.5 h-3.5"
+                            />
                           </span>
                         </div>
-                        <div>
+                        <div className="commissions-page__mobile-card-item">
                           <span className="text-[var(--color-muted)]">العمولة: </span>
                           <span className="font-semibold text-[var(--color-text)]">
-                            {formatNumber(amount)} ر.س
+                            <Currency value={amount} symbolClassName="w-3.5 h-3.5" />
                           </span>
                         </div>
-                        <div>
+                        <div className="commissions-page__mobile-card-item">
                           <span className="text-[var(--color-muted)]">المدفوع: </span>
-                          <span style={{ color: 'var(--color-success)' }}>
-                            {formatNumber(paid)} ر.س
+                          <span className="text-[var(--color-success)]">
+                            <Currency value={paid} symbolClassName="w-3.5 h-3.5" />
                           </span>
                         </div>
-                        <div>
+                        <div className="commissions-page__mobile-card-item">
                           <span className="text-[var(--color-muted)]">المتبقي: </span>
-                          <span style={{ color: 'var(--color-danger)' }}>
-                            {formatNumber(remaining)} ر.س
+                          <span className="text-[var(--color-danger)]">
+                            <Currency value={remaining} symbolClassName="w-3.5 h-3.5" />
                           </span>
                         </div>
                       </div>
@@ -847,26 +852,27 @@ export function CommissionsPage({ setPage }) {
                         </p>
                       )}
                       {canWrite && (
-                        <div className="flex gap-2 border-t border-[var(--color-border)] pt-2">
+                        <div className="commissions-page__mobile-card-actions">
                           <button
+                            type="button"
                             onClick={() => setModal(c)}
-                            className="flex-1 py-1.5 rounded-lg text-xs font-medium text-[var(--color-primary)] hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
+                            className="btn-ghost flex-1 text-xs text-[var(--color-primary)]"
                           >
                             تعديل
                           </button>
                           {c.status !== 'paid' && (
                             <button
+                              type="button"
                               onClick={() => setPaymentModal(c)}
-                              className="flex-1 py-1.5 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
-                              style={{ color: 'var(--color-success)' }}
+                              className="btn-ghost flex-1 text-xs text-[var(--color-success)]"
                             >
                               دفعة
                             </button>
                           )}
                           <button
+                            type="button"
                             onClick={() => handleDelete(c.id)}
-                            className="py-1.5 px-3 rounded-lg text-xs font-medium hover:bg-[var(--color-bg)] border border-[var(--color-border)]"
-                            style={{ color: 'var(--color-danger)' }}
+                            className="btn-ghost text-xs text-[var(--color-danger)]"
                           >
                             حذف
                           </button>
@@ -883,7 +889,7 @@ export function CommissionsPage({ setPage }) {
         /* ═══ تبويب التقارير ═══ */
         <CommissionReports
           commissions={
-            agentOnly && currentAgentName
+            isAgentOnly && currentAgentName
               ? (commissions || []).filter(
                   (c) =>
                     (f(c, 'agentName', 'agent_name') || '').toLowerCase() ===
@@ -892,7 +898,7 @@ export function CommissionsPage({ setPage }) {
               : commissions || []
           }
           ledgerName={ledgerName}
-          agentOnly={agentOnly}
+          agentOnly={isAgentOnly}
         />
       )}
 
@@ -952,7 +958,7 @@ const REPORT_TABS = [
   { id: 'monthly', label: 'شهري' },
 ];
 
-function CommissionReports({ commissions, ledgerName, agentOnly }) {
+function CommissionReports({ commissions, ledgerName }) {
   const [reportTab, setReportTab] = useState('by_agent');
 
   // ─── تقرير حسب الوكيل ───
@@ -1078,13 +1084,13 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
   return (
     <div>
       {/* تبويبات التقارير الفرعية */}
-      <div className="flex gap-1 mb-4 bg-[var(--color-bg)] rounded-lg p-1 border border-[var(--color-border)]">
+      <div className="control-toolbar control-toolbar--segmented commissions-page__report-tabs mb-4">
         {REPORT_TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => setReportTab(tab.id)}
-            className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+            className={`commissions-page__tab py-2 rounded-md text-sm font-medium transition-colors ${
               reportTab === tab.id
                 ? 'bg-[var(--color-surface)] text-[var(--color-text)] shadow-sm'
                 : 'text-[var(--color-muted)] hover:text-[var(--color-text)]'
@@ -1096,7 +1102,7 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
       </div>
 
       {/* إجمالي التقرير */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="route-summary-grid route-summary-grid--triple mb-6">
         <SummaryCard
           label="عدد الصفقات"
           value={
@@ -1107,31 +1113,27 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
         <SummaryCard
           label="إجمالي العمولات"
           value={
-            <>
-              <span className="text-lg font-bold">
-                {formatNumber(reportData.reduce((s, r) => s + r.totalCommission, 0))}
-              </span>{' '}
-              <span className="text-xs">ر.س</span>
-            </>
+            <Currency
+              value={reportData.reduce((s, r) => s + r.totalCommission, 0)}
+              className="text-lg font-bold"
+            />
           }
           color="green"
         />
         <SummaryCard
           label="المتبقي"
           value={
-            <>
-              <span className="text-lg font-bold">
-                {formatNumber(reportData.reduce((s, r) => s + r.totalRemaining, 0))}
-              </span>{' '}
-              <span className="text-xs">ر.س</span>
-            </>
+            <Currency
+              value={reportData.reduce((s, r) => s + r.totalRemaining, 0)}
+              className="text-lg font-bold"
+            />
           }
           color="red"
         />
       </div>
 
       {/* الجدول + رسم بياني أفقي بسيط */}
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] overflow-hidden">
+      <div className="panel-card commissions-page__report-shell">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
@@ -1180,21 +1182,21 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
                     <td className="px-4 py-3 font-medium text-[var(--color-text)]">{label}</td>
                     <td className="px-4 py-3 text-[var(--color-muted)]">{row.count}</td>
                     <td className="px-4 py-3 text-[var(--color-text)]">
-                      {formatNumber(row.totalDeal)} ر.س
+                      <Currency value={row.totalDeal} symbolClassName="w-3.5 h-3.5" />
                     </td>
                     <td className="px-4 py-3 font-semibold text-[var(--color-text)]">
-                      {formatNumber(row.totalCommission)} ر.س
+                      <Currency value={row.totalCommission} symbolClassName="w-3.5 h-3.5" />
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--color-success)' }}>
-                      {formatNumber(row.totalPaid)} ر.س
+                      <Currency value={row.totalPaid} symbolClassName="w-3.5 h-3.5" />
                     </td>
                     <td className="px-4 py-3" style={{ color: 'var(--color-danger)' }}>
-                      {formatNumber(row.totalRemaining)} ر.س
+                      <Currency value={row.totalRemaining} symbolClassName="w-3.5 h-3.5" />
                     </td>
                     <td className="px-4 py-3 hidden md:table-cell">
                       <div
                         className="w-full h-4 bg-[var(--color-bg)] rounded-full overflow-hidden relative"
-                        title={`العمولة: ${formatNumber(row.totalCommission)} ر.س`}
+                        title={`العمولة: ${formatCurrency(row.totalCommission)}`}
                       >
                         <div
                           className="absolute inset-y-0 start-0 rounded-full"
@@ -1218,15 +1220,15 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
       </div>
 
       {/* مفتاح الرسم */}
-      <div className="flex gap-4 mt-3 text-xs text-[var(--color-muted)]">
-        <span className="flex items-center gap-1">
+      <div className="commissions-page__report-legend">
+        <span className="commissions-page__report-legend-item">
           <span
             className="w-3 h-3 rounded inline-block"
             style={{ background: 'var(--color-success)' }}
           />{' '}
           المدفوع
         </span>
-        <span className="flex items-center gap-1">
+        <span className="commissions-page__report-legend-item">
           <span
             className="w-3 h-3 rounded inline-block"
             style={{ background: 'var(--color-info-bg)' }}
@@ -1243,25 +1245,13 @@ function CommissionReports({ commissions, ledgerName, agentOnly }) {
 // ═══════════════════════════════════════
 function EmptyCommissions({ onAdd }) {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-16 h-16 rounded-full bg-[var(--color-bg)] flex items-center justify-center mb-4">
-        <Icons.percent size={32} className="text-[var(--color-muted)]" />
-      </div>
-      <h3 className="text-lg font-semibold text-[var(--color-text)] mb-1">لا توجد عمولات بعد</h3>
-      <p className="text-sm text-[var(--color-muted)] mb-4 max-w-xs">
-        سجّل عمولات صفقاتك لتتبع مستحقاتك المالية ومدفوعاتك
-      </p>
-      {onAdd && (
-        <button
-          type="button"
-          onClick={onAdd}
-          className="btn-primary"
-        >
-          <Icons.plus size={16} />
-          أضف أول عمولة
-        </button>
-      )}
-    </div>
+    <EmptyState
+      icon={<Icons.percent size={32} className="text-[var(--color-muted)]" />}
+      title="لا توجد عمولات بعد"
+      description="سجّل عمولات صفقاتك لتتبع المستحقات والمدفوعات من مكان واحد."
+      actionLabel={onAdd ? 'أضف أول عمولة' : undefined}
+      onAction={onAdd}
+    />
   );
 }
 
@@ -1376,7 +1366,7 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
         </FormField>
       </div>
 
-      <FormField id="cm-deal" label="قيمة الصفقة (ر.س)" error={errors.dealValue}>
+      <FormField id="cm-deal" label="قيمة الصفقة" error={errors.dealValue}>
         <input
           type="number"
           step="0.01"
@@ -1421,19 +1411,23 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
           <div className="flex justify-between mb-1">
             <span className="text-[var(--color-muted)]">عمولة المكتب:</span>
             <span className="font-semibold text-[var(--color-text)]">
-              {formatNumber(officeAmount)} ر.س
+              <Currency value={officeAmount} symbolClassName="w-3.5 h-3.5" />
             </span>
           </div>
           {safeNum(form.agentPercent, 0) > 0 && (
             <>
               <div className="flex justify-between mb-1">
                 <span className="text-[var(--color-muted)]">عمولة الوكيل:</span>
-                <span className="text-[var(--color-text)]">{formatNumber(agentAmount)} ر.س</span>
+                <Currency
+                  value={agentAmount}
+                  className="text-[var(--color-text)]"
+                  symbolClassName="w-3.5 h-3.5"
+                />
               </div>
               <div className="flex justify-between border-t border-[var(--color-border)] pt-1 mt-1">
                 <span className="text-[var(--color-muted)]">صافي المكتب:</span>
                 <span className="font-bold text-[var(--color-text)]">
-                  {formatNumber(netOffice)} ر.س
+                  <Currency value={netOffice} symbolClassName="w-3.5 h-3.5" />
                 </span>
               </div>
             </>
@@ -1461,17 +1455,10 @@ function CommissionForm({ initial, ledgers, activeLedgerId, onSave, onCancel }) 
       </FormField>
 
       <div className="flex gap-3 justify-end mt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-secondary"
-        >
+        <button type="button" onClick={onCancel} className="btn-secondary">
           إلغاء
         </button>
-        <button
-          type="submit"
-          className="btn-primary"
-        >
+        <button type="submit" className="btn-primary">
           {isEdit ? 'حفظ التعديلات' : 'إضافة العمولة'}
         </button>
       </div>
@@ -1503,7 +1490,7 @@ function PaymentForm({ commission, onSave, onCancel }) {
       return;
     }
     if (val > remaining) {
-      setError(`المبلغ يتجاوز المتبقي (${formatNumber(remaining)} ر.س)`);
+      setError(`المبلغ يتجاوز المتبقي (${formatCurrency(remaining)})`);
       return;
     }
     setError('');
@@ -1519,24 +1506,26 @@ function PaymentForm({ commission, onSave, onCancel }) {
         <div className="grid grid-cols-3 gap-2 text-sm">
           <div>
             <span className="text-[var(--color-muted)]">العمولة</span>
-            <p className="font-medium text-[var(--color-text)]">{formatNumber(totalAmount)} ر.س</p>
+            <p className="font-medium text-[var(--color-text)]">
+              <Currency value={totalAmount} symbolClassName="w-3.5 h-3.5" />
+            </p>
           </div>
           <div>
             <span className="text-[var(--color-muted)]">المدفوع</span>
             <p className="font-medium" style={{ color: 'var(--color-success)' }}>
-              {formatNumber(currentPaid)} ر.س
+              <Currency value={currentPaid} symbolClassName="w-3.5 h-3.5" />
             </p>
           </div>
           <div>
             <span className="text-[var(--color-muted)]">المتبقي</span>
             <p className="font-bold" style={{ color: 'var(--color-danger)' }}>
-              {formatNumber(remaining)} ر.س
+              <Currency value={remaining} symbolClassName="w-3.5 h-3.5" />
             </p>
           </div>
         </div>
       </div>
 
-      <FormField id="pay-amount" label="مبلغ الدفعة (ر.س)" error={error}>
+      <FormField id="pay-amount" label="مبلغ الدفعة" error={error}>
         <input
           type="number"
           step="0.01"
@@ -1573,16 +1562,12 @@ function PaymentForm({ commission, onSave, onCancel }) {
           onMouseEnter={(e) => (e.target.style.opacity = '0.8')}
           onMouseLeave={(e) => (e.target.style.opacity = '1')}
         >
-          دفع المبلغ كاملاً ({formatNumber(remaining)} ر.س)
+          دفع المبلغ كاملاً ({formatCurrency(remaining)})
         </button>
       )}
 
       <div className="flex gap-3 justify-end mt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="btn-secondary"
-        >
+        <button type="button" onClick={onCancel} className="btn-secondary">
           إلغاء
         </button>
         <button

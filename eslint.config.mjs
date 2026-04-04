@@ -60,6 +60,9 @@ export default [
         DOMParser: 'readonly',
         XMLSerializer: 'readonly',
         DOMException: 'readonly',
+        HTMLInputElement: 'readonly',
+        HTMLTextAreaElement: 'readonly',
+        Intl: 'readonly',
         requestIdleCallback: 'readonly',
       },
     },
@@ -69,6 +72,7 @@ export default [
     rules: {
       // تجاهل مؤقت
       'no-unused-vars': 'warn',
+      'react/jsx-uses-vars': 'error',
       'react/prop-types': 'off',
       'react/display-name': 'off',
       'no-console': ['warn', { allow: ['warn', 'error'] }],

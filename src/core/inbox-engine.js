@@ -56,12 +56,6 @@ function addYears(dateStr, n) {
   return dateStrRiyadh(d);
 }
 
-/** بداية اليوم (00:00) بالمللي ثانية من تاريخ YYYY-MM-DD في الرياض */
-function startOfDayMs(dateStr) {
-  const ms = parseDateStr(dateStr);
-  return ms != null ? ms : null;
-}
-
 /** تقدم تاريخ الاستحقاق التالي حسب التكرار */
 function nextDueByFrequency(dateStr, frequency) {
   const f = String(frequency || '').toLowerCase();
@@ -225,8 +219,6 @@ export function calculateInbox(ledgerId, options = {}) {
   const transactions = options.transactions || getTransactionsForLedger(lid);
 
   const todayStr = dateStrRiyadh();
-  const todayMs = parseDateStr(todayStr) || 0;
-
   const now = new Date();
   const weekStart = new Date(now);
   const dayOfWeek = weekStart.getDay();
@@ -236,11 +228,7 @@ export function calculateInbox(ledgerId, options = {}) {
   const weekEnd = new Date(weekStart);
   weekEnd.setDate(weekEnd.getDate() + 6);
   const weekEndStr = dateStrRiyadh(weekEnd);
-  const weekStartStr = dateStrRiyadh(weekStart);
-
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  const monthStartStr = dateStrRiyadh(monthStart);
   const monthEndStr = dateStrRiyadh(monthEnd);
 
   const fromDate = addMonths(todayStr, -12);

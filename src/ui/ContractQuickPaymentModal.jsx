@@ -26,6 +26,7 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
     properties,
     units,
     createContractPayment,
+    updateContractPayment,
     deleteContractPayment,
     createTransaction,
     createContractReceipt,
@@ -35,14 +36,10 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
   // استخراج بيانات العقد المرتبط
   const contract = contracts.find((c) => c.id === dueItem?.contractId) || null;
   const property = contract
-    ? properties.find(
-        (p) => p.id === (contract.propertyId || contract.property_id)
-      ) || null
+    ? properties.find((p) => p.id === (contract.propertyId || contract.property_id)) || null
     : null;
   const unit = contract
-    ? units.find(
-        (u) => u.id === (contract.unitId || contract.unit_id)
-      ) || null
+    ? units.find((u) => u.id === (contract.unitId || contract.unit_id)) || null
     : null;
 
   // حالة النموذج — مملوء مسبقاً بالمبلغ المتبقي
@@ -103,7 +100,11 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
       tenantName: dueItem.tenantName,
       installmentNumber: dueItem.installmentNumber ? String(dueItem.installmentNumber) : '',
       remainingAmount: dueItem.remainingAmount,
+      currentDueStatus: dueItem.status,
+      currentPaidAmount: dueItem.paidAmount,
+      currentPaidDate: dueItem.paidDate || null,
       createContractPayment,
+      updateContractPayment,
       deleteContractPayment,
       createTransaction,
       createContractReceipt,
@@ -123,7 +124,20 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
     } else {
       toast.error(result.error?.message || 'تعذر تسجيل الدفعة');
     }
-  }, [contract, dueItem, form, property, unit, createContractPayment, deleteContractPayment, createTransaction, createContractReceipt, toast, onSuccess]);
+  }, [
+    contract,
+    dueItem,
+    form,
+    property,
+    unit,
+    createContractPayment,
+    updateContractPayment,
+    deleteContractPayment,
+    createTransaction,
+    createContractReceipt,
+    toast,
+    onSuccess,
+  ]);
 
   // إغلاق عند الضغط على الخلفية
   const handleBackdropClick = useCallback(
@@ -137,17 +151,12 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
 
   // إذا يوجد إيصال — عرض نافذة الإيصال
   if (receipt) {
-    return (
-      <ReceiptModal
-        receipt={receipt}
-        onClose={onClose}
-      />
-    );
+    return <ReceiptModal receipt={receipt} onClose={onClose} />;
   }
 
-  const displayName = [dueItem.tenantName, dueItem.propertyName, dueItem.unitName]
-    .filter(Boolean)
-    .join(' — ') || 'مستحق عقد';
+  const displayName =
+    [dueItem.tenantName, dueItem.propertyName, dueItem.unitName].filter(Boolean).join(' — ') ||
+    'مستحق عقد';
 
   return (
     <div
@@ -160,29 +169,21 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
       aria-labelledby="contract-qp-title"
     >
       <div
-        className="modal-sheet w-full max-w-md bg-[var(--color-surface)] rounded-t-2xl md:rounded-2xl p-5 max-h-[85vh] overflow-y-auto"
+        className="modal-sheet modal-surface modal-surface--md max-h-[85vh] overflow-y-auto"
         dir="rtl"
       >
         {/* رأس النافذة */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="modal-sheet__header">
           <h2 id="contract-qp-title" className="text-lg font-bold text-[var(--color-text)]">
             تسجيل دفعة عقد
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
-            aria-label="إغلاق"
-          >
+          <button type="button" onClick={onClose} className="modal-sheet__close" aria-label="إغلاق">
             ✕
           </button>
         </div>
 
         {/* معلومات الاستحقاق */}
-        <div
-          className="rounded-lg p-3 mb-4"
-          style={{ background: 'var(--color-bg)' }}
-        >
+        <div className="modal-sheet__notice mb-4">
           <p className="text-sm font-medium text-[var(--color-text)]">{displayName}</p>
           <div className="flex flex-wrap gap-4 mt-2 text-xs text-[var(--color-muted)]">
             {dueItem.dueDate && <span>الاستحقاق: {dueItem.dueDate}</span>}
@@ -209,10 +210,7 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
               <p
                 className="text-sm font-bold"
                 style={{
-                  color:
-                    dueItem.daysOverdue > 0
-                      ? 'var(--color-danger)'
-                      : 'var(--color-text)',
+                  color: dueItem.daysOverdue > 0 ? 'var(--color-danger)' : 'var(--color-text)',
                 }}
               >
                 {formatCurrency(dueItem.remainingAmount)}
@@ -220,10 +218,7 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
             </div>
           </div>
           {dueItem.daysOverdue > 0 && (
-            <p
-              className="text-xs mt-2 font-medium"
-              style={{ color: 'var(--color-danger)' }}
-            >
+            <p className="text-xs mt-2 font-medium" style={{ color: 'var(--color-danger)' }}>
               متأخر {dueItem.daysOverdue} يوم
             </p>
           )}
@@ -232,7 +227,10 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
         {/* حقول النموذج */}
         <div className="space-y-3">
           <div>
-            <label htmlFor="cqp-amount" className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            <label
+              htmlFor="cqp-amount"
+              className="block text-sm font-medium text-[var(--color-text)] mb-1"
+            >
               مبلغ الدفعة
             </label>
             <input
@@ -256,7 +254,10 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
           </div>
 
           <div>
-            <label htmlFor="cqp-date" className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            <label
+              htmlFor="cqp-date"
+              className="block text-sm font-medium text-[var(--color-text)] mb-1"
+            >
               تاريخ الدفعة
             </label>
             <input
@@ -269,7 +270,10 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
           </div>
 
           <div>
-            <label htmlFor="cqp-method" className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            <label
+              htmlFor="cqp-method"
+              className="block text-sm font-medium text-[var(--color-text)] mb-1"
+            >
               طريقة الدفع
             </label>
             <select
@@ -287,7 +291,10 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
           </div>
 
           <div>
-            <label htmlFor="cqp-note" className="block text-sm font-medium text-[var(--color-text)] mb-1">
+            <label
+              htmlFor="cqp-note"
+              className="block text-sm font-medium text-[var(--color-text)] mb-1"
+            >
               ملاحظة (اختياري)
             </label>
             <textarea
@@ -311,11 +318,7 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
           >
             {saving ? 'جاري التسجيل...' : 'تسجيل الدفعة'}
           </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="btn-secondary"
-          >
+          <button type="button" onClick={onClose} className="btn-secondary">
             إلغاء
           </button>
         </div>

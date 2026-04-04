@@ -3,14 +3,9 @@
   قائمة بأقرب 5 مستحقات مع تسمية زمنية وشارة متكرر وزر عرض الكل.
 */
 import { useMemo } from 'react';
+import { formatCurrency } from '../../utils/format.jsx';
 
 const MAX_ITEMS = 5;
-
-function formatAmount(n) {
-  if (n == null || !Number.isFinite(Number(n))) return '0';
-  const num = Number(n);
-  return num.toLocaleString('ar-SA', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-}
 
 function getTimeLabel(daysRemaining) {
   if (daysRemaining == null) return '';
@@ -35,10 +30,7 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
 
   if (sorted.length === 0) {
     return (
-      <div
-        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/80 p-5 text-center text-[var(--color-muted)]"
-        dir="rtl"
-      >
+      <div className="pulse-card pulse-card__empty" dir="rtl">
         <h2 className="font-semibold text-[var(--color-text)] mb-1">أقرب المستحقات</h2>
         <p className="text-sm">لا توجد مستحقات قريبة.</p>
       </div>
@@ -46,11 +38,8 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
   }
 
   return (
-    <div
-      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden"
-      dir="rtl"
-    >
-      <div className="px-4 py-3 border-b border-[var(--color-border)]">
+    <div className="panel-card pulse-card" dir="rtl">
+      <div className="pulse-card__header">
         <h2 className="font-semibold text-[var(--color-text)]">أقرب المستحقات</h2>
       </div>
       <ul className="divide-y divide-[var(--color-border)]">
@@ -87,19 +76,18 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
                 }}
               >
                 {due.type === 'income' ? '+' : '-'}
-                {formatAmount(Math.abs(Number(due.amount) || 0))} ر.س
+                {formatCurrency(Math.abs(Number(due.amount) || 0))}
               </span>
             </div>
           </li>
         ))}
       </ul>
       {onShowAll && (
-        <div className="px-4 py-3 border-t border-[var(--color-border)] bg-[var(--color-bg)]/50 text-center">
+        <div className="pulse-card__footer text-center">
           <button
             type="button"
             onClick={onShowAll}
-            className="text-sm font-medium hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="pulse-card__link text-sm font-medium"
           >
             عرض كل المستحقات
           </button>

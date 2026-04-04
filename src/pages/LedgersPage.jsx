@@ -166,30 +166,57 @@ const LedgersPage = ({ setPage }) => {
     <LedgerTabsShell>
       <LedgerHeader tab={tab} onTabSelect={handleLedgerTabSelect} />
       {setPage && (
-        <div className="ledgers-quick-links no-print" dir="rtl">
-          <span className="ledgers-quick-links-label">سريع:</span>
-          <button
-            type="button"
-            onClick={() => setPage('pulse')}
-            className="btn-ghost !min-h-0 !px-0 !py-0 text-sm"
-          >
-            النبض المالي
+        <div className="ledger-quick-nav no-print" dir="rtl">
+          <button type="button" onClick={() => setPage('pulse')} className="ledger-quick-nav__link">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+            </svg>
+            <span>النبض المالي</span>
           </button>
-          <span className="ledgers-quick-links-sep">|</span>
-          <button
-            type="button"
-            onClick={() => setPage('inbox')}
-            className="btn-ghost !min-h-0 !px-0 !py-0 text-sm"
-          >
-            المستحقات
+          <button type="button" onClick={() => setPage('inbox')} className="ledger-quick-nav__link">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12" />
+              <path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" />
+            </svg>
+            <span>المستحقات</span>
           </button>
-          <span className="ledgers-quick-links-sep">|</span>
           <button
             type="button"
             onClick={() => setPage('transactions')}
-            className="btn-ghost !min-h-0 !px-0 !py-0 text-sm"
+            className="ledger-quick-nav__link"
           >
-            الحركات
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
+            <span>الحركات</span>
           </button>
         </div>
       )}

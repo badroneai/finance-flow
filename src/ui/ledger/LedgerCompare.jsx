@@ -59,156 +59,179 @@ export default function LedgerCompare() {
     'اختر الدفاتر';
 
   return (
-    <div className="panel-card ledger-compare ledger-compare-shell" dir="rtl">
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-        <h3 className="text-lg font-bold text-[var(--color-text)]">مقارنة الدفاتر</h3>
-        <div className="relative" ref={dropdownRef}>
-          <button
-            type="button"
-            onClick={() => setDropdownOpen((v) => !v)}
-            className="btn-secondary ledger-compare__trigger u-text-start"
-            aria-haspopup="listbox"
-            aria-expanded={dropdownOpen}
-          >
-            {selectedNames}
-            <span className="inline-block ms-2 text-[var(--color-muted)]">
-              {dropdownOpen ? '\u25B2' : '\u25BC'}
-            </span>
-          </button>
-          {dropdownOpen && (
-            <div role="listbox" className="ledger-compare__menu">
-              {allLedgers.map((l) => {
-                const checked = selectedIds.includes(l.id);
-                const disabled = !checked && selectedIds.length >= 5;
-                return (
-                  <label
-                    key={l.id}
-                    className={`flex items-center gap-2 px-3 py-2 text-sm cursor-pointer ${disabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[var(--color-bg)]'}`}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={checked}
-                      disabled={disabled}
-                      onChange={() => toggleLedger(l.id)}
-                      className="rounded border-[var(--color-border)]"
-                    />
-                    <span className="truncate">{l.name || l.id}</span>
-                  </label>
-                );
-              })}
-              {allLedgers.length === 0 && (
-                <p className="px-3 py-2 text-sm text-[var(--color-muted)]">لا توجد دفاتر</p>
+    <div
+      className="panel-card ledger-panel ledger-content-panel ledger-compare ledger-compare-shell"
+      dir="rtl"
+    >
+      <div className="ledger-view">
+        <section className="ledger-layer ledger-layer--controls">
+          <div className="ledger-layer__header">
+            <span className="ledger-layer__label">الإجراءات</span>
+            <p className="ledger-layer__hint">
+              اختر الدفاتر المراد مقارنتها أولاً، ثم اقرأ البطاقات والملاحظات في الأسفل.
+            </p>
+          </div>
+          <div className="ledger-panel__header">
+            <div>
+              <span className="ledger-panel__eyebrow">اختيار ومقارنة</span>
+              <h3 className="ledger-panel__title">مقارنة الدفاتر</h3>
+              <p className="ledger-panel__subtitle">
+                قارن بين أكثر من دفتر لمعرفة الصحة التشغيلية والصافي والدفاتر التي تحتاج مراجعة.
+              </p>
+            </div>
+            <div className="ledger-compare__dropdown-anchor" ref={dropdownRef}>
+              <button
+                type="button"
+                onClick={() => setDropdownOpen((v) => !v)}
+                className="btn-secondary ledger-compare__trigger u-text-start"
+                aria-haspopup="listbox"
+                aria-expanded={dropdownOpen}
+              >
+                {selectedNames}
+                <span className="ledger-compare__trigger-icon">
+                  {dropdownOpen ? '\u25B2' : '\u25BC'}
+                </span>
+              </button>
+              {dropdownOpen && (
+                <div role="listbox" className="ledger-compare__menu">
+                  {allLedgers.map((l) => {
+                    const checked = selectedIds.includes(l.id);
+                    const disabled = !checked && selectedIds.length >= 5;
+                    return (
+                      <label
+                        key={l.id}
+                        className={`ledger-compare__menu-item ${disabled ? 'ledger-compare__menu-item--disabled' : ''}`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={() => toggleLedger(l.id)}
+                        />
+                        <span>{l.name || l.id}</span>
+                      </label>
+                    );
+                  })}
+                  {allLedgers.length === 0 && (
+                    <p className="ledger-compare__menu-empty">لا توجد دفاتر</p>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-      </div>
-
-      {!compareResult && (
-        <p className="text-sm text-[var(--color-muted)] py-6 text-center">
-          اختر دفترين على الأقل (وحتى 5) للمقارنة.
-        </p>
-      )}
-
-      {compareResult && compareResult.ledgers.length > 0 && (
-        <>
-          <div className="overflow-x-auto -mx-1 pb-2">
-            <div className="ledger-compare__cards">
-              {compareResult.ledgers.map((l) => {
-                const isBest = compareResult.bestPerformer?.ledgerId === l.id;
-                const isWorst =
-                  compareResult.worstPerformer?.ledgerId === l.id &&
-                  (l.roi < 1 || l.overdueCount > 0);
-                return (
-                  <div key={l.id} className="ledger-compare__card">
-                    <p className="font-bold text-[var(--color-text)] truncate mb-3" title={l.name}>
-                      {l.name}
-                    </p>
-                    <p className="text-sm text-[var(--color-muted)] mb-1">صحة: {l.healthScore}</p>
-                    <div className="h-2 rounded-full bg-[var(--color-bg)] overflow-hidden mb-3">
-                      <div
-                        className="h-full rounded-full transition-all"
-                        style={{
-                          width: `${Math.min(100, Math.max(0, l.healthScore))}%`,
-                          background: healthBarColor(l.healthScore),
-                        }}
-                      />
-                    </div>
-                    <div className="space-y-1 text-sm">
-                      <p className="text-[var(--color-text)]">
-                        دخل: {formatShort(l.totalIncome30d)}
-                      </p>
-                      <p className="text-[var(--color-text)]">
-                        صرف: {formatShort(l.totalExpense30d)}
-                      </p>
-                      <p
-                        style={{
-                          color:
-                            l.netCashflow30d >= 0 ? 'var(--color-success)' : 'var(--color-danger)',
-                          fontWeight: 500,
-                        }}
-                      >
-                        صافي: {l.netCashflow30d >= 0 ? '+' : ''}
-                        {formatShort(l.netCashflow30d)}
-                      </p>
-                    </div>
-                    <p
-                      style={{
-                        marginTop: '0.5rem',
-                        fontSize: '0.875rem',
-                        fontWeight: 500,
-                        color: l.roi >= 1 ? 'var(--color-success)' : 'var(--color-danger)',
-                      }}
-                    >
-                      ROI: {l.roi.toFixed(1)}x
-                    </p>
-                    <div className="mt-3">
-                      {isBest && (
-                        <span
-                          className="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                          style={{
-                            background: 'var(--color-success-bg)',
-                            color: 'var(--color-success)',
-                          }}
-                        >
-                          الأفضل
-                        </span>
-                      )}
-                      {isWorst && !isBest && (
-                        <span
-                          className="inline-block px-2 py-0.5 rounded text-xs font-medium"
-                          style={{
-                            background: 'var(--color-warning-bg)',
-                            color: 'var(--color-warning)',
-                          }}
-                        >
-                          يحتاج مراجعة
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
           </div>
+        </section>
 
-          {compareResult.recommendations && compareResult.recommendations.length > 0 && (
-            <div
-              className="ledger-compare__notice report-highlight report-highlight--neutral"
-              style={{ background: 'var(--color-warning-bg)', borderColor: 'var(--color-warning)' }}
-            >
-              <p className="text-sm font-medium mb-1" style={{ color: 'var(--color-warning)' }}>
-                توصية
+        <section className="ledger-layer">
+          <div className="ledger-layer__header">
+            <span className="ledger-layer__label">المحتوى</span>
+            <p className="ledger-layer__hint">
+              هنا تظهر القراءة المقارنة نفسها عند اختيار دفترين أو أكثر.
+            </p>
+          </div>
+          {!compareResult && (
+            <div className="ledger-empty-wrap">
+              <div className="ledger-empty-wrap__note">
+                <p className="ledger-empty-wrap__title">ابدأ باختيار دفترين على الأقل</p>
+                <p className="ledger-empty-wrap__description">
+                  يمكنك مقارنة حتى 5 دفاتر لرؤية الصحة التشغيلية والصافي والتوصيات في عرض واحد.
+                </p>
+              </div>
+            </div>
+          )}
+
+          {compareResult && compareResult.ledgers.length > 0 && (
+            <div className="ledger-compare__scroll-wrap">
+              <div className="ledger-compare__cards">
+                {compareResult.ledgers.map((l) => {
+                  const isBest = compareResult.bestPerformer?.ledgerId === l.id;
+                  const isWorst =
+                    compareResult.worstPerformer?.ledgerId === l.id &&
+                    (l.roi < 1 || l.overdueCount > 0);
+                  return (
+                    <div key={l.id} className="ledger-compare__card">
+                      <p
+                        className="ledger-item-card__title ledger-compare__card-title"
+                        title={l.name}
+                      >
+                        {l.name}
+                      </p>
+                      <div className="ledger-compare__score">
+                        <span>الصحة التشغيلية</span>
+                        <strong>{l.healthScore}</strong>
+                      </div>
+                      <div className="ledger-compare__health">
+                        <div
+                          className="ledger-compare__health-bar"
+                          style={{
+                            width: `${Math.min(100, Math.max(0, l.healthScore))}%`,
+                            background: healthBarColor(l.healthScore),
+                          }}
+                        />
+                      </div>
+                      <div className="ledger-compare__metrics">
+                        <div className="ledger-compare__metric">
+                          <span className="ledger-compare__metric-label">دخل</span>
+                          <span className="ledger-compare__metric-value">
+                            {formatShort(l.totalIncome30d)}
+                          </span>
+                        </div>
+                        <div className="ledger-compare__metric">
+                          <span className="ledger-compare__metric-label">صرف</span>
+                          <span className="ledger-compare__metric-value">
+                            {formatShort(l.totalExpense30d)}
+                          </span>
+                        </div>
+                        <div className="ledger-compare__metric">
+                          <span className="ledger-compare__metric-label">صافي</span>
+                          <span
+                            className={`ledger-compare__metric-value ${l.netCashflow30d >= 0 ? 'is-positive' : 'is-negative'}`}
+                          >
+                            {l.netCashflow30d >= 0 ? '+' : ''}
+                            {formatShort(l.netCashflow30d)}
+                          </span>
+                        </div>
+                        <div className="ledger-compare__metric">
+                          <span className="ledger-compare__metric-label">ROI</span>
+                          <span
+                            className={`ledger-compare__metric-value ${l.roi >= 1 ? 'is-positive' : 'is-negative'}`}
+                          >
+                            {l.roi.toFixed(1)}x
+                          </span>
+                        </div>
+                      </div>
+                      <div className="ledger-compare__badge-row">
+                        {isBest && <span className="ledger-item-card__badge">الأفضل</span>}
+                        {isWorst && !isBest && (
+                          <span className="ledger-item-card__badge">يحتاج مراجعة</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </section>
+
+        {compareResult?.recommendations && compareResult.recommendations.length > 0 && (
+          <section className="ledger-layer ledger-layer--secondary">
+            <div className="ledger-layer__header">
+              <span className="ledger-layer__label">الثانوي</span>
+              <p className="ledger-layer__hint">
+                التوصيات تأتي بعد قراءة المقارنة الأساسية حتى لا تنافس النتائج نفسها بصرياً.
               </p>
-              <ul className="text-sm space-y-1" style={{ color: 'var(--color-warning)' }}>
+            </div>
+            <div className="ledger-compare__notice ledger-callout ledger-callout--warning">
+              <p className="ledger-compare__notice-title">توصية</p>
+              <ul className="ledger-compare__notice-list">
                 {compareResult.recommendations.map((r, i) => (
                   <li key={i}>{r.message}</li>
                 ))}
               </ul>
             </div>
-          )}
-        </>
-      )}
+          </section>
+        )}
+      </div>
     </div>
   );
 }

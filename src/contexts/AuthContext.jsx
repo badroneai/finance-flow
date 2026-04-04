@@ -261,12 +261,6 @@ export const AuthProvider = ({ children }) => {
   }, [user, fetchUserData, profile]);
 
   // ── أدوار المستخدم (computed) ──────────────────────────────────
-  const role = profile?.role || null;
-  const isOwner = role === 'owner';
-  const isManager = role === 'manager';
-  const isAgent = role === 'agent';
-  const isSuperAdmin = role === 'super_admin';
-
   // ── القيمة المُقدّمة للسياق ──────────────────────────────────
   // في وضع Demo: تجاوز بيانات المستخدم ببيانات تجريبية
   const effectiveProfile = isDemo ? demoProfile : profile;

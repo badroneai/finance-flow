@@ -8,6 +8,7 @@ import { generateSmartAlerts } from '../../core/alert-engine.js';
 import { getActiveLedgerId } from '../../core/ledger-store.js';
 import { AlertManager } from '../../core/alert-manager.js';
 import { useData } from '../../contexts/DataContext.jsx';
+import { formatCurrency } from '../../utils/format.jsx';
 
 const ICON_BY_TYPE = {
   cashflow_crisis: 'cashflow',
@@ -153,7 +154,6 @@ export default function AlertCenter({
   setPage,
   alerts,
   fetchTime,
-  criticalFirst,
   refresh,
   handleAction,
   handleDismiss,
@@ -267,8 +267,7 @@ export default function AlertCenter({
                       <p className="font-medium text-[var(--color-text)] text-sm">{alert.title}</p>
                       <p className="text-xs text-[var(--color-muted)] mt-0.5">
                         {formatHoursAgo(Date.now() - fetchTime)}
-                        {alert.amount > 0 &&
-                          ` · ${Number(alert.amount).toLocaleString('ar-SA')} ر.س`}
+                        {alert.amount > 0 && ` · ${formatCurrency(alert.amount)}`}
                       </p>
                       <div className="flex flex-wrap gap-2 mt-2">
                         <button

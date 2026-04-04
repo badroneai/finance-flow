@@ -11,7 +11,7 @@
  */
 
 import { getLedgers, getActiveLedgerId, getRecurringItems } from './ledger-store.js';
-import { dataStore, getTransactionsForLedger } from './dataStore.js';
+import { getTransactionsForLedger } from './dataStore.js';
 import { buildLedgerInbox, computeCashPlan } from './ledger-planner.js';
 import { computeLedgerHealth, computeComplianceShield } from './ledger-health.js';
 import { computePL } from './ledger-analytics.js';
@@ -90,7 +90,7 @@ export function calculateHealthScore(ledgerId, options = {}) {
   });
 
   // 40%: انضباط الدفع (disciplineRatio 0–1)
-  const disciplineScore = Math.min(40, Math.round((Number(health?.disciplineRatio) ?? 0) * 40));
+  const disciplineScore = Math.min(40, Math.round((Number(health?.disciplineRatio) || 0) * 40));
 
   // 20%: نسبة دخل/مصروف (لا تتجاوز الميزانية)
   const pl = computePL({ transactions: txs });

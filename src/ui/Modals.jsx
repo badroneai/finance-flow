@@ -69,7 +69,7 @@ export const ConfirmDialog = ({
     >
       <div
         ref={dialogRef}
-        className={`confirm-modal max-w-sm w-full p-6 ${danger ? 'confirm-modal danger' : ''}`}
+        className={`confirm-modal modal-surface modal-surface--sm p-6 ${danger ? 'confirm-modal danger' : ''}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -100,18 +100,16 @@ export const ConfirmDialog = ({
           </p>
         ) : null}
         <div className="confirm-actions flex gap-3 justify-end mt-4">
-          <button
-            onClick={onCancel}
-            className="btn-secondary px-4 py-2 rounded-lg text-sm font-medium"
-            style={{ background: 'var(--color-bg)', color: 'var(--color-text)' }}
-            aria-label="تراجع"
-          >
+          <button onClick={onCancel} className="btn-secondary" aria-label="تراجع">
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded-lg text-white text-sm font-medium"
-            style={{ background: danger ? 'var(--color-danger)' : 'var(--color-info)' }}
+            className={danger ? 'btn-primary' : 'btn-primary'}
+            style={{
+              background: danger ? 'var(--color-danger)' : 'var(--color-primary)',
+              color: '#fff',
+            }}
             aria-label="تأكيد"
           >
             {confirmLabel || 'تأكيد'}
@@ -142,7 +140,7 @@ export const Modal = ({ open, onClose, title, children, wide = false }) => {
     >
       <div
         ref={dialogRef}
-        className={`modal-dialog mt-8 mb-8 w-full ${wide ? 'max-w-3xl' : 'max-w-lg'}`}
+        className={`modal-dialog mt-8 mb-8 modal-surface ${wide ? 'max-w-3xl' : 'modal-surface--md'}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -152,11 +150,7 @@ export const Modal = ({ open, onClose, title, children, wide = false }) => {
           <h3 id="modalTitle" className="modal-title">
             {title}
           </h3>
-          <button
-            onClick={onClose}
-            className="modal-close"
-            aria-label="إغلاق"
-          >
+          <button onClick={onClose} className="modal-close" aria-label="إغلاق">
             <Icons.x size={20} />
           </button>
         </div>

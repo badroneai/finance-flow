@@ -12,21 +12,24 @@ describe('contract-payment-service', () => {
 
   // دوال وهمية — تحاكي DataContext
   const makeCreateContractPayment = (shouldFail = false) =>
-    vi.fn().mockResolvedValue(
-      shouldFail
-        ? { data: null, error: { message: 'فشل حفظ الدفعة' } }
-        : { data: { id: 'pay-1' }, error: null }
-    );
+    vi
+      .fn()
+      .mockResolvedValue(
+        shouldFail
+          ? { data: null, error: { message: 'فشل حفظ الدفعة' } }
+          : { data: { id: 'pay-1' }, error: null }
+      );
 
   const makeCreateTransaction = (shouldFail = false) =>
-    vi.fn().mockResolvedValue(
-      shouldFail
-        ? { data: null, error: { message: 'فشل الحركة' } }
-        : { data: { id: 'tx-1' }, error: null }
-    );
+    vi
+      .fn()
+      .mockResolvedValue(
+        shouldFail
+          ? { data: null, error: { message: 'فشل الحركة' } }
+          : { data: { id: 'tx-1' }, error: null }
+      );
 
-  const makeDeleteContractPayment = () =>
-    vi.fn().mockResolvedValue({ error: null });
+  const makeDeleteContractPayment = () => vi.fn().mockResolvedValue({ error: null });
 
   it('يسجل دفعة كاملة بنجاح', async () => {
     const createPayment = makeCreateContractPayment();
@@ -176,6 +179,74 @@ describe('contract-payment-service', () => {
     expect(createTx).not.toHaveBeenCalled();
   });
 
+  // ═══════════════════════════════════════
+  // اختبار تحديث القسط المجدول (dueId موجود + updateContractPayment)
+  // ═══════════════════════════════════════
+  it('يحدّث القسط المجدول بدل إنشاء سطر جديد عند وجود dueId', async () => {
+    const createPayment = makeCreateContractPayment();
+    const createTx = makeCreateTransaction();
+    const updatePayment = vi.fn().mockResolvedValue({
+      data: { id: 'due-1', status: 'paid' },
+      error: null,
+    });
+
+    const result = await recordContractPayment({
+      contract: mockContract,
+      formData: {
+        amount: 3000,
+        date: '2026-03-15',
+        paymentMethod: 'bank_transfer',
+        dueId: 'due-1',
+        note: 'سداد قسط',
+      },
+      remainingAmount: 3000,
+      createContractPayment: createPayment,
+      updateContractPayment: updatePayment,
+      createTransaction: createTx,
+    });
+
+    expect(result.success).toBe(true);
+    // تم تحديث القسط الموجود بدلاً من إنشاء سطر جديد
+    expect(updatePayment).toHaveBeenCalledOnce();
+    expect(updatePayment).toHaveBeenCalledWith(
+      'due-1',
+      expect.objectContaining({
+        status: 'paid',
+        paidAmount: 3000,
+        paidDate: '2026-03-15',
+        paymentMethod: 'bank_transfer',
+      })
+    );
+    // لم يتم إنشاء سطر جديد
+    expect(createPayment).not.toHaveBeenCalled();
+    // تم إنشاء الحركة المالية
+    expect(createTx).toHaveBeenCalledOnce();
+  });
+
+  it('ينشئ سطراً جديداً عند عدم وجود dueId حتى مع وجود updateContractPayment', async () => {
+    const createPayment = makeCreateContractPayment();
+    const createTx = makeCreateTransaction();
+    const updatePayment = vi.fn();
+
+    const result = await recordContractPayment({
+      contract: mockContract,
+      formData: {
+        amount: 1000,
+        date: '2026-03-15',
+        paymentMethod: 'cash',
+        // لا dueId
+      },
+      createContractPayment: createPayment,
+      updateContractPayment: updatePayment,
+      createTransaction: createTx,
+    });
+
+    expect(result.success).toBe(true);
+    // لم يتم تحديث — بل إنشاء جديد
+    expect(updatePayment).not.toHaveBeenCalled();
+    expect(createPayment).toHaveBeenCalledOnce();
+  });
+
   it('يمرر dueId فارغ إذا لم يُحدد', async () => {
     const createPayment = makeCreateContractPayment();
     const createTx = makeCreateTransaction();
@@ -203,7 +274,10 @@ describe('contract-payment-service', () => {
       vi.fn().mockResolvedValue(
         shouldFail
           ? { data: null, error: { message: 'فشل حفظ السند' } }
-          : { data: { id: 'rcp-1', receiptNumber: 'RCP-20260315-ABCD', amount: 1000 }, error: null }
+          : {
+              data: { id: 'rcp-1', receiptNumber: 'RCP-20260315-ABCD', amount: 1000 },
+              error: null,
+            }
       );
 
     it('يحفظ سند قبض ويرجعه مع النتيجة عند النجاح', async () => {
@@ -420,7 +494,9 @@ describe('contract-payment-service', () => {
       const createPayment = makeCreateContractPayment();
       const createTx = makeCreateTransaction(true);
       // deleteContractPayment تنجح تقنياً (resolve) لكن ترجع { error } — نمط DataContext
-      const deletePayment = vi.fn().mockResolvedValue({ error: { message: 'فشل الحذف من المخزن' } });
+      const deletePayment = vi
+        .fn()
+        .mockResolvedValue({ error: { message: 'فشل الحذف من المخزن' } });
 
       const result = await recordContractPayment({
         contract: mockContract,
@@ -441,6 +517,77 @@ describe('contract-payment-service', () => {
       expect(deletePayment).toHaveBeenCalledWith('pay-1');
       // الخطأ الأصلي (فشل الحركة) يُرجع للمستدعي
       expect(result.error?.message).toBe('فشل الحركة');
+    });
+
+    it('يرجع القسط لحالته الفعلية (partial) عند فشل الحركة بعد تحديث قسط', async () => {
+      const createPayment = makeCreateContractPayment();
+      const createTx = makeCreateTransaction(true); // يفشل
+      const updatePayment = vi.fn().mockResolvedValue({
+        data: { id: 'due-1', status: 'paid' },
+        error: null,
+      });
+
+      const result = await recordContractPayment({
+        contract: mockContract,
+        formData: {
+          amount: 2000,
+          date: '2026-03-15',
+          paymentMethod: 'bank_transfer',
+          dueId: 'due-1',
+        },
+        remainingAmount: 2000,
+        currentDueStatus: 'partial',
+        currentPaidAmount: 1000,
+        currentPaidDate: '2026-02-10',
+        createContractPayment: createPayment,
+        updateContractPayment: updatePayment,
+        createTransaction: createTx,
+      });
+
+      expect(result.success).toBe(false);
+      // تم استدعاء updateContractPayment مرتين: مرة للتحديث ومرة للـ rollback
+      expect(updatePayment).toHaveBeenCalledTimes(2);
+      // الـ rollback يرجع للحالة الفعلية السابقة كاملة (partial + 1000 + التاريخ الأصلي)
+      expect(updatePayment).toHaveBeenLastCalledWith('due-1', {
+        status: 'partial',
+        paidAmount: 1000,
+        paidDate: '2026-02-10',
+      });
+    });
+
+    it('يرجع paidDate إلى null عند rollback قسط لم يُدفع سابقاً', async () => {
+      const createPayment = makeCreateContractPayment();
+      const createTx = makeCreateTransaction(true); // يفشل
+      const updatePayment = vi.fn().mockResolvedValue({
+        data: { id: 'due-1', status: 'paid' },
+        error: null,
+      });
+
+      const result = await recordContractPayment({
+        contract: mockContract,
+        formData: {
+          amount: 3000,
+          date: '2026-03-15',
+          paymentMethod: 'cash',
+          dueId: 'due-1',
+        },
+        remainingAmount: 3000,
+        currentDueStatus: 'pending',
+        currentPaidAmount: 0,
+        // لا currentPaidDate — القسط لم يُدفع من قبل
+        createContractPayment: createPayment,
+        updateContractPayment: updatePayment,
+        createTransaction: createTx,
+      });
+
+      expect(result.success).toBe(false);
+      expect(updatePayment).toHaveBeenCalledTimes(2);
+      // الـ rollback يرجع paidDate إلى null (لم يكن مدفوعاً)
+      expect(updatePayment).toHaveBeenLastCalledWith('due-1', {
+        status: 'pending',
+        paidAmount: 0,
+        paidDate: null,
+      });
     });
 
     it('لا يستدعي rollback إذا نجحت كلا العمليتين', async () => {

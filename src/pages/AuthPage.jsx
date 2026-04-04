@@ -124,7 +124,9 @@ const AuthPage = () => {
       setError(translateError(err.message));
     } else {
       // نُظهر رسالة نجاح بدون الكشف إذا كان الإيميل مسجلاً أم لا (أمان)
-      setSuccessMsg('إذا كان البريد مسجّلاً لدينا، ستصل رسالة الاستعادة خلال دقائق. تحقق من صندوق الوارد والبريد غير المرغوب.');
+      setSuccessMsg(
+        'إذا كان البريد مسجّلاً لدينا، ستصل رسالة الاستعادة خلال دقائق. تحقق من صندوق الوارد والبريد غير المرغوب.'
+      );
     }
   };
 
@@ -143,7 +145,7 @@ const AuthPage = () => {
     }
 
     setLoading(true);
-    const { data, error: err } = await signIn(email.trim(), password);
+    const { error: err } = await signIn(email.trim(), password);
     setLoading(false);
 
     if (err) {
@@ -250,7 +252,10 @@ const AuthPage = () => {
         {/* ── نموذج نسيت كلمة المرور ─────────────────────────────── */}
         {isForgot && (
           <form onSubmit={handleForgotPassword} noValidate>
-            <p className="text-sm mb-4 text-center" style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+            <p
+              className="text-sm mb-4 text-center"
+              style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6 }}
+            >
               أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور
             </p>
             <div className="mb-4">
@@ -330,7 +335,11 @@ const AuthPage = () => {
           </form>
         )}
 
-        <form onSubmit={isLogin ? handleSignIn : handleSignUp} noValidate style={{ display: isForgot ? 'none' : undefined }}>
+        <form
+          onSubmit={isLogin ? handleSignIn : handleSignUp}
+          noValidate
+          style={{ display: isForgot ? 'none' : undefined }}
+        >
           {/* ── اسم المكتب (إنشاء حساب فقط) ────────────────────── */}
           {!isLogin && (
             <div className="mb-4">
@@ -488,7 +497,10 @@ const AuthPage = () => {
         </form>
 
         {/* ── تبديل الوضع ─────────────────────────────────────────── */}
-        <div className="text-center mt-5" style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}>
+        <div
+          className="text-center mt-5"
+          style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}
+        >
           {isLogin ? (
             <>
               <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>

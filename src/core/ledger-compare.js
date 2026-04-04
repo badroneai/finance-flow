@@ -3,7 +3,7 @@
  * يقارن 2–5 دفاتر ويرجع صحة، تدفقات 30 يوم، متأخرات، ROI، اتجاه، أفضل/أسوأ، وتوصيات.
  */
 
-import { getLedgers, getRecurringItems } from './ledger-store.js';
+import { getLedgers } from './ledger-store.js';
 import { getTransactionsForLedger } from './dataStore.js';
 import { calculateHealthScore } from './pulse-engine.js';
 import { calculateInbox } from './inbox-engine.js';

@@ -11,7 +11,7 @@
  *  4. المستحقات — متابعة الالتزامات
  *  5. النبض المالي — مراقبة الصحة المالية
  */
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { storageFacade } from '../core/storage-facade.js';
 
 // مفتاح التخزين
@@ -104,16 +104,6 @@ export function TooltipTour({ active, onComplete }) {
   const [step, setStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [tooltipPos, setTooltipPos] = useState(null);
-  const rafRef = useRef(null);
-
-  // هل الجولة شوهدت سابقاً؟
-  const isSeen = useCallback(() => {
-    try {
-      return storageFacade.getRaw(TOUR_SEEN_KEY) === '1';
-    } catch {
-      return false;
-    }
-  }, []);
 
   const markSeen = useCallback(() => {
     try {

@@ -10,7 +10,8 @@ export default defineConfig({
     include: ['src/**/*.test.js'],
   },
   build: {
-    // إذا فشل تنظيف dist/ (ملفات مقفلة من deploy سابق)، أكمل البناء بدون حذفها أولاً
+    // ملاحظة: emptyOutDir: false لأن بعض البيئات لا تسمح بحذف dist/
+    // شغّل `npm run clean` يدوياً قبل البناء إذا أردت تنظيف dist/
     emptyOutDir: false,
     rollupOptions: {
       input: {
@@ -20,7 +21,6 @@ export default defineConfig({
       },
       output: {
         manualChunks: {
-          'pdf-lib': ['jspdf', 'html2canvas'],
           'supabase': ['@supabase/supabase-js'],
           'router': ['react-router-dom'],
         },

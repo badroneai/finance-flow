@@ -9,50 +9,59 @@ function RecurringSummaryBar({
   Currency,
 }) {
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <h4 className="font-bold text-[var(--color-text)] mb-3">الملخص المالي</h4>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-          <div className="text-xs text-[var(--color-muted)]">إجمالي شهري</div>
-          <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+    <div className="panel-card ledger-panel ledger-summary-panel">
+      <div className="ledger-panel__header">
+        <div>
+          <span className="ledger-panel__eyebrow">نظرة سريعة</span>
+          <h4 className="ledger-panel__title">الملخص المالي</h4>
+          <p className="ledger-panel__subtitle">
+            لقطة سريعة توضح العبء الحالي، الالتزامات القادمة، والتنبيهات التي تحتاج متابعة.
+          </p>
+        </div>
+      </div>
+      <div className="ledger-metric-grid">
+        <div className="ledger-metric-card">
+          <span className="ledger-metric-card__label">إجمالي شهري</span>
+          <strong className="ledger-metric-card__value ledger-metric-card__value--lg">
             <Currency value={monthlyTotal} />
-          </div>
+          </strong>
         </div>
         {overdueTotal > 0 && (
-          <div className="p-3 rounded-xl border border-[var(--color-danger)] bg-[var(--color-danger-bg)]">
-            <div className="text-xs text-[var(--color-danger)]">متأخر</div>
-            <div className="mt-1 text-lg font-bold text-[var(--color-danger)]">
+          <div className="ledger-metric-card ledger-metric-card--danger">
+            <span className="ledger-metric-card__label">متأخر</span>
+            <strong className="ledger-metric-card__value ledger-metric-card__value--lg">
               <Currency value={overdueTotal} />
-            </div>
+            </strong>
           </div>
         )}
-        <div className="p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)]">
-          <div className="text-xs text-[var(--color-warning)]">مستحق هذا الشهر</div>
-          <div className="mt-1 text-lg font-bold text-[var(--color-warning)]">
+        <div className="ledger-metric-card ledger-metric-card--warning">
+          <span className="ledger-metric-card__label">مستحق هذا الشهر</span>
+          <strong className="ledger-metric-card__value ledger-metric-card__value--lg">
             <Currency value={thisMonthDue} />
-          </div>
+          </strong>
         </div>
-        <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-          <div className="text-xs text-[var(--color-muted)]">تقدير سنوي</div>
-          <div className="mt-1 text-lg font-bold text-[var(--color-text)]">
+        <div className="ledger-metric-card">
+          <span className="ledger-metric-card__label">تقدير سنوي</span>
+          <strong className="ledger-metric-card__value ledger-metric-card__value--lg">
             <Currency value={yearlyEstimate} />
-          </div>
+          </strong>
         </div>
-        <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]">
-          <div className="text-xs text-[var(--color-muted)]">عدد الالتزامات</div>
-          <div className="mt-1 text-lg font-bold text-[var(--color-text)]">{itemCount}</div>
+        <div className="ledger-metric-card">
+          <span className="ledger-metric-card__label">عدد الالتزامات</span>
+          <strong className="ledger-metric-card__value ledger-metric-card__value--lg">
+            {itemCount}
+          </strong>
         </div>
       </div>
 
       {/* تنبيهات بسيطة */}
       {ledgerAlerts && ledgerAlerts.length > 0 && (
-        <div className="mt-3 flex flex-col gap-2">
+        <div className="ledger-stack ledger-stack--sm ledger-panel__alerts">
           {ledgerAlerts.map((a) => (
-            <div
-              key={a.id}
-              className="p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)] text-sm text-[var(--color-warning)]"
-            >
-              <span className="font-semibold">{a.title}</span>: {a.reason}
+            <div key={a.id} className="ledger-callout ledger-callout--warning">
+              <span className="ledger-callout__text">
+                <strong>{a.title}</strong>: {a.reason}
+              </span>
             </div>
           ))}
         </div>

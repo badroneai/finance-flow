@@ -16,7 +16,7 @@ export class LedgerTabErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
+        <div className="error-surface error-surface--page">
           <h4 className="font-bold text-[var(--color-text)] mb-2">حدث خطأ في تحميل هذه الصفحة</h4>
           <p className="text-sm text-[var(--color-muted)] mb-4">
             يمكنك العودة إلى تبويب آخر والمحاولة مرة أخرى.
@@ -50,7 +50,7 @@ export class PageLoadErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="p-6 max-w-md mx-auto text-center" dir="rtl">
+        <div className="error-surface error-surface--page" dir="rtl">
           <p className="text-[var(--color-text)] font-medium mb-1">تعذر تحميل هذه الصفحة</p>
           <p className="text-sm text-[var(--color-muted)] mb-4">
             تحقق من الاتصال بالإنترنت وحاول مرة أخرى.
@@ -69,7 +69,7 @@ export class PageLoadErrorBoundary extends React.Component {
             <button
               type="button"
               onClick={() => window.location.reload()}
-              className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+              className="btn-secondary"
               aria-label="إعادة تحميل الصفحة"
             >
               إعادة تحميل الصفحة
@@ -115,24 +115,24 @@ export class ErrorBoundary extends React.Component {
           className="min-h-screen flex items-center justify-center bg-[var(--color-bg)] p-6"
           dir="rtl"
         >
-          <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-8 max-w-md w-full text-center">
+          <div className="error-surface error-surface--fullscreen">
             <h1 className="text-xl font-bold text-[var(--color-text)] mb-2">حدث خطأ غير متوقع</h1>
             <p className="text-[var(--color-muted)] text-sm mb-6">
               يمكنك إعادة تحميل التطبيق أو نسخ تفاصيل الخطأ للمساعدة الفنية.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              type="button"
-              onClick={this.handleReload}
-              className="btn-primary"
-              aria-label="إعادة تحميل التطبيق"
-            >
+              <button
+                type="button"
+                onClick={this.handleReload}
+                className="btn-primary"
+                aria-label="إعادة تحميل التطبيق"
+              >
                 إعادة تحميل التطبيق
               </button>
               <button
                 type="button"
                 onClick={this.handleCopyDetails}
-                className="px-5 py-2.5 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] font-medium hover:bg-[var(--color-bg)]"
+                className="btn-secondary"
                 aria-label="نسخ تفاصيل الخطأ"
               >
                 نسخ تفاصيل الخطأ

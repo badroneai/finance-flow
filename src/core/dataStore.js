@@ -316,7 +316,7 @@ export const detectPrivateBrowsing = () => {
     storageFacade.setRaw('_ff_private_test', '1');
     storageFacade.removeRaw('_ff_private_test');
     return false;
-  } catch (e) {
+  } catch {
     return true;
   }
 };

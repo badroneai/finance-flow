@@ -3,7 +3,11 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useData } from '../contexts/DataContext.jsx';
 import { Badge, EmptyState, SummaryCard, Icons } from '../ui/ui-common.jsx';
 import { getContactIdTypeLabel, getContactTypeLabel } from '../domain/contacts.js';
-import { getContractStatusColor, getContractStatusLabel, getContractTypeLabel } from '../domain/contracts.js';
+import {
+  getContractStatusColor,
+  getContractStatusLabel,
+  getContractTypeLabel,
+} from '../domain/contracts.js';
 import { formatCurrency } from '../utils/format.jsx';
 import { safeNum } from '../utils/helpers.js';
 
@@ -34,7 +38,9 @@ export default function ContactDetailPage() {
 
   const linkedContracts = useMemo(() => {
     if (!contact) return [];
-    return contracts.filter((contract) => (contract.contactId || contract.contact_id) === contact.id);
+    return contracts.filter(
+      (contract) => (contract.contactId || contract.contact_id) === contact.id
+    );
   }, [contracts, contact]);
 
   const unitsById = useMemo(
@@ -163,7 +169,9 @@ export default function ContactDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="text-sm text-[var(--color-muted)]">لا توجد عقارات مرتبطة بهذا العميل.</div>
+          <div className="text-sm text-[var(--color-muted)]">
+            لا توجد عقارات مرتبطة بهذا العميل.
+          </div>
         )}
       </section>
 
@@ -184,8 +192,9 @@ export default function ContactDetailPage() {
                       {getContractTypeLabel(contract.type)}
                     </div>
                     <div className="text-sm text-[var(--color-muted)] mt-1">
-                      {properties.find((property) => property.id === (contract.propertyId || contract.property_id))
-                        ?.name || '—'}
+                      {properties.find(
+                        (property) => property.id === (contract.propertyId || contract.property_id)
+                      )?.name || '—'}
                       {unitsById[contract.unitId || contract.unit_id]
                         ? ` — ${unitsById[contract.unitId || contract.unit_id].name}`
                         : ''}
@@ -199,7 +208,9 @@ export default function ContactDetailPage() {
                   <span>رقم العقد: {contract.contractNumber || '—'}</span>
                   <span>
                     الإيجار الشهري:{' '}
-                    {contract.monthlyRent ? `${formatCurrency(safeNum(contract.monthlyRent))} ر.س` : '—'}
+                    {contract.monthlyRent
+                      ? `${formatCurrency(safeNum(contract.monthlyRent))}`
+                      : '—'}
                   </span>
                 </div>
               </button>

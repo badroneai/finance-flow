@@ -181,7 +181,7 @@
   border-color: #9CA3AF;
 }
 
-[data-direction="a"] .btn-danger {
+[data-direction="a"] .btn-ghost {
   border-radius: 6px;
   box-shadow: none;
 }

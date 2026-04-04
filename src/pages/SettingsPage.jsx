@@ -1,37 +1,26 @@
 /*
   صفحة الإعدادات — مستخرجة من App.jsx (الخطوة 7)
 */
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '../contexts/ToastContext.jsx';
 import { useAuth } from '../contexts/AuthContext.jsx';
 import { useData } from '../contexts/DataContext.jsx';
-import { dataStore, safeGet } from '../core/dataStore.js';
 import { storageFacade } from '../core/storage-facade.js';
 import {
   getSavedTheme,
   getSavedNumerals,
-  initTheme,
   applyTheme,
   applyNumerals,
   UI_THEME_KEY,
-  UI_NUMERALS_KEY,
-  UI_DATE_HEADER_KEY,
-  UI_ONBOARDING_SEEN_KEY,
   getSavedDateHeader,
   setDateHeaderPref,
 } from '../core/theme-ui.js';
-import {
-  KEYS,
-  STORAGE_KEYS,
-  SEED_SETTINGS,
-  STORAGE_ERROR_MESSAGE,
-  MSG,
-} from '../constants/index.js';
+import { STORAGE_KEYS, STORAGE_ERROR_MESSAGE, MSG } from '../constants/index.js';
+import { dataStore } from '../core/dataStore.js';
 const OFFICE_LOGO_KEY = STORAGE_KEYS.OFFICE_LOGO;
 import { SettingsField, Icons } from '../ui/ui-common.jsx';
 import { ConfirmDialog } from '../ui/Modals.jsx';
-import { formatNumber } from '../utils/format.jsx';
 import { safeNum } from '../utils/helpers.js';
 
 export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
@@ -39,37 +28,49 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
   const navigate = useNavigate();
   const { user, signOut, isSupabaseConfigured, profile, office, role } = useAuth();
   const {
-    isCloudMode,
     updateOfficeSettings,
+    reloadFromLocalStorage,
     transactions,
     commissions,
     ledgers,
     recurringItems,
     contractPayments,
-    fetchTransactions,
-    fetchCommissions,
-    fetchProperties,
-    fetchUnits,
-    fetchContacts,
-    fetchContracts,
-    fetchContractPayments,
+    contractReceipts,
+    properties,
+    units,
+    contacts,
+    contracts,
   } = useData();
 
-  // SPR-010: قراءة الإعدادات — سحابي: من office (Supabase)، محلي: من localStorage
+  // SPR-010: قراءة الإعدادات من office (Supabase دائماً)
   const [settings, setSettings] = useState(() => {
-    const local = dataStore.settings.get();
-    if (isCloudMode && office) {
+    if (office) {
       return {
-        ...local,
-        officeName: office.name || local.officeName,
-        phone: office.phone || local.phone,
-        email: office.email || local.email,
-        defaultCommissionPercent:
-          office.default_commission_percent ?? local.defaultCommissionPercent,
+        officeName: office.name || '',
+        phone: office.phone || '',
+        email: office.email || '',
+        defaultCommissionPercent: office.default_commission_percent ?? 0,
       };
     }
-    return local;
+    return {
+      officeName: '',
+      phone: '',
+      email: '',
+      defaultCommissionPercent: 0,
+    };
   });
+  // مزامنة الإعدادات عند وصول بيانات المكتب متأخرة من Supabase
+  useEffect(() => {
+    if (office) {
+      setSettings({
+        officeName: office.name || '',
+        phone: office.phone || '',
+        email: office.email || '',
+        defaultCommissionPercent: office.default_commission_percent ?? 0,
+      });
+    }
+  }, [office]);
+
   const [signingOut, setSigningOut] = useState(false);
   const [uiTheme, setUiTheme] = useState(getSavedTheme() || 'system');
   const [uiNumerals, setUiNumerals] = useState(
@@ -77,7 +78,6 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
   );
   const [confirm, setConfirm] = useState(null);
   const fileInputRef = useRef(null);
-  const importDataRef = useRef(null);
   const logoInputRef = useRef(null);
 
   // SPR-017: شعار المكتب (base64)
@@ -89,6 +89,8 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
     }
   });
 
+  // شعار المكتب محفوظ في localStorage للأداء والتجربة الفورية (UI preference)
+  // البيانات الرئيسية (إعدادات المكتب) محفوظة في Supabase فقط
   const handleLogoUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -126,136 +128,64 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
   };
 
   const handleSave = async () => {
-    // حفظ محلي دائماً (للتوافق مع المحركات)
-    const res = dataStore.settings.update(settings);
-    if (!res.ok) {
-      toast.error(res.message);
+    // حفظ في Supabase فقط
+    const { error } = await updateOfficeSettings({
+      name: settings.officeName,
+      phone: settings.phone,
+      email: settings.email,
+      default_commission_percent: settings.defaultCommissionPercent,
+    });
+    if (error) {
+      toast.error('فشل الحفظ: ' + (error.message || 'خطأ غير معروف'));
       return;
-    }
-    // مزامنة مع Supabase إذا في وضع السحابة
-    if (isCloudMode) {
-      const { error } = await updateOfficeSettings({
-        name: settings.officeName,
-        phone: settings.phone,
-        email: settings.email,
-        default_commission_percent: settings.defaultCommissionPercent,
-      });
-      if (error) {
-        toast.error('تم الحفظ محلياً لكن فشلت المزامنة السحابية');
-        return;
-      }
     }
     toast.success(MSG.success.saved);
   };
 
+  // إعادة بيانات الديمو التجريبية
   const handleResetDemo = () => {
     setConfirm({
-      title: 'إعادة بيانات الديمو',
-      message: 'سيتم استبدال جميع البيانات ببيانات الديمو. هل أنت متأكد؟',
-      onConfirm: async () => {
+      title: 'تحميل بيانات تجريبية',
+      message: 'سيتم استبدال جميع البيانات الحالية ببيانات تجريبية جاهزة. هل أنت متأكد؟',
+      confirmLabel: 'نعم، حمّل البيانات',
+      onConfirm: () => {
         const res = dataStore.seed.resetDemo();
         if (!res.ok) {
           toast.error(res.message);
           setConfirm(null);
           return;
         }
-        await Promise.all([
-          fetchTransactions(),
-          fetchCommissions(),
-          fetchProperties(),
-          fetchUnits(),
-          fetchContacts(),
-          fetchContracts(),
-          fetchContractPayments(),
-        ]);
-        setSettings(dataStore.settings.get());
-        initTheme();
-        toast.success('تمت إعادة بيانات الديمو');
+        reloadFromLocalStorage();
+        toast.success('تم تحميل البيانات التجريبية بنجاح');
         setConfirm(null);
       },
     });
   };
 
+  // حذف جميع البيانات
   const handleClearAll = () => {
-    const txCount = dataStore.transactions.list().length;
-    const cmCount = dataStore.commissions.list().length;
-    const draftCount = safeGet(KEYS.drafts, []).length;
+    const propCount = (properties || []).length;
+    const contactCount = (contacts || []).length;
+    const contractCount = (contracts || []).length;
+    const txCount = (transactions || []).length;
     setConfirm({
       title: 'حذف جميع البيانات',
-      message: 'سيتم حذف جميع البيانات المحفوظة:',
-      messageList: [
-        `جميع الحركات المالية (${formatNumber(txCount, { maximumFractionDigits: 0 })})`,
-        `جميع العمولات (${formatNumber(cmCount, { maximumFractionDigits: 0 })})`,
-        `جميع المسودات (${formatNumber(draftCount, { maximumFractionDigits: 0 })})`,
-        'جميع الإعدادات',
-      ],
+      message: [
+        `سيتم حذف:`,
+        `${propCount} عقار، ${contactCount} عميل، ${contractCount} عقد، ${txCount} حركة مالية`,
+        'وجميع البيانات الأخرى.',
+      ].join('\n'),
       dangerText: 'لا يمكن التراجع عن هذا الإجراء.',
       confirmLabel: 'نعم، احذف كل شيء',
       danger: true,
-      onConfirm: async () => {
+      onConfirm: () => {
         dataStore.seed.clearAll();
-        await Promise.all([
-          fetchTransactions(),
-          fetchCommissions(),
-          fetchProperties(),
-          fetchUnits(),
-          fetchContacts(),
-          fetchContracts(),
-          fetchContractPayments(),
-        ]);
-        setSettings(SEED_SETTINGS);
-        initTheme();
+        reloadFromLocalStorage();
         toast.success('تم حذف جميع البيانات');
         setConfirm(null);
       },
     });
   };
-
-  const getBackupAppKeys = () => [
-    // Financial/local data keys
-    KEYS.transactions,
-    KEYS.commissions,
-    KEYS.drafts,
-    KEYS.settings,
-    KEYS.seeded,
-    KEYS.properties,
-    KEYS.units,
-    KEYS.contacts,
-    KEYS.contracts,
-    KEYS.contractPayments,
-
-    // Ledgers (PR-1)
-    'ff_ledgers',
-    'ff_recurring_items',
-    'ff_active_ledger_id',
-
-    // UI keys
-    UI_THEME_KEY,
-    UI_NUMERALS_KEY,
-    UI_DATE_HEADER_KEY,
-    UI_ONBOARDING_SEEN_KEY,
-    // Optional UI state
-    STORAGE_KEYS.UI_WELCOME,
-    // شعار المكتب
-    STORAGE_KEYS.OFFICE_LOGO,
-  ];
-
-  // P0 #1 — حدود وتحقق استعادة النسخة الاحتياطية
-  const MAX_BACKUP_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
-  const BACKUP_DANGEROUS_KEYS = ['__proto__', 'constructor', 'prototype'];
-  const BACKUP_JSON_KEYS = new Set([
-    KEYS.transactions,
-    KEYS.commissions,
-    KEYS.drafts,
-    KEYS.settings,
-    KEYS.properties,
-    KEYS.units,
-    KEYS.contacts,
-    KEYS.contracts,
-    KEYS.contractPayments,
-    'ff_ledgers',
-    'ff_recurring_items',
-  ]);
 
   const pad2 = (n) => String(n).padStart(2, '0');
   const formatBackupFilename = (d) => {
@@ -267,45 +197,35 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
     return `qaydalaqar-backup-${yyyy}${mm}${dd}-${hh}${min}.json`;
   };
 
-  // SPR-010: تصدير ذكي — سحابي يجلب من DataContext، محلي من localStorage
+  // تصدير شامل — يجمع كل بيانات المكتب من DataContext
   const handleExportBackup = () => {
     const now = new Date();
-    let data;
-
-    if (isCloudMode) {
-      // في الوضع السحابي: نجمع البيانات من DataContext (Supabase) مباشرة
-      data = {
-        [KEYS.transactions]: transactions || [],
-        [KEYS.commissions]: commissions || [],
-        ff_ledgers: ledgers || [],
-        ff_recurring_items: recurringItems || [],
-        [KEYS.contractPayments]: contractPayments || [],
-        [KEYS.settings]: settings,
-      };
-      // نضيف أيضاً إعدادات UI المحلية
-      [UI_THEME_KEY, UI_NUMERALS_KEY, UI_DATE_HEADER_KEY].forEach((k) => {
-        try {
-          const v = storageFacade.getRaw(k);
-          if (v != null) data[k] = v;
-        } catch {}
-      });
-    } else {
-      // في الوضع المحلي: نقرأ كل شيء من localStorage
-      data = {};
-      const keys = getBackupAppKeys();
-      keys.forEach((k) => {
-        try {
-          const v = storageFacade.getRaw(k);
-          if (v != null) data[k] = v;
-        } catch {}
-      });
-    }
+    const data = {
+      transactions: transactions || [],
+      commissions: commissions || [],
+      ledgers: ledgers || [],
+      recurringItems: recurringItems || [],
+      contractPayments: contractPayments || [],
+      contractReceipts: contractReceipts || [],
+      properties: properties || [],
+      units: units || [],
+      contacts: contacts || [],
+      contracts: contracts || [],
+      settings,
+    };
 
     const envelope = {
       app: 'qaydalaqar-finance-flow',
-      schema: 1,
+      schema: 2,
       exported_at: new Date().toISOString(),
-      source: isCloudMode ? 'cloud' : 'local',
+      source: 'cloud',
+      record_counts: {
+        transactions: (data.transactions || []).length,
+        properties: (data.properties || []).length,
+        contacts: (data.contacts || []).length,
+        contracts: (data.contracts || []).length,
+        units: (data.units || []).length,
+      },
       data,
     };
 
@@ -319,137 +239,14 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
     toast.success('تم تنزيل النسخة الاحتياطية');
   };
 
-  const handleImportBackupClick = () => {
-    fileInputRef.current && fileInputRef.current.click();
-  };
-
   const handleImportFileChange = (e) => {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     e.target.value = '';
 
-    if (file.size > MAX_BACKUP_FILE_SIZE) {
-      toast.error('الملف كبير جداً (الحد 10 ميجا). اختر ملفاً أصغر أو صدّر نسخة أقل.');
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      let envelope;
-      try {
-        envelope = JSON.parse(reader.result);
-      } catch {
-        toast.error('ملف غير صالح (ليس JSON)');
-        return;
-      }
-
-      const ok =
-        envelope &&
-        envelope.app === 'qaydalaqar-finance-flow' &&
-        envelope.schema === 1 &&
-        envelope.data &&
-        typeof envelope.data === 'object';
-      if (!ok) {
-        toast.error('تنسيق النسخة الاحتياطية غير صحيح (app/schema)');
-        return;
-      }
-
-      const allowedKeys = new Set(getBackupAppKeys());
-      const safeData = {};
-      for (const k of Object.keys(envelope.data)) {
-        if (BACKUP_DANGEROUS_KEYS.includes(k)) continue;
-        if (!allowedKeys.has(k)) continue;
-        safeData[k] = envelope.data[k];
-      }
-      importDataRef.current = safeData;
-      const keys = getBackupAppKeys();
-      const current = {};
-      keys.forEach((k) => {
-        try {
-          current[k] = storageFacade.getRaw(k);
-        } catch {
-          current[k] = null;
-        }
-      });
-
-      let changeCount = 0;
-      keys.forEach((k) => {
-        if (!Object.prototype.hasOwnProperty.call(safeData, k)) return;
-        const cur = current[k];
-        const nextVal = safeData[k];
-        const next =
-          nextVal == null
-            ? null
-            : BACKUP_JSON_KEYS.has(k) &&
-                (Array.isArray(nextVal) || (typeof nextVal === 'object' && nextVal !== null))
-              ? JSON.stringify(nextVal)
-              : String(nextVal);
-        if ((cur ?? null) !== (next ?? null)) changeCount++;
-      });
-
-      setConfirm({
-        title: 'استعادة نسخة احتياطية',
-        message: `سيتم استبدال البيانات الحالية (${formatNumber(changeCount, { maximumFractionDigits: 0 })} مفاتيح). هل أنت متأكد؟`,
-        danger: true,
-        confirmLabel: 'نعم، استبدل البيانات',
-        onConfirm: () => {
-          const d = importDataRef.current;
-          if (!d || typeof d !== 'object') {
-            setConfirm(null);
-            return;
-          }
-
-          const keysToRestore = getBackupAppKeys();
-          const backup = {};
-          keysToRestore.forEach((k) => {
-            try {
-              backup[k] = storageFacade.getRaw(k);
-            } catch {
-              backup[k] = null;
-            }
-          });
-
-          let writeFailed = false;
-          try {
-            storageFacade.removeMany(keysToRestore);
-            for (const k of keysToRestore) {
-              if (!Object.prototype.hasOwnProperty.call(d, k)) continue;
-              const v = d[k];
-              if (BACKUP_JSON_KEYS.has(k) && (Array.isArray(v) || (v && typeof v === 'object'))) {
-                if (!storageFacade.setJSON(k, v)) {
-                  writeFailed = true;
-                  break;
-                }
-              } else {
-                const str = typeof v === 'string' ? v : v != null ? JSON.stringify(v) : '';
-                if (!storageFacade.setRaw(k, str)) {
-                  writeFailed = true;
-                  break;
-                }
-              }
-            }
-          } catch {
-            writeFailed = true;
-          }
-
-          if (writeFailed) {
-            keysToRestore.forEach((k) => {
-              try {
-                if (backup[k] == null) storageFacade.removeRaw(k);
-                else storageFacade.setRaw(k, backup[k]);
-              } catch {}
-            });
-            toast.error('فشلت الاستعادة. تمت استعادة الحالة السابقة. (مثلاً: التخزين ممتلئ)');
-            setConfirm(null);
-            return;
-          }
-
-          setConfirm(null);
-          window.location.reload();
-        },
-      });
-    };
-    reader.readAsText(file, 'UTF-8');
+    toast.info(
+      'البيانات الآن محفوظة في السحابة (Supabase). استخدم لوحة تحكم Supabase لإدارة النسخ الاحتياطية والبيانات.'
+    );
   };
 
   return (
@@ -464,36 +261,6 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
           >
             النبض المالي
           </button>
-        </div>
-      )}
-      {/* Phase 9.1 — Data Warning Notice (LocalStorage only) */}
-      {!isCloudMode && (
-        <div
-          className="rounded-xl p-5 shadow-sm mb-6 no-print"
-          role="alert"
-          aria-labelledby="data-warning-title"
-          style={{
-            backgroundColor: 'var(--color-warning-bg)',
-            borderColor: 'var(--color-warning-border)',
-            borderWidth: '1px',
-          }}
-        >
-          <h3
-            id="data-warning-title"
-            className="font-bold mb-3"
-            style={{ color: 'var(--color-warning)' }}
-          >
-            ملاحظة مهمة
-          </h3>
-          <ul
-            className="text-sm space-y-1.5 list-disc list-inside"
-            style={{ color: 'var(--color-warning-text)' }}
-          >
-            <li>البيانات محفوظة على هذا الجهاز فقط (LocalStorage)</li>
-            <li>مسح بيانات المتصفح/الموقع يحذف كل شيء</li>
-            <li>لا تستخدم على جهاز مشترك</li>
-            <li>يُنصح بتصدير نسخة احتياطية دوريًا</li>
-          </ul>
         </div>
       )}
 
@@ -699,9 +466,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
       <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
         <h3 className="font-bold text-[var(--color-text)] mb-4">النسخ الاحتياطي</h3>
         <p className="text-sm text-[var(--color-muted)] mb-4">
-          {isCloudMode
-            ? 'بياناتك محفوظة تلقائياً في السحابة. يمكنك تصدير نسخة احتياطية محلية للاحتفاظ بها.'
-            : 'صدّر نسخة احتياطية إلى ملف JSON أو استعد نسخة سابقة (استبدال كامل للبيانات الحالية).'}
+          بياناتك محفوظة تلقائياً في السحابة. يمكنك تصدير نسخة احتياطية محلية للاحتفاظ بها.
         </p>
         <div className="flex flex-wrap gap-3">
           <button
@@ -709,87 +474,45 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
             onClick={handleExportBackup}
             className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75 flex items-center gap-2"
             style={{ borderColor: 'var(--color-info)', color: 'var(--color-info)' }}
-            aria-label="تنزيل نسخة احتياطية JSON"
+            aria-label="تصدير نسخة احتياطية JSON"
           >
-            <Icons.download size={16} />{' '}
-            {isCloudMode ? 'تصدير نسخة من السحابة (JSON)' : 'تنزيل نسخة احتياطية (JSON)'}
+            <Icons.download size={16} /> تصدير نسخة من السحابة (JSON)
           </button>
-          {!isCloudMode && (
-            <button
-              type="button"
-              onClick={handleImportBackupClick}
-              className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)] flex items-center gap-2"
-              aria-label="استعادة نسخة احتياطية"
-            >
-              <Icons.fileText size={16} /> استعادة من نسخة احتياطية
-            </button>
-          )}
         </div>
-        {isCloudMode ? (
-          <p className="text-xs text-[var(--color-muted)] mt-2">
-            التصدير يحفظ نسخة من بيانات السحابة على جهازك.
-          </p>
-        ) : (
-          <p className="text-xs text-[var(--color-muted)] mt-2">
-            النسخ الاحتياطي لا يرسل بيانات للسحابة.
-          </p>
-        )}
+        <p className="text-xs text-[var(--color-muted)] mt-2">
+          التصدير يحفظ نسخة من بيانات السحابة على جهازك.
+        </p>
 
-        {/* SPR-008: قسم المزامنة ديناميكي حسب وضع التخزين */}
-        {isCloudMode ? (
-          <div
-            className="mt-4 rounded-xl p-4"
-            style={{
-              borderWidth: '1px',
-              borderColor: 'var(--color-success)',
-              backgroundColor: 'var(--color-success-bg)',
-            }}
-            aria-label="المزامنة السحابية"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="font-semibold" style={{ color: 'var(--color-success)' }}>
-                بياناتك متزامنة مع السحابة
-              </div>
-              <span
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{
-                  backgroundColor: 'var(--color-success-light)',
-                  color: 'var(--color-success)',
-                  borderWidth: '1px',
-                  borderColor: 'var(--color-success)',
-                }}
-              >
-                مُفعّل
-              </span>
+        {/* المزامنة السحابية — مُفعّلة دائماً */}
+        <div
+          className="mt-4 rounded-xl p-4"
+          style={{
+            borderWidth: '1px',
+            borderColor: 'var(--color-success)',
+            backgroundColor: 'var(--color-success-bg)',
+          }}
+          aria-label="المزامنة السحابية"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="font-semibold" style={{ color: 'var(--color-success)' }}>
+              بياناتك متزامنة مع السحابة
             </div>
-            <p className="text-sm mt-2" style={{ color: 'var(--color-success)' }}>
-              بياناتك محفوظة بأمان في السحابة ومتاحة من أي جهاز مسجّل بنفس الحساب.
-            </p>
+            <span
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+              style={{
+                backgroundColor: 'var(--color-success-light)',
+                color: 'var(--color-success)',
+                borderWidth: '1px',
+                borderColor: 'var(--color-success)',
+              }}
+            >
+              مُفعّل
+            </span>
           </div>
-        ) : (
-          <div
-            className="mt-4 rounded-xl border border-[var(--color-border)] p-4"
-            aria-label="المزامنة السحابية"
-          >
-            <div className="flex items-center justify-between gap-3">
-              <div className="font-semibold text-[var(--color-text)]">المزامنة السحابية</div>
-              <span
-                className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{
-                  backgroundColor: 'var(--color-warning-bg)',
-                  color: 'var(--color-warning)',
-                  borderWidth: '1px',
-                  borderColor: 'var(--color-warning-border)',
-                }}
-              >
-                غير مُفعّل
-              </span>
-            </div>
-            <p className="text-sm text-[var(--color-muted)] mt-2">
-              لتفعيل المزامنة السحابية بين أجهزتك، سجّل حساباً وفعّل الاتصال بالسحابة.
-            </p>
-          </div>
-        )}
+          <p className="text-sm mt-2" style={{ color: 'var(--color-success)' }}>
+            بياناتك محفوظة بأمان في السحابة ومتاحة من أي جهاز مسجّل بنفس الحساب.
+          </p>
+        </div>
 
         <input
           ref={fileInputRef}
@@ -803,14 +526,17 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
 
       <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
         <h3 className="font-bold text-[var(--color-text)] mb-4">إدارة البيانات</h3>
+        <p className="text-xs mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+          حمّل بيانات تجريبية لاستعراض النظام، أو احذف جميع البيانات للبدء من الصفر.
+        </p>
         <div className="flex flex-wrap gap-3">
           <button
             onClick={handleResetDemo}
             className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75"
             style={{ borderColor: 'var(--color-info)', color: 'var(--color-info)' }}
-            aria-label="إعادة بيانات الديمو"
+            aria-label="تحميل بيانات تجريبية"
           >
-            إعادة بيانات الديمو
+            تحميل بيانات تجريبية
           </button>
           <button
             onClick={handleClearAll}
@@ -931,10 +657,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
             📧 support@qaydalaqar.com
           </a>
         </div>
-        <p
-          className="text-xs mt-3"
-          style={{ color: 'var(--color-text-secondary)' }}
-        >
+        <p className="text-xs mt-3" style={{ color: 'var(--color-text-secondary)' }}>
           © 2024–2026 إلكسار الرقمية — سجل تجاري: 7008837028
         </p>
       </div>

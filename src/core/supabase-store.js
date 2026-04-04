@@ -1,12 +1,9 @@
 /*
   قيد العقار (Finance Flow)
-  supabase-store.js — طبقة بيانات Supabase (SPR-004e-1)
+  supabase-store.js — طبقة بيانات Supabase الوحيدة
 
-  البديل السحابي لـ dataStore.js (localStorage).
   كل دالة async وتُرجع { data, error } بنفس نمط Supabase.
-  الأقسام المنفّذة: profile, office, ledgers, transactions, recurringItems, commissions, drafts.
-  الأقسام المؤجلة (TODO): contacts, properties, contracts, paymentSchedule,
-    maintenanceRequests, contactActivities, notifications, supportTickets, auditLog, attachments.
+  جميع الـ 17 جدول مُنفذة بالكامل.
 */
 
 import { supabase } from './supabase.js';
@@ -660,6 +657,74 @@ const properties = {
 };
 
 // ═══════════════════════════════════════
+// الوحدات العقارية (units)
+// ═══════════════════════════════════════
+const units = {
+  /** جلب وحدات مكتب مع فلتر اختياري بالعقار */
+  list: async (officeId, propertyId = null) => {
+    try {
+      let query = supabase.from('units').select('*').eq('office_id', officeId);
+      if (propertyId) query = query.eq('property_id', propertyId);
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('units.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('units.list (exception)', err);
+    }
+  },
+
+  /** جلب وحدة واحدة بالمعرّف */
+  get: async (id) => {
+    try {
+      const { data, error } = await supabase.from('units').select('*').eq('id', id).single();
+      if (error) return handleError('units.get', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('units.get (exception)', err);
+    }
+  },
+
+  /** إنشاء وحدة جديدة */
+  create: async (unit) => {
+    try {
+      const { data, error } = await supabase.from('units').insert(unit).select('*').single();
+      if (error) return handleError('units.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('units.create (exception)', err);
+    }
+  },
+
+  /** تحديث بيانات وحدة */
+  update: async (id, updates) => {
+    try {
+      const { data, error } = await supabase
+        .from('units')
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) return handleError('units.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('units.update (exception)', err);
+    }
+  },
+
+  /** حذف وحدة */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('units').delete().eq('id', id);
+      if (error) return handleError('units.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('units.remove (exception)', err);
+    }
+  },
+};
+
+// ═══════════════════════════════════════
 // العقود (contracts) — SPR-018
 // ═══════════════════════════════════════
 const contracts = {
@@ -744,104 +809,432 @@ const contracts = {
 };
 
 // ═══════════════════════════════════════
-// جدول الدفعات (payment_schedule) — هيكل فقط للمستقبل
+// سندات القبض (contract_receipts)
+// ═══════════════════════════════════════
+const contractReceipts = {
+  /** جلب جميع سندات القبض لمكتب */
+  list: async (officeId) => {
+    try {
+      const { data, error } = await supabase
+        .from('contract_receipts')
+        .select('*')
+        .eq('office_id', officeId)
+        .order('created_at', { ascending: false });
+      if (error) return handleError('contractReceipts.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('contractReceipts.list (exception)', err);
+    }
+  },
+
+  /** إنشاء سند قبض جديد */
+  create: async (receipt) => {
+    try {
+      const { data, error } = await supabase
+        .from('contract_receipts')
+        .insert(receipt)
+        .select('*')
+        .single();
+      if (error) return handleError('contractReceipts.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contractReceipts.create (exception)', err);
+    }
+  },
+
+  /** حذف سند قبض */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('contract_receipts').delete().eq('id', id);
+      if (error) return handleError('contractReceipts.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('contractReceipts.remove (exception)', err);
+    }
+  },
+};
+
+// ═══════════════════════════════════════
+// جدول الدفعات (payment_schedule)
 // ═══════════════════════════════════════
 const paymentSchedule = {
+  /** جلب جميع الأقساط لمكتب مع فلتر اختياري بالعقد */
   list: async (officeId, contractId = null) => {
-    /* TODO */
+    try {
+      let query = supabase.from('payment_schedule').select('*').eq('office_id', officeId);
+      if (contractId) query = query.eq('contract_id', contractId);
+      query = query.order('due_date', { ascending: true });
+      const { data, error } = await query;
+      if (error) return handleError('paymentSchedule.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('paymentSchedule.list (exception)', err);
+    }
   },
+
+  /** جلب قسط واحد بالمعرّف */
+  get: async (id) => {
+    try {
+      const { data, error } = await supabase
+        .from('payment_schedule')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) return handleError('paymentSchedule.get', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('paymentSchedule.get (exception)', err);
+    }
+  },
+
+  /** إنشاء قسط جديد */
   create: async (payment) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('payment_schedule')
+        .insert(payment)
+        .select('*')
+        .single();
+      if (error) return handleError('paymentSchedule.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('paymentSchedule.create (exception)', err);
+    }
   },
+
+  /** تحديث بيانات قسط */
   update: async (id, updates) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('payment_schedule')
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) return handleError('paymentSchedule.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('paymentSchedule.update (exception)', err);
+    }
+  },
+
+  /** حذف قسط */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('payment_schedule').delete().eq('id', id);
+      if (error) return handleError('paymentSchedule.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('paymentSchedule.remove (exception)', err);
+    }
   },
 };
 
 // ═══════════════════════════════════════
-// طلبات الصيانة (maintenance_requests) — هيكل فقط للمستقبل
+// طلبات الصيانة (maintenance_requests)
 // ═══════════════════════════════════════
 const maintenanceRequests = {
+  /** جلب جميع طلبات الصيانة لمكتب مع فلاتر اختيارية */
   list: async (officeId, filters = {}) => {
-    /* TODO */
+    try {
+      let query = supabase.from('maintenance_requests').select('*').eq('office_id', officeId);
+      if (filters.status) query = query.eq('status', filters.status);
+      if (filters.priority) query = query.eq('priority', filters.priority);
+      if (filters.propertyId) query = query.eq('property_id', filters.propertyId);
+      if (filters.category) query = query.eq('category', filters.category);
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('maintenanceRequests.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('maintenanceRequests.list (exception)', err);
+    }
   },
+
+  /** جلب طلب صيانة واحد بالمعرّف */
   get: async (id) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_requests')
+        .select('*')
+        .eq('id', id)
+        .single();
+      if (error) return handleError('maintenanceRequests.get', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('maintenanceRequests.get (exception)', err);
+    }
   },
+
+  /** إنشاء طلب صيانة جديد */
   create: async (request) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_requests')
+        .insert(request)
+        .select('*')
+        .single();
+      if (error) return handleError('maintenanceRequests.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('maintenanceRequests.create (exception)', err);
+    }
   },
+
+  /** تحديث طلب صيانة */
   update: async (id, updates) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('maintenance_requests')
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) return handleError('maintenanceRequests.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('maintenanceRequests.update (exception)', err);
+    }
+  },
+
+  /** حذف طلب صيانة */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('maintenance_requests').delete().eq('id', id);
+      if (error) return handleError('maintenanceRequests.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('maintenanceRequests.remove (exception)', err);
+    }
   },
 };
 
 // ═══════════════════════════════════════
-// سجل التواصل (contact_activities) — هيكل فقط للمستقبل
+// سجل التواصل (contact_activities)
 // ═══════════════════════════════════════
 const contactActivities = {
+  /** جلب نشاطات جهة اتصال مع فلتر اختياري */
   list: async (officeId, contactId = null) => {
-    /* TODO */
+    try {
+      let query = supabase.from('contact_activities').select('*').eq('office_id', officeId);
+      if (contactId) query = query.eq('contact_id', contactId);
+      query = query.order('activity_date', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('contactActivities.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('contactActivities.list (exception)', err);
+    }
   },
+
+  /** إنشاء نشاط جديد */
   create: async (activity) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('contact_activities')
+        .insert(activity)
+        .select('*')
+        .single();
+      if (error) return handleError('contactActivities.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('contactActivities.create (exception)', err);
+    }
+  },
+
+  /** حذف نشاط */
+  remove: async (id) => {
+    try {
+      const { error } = await supabase.from('contact_activities').delete().eq('id', id);
+      if (error) return handleError('contactActivities.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('contactActivities.remove (exception)', err);
+    }
   },
 };
 
 // ═══════════════════════════════════════
-// الإشعارات (notifications) — هيكل فقط للمستقبل
+// الإشعارات (notifications)
 // ═══════════════════════════════════════
 const notifications = {
+  /** جلب إشعارات المستخدم */
   list: async (userId) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      if (error) return handleError('notifications.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('notifications.list (exception)', err);
+    }
   },
+
+  /** تعليم إشعار كمقروء */
   markRead: async (id) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) return handleError('notifications.markRead', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('notifications.markRead (exception)', err);
+    }
   },
+
+  /** تعليم كل الإشعارات كمقروءة */
   markAllRead: async (userId) => {
-    /* TODO */
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('user_id', userId)
+        .eq('is_read', false);
+      if (error) return handleError('notifications.markAllRead', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('notifications.markAllRead (exception)', err);
+    }
   },
 };
 
 // ═══════════════════════════════════════
-// تذاكر الدعم (support_tickets) — هيكل فقط للمستقبل
+// تذاكر الدعم (support_tickets)
 // ═══════════════════════════════════════
 const supportTickets = {
+  /** جلب جميع تذاكر المكتب */
   list: async (officeId) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('office_id', officeId)
+        .order('created_at', { ascending: false });
+      if (error) return handleError('supportTickets.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('supportTickets.list (exception)', err);
+    }
   },
+
+  /** إنشاء تذكرة دعم جديدة */
   create: async (ticket) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .insert(ticket)
+        .select('*')
+        .single();
+      if (error) return handleError('supportTickets.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('supportTickets.create (exception)', err);
+    }
   },
+
+  /** تحديث تذكرة دعم */
   update: async (id, updates) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .update(updates)
+        .eq('id', id)
+        .select('*')
+        .single();
+      if (error) return handleError('supportTickets.update', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('supportTickets.update (exception)', err);
+    }
   },
 };
 
 // ═══════════════════════════════════════
-// سجل العمليات (audit_log) — هيكل فقط للمستقبل
+// سجل العمليات (audit_log) — append-only
 // ═══════════════════════════════════════
 const auditLog = {
+  /** تسجيل عملية جديدة */
   log: async (entry) => {
-    /* TODO */
+    try {
+      const { data, error } = await supabase.from('audit_log').insert(entry).select('*').single();
+      if (error) return handleError('auditLog.log', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('auditLog.log (exception)', err);
+    }
   },
+
+  /** جلب سجل العمليات لمكتب مع فلاتر اختيارية */
   list: async (officeId, filters = {}) => {
-    /* TODO */
+    try {
+      let query = supabase.from('audit_log').select('*').eq('office_id', officeId);
+      if (filters.action) query = query.eq('action', filters.action);
+      if (filters.entityType) query = query.eq('entity_type', filters.entityType);
+      if (filters.entityId) query = query.eq('entity_id', filters.entityId);
+      if (filters.performedBy) query = query.eq('performed_by', filters.performedBy);
+      if (filters.from) query = query.gte('created_at', filters.from);
+      if (filters.to) query = query.lte('created_at', filters.to);
+      query = query.order('created_at', { ascending: false });
+      if (filters.limit) query = query.limit(filters.limit);
+      const { data, error } = await query;
+      if (error) return handleError('auditLog.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('auditLog.list (exception)', err);
+    }
   },
 };
 
 // ═══════════════════════════════════════
-// المرفقات (attachments) — هيكل فقط للمستقبل
+// المرفقات (attachments)
 // ═══════════════════════════════════════
 const attachments = {
-  list: async (entityType, entityId) => {
-    /* TODO */
+  /** جلب مرفقات كيان معين */
+  list: async (officeId, entityType = null, entityId = null) => {
+    try {
+      let query = supabase.from('attachments').select('*').eq('office_id', officeId);
+      if (entityType) query = query.eq('entity_type', entityType);
+      if (entityId) query = query.eq('entity_id', entityId);
+      query = query.order('created_at', { ascending: false });
+      const { data, error } = await query;
+      if (error) return handleError('attachments.list', error);
+      return { data: data || [], error: null };
+    } catch (err) {
+      return handleError('attachments.list (exception)', err);
+    }
   },
-  upload: async (file, metadata) => {
-    /* TODO */
+
+  /** إنشاء سجل مرفق (بعد رفع الملف إلى Storage) */
+  create: async (metadata) => {
+    try {
+      const { data, error } = await supabase
+        .from('attachments')
+        .insert(metadata)
+        .select('*')
+        .single();
+      if (error) return handleError('attachments.create', error);
+      return { data, error: null };
+    } catch (err) {
+      return handleError('attachments.create (exception)', err);
+    }
   },
+
+  /** حذف مرفق */
   remove: async (id) => {
-    /* TODO */
+    try {
+      const { error } = await supabase.from('attachments').delete().eq('id', id);
+      if (error) return handleError('attachments.remove', error);
+      return { data: null, error: null };
+    } catch (err) {
+      return handleError('attachments.remove (exception)', err);
+    }
   },
 };
 
@@ -858,7 +1251,9 @@ const supabaseStore = {
   drafts,
   contacts,
   properties,
+  units,
   contracts,
+  contractReceipts,
   paymentSchedule,
   maintenanceRequests,
   contactActivities,

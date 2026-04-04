@@ -3,6 +3,7 @@
   يعرض pulse.alerts مرتبة حسب الخطورة مع زر إجراء وإمكانية الإخفاء.
 */
 import { useState, useMemo } from 'react';
+import { formatCurrency } from '../../utils/format.jsx';
 
 const SEVERITY_ORDER = { critical: 0, warning: 1, info: 2 };
 const SEVERITY_DOT = {
@@ -14,7 +15,7 @@ const SEVERITY_DOT = {
 function formatAmount(val) {
   const n = Number(val);
   if (val == null || !Number.isFinite(n) || n === 0) return null;
-  return `${n.toLocaleString('ar-SA', { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ر.س`;
+  return formatCurrency(n);
 }
 
 function getDaysText(dueDate) {
@@ -63,10 +64,7 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
 
   if (sorted.length === 0) {
     return (
-      <div
-        className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)]/80 p-5 text-center text-[var(--color-muted)]"
-        dir="rtl"
-      >
+      <div className="pulse-card pulse-card__empty" dir="rtl">
         <p className="font-medium">كل شيء على ما يرام</p>
         <p className="text-sm mt-1">لا توجد تنبيهات عاجلة.</p>
       </div>
@@ -74,12 +72,9 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
   }
 
   return (
-    <div
-      className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden"
-      dir="rtl"
-    >
+    <div className="panel-card pulse-card" dir="rtl">
       <style>{slideInStyles}</style>
-      <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
+      <div className="pulse-card__header">
         <h2 className="font-semibold text-[var(--color-text)]">تنبيهات عاجلة ({sorted.length})</h2>
       </div>
       <ul className="divide-y divide-[var(--color-border)]" aria-label="قائمة التنبيهات">
@@ -94,13 +89,12 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
         ))}
       </ul>
       {hasMore && (
-        <div className="px-4 py-2 border-t border-[var(--color-border)] bg-[var(--color-bg)]/50">
+        <div className="pulse-card__footer">
           {onShowAll ? (
             <button
               type="button"
               onClick={onShowAll}
-              className="text-sm font-medium hover:opacity-80"
-              style={{ color: 'var(--color-info)' }}
+              className="pulse-card__link text-sm font-medium"
             >
               عرض الكل ({sorted.length})
             </button>

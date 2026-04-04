@@ -172,7 +172,7 @@
 /* ─── Buttons ─── */
 [data-direction="b"] .btn-primary,
 [data-direction="b"] .btn-secondary,
-[data-direction="b"] .btn-danger {
+[data-direction="b"] .btn-ghost {
   border-radius: 6px;
   min-height: 2.25rem;
   padding: 0.45rem 0.85rem;
@@ -204,7 +204,7 @@
   border-color: #A1A1AA;
 }
 
-[data-direction="b"] .btn-danger {
+[data-direction="b"] .btn-ghost {
   border-radius: 6px;
 }
 

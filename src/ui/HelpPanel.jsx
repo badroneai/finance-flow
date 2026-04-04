@@ -45,16 +45,10 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
         onClick={onClose}
       />
       <div
-        className="relative w-full max-w-lg rounded-2xl border p-5 shadow-lg"
-        style={{
-          background: 'var(--color-surface)',
-          borderColor: 'var(--color-border)',
-          color: 'var(--color-text)',
-          maxHeight: '80vh',
-          overflow: 'auto',
-        }}
+        className="modal-sheet modal-surface max-w-lg help-modal"
+        style={{ color: 'var(--color-text)' }}
       >
-        <div className="flex items-start justify-between gap-3">
+        <div className="help-modal__header">
           <div className="min-w-0">
             <h3 className="text-lg font-bold" style={{ margin: 0 }}>
               الأسئلة الشائعة والمساعدة
@@ -63,24 +57,18 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
               دليل عملي — بدون تسويق، فقط خطوات واضحة.
             </p>
           </div>
-          <button
-            type="button"
-            className="text-sm"
-            style={{ color: 'var(--color-muted)' }}
-            aria-label="إغلاق"
-            onClick={onClose}
-          >
+          <button type="button" className="modal-sheet__close" aria-label="إغلاق" onClick={onClose}>
             ×
           </button>
         </div>
 
-        <div className="mt-4 flex flex-wrap gap-2">
+        <div className="help-modal__chips">
           {HELP_SECTIONS.map((x) => (
             <button
               key={x.k}
               type="button"
               onClick={() => scrollToSection(x.k)}
-              className="px-3 py-2 rounded-lg border text-sm"
+              className="btn-secondary text-sm"
               style={{
                 background: helpSection === x.k ? 'var(--color-info)' : 'transparent',
                 color:
@@ -94,7 +82,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           ))}
         </div>
 
-        <div className="mt-4 space-y-4 text-sm" style={{ color: 'var(--color-text)' }}>
+        <div className="help-modal__content text-sm" style={{ color: 'var(--color-text)' }}>
           <div data-help-section="start">
             <div className="font-semibold">كيف أبدأ؟</div>
             <ol
@@ -184,11 +172,10 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           </div>
         </div>
 
-        <div className="mt-5 flex flex-wrap gap-2">
+        <div className="help-modal__actions">
           <button
             type="button"
-            className="px-4 py-2 rounded-lg border text-sm"
-            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+            className="btn-secondary text-sm"
             onClick={() => {
               onClose();
               onOpenSettings?.();
@@ -198,8 +185,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           </button>
           <button
             type="button"
-            className="px-4 py-2 rounded-lg border text-sm"
-            style={{ borderColor: 'var(--color-border)', color: 'var(--color-text)' }}
+            className="btn-secondary text-sm"
             onClick={() => scrollToSection('backup')}
           >
             فتح ملف النسخ الاحتياطي

@@ -12,7 +12,6 @@ import {
 } from '../../core/ledger-store.js';
 import { buildTxMetaFromRecurring } from '../../core/ledger-analytics.js';
 import { pushHistoryEntry } from '../../core/ledger-item-history.js';
-import { dataStore } from '../../core/dataStore.js';
 import { useData } from '../../contexts/DataContext.jsx';
 
 function todayISO() {
@@ -28,7 +27,6 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
     activeLedgerId: ctxActiveLedgerId,
     recurringItems: ctxRecurringItems,
     updateRecurringItem: ctxUpdateRecurringItem,
-    fetchRecurringItems,
   } = useData();
 
   const amount = Number(dueItem?.amount) || 0;
@@ -118,7 +116,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
           meta: { dueDate: dueItem.dueDate, method: 'cash' },
         });
         // Extract only the changed fields (history + status fields)
-        const { history, ...statusFields } = historyPatch;
+        const { history } = historyPatch;
         historyPatch = { ...recurringUpdate, history };
       } catch {}
 
@@ -161,25 +159,20 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
       aria-modal="true"
       aria-labelledby="quick-payment-title"
     >
-      <div className="bg-[var(--color-surface)] rounded-xl shadow-xl max-w-md w-full max-h-[90vh] overflow-auto">
-        <div className="flex items-center justify-between p-4 border-b border-[var(--color-border)]">
+      <div className="modal-sheet modal-surface modal-surface--md max-h-[90vh] overflow-auto">
+        <div className="modal-sheet__header">
           <h2 id="quick-payment-title" className="text-lg font-bold text-[var(--color-text)]">
             تسجيل دفعة سريع
           </h2>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
-            aria-label="إغلاق"
-          >
+          <button type="button" onClick={onClose} className="modal-sheet__close" aria-label="إغلاق">
             <span className="text-xl leading-none">×</span>
           </button>
         </div>
-        <div className="p-4 space-y-4">
+        <div className="modal-sheet__body">
           <div>
             <p className="font-medium text-[var(--color-text)]">{name}</p>
             <p className="text-sm text-[var(--color-muted)] mt-0.5">
-              المبلغ المستحق: {formatCurrency(dueItem.amount)} ر.س
+              المبلغ المستحق: {formatCurrency(dueItem.amount)}
             </p>
           </div>
 

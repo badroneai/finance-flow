@@ -6,10 +6,6 @@
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function todayKey(now = new Date()) {
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-}
-
 function daysUntil(dateStr, now = new Date()) {
   if (!dateStr) return null;
   const end = new Date(String(dateStr).slice(0, 10) + 'T00:00:00');

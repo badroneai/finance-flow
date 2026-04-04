@@ -21,16 +21,18 @@ function SaPricingModal({
       onClick={() => setSaPricingOpen(false)}
     >
       <div
-        className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] shadow-lg p-5 w-full max-w-md"
+        className="panel-card modal-surface modal-surface--md"
         dir="rtl"
         onClick={(e) => e.stopPropagation()}
       >
-        <h4 className="font-bold text-[var(--color-text)] mb-1">
-          تسعير تلقائي (أسعار السوق السعودي)
-        </h4>
-        <p className="text-xs text-[var(--color-muted)] mb-3">
-          يطبّق أسعاراً مقترحة بناءً على المدينة وحجم المكتب.
-        </p>
+        <div className="ledger-panel__header">
+          <div>
+            <h4 className="ledger-panel__title">تسعير تلقائي (أسعار السوق السعودي)</h4>
+            <p className="ledger-panel__subtitle">
+              يطبّق أسعاراً مقترحة بناءً على المدينة وحجم المكتب.
+            </p>
+          </div>
+        </div>
         <div className="flex flex-col gap-3">
           <div>
             <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
@@ -74,11 +76,7 @@ function SaPricingModal({
           </label>
         </div>
         <div className="flex gap-2 justify-end mt-4">
-          <button
-            type="button"
-            onClick={() => setSaPricingOpen(false)}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
-          >
+          <button type="button" onClick={() => setSaPricingOpen(false)} className="btn-secondary">
             إلغاء
           </button>
           <button
@@ -96,7 +94,7 @@ function SaPricingModal({
                 refresh();
               } else toast.error(result.message || 'تعذر التطبيق');
             }}
-            className="px-4 py-2 rounded-lg bg-[var(--color-primary)] text-[var(--color-text-inverse)] text-sm font-medium hover:bg-[var(--color-primary-strong)]"
+            className="btn-primary"
           >
             تطبيق التسعير
           </button>

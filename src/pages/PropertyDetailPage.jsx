@@ -29,7 +29,11 @@ import {
   defaultUnit,
   computeUnitsSummary,
 } from '../domain/units.js';
-import { getContractTypeLabel, getContractStatusLabel, getContractStatusColor } from '../domain/contracts.js';
+import {
+  getContractTypeLabel,
+  getContractStatusLabel,
+  getContractStatusColor,
+} from '../domain/contracts.js';
 
 function getStatusScopedFields(status) {
   if (status === 'rented') {
@@ -138,7 +142,7 @@ function PropertyEditForm({
   };
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+    <div className="detail-section mb-4">
       <div className="flex items-center justify-between gap-3 mb-4">
         <h3 className="font-bold text-[var(--color-text)]">تعديل بيانات العقار</h3>
         <button
@@ -338,7 +342,7 @@ function PropertyEditForm({
             }}
             disabled={!manualOwnerEntry && !!form.ownerId}
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left disabled:opacity-60"
+            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start disabled:opacity-60"
           />
         </FormField>
       </div>
@@ -392,7 +396,7 @@ function PropertyEditForm({
                 value={form.tenantPhone || ''}
                 onChange={(e) => handleChange('tenantPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -437,7 +441,7 @@ function PropertyEditForm({
                 value={form.maintenanceContactPhone || ''}
                 onChange={(e) => handleChange('maintenanceContactPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -482,7 +486,7 @@ function PropertyEditForm({
                 value={form.buyerPhone || ''}
                 onChange={(e) => handleChange('buyerPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -646,14 +650,14 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
         <table className="w-full text-sm">
           <thead className="bg-[var(--color-bg)] text-[var(--color-muted)]">
             <tr>
-              <th className="p-3 text-right">الوحدة</th>
-              <th className="p-3 text-right">النوع</th>
-              <th className="p-3 text-right">المساحة</th>
-              <th className="p-3 text-right">الغرف</th>
-              <th className="p-3 text-right">الإيجار</th>
-              <th className="p-3 text-right">الحالة</th>
-              <th className="p-3 text-right">العقد الحالي</th>
-              <th className="p-3 text-right">الإجراءات</th>
+              <th className="p-3 u-text-start">الوحدة</th>
+              <th className="p-3 u-text-start">النوع</th>
+              <th className="p-3 u-text-start">المساحة</th>
+              <th className="p-3 u-text-start">الغرف</th>
+              <th className="p-3 u-text-start">الإيجار</th>
+              <th className="p-3 u-text-start">الحالة</th>
+              <th className="p-3 u-text-start">العقد الحالي</th>
+              <th className="p-3 u-text-start">الإجراءات</th>
             </tr>
           </thead>
           <tbody className="bg-[var(--color-surface)]">
@@ -672,7 +676,7 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
                   <td className="p-3 text-[var(--color-muted)]">{unit.areaSqm || '—'}</td>
                   <td className="p-3 text-[var(--color-muted)]">{unit.rooms || '—'}</td>
                   <td className="p-3 text-[var(--color-text)]">
-                    {unit.monthlyRent ? `${formatCurrency(safeNum(unit.monthlyRent))} ر.س` : '—'}
+                    {unit.monthlyRent ? `${formatCurrency(safeNum(unit.monthlyRent))}` : '—'}
                   </td>
                   <td className="p-3">
                     <Badge color={getUnitStatusColor(effectiveStatus)}>
@@ -747,12 +751,14 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
                 <span>المساحة: {unit.areaSqm || '—'}</span>
                 <span>الغرف: {unit.rooms || '—'}</span>
                 <span>
-                  الإيجار: {unit.monthlyRent ? `${formatCurrency(safeNum(unit.monthlyRent))} ر.س` : '—'}
+                  الإيجار: {unit.monthlyRent ? `${formatCurrency(safeNum(unit.monthlyRent))}` : '—'}
                 </span>
               </div>
               <div className="text-sm text-[var(--color-muted)] mt-2">
                 العقد الحالي:{' '}
-                {activeContract ? `${tenant || 'عميل مرتبط'} — #${activeContract.contractNumber || '—'}` : 'لا يوجد'}
+                {activeContract
+                  ? `${tenant || 'عميل مرتبط'} — #${activeContract.contractNumber || '—'}`
+                  : 'لا يوجد'}
               </div>
               <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]">
                 <button
@@ -849,7 +855,9 @@ export default function PropertyDetailPage() {
       propertyUnits.map((unit) => ({
         ...unit,
         effectiveStatus:
-          activeContractsByUnitId[unit.id] && unit.status !== 'maintenance' ? 'occupied' : unit.status,
+          activeContractsByUnitId[unit.id] && unit.status !== 'maintenance'
+            ? 'occupied'
+            : unit.status,
       })),
     [propertyUnits, activeContractsByUnitId]
   );
@@ -865,7 +873,10 @@ export default function PropertyDetailPage() {
   const [savingUnit, setSavingUnit] = useState(false);
   const [confirmDeleteUnit, setConfirmDeleteUnit] = useState(null);
 
-  const unitsSummary = useMemo(() => computeUnitsSummary(effectivePropertyUnits), [effectivePropertyUnits]);
+  const unitsSummary = useMemo(
+    () => computeUnitsSummary(effectivePropertyUnits),
+    [effectivePropertyUnits]
+  );
   const currentMonthlyIncome = useMemo(() => {
     if (propertyUnits.length > 0) {
       return propertyUnits.reduce((sum, unit) => {
@@ -932,11 +943,14 @@ export default function PropertyDetailPage() {
     setShowUnitForm(true);
   }, [id]);
 
-  const startEditUnit = useCallback((unit) => {
-    setUnitForm({ ...defaultUnit(id), ...unit });
-    setEditingUnitId(unit.id);
-    setShowUnitForm(true);
-  }, [id]);
+  const startEditUnit = useCallback(
+    (unit) => {
+      setUnitForm({ ...defaultUnit(id), ...unit });
+      setEditingUnitId(unit.id);
+      setShowUnitForm(true);
+    },
+    [id]
+  );
 
   const handleCancelUnit = useCallback(() => {
     setUnitForm(defaultUnit(id));
@@ -989,7 +1003,7 @@ export default function PropertyDetailPage() {
 
   if (!property) {
     return (
-      <div className="px-4 md:px-6 max-w-4xl mx-auto py-6" dir="rtl">
+      <div className="page-shell page-shell--regular" dir="rtl">
         <EmptyState
           title="عقار غير موجود"
           description="قد يكون العقار حُذف أو أن الرابط غير صحيح."
@@ -1003,7 +1017,7 @@ export default function PropertyDetailPage() {
   const propertyStatusColor = getPropertyStatusColor(property.status);
 
   return (
-    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+    <div className="page-shell page-shell--regular" dir="rtl">
       <div className="text-sm text-[var(--color-muted)] mb-3">
         <button type="button" onClick={() => navigate('/properties')} className="hover:underline">
           العقارات
@@ -1012,7 +1026,7 @@ export default function PropertyDetailPage() {
         <span>{property.name}</span>
       </div>
 
-      <div className="detail-hero panel-card bg-[var(--color-surface)] mb-4">
+      <div className="detail-hero mb-4">
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex items-start gap-3 min-w-0">
             <span className="text-[var(--color-primary)]" aria-hidden="true">
@@ -1041,18 +1055,10 @@ export default function PropertyDetailPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={openPropertyEditor}
-              className="btn-primary"
-            >
+            <button type="button" onClick={openPropertyEditor} className="btn-primary">
               تعديل العقار
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/properties')}
-              className="btn-secondary"
-            >
+            <button type="button" onClick={() => navigate('/properties')} className="btn-secondary">
               رجوع للقائمة
             </button>
           </div>
@@ -1075,7 +1081,7 @@ export default function PropertyDetailPage() {
         />
       )}
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      <div className="route-summary-grid route-summary-grid--quad mb-4">
         <SummaryCard
           label="الإيراد الشهري الحالي"
           value={formatCurrency(currentMonthlyIncome)}
@@ -1090,7 +1096,13 @@ export default function PropertyDetailPage() {
         />
         <SummaryCard
           label="الوحدات الشاغرة"
-          value={propertyUnits.length ? unitsSummary.vacantCount : property.status === 'available' ? 1 : 0}
+          value={
+            propertyUnits.length
+              ? unitsSummary.vacantCount
+              : property.status === 'available'
+                ? 1
+                : 0
+          }
           color="yellow"
           icon={<Icons.home size={18} />}
         />
@@ -1110,17 +1122,20 @@ export default function PropertyDetailPage() {
           <PropertyInfoItem label="العنوان الوطني" value={property.nationalAddress} />
           <PropertyInfoItem label="المدينة" value={property.city} />
           <PropertyInfoItem label="الحي" value={property.district} />
-          <PropertyInfoItem label="المساحة" value={property.areaSqm ? `${property.areaSqm} م²` : '—'} />
+          <PropertyInfoItem
+            label="المساحة"
+            value={property.areaSqm ? `${property.areaSqm} م²` : '—'}
+          />
           <PropertyInfoItem label="سنة البناء" value={property.yearBuilt} />
           <PropertyInfoItem label="الطوابق" value={property.floors} />
           <PropertyInfoItem label="الحمامات" value={property.bathrooms} />
           <PropertyInfoItem
             label="سعر الشراء"
-            value={property.purchasePrice ? `${formatCurrency(safeNum(property.purchasePrice))} ر.س` : '—'}
+            value={property.purchasePrice ? formatCurrency(safeNum(property.purchasePrice)) : '—'}
           />
           <PropertyInfoItem
             label="الإيجار الشهري"
-            value={property.monthlyRent ? `${formatCurrency(safeNum(property.monthlyRent))} ر.س` : '—'}
+            value={property.monthlyRent ? formatCurrency(safeNum(property.monthlyRent)) : '—'}
           />
           <PropertyInfoItem label="عدد الوحدات المخطط" value={property.unitsCount} />
         </div>
@@ -1162,7 +1177,9 @@ export default function PropertyDetailPage() {
         ) : property.ownerName ? (
           <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-sm text-[var(--color-text)]">
             <div className="font-medium">{property.ownerName}</div>
-            <div className="text-[var(--color-muted)] mt-1">{property.ownerPhone || 'لا يوجد جوال'}</div>
+            <div className="text-[var(--color-muted)] mt-1">
+              {property.ownerPhone || 'لا يوجد جوال'}
+            </div>
           </div>
         ) : (
           <div className="text-sm text-[var(--color-muted)]">لم يُحدد مالك لهذا العقار.</div>
@@ -1175,14 +1192,16 @@ export default function PropertyDetailPage() {
         property.maintenanceContactPhone ||
         property.buyerName ||
         property.buyerPhone) && (
-        <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+        <section className="detail-section mb-4">
           <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات مرتبطة بالحالة الحالية</h2>
           {property.status === 'rented' && (
             <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-sm">
               <div className="font-medium text-[var(--color-text)]">
                 {property.tenantName || 'مستأجر غير محدد'}
               </div>
-              <div className="text-[var(--color-muted)] mt-1">{property.tenantPhone || 'لا يوجد جوال'}</div>
+              <div className="text-[var(--color-muted)] mt-1">
+                {property.tenantPhone || 'لا يوجد جوال'}
+              </div>
             </div>
           )}
           {property.status === 'maintenance' && (
@@ -1200,13 +1219,15 @@ export default function PropertyDetailPage() {
               <div className="font-medium text-[var(--color-text)]">
                 {property.buyerName || 'مشتري غير محدد'}
               </div>
-              <div className="text-[var(--color-muted)] mt-1">{property.buyerPhone || 'لا يوجد جوال'}</div>
+              <div className="text-[var(--color-muted)] mt-1">
+                {property.buyerPhone || 'لا يوجد جوال'}
+              </div>
             </div>
           )}
         </section>
       )}
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <div className="flex items-center justify-between gap-3 mb-3">
           <div>
             <h2 className="font-bold text-[var(--color-text)]">الوحدات</h2>
@@ -1216,11 +1237,7 @@ export default function PropertyDetailPage() {
                 : 'هذا النوع من العقارات لا يحتاج وحدات فرعية غالبًا، لكن يمكنك إضافتها إذا لزم.'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={startCreateUnit}
-            className="btn-primary"
-          >
+          <button type="button" onClick={startCreateUnit} className="btn-primary">
             إضافة وحدة
           </button>
         </div>
@@ -1260,12 +1277,14 @@ export default function PropertyDetailPage() {
         )}
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
+      <section className="detail-section mb-4">
         <h2 className="font-bold text-[var(--color-text)] mb-3">العقود المرتبطة</h2>
         {propertyContracts.length > 0 ? (
           <div className="space-y-3">
             {propertyContracts.map((contract) => {
-              const contact = contacts.find((item) => item.id === (contract.contactId || contract.contact_id));
+              const contact = contacts.find(
+                (item) => item.id === (contract.contactId || contract.contact_id)
+              );
               return (
                 <div
                   key={contract.id}
@@ -1289,14 +1308,21 @@ export default function PropertyDetailPage() {
                     <span>رقم العقد: {contract.contractNumber || '—'}</span>
                     <span>
                       الوحدة:{' '}
-                      {propertyUnits.find((unit) => unit.id === (contract.unitId || contract.unit_id))?.name ||
-                        '—'}
+                      {propertyUnits.find(
+                        (unit) => unit.id === (contract.unitId || contract.unit_id)
+                      )?.name || '—'}
                     </span>
                     <span>
-                      القيمة: {contract.totalAmount ? `${formatCurrency(safeNum(contract.totalAmount))} ر.س` : '—'}
+                      القيمة:{' '}
+                      {contract.totalAmount
+                        ? `${formatCurrency(safeNum(contract.totalAmount))}`
+                        : '—'}
                     </span>
                     <span>
-                      الإيجار الشهري: {contract.monthlyRent ? `${formatCurrency(safeNum(contract.monthlyRent))} ر.س` : '—'}
+                      الإيجار الشهري:{' '}
+                      {contract.monthlyRent
+                        ? `${formatCurrency(safeNum(contract.monthlyRent))}`
+                        : '—'}
                     </span>
                   </div>
                 </div>
@@ -1308,7 +1334,7 @@ export default function PropertyDetailPage() {
         )}
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
+      <section className="detail-section">
         <h2 className="font-bold text-[var(--color-text)] mb-3">إجراءات سريعة</h2>
         <div className="flex flex-wrap gap-2">
           <button

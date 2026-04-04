@@ -103,7 +103,7 @@ function mount() {
   try {
     // PR-1 migration (idempotent): ensure default ledger exists.
     ensureDefaultLedger();
-  } catch (_) {}
+  } catch {}
 
   try {
     ReactDOM.createRoot(el).render(

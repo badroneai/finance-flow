@@ -28,10 +28,16 @@ function RecurringItemList({
   isPastDue,
 }) {
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-        <h4 className="font-bold text-[var(--color-text)]">الالتزامات الحالية</h4>
-        <div className="flex flex-wrap gap-1.5">
+    <div className="panel-card ledger-panel ledger-content-panel">
+      <div className="ledger-panel__header">
+        <div>
+          <span className="ledger-panel__eyebrow">القائمة التشغيلية</span>
+          <h4 className="ledger-panel__title">الالتزامات الحالية</h4>
+          <p className="ledger-panel__subtitle">
+            راجع البنود النشطة، صِفّها حسب الأولوية، ثم اتخذ الإجراءات مباشرة من نفس السياق.
+          </p>
+        </div>
+        <div className="ledger-segmented">
           {[
             { key: 'all', label: 'الكل', count: allItems.length },
             { key: 'overdue', label: 'متأخر', count: overdueCount },
@@ -41,9 +47,10 @@ function RecurringItemList({
               key={f.key}
               type="button"
               onClick={() => setListFilter(f.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${listFilter === f.key ? 'bg-[var(--color-primary)] text-[var(--color-text-inverse)] border-[var(--color-primary)]' : 'bg-[var(--color-surface)] text-[var(--color-muted)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'}`}
+              className={`ledger-segmented__button ${listFilter === f.key ? 'is-active' : ''}`}
             >
-              {f.label} {f.count > 0 && <span className="opacity-75">({f.count})</span>}
+              {f.label}{' '}
+              {f.count > 0 && <span className="ledger-segmented__count">({f.count})</span>}
             </button>
           ))}
         </div>
@@ -51,21 +58,21 @@ function RecurringItemList({
 
       {/* أزرار التسعير السريع */}
       {unpricedList && unpricedList.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-3 p-3 rounded-xl border border-[var(--color-warning)] bg-[var(--color-warning-bg)]">
-          <span className="text-sm text-[var(--color-warning)]">
+        <div className="ledger-callout ledger-callout--warning">
+          <span className="ledger-callout__text ledger-callout__text--warning">
             {unpricedList.length} التزام بدون مبلغ
           </span>
           <button
             type="button"
             onClick={openPricingWizard}
-            className="px-3 py-1.5 rounded-lg bg-[var(--color-warning)] text-[var(--color-text-inverse)] text-xs font-medium hover:bg-[var(--color-warning-light)]"
+            className="ledger-chip-action ledger-chip-action--warning"
           >
             معالج التسعير
           </button>
           <button
             type="button"
             onClick={() => setSaPricingOpen(true)}
-            className="px-3 py-1.5 rounded-lg border border-[var(--color-warning)] text-[var(--color-warning)] text-xs font-medium hover:bg-[var(--color-warning-bg)]"
+            className="ledger-chip-action ledger-chip-action--ghost-warning"
           >
             تسعير تلقائي (سعودي)
           </button>
@@ -73,19 +80,21 @@ function RecurringItemList({
       )}
 
       {filteredItems.length === 0 ? (
-        <div className="py-10 text-center">
-          <p className="text-[var(--color-text)] font-medium">
-            لا توجد التزامات
-            {listFilter !== 'all' ? ` (${listFilter === 'overdue' ? 'متأخرة' : 'قريبة'})` : ''}
-          </p>
-          {allItems.length === 0 && (
-            <p className="text-sm text-[var(--color-muted)] mt-2">
-              أضف أول التزام (مثل: إيجار المكتب، فاتورة الكهرباء، رسوم البلدية)
+        <div className="ledger-empty-wrap">
+          <div className="ledger-empty-wrap__note">
+            <p className="ledger-empty-wrap__title">
+              لا توجد التزامات
+              {listFilter !== 'all' ? ` (${listFilter === 'overdue' ? 'متأخرة' : 'قريبة'})` : ''}
             </p>
-          )}
+            {allItems.length === 0 && (
+              <p className="ledger-empty-wrap__description">
+                أضف أول التزام مثل إيجار المكتب أو فاتورة الكهرباء لتبدأ المتابعة من مكان واحد.
+              </p>
+            )}
+          </div>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="ledger-stack">
           {filteredItems.map((item) => {
             const status = getStatusInfo(item);
             const catLabel =
@@ -97,43 +106,37 @@ function RecurringItemList({
               <div
                 key={item.id}
                 id={`rec-${item.id}`}
-                className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] hover:shadow-sm transition-shadow"
+                className="ledger-item-card"
                 data-overdue={isPastDue(item) ? '1' : '0'}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                  {/* Info */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="font-semibold text-[var(--color-text)] truncate">
-                        {item.title || '—'}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[11px] border ${status.color}`}
-                      >
+                <div className="ledger-item-card__body">
+                  <div className="ledger-item-card__content">
+                    <div className="ledger-row ledger-row--wrap">
+                      <p className="ledger-item-card__title">{item.title || '—'}</p>
+                    </div>
+                    <div className="ledger-item-card__badges">
+                      <span className={`ledger-item-card__badge ${status.modifier}`}>
                         {status.label}
                       </span>
-                      <span className="px-2 py-0.5 rounded-full text-[11px] border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-muted)]">
-                        {catLabel}
-                      </span>
+                      <span className="ledger-item-card__badge">{catLabel}</span>
                     </div>
-                    <div className="flex flex-wrap gap-3 mt-1 text-xs text-[var(--color-muted)]">
+                    <div className="ledger-item-card__meta">
                       <span>{freqLabel}</span>
                       {item.nextDueDate && <span>الاستحقاق: {item.nextDueDate}</span>}
-                      <span className="font-semibold text-[var(--color-text)]">
+                      <span className="ledger-item-card__amount">
                         {Number(item.amount) > 0 ? (
                           <Currency value={item.amount} />
                         ) : (
-                          <span className="text-[var(--color-warning)]">غير مسعّر</span>
+                          <span className="ledger-item-card__amount--unpriced">غير مسعّر</span>
                         )}
                       </span>
                     </div>
                     {item.notes?.trim() && (
-                      <div className="text-xs text-[var(--color-muted)] mt-1">{item.notes}</div>
+                      <div className="ledger-item-card__note">{item.notes}</div>
                     )}
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-wrap gap-1.5 justify-end shrink-0">
+                  <div className="ledger-item-card__actions">
                     <button
                       type="button"
                       onClick={() => {
@@ -143,7 +146,7 @@ function RecurringItemList({
                         if (r) startPayNow(r);
                       }}
                       disabled={Number(item.amount) === 0}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium border ${Number(item.amount) === 0 ? 'bg-[var(--color-bg)] text-[var(--color-muted)] border-[var(--color-border)] cursor-not-allowed' : 'bg-[var(--color-success)] text-[var(--color-text-inverse)] border-[var(--color-success)] hover:bg-[var(--color-success-light)]'}`}
+                      className={`ledger-chip-action ledger-chip-action--success ${Number(item.amount) === 0 ? 'is-disabled' : ''}`}
                       aria-label="سجّل دفعة"
                     >
                       سجّل دفعة
@@ -151,7 +154,7 @@ function RecurringItemList({
                     <button
                       type="button"
                       onClick={() => startEditRecurring(item)}
-                      className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-xs font-medium hover:bg-[var(--color-bg)]"
+                      className="ledger-chip-action ledger-chip-action--neutral"
                       aria-label="تعديل"
                     >
                       تعديل
@@ -159,7 +162,7 @@ function RecurringItemList({
                     <button
                       type="button"
                       onClick={() => deleteRecurring(item.id)}
-                      className="px-3 py-1.5 rounded-lg border border-[var(--color-danger)] text-[var(--color-danger)] text-xs font-medium hover:bg-[var(--color-danger-bg)]"
+                      className="ledger-chip-action ledger-chip-action--danger"
                       aria-label="حذف"
                     >
                       حذف
