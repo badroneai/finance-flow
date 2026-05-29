@@ -34,5 +34,22 @@
       "Read(./.env.*)",
       "Read(./.env.local)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in */src/*.js|*/src/*.jsx|src/*.js|src/*.jsx) npx prettier --write \"$f\" && npx eslint --fix --no-warn-ignored \"$f\" ;; esac"
+          },
+          {
+            "type": "command",
+            "command": "f=$(jq -r '.tool_input.file_path // empty'); case \"$f\" in *src/domain/*|*src/core/*) npx vitest related --run \"$f\" ;; esac"
+          }
+        ]
+      }
+    ]
   }
 }
