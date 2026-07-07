@@ -27,7 +27,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
 
   return (
     <nav
-      className="bottom-nav-shell md:hidden no-print safe-area-pb"
+      className="bottom-nav-shell no-print safe-area-pb"
       aria-label="التنقل الرئيسي"
       dir="rtl"
     >
@@ -45,25 +45,25 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
               }}
               aria-label={item.label}
               aria-current={isActive ? 'page' : undefined}
-              className={`bottom-nav-item flex-1 text-xs ${isActive ? 'is-active' : ''}`}
+              className={`bottom-nav-item ${isActive ? 'is-active' : ''}`}
             >
               {Icon && <Icon size={22} />}
-              <span className="leading-tight">{item.label}</span>
+              <span>{item.label}</span>
             </button>
           );
         })}
 
         {moreItems.length > 0 && (
-          <div className="relative flex-1 h-full" ref={moreRef}>
+          <div className="bottom-nav-more-wrap" ref={moreRef}>
             <button
               type="button"
               onClick={() => setMoreOpen((v) => !v)}
               aria-label="المزيد"
               aria-expanded={moreOpen}
-              className={`bottom-nav-item w-full h-full text-xs ${isMoreActive ? 'is-active' : ''}`}
+              className={`bottom-nav-item ${isMoreActive ? 'is-active' : ''}`}
             >
               {MoreIcon ? <MoreIcon size={22} /> : <span style={{ fontSize: 18 }}>⋮</span>}
-              <span className="leading-tight">المزيد</span>
+              <span>المزيد</span>
             </button>
 
             {moreOpen && (
@@ -80,11 +80,7 @@ export const BottomNav = ({ navItems, page, setPage, mainIds, moreIds, MoreIcon 
                         setPage(item.id);
                         setMoreOpen(false);
                       }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm transition-colors"
-                      style={{
-                        background: isActive ? 'var(--color-info-bg)' : 'transparent',
-                        color: isActive ? 'var(--color-info)' : 'var(--color-text)',
-                      }}
+                      className={`bottom-nav-more-item ${isActive ? 'is-active' : ''}`}
                     >
                       {Icon && <Icon size={18} />}
                       <span>{item.label}</span>

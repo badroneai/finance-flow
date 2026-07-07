@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>خطة إصلاح الإطلاق — قيد العقار</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --navy: #0F1C2E;
+    --gold: #6B5A2E;
+    --gray: #8A8F98;
+    --white: #FFFFFF;
+    --bg: #F8F9FB;
+    --red: #DC3545;
+    --orange: #F59E0B;
+    --green: #10B981;
+    --blue: #3B82F6;
+    --card-shadow: 0 2px 12px rgba(15,28,46,0.08);
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans Arabic', sans-serif;
+    background: var(--bg);
+    color: var(--navy);
+    line-height: 1.7;
+    padding: 32px 16px;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; }
+
+  .header {
+    background: linear-gradient(135deg, var(--navy) 0%, #1a2d47 100%);
+    color: var(--white);
+    padding: 40px 32px;
+    border-radius: var(--radius);
+    margin-bottom: 32px;
+    text-align: center;
+  }
+
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { color: rgba(255,255,255,0.7); font-size: 15px; }
+
+  .score-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 24px;
+  }
+
+  .score-circle {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: 4px solid var(--gold);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px; font-weight: 700; color: var(--gold);
+  }
+
+  .score-label { color: rgba(255,255,255,0.85); font-size: 14px; }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .stat-card {
+    background: var(--white);
+    padding: 20px 16px;
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    text-align: center;
+  }
+
+  .stat-card .num { font-size: 32px; font-weight: 700; }
+  .stat-card .label { font-size: 13px; color: var(--gray); margin-top: 4px; }
+  .stat-card.critical .num { color: var(--red); }
+  .stat-card.medium .num { color: var(--orange); }
+  .stat-card.ok .num { color: var(--green); }
+  .stat-card.info .num { color: var(--blue); }
+
+  .phase {
+    background: var(--white);
+    border-radius: var(--radius);
+    box-shadow: var(--card-shadow);
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+
+  .phase-header {
+    padding: 20px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #EEF0F3;
+  }
+
+  .phase-header:hover { background: #FAFBFC; }
+
+  .phase-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    font-size: 14px; font-weight: 700;
+    color: var(--white);
+    flex-shrink: 0;
+  }
+
+  .phase-badge.p0 { background: var(--red); }
+  .phase-badge.p1 { background: var(--orange); }
+  .phase-badge.p2 { background: var(--blue); }
+  .phase-badge.p3 { background: var(--green); }
+
+  .phase-title { font-size: 17px; font-weight: 600; flex: 1; }
+  .phase-meta { font-size: 13px; color: var(--gray); }
+
+  .phase-body { padding: 0 24px 24px; }
+
+  .task-group {
+    margin-top: 20px;
+    padding: 16px 20px;
+    background: #F8F9FB;
+    border-radius: 10px;
+    border-right: 4px solid var(--gold);
+  }
+
+  .task-group h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--navy);
+  }
+
+  .task-group .desc {
+    font-size: 14px;
+    color: #4A5568;
+    margin-bottom: 12px;
+  }
+
+  .file-ref {
+    display: inline-block;
+    background: #EDF2F7;
+    color: var(--navy);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin: 2px 0;
+    direction: ltr;
+    unicode-bidi: embed;
+  }
+
+  .steps { list-style: none; padding: 0; margin-top: 10px; }
+
+  .steps li {
+    padding: 8px 0;
+    padding-right: 24px;
+    position: relative;
+    font-size: 14px;
+    color: #2D3748;
+    border-bottom: 1px dashed #E2E8F0;
+  }
+
+  .steps li:last-child { border-bottom: none; }
+
+  .steps li::before {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 14px;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    border: 2px solid var(--gold);
+    background: var(--white);
+  }
+
+  .effort-tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-right: 8px;
+    font-weight: 600;
+  }
+
+  .effort-tag.small { background: #DEF7EC; color: #03543F; }
+  .effort-tag.medium { background: #FEF3C7; color: #92400E; }
+  .effort-tag.large { background: #FEE2E2; color: #991B1B; }
+
+  .timeline {
+    display: flex;
+    gap: 4px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid #E2E8F0;
+  }
+
+  .timeline-block {
+    flex: 1;
+    height: 8px;
+    border-radius: 4px;
+  }
+
+  .timeline-block.done { background: var(--green); }
+  .timeline-block.todo { background: #E2E8F0; }
+
+  .summary-box {
+    background: linear-gradient(135deg, #FFFBEB 0%, #FEF3C7 100%);
+    border: 1px solid #F59E0B;
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 32px;
+  }
+
+  .summary-box h3 { font-size: 17px; font-weight: 600; color: #92400E; margin-bottom: 12px; }
+  .summary-box p { font-size: 14px; color: #78350F; }
+
+  .prompt-box {
+    background: var(--navy);
+    color: #E2E8F0;
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-top: 24px;
+    font-size: 13px;
+    direction: ltr;
+    text-align: left;
+    white-space: pre-wrap;
+    font-family: 'IBM Plex Mono', monospace;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  .prompt-box .comment { color: var(--gray); }
+
+  @media (max-width: 640px) {
+    .stats-row { grid-template-columns: repeat(2, 1fr); }
+    .header h1 { font-size: 22px; }
+    body { padding: 16px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>خطة إصلاح الإطلاق — قيد العقار</h1>
+    <div class="subtitle">بناءً على تحليل Codex الشامل | 1 أبريل 2026</div>
+    <div class="score-bar">
+      <div>
+        <div class="score-circle">68%</div>
+        <div class="score-label">نسبة الجاهزية</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-row">
+    <div class="stat-card critical">
+      <div class="num">4</div>
+      <div class="label">مشاكل حرجة P0</div>
+    </div>
+    <div class="stat-card medium">
+      <div class="num">5</div>
+      <div class="label">مشاكل متوسطة P1</div>
+    </div>
+    <div class="stat-card info">
+      <div class="num">3</div>
+      <div class="label">تحسينات P2</div>
+    </div>
+    <div class="stat-card ok">
+      <div class="num">206</div>
+      <div class="label">اختبار ناجح</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--                المرحلة P0                   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-badge p0">P0</div>
+      <div class="phase-title">مشاكل حرجة — لا إطلاق بدون إصلاحها</div>
+      <div class="phase-meta">4 مهام | ~3-4 أيام عمل</div>
+    </div>
+    <div class="phase-body">
+
+      <!-- P0-1 -->
+      <div class="task-group">
+        <h4>P0-1: توحيد البيانات المحلية في Supabase</h4>
+        <div class="desc">
+          ثلاثة كيانات تشغيلية (الوحدات، دفعات العقود، سندات القبض) تعمل حالياً على localStorage فقط حتى في وضع السحابة. هذا يعني أن المستخدم يرى عقوداً سحابية لكن دفعاتها تبقى على جهاز واحد فقط.
+        </div>
+        <div>
+          <span class="file-ref">src/contexts/DataContext.jsx</span>
+          الأسطر 312-328 (units) | 374-386 (contractPayments) | 388-399 (contractReceipts)
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="effort-tag large">كبير</span>
+            إنشاء CRUD كامل في <span class="file-ref">supabase-store.js</span> لجداول: <code>units</code> (كجزء من properties أو جدول منفصل)، <code>payment_schedule</code>، وجدول جديد لسندات القبض
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            تعديل DataContext: تحويل <code>loadUnits</code> و<code>loadContractPayments</code> و<code>loadContractReceipts</code> لتتبع نمط isCloud الهجين الموجود في باقي الكيانات
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            تعديل عمليات CRUD (create/update/remove) في الأسطر 1033-1100 لتمر عبر Supabase في وضع السحابة
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            كتابة migration script لنقل البيانات المحلية الموجودة إلى Supabase عند أول اتصال سحابي
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            كتابة اختبارات تكامل للتحقق من تزامن البيانات بين الوضعين
+          </li>
+        </ol>
+      </div>
+
+      <!-- P0-2 -->
+      <div class="task-group">
+        <h4>P0-2: إكمال supabase-store للجداول المؤجلة</h4>
+        <div class="desc">
+          8 جداول من أصل 18 (45%) ما زالت TODO بدون أي تنفيذ. الجداول الحرجة للإطلاق: payment_schedule و maintenance_requests. الباقي ممكن يتأجل.
+        </div>
+        <div>
+          <span class="file-ref">src/core/supabase-store.js</span>
+          الأسطر 746-846
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="effort-tag large">كبير</span>
+            <strong>إلزامي للإطلاق:</strong> تنفيذ CRUD كامل لـ <code>paymentSchedule</code> (سطر 750) و <code>maintenanceRequests</code> (سطر 764)
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            <strong>مهم:</strong> تنفيذ <code>contactActivities</code> (سطر 782) و <code>notifications</code> (سطر 794)
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            <strong>ممكن يتأجل:</strong> <code>supportTickets</code> (سطر 809)، <code>auditLog</code> (سطر 824)، <code>attachments</code> (سطر 836)
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            لكل جدول مؤجل: إما نفّذه أو أخفِ الميزة المرتبطة فيه من الواجهة مع رسالة "قريباً"
+          </li>
+        </ol>
+      </div>
+
+      <!-- P0-3 -->
+      <div class="task-group">
+        <h4>P0-3: إصلاح النسخ الاحتياطي والتصدير</h4>
+        <div class="desc">
+          دالة التصدير في الإعدادات تصدّر 6 كيانات فقط من أصل 11. بيانات حرجة مثل العقارات وجهات الاتصال والعقود غير مشمولة. هذا يخالف متطلبات PDPL (حق التصدير).
+        </div>
+        <div>
+          <span class="file-ref">src/pages/SettingsPage.jsx</span>
+          الأسطر 271-320
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            إضافة الكيانات الناقصة للتصدير: <code>properties</code>، <code>contacts</code>، <code>contracts</code>، <code>units</code>، <code>contractReceipts</code>
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            إضافة التحقق من اكتمال البيانات المصدّرة (checksum أو عدد السجلات)
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            بناء دالة استيراد (import) متوافقة مع ملف التصدير لاسترجاع البيانات
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            اختبار دورة كاملة: تصدير ← مسح ← استيراد ← تحقق
+          </li>
+        </ol>
+      </div>
+
+      <!-- P0-4 -->
+      <div class="task-group">
+        <h4>P0-4: الامتثال السعودي للمستندات المالية</h4>
+        <div class="desc">
+          نموذج الإيصال لا يتضمن أي بيانات ضريبية: لا VAT ولا رقم ضريبي ولا QR Code. إذا كانت الإيصالات ستُستخدم كمستندات مالية رسمية في السعودية، هذا blocker.
+        </div>
+        <div>
+          <span class="file-ref">src/domain/receipt.js</span> |
+          <span class="file-ref">src/ui/ReceiptModal.jsx</span> |
+          <span class="file-ref">src/core/pdf-service.js</span>
+        </div>
+        <ol class="steps">
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            إضافة حقول ZATCA في <code>buildReceiptModel</code>: الرقم الضريبي للبائع، نسبة VAT (15%)، مبلغ الضريبة، الإجمالي شامل الضريبة
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            إضافة التحقق من الرقم الضريبي: 15 رقم، يبدأ وينتهي بـ 3
+          </li>
+          <li>
+            <span class="effort-tag medium">متوسط</span>
+            تنفيذ QR Code بمعيار TLV (Tags 1-5 للمرحلة الأولى): اسم البائع، الرقم الضريبي، التاريخ، الإجمالي، مبلغ الضريبة
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            تحديث واجهة الإيصال في ReceiptModal لعرض البيانات الضريبية و QR
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            تحديث pdf-service لتضمين QR في ملف PDF المُصدَّر
+          </li>
+          <li>
+            <span class="effort-tag small">صغير</span>
+            كتابة اختبارات domain لحساب الضريبة والتحقق من TLV
+          </li>
+        </ol>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--                المرحلة P1                   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-badge p1">P1</div>
+      <div class="phase-title">مشاكل متوسطة — تؤثر على الجودة</div>
+      <div class="phase-meta">5 مهام | ~2 يوم عمل</div>
+    </div>
+    <div class="phase-body">
+
+      <!-- P1-1 -->
+      <div class="task-group">
+        <h4>P1-1: تنظيف ESLint بالكامل</h4>
+        <div class="desc">4 أخطاء و 336 تحذير. الأخطاء الحقيقية في App.jsx أسطر 188 و 206.</div>
+        <div><span class="file-ref">eslint.config.mjs</span> | <span class="file-ref">src/App.jsx</span></div>
+        <ol class="steps">
+          <li><span class="effort-tag small">صغير</span> إصلاح الـ 4 أخطاء الفعلية في App.jsx</li>
+          <li><span class="effort-tag medium">متوسط</span> معالجة التحذيرات على دفعات — الأولوية لـ unused vars و missing deps</li>
+          <li><span class="effort-tag small">صغير</span> إضافة lint check في CI/pre-commit hook</li>
+        </ol>
+      </div>
+
+      <!-- P1-2 -->
+      <div class="task-group">
+        <h4>P1-2: إصلاح تكرار رمز العملة (ر.س ر.س)</h4>
+        <div class="desc">
+          <code>formatCurrency()</code> يضيف "ر.س" أصلاً، لكن عدة صفحات تضيفها يدوياً مرة ثانية.
+        </div>
+        <div>
+          <span class="file-ref">src/utils/format.jsx:21</span> |
+          <span class="file-ref">ContractsPage.jsx:454</span> |
+          <span class="file-ref">DashboardPage.jsx:353</span> |
+          <span class="file-ref">InboxPage.jsx:400</span> |
+          <span class="file-ref">PropertyDetailPage.jsx:1119</span>
+        </div>
+        <ol class="steps">
+          <li><span class="effort-tag small">صغير</span> البحث عن كل الأماكن التي تضيف "ر.س" يدوياً بجانب formatCurrency</li>
+          <li><span class="effort-tag small">صغير</span> إزالة التكرار — الاعتماد على formatCurrency فقط</li>
+        </ol>
+      </div>
+
+      <!-- P1-3 -->
+      <div class="task-group">
+        <h4>P1-3: تنظيف dist وإصلاح emptyOutDir</h4>
+        <div class="desc">
+          <code>emptyOutDir: false</code> يسبب تراكم ملفات قديمة في dist (28MB، 755 ملف). هذا يؤثر على حجم النشر.
+        </div>
+        <div><span class="file-ref">vite.config.js:14</span></div>
+        <ol class="steps">
+          <li><span class="effort-tag small">صغير</span> تغيير <code>emptyOutDir</code> إلى <code>true</code></li>
+          <li><span class="effort-tag small">صغير</span> إضافة سكربت clean في package.json: <code>"clean": "rm -rf dist"</code></li>
+          <li><span class="effort-tag small">صغير</span> بناء جديد والتحقق من حجم dist النظيف</li>
+        </ol>
+      </div>
+
+      <!-- P1-4 -->
+      <div class="task-group">
+        <h4>P1-4: تحسين .gitignore</h4>
+        <div class="desc">ملف <code>.env</code> العام غير متجاهل — خطر محتمل لو أضاف أحد secrets فيه بالخطأ.</div>
+        <div><span class="file-ref">.gitignore</span> الأسطر 15-16</div>
+        <ol class="steps">
+          <li><span class="effort-tag small">صغير</span> إضافة <code>.env</code> إلى .gitignore (أو إنشاء <code>.env.example</code> بقيم فارغة للتوثيق)</li>
+          <li><span class="effort-tag small">صغير</span> التأكد أن .env الحالي ليس متتبعاً في git</li>
+        </ol>
+      </div>
+
+      <!-- P1-5 -->
+      <div class="task-group">
+        <h4>P1-5: تثبيت وتشغيل Coverage</h4>
+        <div class="desc">لا يوجد قياس تغطية فعلي حالياً — <code>@vitest/coverage-v8</code> غير مثبت.</div>
+        <ol class="steps">
+          <li><span class="effort-tag small">صغير</span> <code>npm install -D @vitest/coverage-v8</code></li>
+          <li><span class="effort-tag small">صغير</span> إضافة سكربت: <code>"test:coverage": "vitest run --coverage"</code></li>
+          <li><span class="effort-tag small">صغير</span> تحديد حد أدنى مقبول (مثلاً 70% لـ core/ و domain/)</li>
+        </ol>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--                المرحلة P2                   -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="phase">
+    <div class="phase-header">
+      <div class="phase-badge p2">P2</div>
+      <div class="phase-title">تحسينات — بعد الإطلاق الأولي</div>
+      <div class="phase-meta">3 مهام | ~1-2 يوم عمل</div>
+    </div>
+    <div class="phase-body">
+
+      <div class="task-group">
+        <h4>P2-1: اختبارات E2E للمسارات الحرجة</h4>
+        <div class="desc">إضافة smoke tests لأهم السيناريوهات: تسجيل دخول، إنشاء عقد، تسجيل دفعة، تصدير PDF/نسخة احتياطية.</div>
+        <ol class="steps">
+          <li><span class="effort-tag medium">متوسط</span> إعداد Playwright أو Cypress</li>
+          <li><span class="effort-tag large">كبير</span> كتابة 4-5 سيناريوهات E2E أساسية</li>
+        </ol>
+      </div>
+
+      <div class="task-group">
+        <h4>P2-2: تحسين حزمة pdf-lib</h4>
+        <div class="desc">تحذير chunk كبير: pdf-lib بحجم 588 KB. ممكن lazy load أو code splitting.</div>
+        <ol class="steps">
+          <li><span class="effort-tag small">صغير</span> تحويل import لـ dynamic import في المكان الوحيد المستخدم</li>
+        </ol>
+      </div>
+
+      <div class="task-group">
+        <h4>P2-3: إكمال الجداول المؤجلة</h4>
+        <div class="desc">supportTickets، auditLog، attachments — ميزات مكمّلة وليست حرجة للإطلاق الأول.</div>
+        <ol class="steps">
+          <li><span class="effort-tag large">كبير</span> تنفيذ CRUD لكل جدول حسب الأولوية</li>
+        </ol>
+      </div>
+
+      <div class="timeline">
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+        <div class="timeline-block todo"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--              ملخص ترتيب التنفيذ             -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="summary-box">
+    <h3>ترتيب التنفيذ المقترح</h3>
+    <p>
+      <strong>الأسبوع الأول:</strong> P0-1 (توحيد البيانات) + P0-2 (supabase-store) — يُحلّان معاً لأنهما مترابطان.<br><br>
+      <strong>الأسبوع الأول (بالتوازي):</strong> P1-1 + P1-2 + P1-3 + P1-4 — إصلاحات سريعة يقدر مطور ثاني ينفذها بالتوازي.<br><br>
+      <strong>الأسبوع الثاني:</strong> P0-3 (النسخ الاحتياطي) + P0-4 (ZATCA) + P1-5 (Coverage).<br><br>
+      <strong>بعد الإطلاق:</strong> P2-1 + P2-2 + P2-3 — تحسينات مستمرة.
+    </p>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ -->
+  <!--            برومبت التنفيذ لـ Codex          -->
+  <!-- ═══════════════════════════════════════════ -->
+  <div class="summary-box" style="background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%); border-color: var(--blue);">
+    <h3 style="color: #3730A3;">برومبت جاهز لتنفيذ P0-1 عبر Codex</h3>
+    <p style="color: #312E81;">انسخ البرومبت أدناه وأعطه Codex لبدء التنفيذ الفعلي لأول مهمة:</p>
+  </div>
+
+  <div class="prompt-box"><span class="comment"># Task: Migrate units, contractPayments, contractReceipts to Supabase</span>
+
+<span class="comment"># Context:</span>
+<span class="comment"># These 3 entities are localStorage-only even in cloud mode.</span>
+<span class="comment"># See DataContext.jsx lines 312-399 and 1033-1100.</span>
+<span class="comment"># Follow the same isCloud hybrid pattern used by other entities.</span>
+
+<span class="comment"># Files to modify:</span>
+<span class="comment"># 1. src/core/supabase-store.js (lines 746+) — implement CRUD for:</span>
+<span class="comment">#    - paymentSchedule (line 750)</span>
+<span class="comment">#    - contractReceipts (new section)</span>
+<span class="comment">#    - units (as part of properties or new table)</span>
+<span class="comment"># 2. src/contexts/DataContext.jsx — update:</span>
+<span class="comment">#    - loadUnits (line 318) to use isCloud check</span>
+<span class="comment">#    - loadContractPayments (line 378) to use isCloud check</span>
+<span class="comment">#    - loadContractReceipts (line 392) to use isCloud check</span>
+<span class="comment">#    - CRUD operations (lines 1033-1100) to go through Supabase</span>
+
+<span class="comment"># Rules:</span>
+<span class="comment"># - Follow existing patterns in supabase-store.js exactly</span>
+<span class="comment"># - All queries must filter by office_id</span>
+<span class="comment"># - Keep localStorage fallback working</span>
+<span class="comment"># - Write tests for new CRUD operations</span>
+<span class="comment"># - Do NOT break existing functionality</span></div>
+
+</div>
+</body>
+</html>

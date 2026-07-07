@@ -39,8 +39,19 @@ const DEMO_OFFICE = {
   created_at: '2024-01-01T00:00:00Z',
 };
 
-/** كشف وضع Demo من URL */
+/** هل البيئة الحالية إنتاجية؟ (لا DEV ولا preview محلي) */
+const isProductionEnv = () => {
+  try {
+    return import.meta.env.PROD && !import.meta.env.DEV;
+  } catch {
+    return false;
+  }
+};
+
+/** كشف وضع Demo من URL — ممنوع في الإنتاج */
 function detectDemoFromURL() {
+  // في بيئة الإنتاج، وضع Demo مُعطّل بالكامل
+  if (isProductionEnv()) return false;
   try {
     // فحص hash: #/demo
     if (window.location.hash.includes('/demo')) return true;
@@ -68,6 +79,8 @@ export const DemoProvider = ({ children }) => {
   }, [isDemo]);
 
   const activateDemo = useCallback(() => {
+    // ممنوع تفعيل Demo في بيئة الإنتاج
+    if (isProductionEnv()) return;
     setIsDemo(true);
   }, []);
 

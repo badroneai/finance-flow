@@ -20,18 +20,14 @@ function formatCalculatedAt(iso) {
 
 export default function PulseFooter({ calculatedAt, onRefresh, refreshing = false }) {
   return (
-    <footer
-      className="flex flex-wrap items-center justify-between gap-3 pt-4 mt-6 border-t border-[var(--color-border)] text-sm text-[var(--color-muted)]"
-      dir="rtl"
-      aria-label="تذييل النبض المالي"
-    >
+    <footer className="pulse-footer" dir="rtl" aria-label="تذييل النبض المالي">
       <span>آخر تحديث: {formatCalculatedAt(calculatedAt)}</span>
       {onRefresh && (
         <button
           type="button"
           onClick={onRefresh}
           disabled={refreshing}
-          className="text-[var(--color-muted)] hover:text-[var(--color-text)] font-medium disabled:opacity-50 no-print"
+          className="pulse-footer__refresh no-print u-disabled-muted"
           aria-label="تحديث يدوي"
         >
           {refreshing ? 'جاري التحديث…' : 'تحديث يدوي'}

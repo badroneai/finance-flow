@@ -4,7 +4,7 @@ function PayNowModal({ payOpen, paySource, payForm, setPayForm, submitPayNow, se
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="modal-batch__backdrop modal-batch__backdrop--center"
       onClick={() => setPayOpen(false)}
     >
       <div
@@ -18,40 +18,34 @@ function PayNowModal({ payOpen, paySource, payForm, setPayForm, submitPayNow, se
             <p className="ledger-panel__subtitle">أدخل عملية الدفع كما ستظهر في السجل المالي.</p>
           </div>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="modal-batch__stack">
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              المبلغ
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">المبلغ</label>
             <input
               type="text"
               inputMode="decimal"
               value={payForm.amount}
               onChange={(e) => setPayForm((p) => ({ ...p, amount: e.target.value }))}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="modal-batch__input"
               aria-label="المبلغ"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              التاريخ
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">التاريخ</label>
             <input
               type="date"
               value={payForm.date}
               onChange={(e) => setPayForm((p) => ({ ...p, date: e.target.value }))}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="modal-batch__input"
               aria-label="التاريخ"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              طريقة الدفع
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">طريقة الدفع</label>
             <select
               value={payForm.paymentMethod}
               onChange={(e) => setPayForm((p) => ({ ...p, paymentMethod: e.target.value }))}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+              className="modal-batch__input modal-batch__input--surface"
               aria-label="طريقة الدفع"
             >
               <option value="cash">نقدي</option>
@@ -62,17 +56,17 @@ function PayNowModal({ payOpen, paySource, payForm, setPayForm, submitPayNow, se
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">الوصف</label>
+            <label className="modal-batch__label modal-batch__label--xs">الوصف</label>
             <input
               type="text"
               value={payForm.description}
               onChange={(e) => setPayForm((p) => ({ ...p, description: e.target.value }))}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="modal-batch__input"
               aria-label="الوصف"
             />
           </div>
         </div>
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="modal-batch__actions">
           <button type="button" onClick={() => setPayOpen(false)} className="btn-secondary">
             إلغاء
           </button>

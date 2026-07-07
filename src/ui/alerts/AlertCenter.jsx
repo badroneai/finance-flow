@@ -120,27 +120,20 @@ export function useAlerts() {
 export function CriticalAlertBanner({ criticalFirst, onAction, onDismiss, setPage }) {
   if (!criticalFirst) return null;
   return (
-    <div
-      className="w-full text-white px-4 py-2.5 flex items-center justify-between gap-3 no-print"
-      style={{ background: 'var(--color-danger)' }}
-      role="alert"
-      dir="rtl"
-    >
-      <p className="text-sm font-medium truncate flex-1 min-w-0">{criticalFirst.title}</p>
-      <div className="flex items-center gap-2 flex-shrink-0">
+    <div className="ac--banner no-print" role="alert" dir="rtl">
+      <p className="ac--banner__text">{criticalFirst.title}</p>
+      <div className="ac--banner__actions">
         <button
           type="button"
-          onClick={() => {
-            onAction(criticalFirst, setPage);
-          }}
-          className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30"
+          onClick={() => onAction(criticalFirst, setPage)}
+          className="ac--banner__btn"
         >
           {criticalFirst.actionLabel || 'اتخذ إجراء'}
         </button>
         <button
           type="button"
           onClick={() => onDismiss(criticalFirst)}
-          className="px-3 py-1 rounded bg-[var(--color-surface)]/20 text-white text-xs font-medium hover:bg-[var(--color-surface)]/30"
+          className="ac--banner__btn"
           aria-label="رفض"
         >
           رفض
@@ -148,6 +141,12 @@ export function CriticalAlertBanner({ criticalFirst, onAction, onDismiss, setPag
       </div>
     </div>
   );
+}
+
+function severityClass(severity) {
+  if (severity === 'critical') return 'ac--row__icon--critical';
+  if (severity === 'warning') return 'ac--row__icon--warning';
+  return 'ac--row__icon--info';
 }
 
 export default function AlertCenter({
@@ -200,20 +199,17 @@ export default function AlertCenter({
   }, [open]);
 
   return (
-    <div className="relative flex items-center" ref={panelRef} data-alert-bell>
+    <div className="ac--wrap" ref={panelRef} data-alert-bell>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className={`relative p-2 rounded-lg text-[var(--color-muted)] hover:bg-[var(--color-bg)] hover:text-[var(--color-text)] ${hasCritical ? 'animate-pulse' : ''}`}
+        className={`ac--trigger${hasCritical ? ' is-critical' : ''}`}
         aria-label={count ? `${count} تنبيه` : 'مركز التنبيهات'}
         aria-expanded={open}
       >
         <BellIcon size={22} />
         {count > 0 && (
-          <span
-            className="absolute -top-0.5 -end-0.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full text-white text-[11px] font-bold leading-none"
-            style={{ background: 'var(--color-danger)' }}
-          >
+          <span className="ac--badge">
             {count > 9 ? '9+' : count}
           </span>
         )}
@@ -221,76 +217,57 @@ export default function AlertCenter({
 
       {/* اللوحة المنبثقة */}
       {open && (
-        <div
-          className="absolute top-full end-0 mt-1 w-[min(360px,100vw-2rem)] max-h-[70vh] overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-xl z-50 flex flex-col"
-          dir="rtl"
-        >
-          <div className="px-4 py-3 border-b border-[var(--color-border)] flex items-center justify-between">
-            <h3 className="font-semibold text-[var(--color-text)]">التنبيهات</h3>
+        <div className="ac--panel" dir="rtl">
+          <div className="ac--header">
+            <h3 className="ac--header__title">التنبيهات</h3>
             {count > 0 && (
               <button
                 type="button"
                 onClick={onDismissAll}
-                className="text-xs font-medium"
-                style={{ color: 'var(--color-muted)' }}
-                onMouseEnter={(e) => (e.target.style.color = 'var(--color-danger)')}
-                onMouseLeave={(e) => (e.target.style.color = 'var(--color-muted)')}
+                className="ac--header__clear"
               >
                 مسح الكل
               </button>
             )}
           </div>
-          <ul className="overflow-y-auto flex-1 divide-y divide-[var(--color-border)]">
+          <ul className="ac--list">
             {count === 0 ? (
-              <li className="px-4 py-6 text-center text-sm text-[var(--color-muted)]">
-                لا توجد تنبيهات
-              </li>
+              <li className="ac--empty">لا توجد تنبيهات</li>
             ) : (
               alerts.map((alert) => (
-                <li key={alert.id} className="px-4 py-3">
-                  <div className="flex gap-3">
+                <li key={alert.id}>
+                  <div className="ac--row">
                     <span
-                      className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-white text-xs"
-                      style={{
-                        background:
-                          alert.severity === 'critical'
-                            ? 'var(--color-danger)'
-                            : alert.severity === 'warning'
-                              ? 'var(--color-warning)'
-                              : 'var(--color-info)',
-                      }}
+                      className={`ac--row__icon ${severityClass(alert.severity)}`}
                       aria-hidden="true"
                     >
                       {ICON_BY_TYPE[alert.type] ? String(alert.type).slice(0, 1) : '•'}
                     </span>
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-[var(--color-text)] text-sm">{alert.title}</p>
-                      <p className="text-xs text-[var(--color-muted)] mt-0.5">
+                    <div className="ac--row__body">
+                      <p className="ac--row__title">{alert.title}</p>
+                      <p className="ac--row__desc">
                         {formatHoursAgo(Date.now() - fetchTime)}
                         {alert.amount > 0 && ` · ${formatCurrency(alert.amount)}`}
                       </p>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="ac--row__actions">
                         <button
                           type="button"
                           onClick={() => onAction(alert)}
-                          className="text-xs font-medium"
-                          style={{ color: 'var(--color-info)' }}
-                          onMouseEnter={(e) => (e.target.style.opacity = '0.8')}
-                          onMouseLeave={(e) => (e.target.style.opacity = '1')}
+                          className="ac--row__action-btn"
                         >
                           {alert.actionLabel || 'اتخذ إجراء'}
                         </button>
                         <button
                           type="button"
                           onClick={() => onDismiss(alert)}
-                          className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                          className="ac--row__dismiss-btn"
                         >
                           رفض
                         </button>
                         <button
                           type="button"
                           onClick={() => onSnooze(alert)}
-                          className="text-xs font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                          className="ac--row__dismiss-btn"
                         >
                           تأجيل
                         </button>

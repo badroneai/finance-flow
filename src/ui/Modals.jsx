@@ -63,53 +63,41 @@ export const ConfirmDialog = ({
   const cancelText = cancelLabel || MSG?.buttons?.cancel || 'إلغاء';
 
   return (
-    <div
-      className="confirm-overlay fixed inset-0 z-50 flex items-center justify-center p-4"
-      onClick={onCancel}
-    >
+    <div className="confirm-overlay" onClick={onCancel}>
       <div
         ref={dialogRef}
-        className={`confirm-modal modal-surface modal-surface--sm p-6 ${danger ? 'confirm-modal danger' : ''}`}
+        className={`confirm-modal modal-surface modal-surface--sm${danger ? ' confirm-modal--danger' : ''}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="confirmDialogTitle"
         aria-describedby="confirmDialogDesc"
       >
-        <h3 id="confirmDialogTitle" className="text-lg font-bold text-[var(--color-text)]">
+        <h3 id="confirmDialogTitle" className="confirm-modal__title">
           {title || 'تأكيد'}
         </h3>
         {message ? (
-          <p id="confirmDialogDesc" className="text-sm text-[var(--color-muted)] mt-2">
+          <p id="confirmDialogDesc" className="confirm-modal__message">
             {message}
           </p>
         ) : null}
         {Array.isArray(messageList) && messageList.length ? (
-          <ul
-            className="mt-2 text-sm text-[var(--color-muted)] list-disc"
-            style={{ paddingInlineStart: '1.2rem' }}
-          >
+          <ul className="confirm-modal__list">
             {messageList.map((x, idx) => (
               <li key={idx}>{x}</li>
             ))}
           </ul>
         ) : null}
         {dangerText ? (
-          <p className="text-xs mt-2" style={{ color: 'var(--color-danger)' }}>
-            {dangerText}
-          </p>
+          <p className="confirm-modal__danger-text">{dangerText}</p>
         ) : null}
-        <div className="confirm-actions flex gap-3 justify-end mt-4">
+        <div className="confirm-actions">
           <button onClick={onCancel} className="btn-secondary" aria-label="تراجع">
             {cancelText}
           </button>
           <button
             onClick={onConfirm}
-            className={danger ? 'btn-primary' : 'btn-primary'}
-            style={{
-              background: danger ? 'var(--color-danger)' : 'var(--color-primary)',
-              color: '#fff',
-            }}
+            className={danger ? 'btn-primary confirm-modal__btn--danger' : 'btn-primary'}
             aria-label="تأكيد"
           >
             {confirmLabel || 'تأكيد'}
@@ -134,13 +122,10 @@ export const Modal = ({ open, onClose, title, children, wide = false }) => {
   if (!open) return null;
 
   return (
-    <div
-      className="modal-overlay fixed inset-0 z-40 flex items-start justify-center p-4 overflow-y-auto"
-      onClick={onClose}
-    >
+    <div className="modal-overlay" onClick={onClose}>
       <div
         ref={dialogRef}
-        className={`modal-dialog mt-8 mb-8 modal-surface ${wide ? 'max-w-3xl' : 'modal-surface--md'}`}
+        className={`modal-dialog modal-surface ${wide ? 'modal-surface--wide' : 'modal-surface--md'}`}
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"

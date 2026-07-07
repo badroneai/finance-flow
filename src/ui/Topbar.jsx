@@ -44,9 +44,9 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
         />
       )}
       <div className="topbar-body">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
+        <div className="topbar-start">
           <button
-            className="md:hidden hamburger-btn p-2 rounded-lg flex-shrink-0"
+            className="hamburger-btn"
             onClick={() => setMobileOpen(true)}
             aria-label="فتح القائمة"
             aria-expanded={mobileOpen}
@@ -54,7 +54,7 @@ export const Topbar = ({ Icons, page, mobileOpen, setMobileOpen, headerDateText,
             <Icons.menu size={22} />
           </button>
           <div className="topbar-heading">
-            <h2 className="topbar-title truncate">{titles[page] || ''}</h2>
+            <h2 className="topbar-title">{titles[page] || ''}</h2>
             <span className="topbar-subtitle">
               {subtitles[page] || 'واجهة تشغيل مالية واضحة.'}
             </span>

@@ -37,13 +37,7 @@ function getDaysText(dueDate) {
   }
 }
 
-const slideInStyles = `
-  @keyframes pulseAlertSlideIn {
-    from { opacity: 0; transform: translateX(12px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-  .pulse-alert-row { animation: pulseAlertSlideIn 0.3s ease-out forwards; }
-`;
+// تم نقل keyframes pulseAlertSlideIn إلى app.css §35
 
 export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
   const [dismissed, setDismissed] = useState(() => new Set());
@@ -65,19 +59,18 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
   if (sorted.length === 0) {
     return (
       <div className="pulse-card pulse-card__empty" dir="rtl">
-        <p className="font-medium">كل شيء على ما يرام</p>
-        <p className="text-sm mt-1">لا توجد تنبيهات عاجلة.</p>
+        <p className="pulse-page__state-title">كل شيء على ما يرام</p>
+        <p className="pulse-page__state-desc">لا توجد تنبيهات عاجلة.</p>
       </div>
     );
   }
 
   return (
     <div className="panel-card pulse-card" dir="rtl">
-      <style>{slideInStyles}</style>
       <div className="pulse-card__header">
-        <h2 className="font-semibold text-[var(--color-text)]">تنبيهات عاجلة ({sorted.length})</h2>
+        <h2 className="pulse-card__title">تنبيهات عاجلة ({sorted.length})</h2>
       </div>
-      <ul className="divide-y divide-[var(--color-border)]" aria-label="قائمة التنبيهات">
+      <ul className="pulse-alert__list" aria-label="قائمة التنبيهات">
         {displayList.map((alert, index) => (
           <AlertRow
             key={alert.id}
@@ -94,12 +87,12 @@ export default function PulseAlerts({ alerts = [], onAlertAction, onShowAll }) {
             <button
               type="button"
               onClick={onShowAll}
-              className="pulse-card__link text-sm font-medium"
+              className="pulse-card__link"
             >
               عرض الكل ({sorted.length})
             </button>
           ) : (
-            <span className="text-sm text-[var(--color-muted)]">عرض الكل ({sorted.length})</span>
+            <span className="pulse-card__muted">عرض الكل ({sorted.length})</span>
           )}
         </div>
       )}
@@ -115,44 +108,39 @@ function AlertRow({ alert, index, onAction, onDismiss }) {
 
   return (
     <li
-      className="pulse-alert-row px-4 py-3 flex flex-col gap-2"
+      className="pulse-alert-row pulse-alert__item"
       style={{
         background: isCritical ? 'var(--color-danger-bg)' : 'var(--color-surface)',
         animationDelay: `${index * 50}ms`,
         opacity: 0,
       }}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0 flex-1 flex items-center gap-2">
-          <span
-            className="flex-shrink-0 w-2 h-2 rounded-full"
-            style={dotStyle}
-            aria-hidden="true"
-          />
-          <div className="min-w-0">
-            <p className="font-medium text-[var(--color-text)] truncate">{alert.title}</p>
-            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-[var(--color-muted)] mt-0.5">
+      <div className="pulse-alert__item-head">
+        <div className="pulse-alert__item-body">
+          <span className="pulse-alert__dot" style={dotStyle} aria-hidden="true" />
+          <div className="pulse-alert__text-wrap">
+            <p className="pulse-alert__title">{alert.title}</p>
+            <div className="pulse-alert__meta">
               {daysStr && <span>{daysStr}</span>}
-              {amountStr && <span className="font-medium">{amountStr}</span>}
+              {amountStr && <span className="pulse-alert__amount">{amountStr}</span>}
             </div>
           </div>
         </div>
         <button
           type="button"
           onClick={() => onDismiss(alert.id)}
-          className="flex-shrink-0 p-1 rounded text-[var(--color-muted)] hover:text-[var(--color-muted)] hover:bg-[var(--color-bg)]"
+          className="pulse-alert__dismiss"
           aria-label="إخفاء التنبيه"
         >
-          <span className="text-lg leading-none">×</span>
+          <span className="pulse-alert__dismiss-icon">×</span>
         </button>
       </div>
       {alert.actionLabel && (
-        <div className="flex justify-end">
+        <div className="pulse-alert__action-row">
           <button
             type="button"
             onClick={() => onAction && onAction(alert)}
-            className="text-sm font-medium hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="pulse-alert__action-btn"
           >
             {alert.actionLabel}
           </button>

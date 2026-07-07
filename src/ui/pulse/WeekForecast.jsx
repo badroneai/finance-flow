@@ -74,13 +74,13 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
 
   return (
     <div className="panel-card pulse-card" dir="rtl">
-      <h2 className="font-semibold text-[var(--color-text)] mb-4">نظرة الأسبوع</h2>
+      <h2 className="pulse-forecast__title">نظرة الأسبوع</h2>
 
       {/* رسم الأعمدة */}
-      <div className="w-full overflow-x-auto">
+      <div className="pulse-forecast__chart-wrap">
         <svg
           viewBox={`0 0 ${svgWidth} ${chartHeight + 44}`}
-          className="w-full min-h-[124px]"
+          className="pulse-forecast__chart"
           preserveAspectRatio="xMidYMid meet"
         >
           {/* خط الصفر */}
@@ -155,23 +155,23 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
       </div>
 
       {/* ملخص رقمي */}
-      <div className="mt-4 pt-4 border-t border-[var(--color-border)] space-y-1 text-sm">
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--color-muted)]">متوقع الدخل:</span>
-          <span className="font-medium" style={{ color: 'var(--color-success)' }}>
+      <div className="pulse-forecast__summary">
+        <div className="pulse-forecast__summary-row">
+          <span className="pulse-forecast__summary-label">متوقع الدخل:</span>
+          <span className="pulse-forecast__summary-value" style={{ color: 'var(--color-success)' }}>
             {formatCurrency(expectedIncome)}
           </span>
         </div>
-        <div className="flex justify-between items-center">
-          <span className="text-[var(--color-muted)]">متوقع المصروف:</span>
-          <span className="font-medium" style={{ color: 'var(--color-danger)' }}>
+        <div className="pulse-forecast__summary-row">
+          <span className="pulse-forecast__summary-label">متوقع المصروف:</span>
+          <span className="pulse-forecast__summary-value" style={{ color: 'var(--color-danger)' }}>
             {formatCurrency(expectedExpenses)}
           </span>
         </div>
-        <div className="flex justify-between items-center pt-1 border-t border-[var(--color-border)]">
-          <span className="text-[var(--color-text)] font-medium">صافي:</span>
+        <div className="pulse-forecast__summary-row pulse-forecast__summary-row--net">
+          <span className="pulse-forecast__summary-label--net">صافي:</span>
           <span
-            className="font-bold"
+            className="pulse-forecast__summary-value pulse-forecast__summary-value--net"
             style={{ color: netCashflow >= 0 ? 'var(--color-success)' : 'var(--color-danger)' }}
           >
             {netCashflow >= 0 ? '' : '-'}
@@ -189,9 +189,9 @@ export default function WeekForecast({ weekForecast, upcomingDues = [] }) {
         }
         .week-forecast-danger { animation: weekDangerShake 2s ease-in-out infinite; }
       `}</style>
-      <div className="mt-3 flex justify-center">
+      <div className="pulse-forecast__badge-wrap">
         <span
-          className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${riskLevel === 'danger' ? 'week-forecast-danger' : ''}`}
+          className={`pulse-forecast__badge ${riskLevel === 'danger' ? 'week-forecast-danger' : ''}`}
           style={{
             background:
               riskLevel === 'safe'

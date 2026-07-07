@@ -13,6 +13,7 @@ import {
 import { buildTxMetaFromRecurring } from '../../core/ledger-analytics.js';
 import { pushHistoryEntry } from '../../core/ledger-item-history.js';
 import { useData } from '../../contexts/DataContext.jsx';
+import { useToast } from '../../contexts/ToastContext.jsx';
 
 function todayISO() {
   const d = new Date();
@@ -28,6 +29,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
     recurringItems: ctxRecurringItems,
     updateRecurringItem: ctxUpdateRecurringItem,
   } = useData();
+  const toast = useToast();
 
   const amount = Number(dueItem?.amount) || 0;
   const [paidAmount, setPaidAmount] = useState(() => (amount > 0 ? String(amount) : ''));
@@ -55,11 +57,15 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
 
   const handleSubmit = async () => {
     const num = Number(String(paidAmount).replace(/,/g, '').replace(/٬/g, '')) || 0;
-    if (num <= 0) return;
+    if (num <= 0) {
+      toast.error('أدخل مبلغاً صحيحاً');
+      return;
+    }
 
     // DataContext first, fallback to localStorage
     const activeId = ctxActiveLedgerId || getActiveLedgerId() || '';
     if (!activeId || !dueItem?.recurringItemId) {
+      toast.error('لا يمكن تسجيل الدفعة — لا يوجد دفتر نشط أو بند مرتبط');
       setSubmitting(false);
       return;
     }
@@ -69,6 +75,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
         : getRecurringItems() || [];
     const recurring = recurringList.find((r) => r.id === dueItem.recurringItemId);
     if (!recurring) {
+      toast.error('لم يُعثر على البند المتكرر المرتبط');
       setSubmitting(false);
       return;
     }
@@ -92,6 +99,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
 
       if (txError) {
         console.error('[قيد العقار] QuickPaymentModal createTransaction:', txError);
+        toast.error('فشل تسجيل الحركة المالية');
         setSubmitting(false);
         return;
       }
@@ -138,9 +146,11 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
       try {
         window.dispatchEvent(new CustomEvent('ledger:activeChanged'));
       } catch {}
+      toast.success('تم تسجيل الدفعة');
       setSuccess(true);
     } catch (err) {
       console.error('[قيد العقار] QuickPaymentModal handleSubmit:', err);
+      toast.error('حدث خطأ أثناء تسجيل الدفعة');
       setSubmitting(false);
     }
   };
@@ -153,72 +163,64 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      className="modal-batch__backdrop modal-batch__backdrop--center"
       dir="rtl"
       role="dialog"
       aria-modal="true"
       aria-labelledby="quick-payment-title"
     >
-      <div className="modal-sheet modal-surface modal-surface--md max-h-[90vh] overflow-auto">
+      <div className="modal-sheet modal-surface modal-surface--md modal-batch__sheet-scroll--tall">
         <div className="modal-sheet__header">
-          <h2 id="quick-payment-title" className="text-lg font-bold text-[var(--color-text)]">
+          <h2 id="quick-payment-title" className="modal-sheet__title">
             تسجيل دفعة سريع
           </h2>
           <button type="button" onClick={onClose} className="modal-sheet__close" aria-label="إغلاق">
-            <span className="text-xl leading-none">×</span>
+            <span className="modal-sheet__close-icon">×</span>
           </button>
         </div>
         <div className="modal-sheet__body">
           <div>
-            <p className="font-medium text-[var(--color-text)]">{name}</p>
-            <p className="text-sm text-[var(--color-muted)] mt-0.5">
+            <p className="modal-batch__text-strong">{name}</p>
+            <p className="modal-batch__text-muted-sm">
               المبلغ المستحق: {formatCurrency(dueItem.amount)}
             </p>
           </div>
 
           {success ? (
-            <div className="py-6 text-center">
-              <p className="font-semibold" style={{ color: 'var(--color-success)' }}>
-                تم التسجيل
-              </p>
-              <p className="text-sm text-[var(--color-muted)] mt-1">يُغلق تلقائياً خلال لحظات</p>
+            <div className="modal-batch__success-block">
+              <p className="modal-batch__success-title">تم التسجيل</p>
+              <p className="modal-batch__success-hint">يُغلق تلقائياً خلال لحظات</p>
             </div>
           ) : (
             <>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                  المبلغ المدفوع (ر.س)
-                </label>
+                <label className="modal-batch__label">المبلغ المدفوع (ر.س)</label>
                 <input
                   type="text"
                   inputMode="decimal"
                   value={paidAmount}
                   onChange={(e) => setPaidAmount(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
+                  className="modal-batch__input"
                   placeholder={formatNumber(amount)}
                 />
-                <p className="text-xs text-[var(--color-muted)] mt-1">يمكن تعديله للدفع الجزئي</p>
+                <p className="modal-batch__text-hint">يمكن تعديله للدفع الجزئي</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                  تاريخ الدفع
-                </label>
+                <label className="modal-batch__label">تاريخ الدفع</label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
+                  className="modal-batch__input"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-[var(--color-text)] mb-1">
-                  ملاحظة (اختياري)
-                </label>
+                <label className="modal-batch__label">ملاحظة (اختياري)</label>
                 <input
                   type="text"
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
-                  className="w-full px-3 py-2 border border-[var(--color-border)] rounded-lg text-[var(--color-text)]"
+                  className="modal-batch__input"
                   placeholder="ملاحظة"
                 />
               </div>
@@ -226,13 +228,12 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                 type="button"
                 onClick={handleSubmit}
                 disabled={!canSubmit}
-                className="btn-primary w-full disabled:opacity-50"
-                style={{ background: 'var(--color-info)' }}
+                className="btn-primary modal-batch__btn-block modal-batch__submit--info u-disabled-muted"
               >
                 {submitting ? 'جاري التسجيل…' : 'تسجيل الدفعة'}
               </button>
               {onPostpone && (
-                <p className="text-center text-sm text-[var(--color-muted)]">
+                <p className="modal-batch__postpone">
                   أو:{' '}
                   <button
                     type="button"
@@ -240,8 +241,7 @@ export default function QuickPaymentModal({ dueItem, onClose, onPostpone }) {
                       onPostpone(dueItem);
                       onClose?.();
                     }}
-                    className="font-medium"
-                    style={{ color: 'var(--color-primary)' }}
+                    className="modal-batch__inline-link"
                   >
                     تأجيل لتاريخ آخر
                   </button>

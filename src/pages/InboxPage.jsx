@@ -53,63 +53,60 @@ function daysLabel(due) {
   return `بعد ${days} يوم`;
 }
 
-function priorityDot(priority) {
+function priorityDotClass(priority) {
   const p = String(priority || '').toLowerCase();
-  if (p === 'critical') return { background: 'var(--color-danger)' };
-  if (p === 'high') return { background: 'var(--color-warning)' };
-  return { background: 'var(--color-muted)' };
+  if (p === 'critical') return 'inbox__due-dot inbox__due-dot--critical';
+  if (p === 'high') return 'inbox__due-dot inbox__due-dot--high';
+  return 'inbox__due-dot inbox__due-dot--default';
 }
 
+// قسم مطوي — يلف مجموعة بنود مستحقة
 function InboxSection({ title, count, amountLabel, open, onToggle, children }) {
   const isOpen = open !== false;
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] shadow-sm overflow-hidden mb-4">
+    <div className="inbox__section">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-right border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]"
+        className="inbox__section-toggle"
         aria-expanded={isOpen}
       >
-        <span className="font-semibold text-[var(--color-text)]">
+        <span className="inbox__section-title">
           {title} ({count})
         </span>
-        <span className="text-sm text-[var(--color-muted)]">{amountLabel}</span>
-        <span className="text-[var(--color-muted)]">{isOpen ? '\u25B2' : '\u25BC'}</span>
+        <span className="inbox__section-amount">{amountLabel}</span>
+        <span className="inbox__section-chevron">{isOpen ? '\u25B2' : '\u25BC'}</span>
       </button>
-      {isOpen && <div className="divide-y divide-[var(--color-border)]">{children}</div>}
+      {isOpen && <div className="inbox__section-body">{children}</div>}
     </div>
   );
 }
 
+// صف بند مستحق — دفتر (recurring)
 function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
-  const dotClass = priorityDot(due.priority);
+  const amountClass =
+    due.type === 'income' ? 'inbox__due-amount inbox__due-amount--income' : 'inbox__due-amount inbox__due-amount--expense';
+
   return (
-    <div className="px-4 py-3">
-      <div className="flex items-start gap-3">
+    <div className="inbox__due-row">
+      <div className="inbox__due-layout">
         <span
-          className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
-          style={dotClass}
+          className={priorityDotClass(due.priority)}
           aria-hidden="true"
         />
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <span className="font-medium text-[var(--color-text)]">{due.name}</span>
-            <span
-              className="font-medium"
-              style={{
-                color: due.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
-              }}
-            >
+        <div className="inbox__due-content">
+          <div className="inbox__due-head">
+            <span className="inbox__due-name">{due.name}</span>
+            <span className={amountClass}>
               {formatCurrency(due.amount)}
             </span>
           </div>
-          <p className="text-sm text-[var(--color-muted)] mt-0.5">{daysLabel(due)}</p>
-          <div className="flex flex-wrap gap-2 mt-2">
+          <p className="inbox__due-meta">{daysLabel(due)}</p>
+          <div className="inbox__due-actions">
             <button
               type="button"
               onClick={() => onRecordPayment(due)}
-              className="text-sm font-medium hover:opacity-80"
-              style={{ color: 'var(--color-info)' }}
+              className="inbox__action-btn"
             >
               سجّل دفعة
             </button>
@@ -117,7 +114,7 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
               <button
                 type="button"
                 onClick={() => onSnoozeTomorrow(due)}
-                className="text-sm font-medium text-[var(--color-muted)] hover:text-[var(--color-text)]"
+                className="inbox__action-btn inbox__action-btn--muted"
               >
                 ذكّرني غدًا
               </button>
@@ -127,7 +124,7 @@ function DueRow({ due, onRecordPayment, onSnoozeTomorrow, formatCurrency }) {
         <button
           type="button"
           onClick={() => onRecordPayment(due)}
-          className="flex-shrink-0 w-5 h-5 rounded border-2 border-[var(--color-border)] hover:border-[var(--color-primary)]"
+          className="inbox__due-checkbox"
           aria-label="تسجيل دفعة"
         />
       </div>
@@ -275,7 +272,7 @@ export default function InboxPage({ setPage }) {
 
   return (
     <div
-      className="page-shell inbox-page min-h-screen bg-[var(--color-bg)] p-4 md:p-6 max-w-2xl mx-auto"
+      className="page-shell page-shell--regular inbox-page"
       dir="rtl"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -283,10 +280,7 @@ export default function InboxPage({ setPage }) {
       onTouchCancel={handleTouchEnd}
     >
       {pullY > 0 && (
-        <div
-          className="fixed top-0 left-0 right-0 h-12 flex items-center justify-center bg-[var(--color-bg)]/90 text-[var(--color-muted)] text-sm z-10"
-          aria-live="polite"
-        >
+        <div className="inbox__pull-indicator" aria-live="polite">
           {pullY >= PULL_THRESHOLD ? 'أفلت للتحديث' : 'اسحب للتحديث'}
         </div>
       )}
@@ -308,7 +302,7 @@ export default function InboxPage({ setPage }) {
                 if (id) setActiveLedgerIdStore(id);
                 refresh();
               }}
-              className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-sm text-[var(--color-text)] min-w-[140px]"
+              className="inbox__ledger-select"
               aria-label="الدفتر"
             >
               {ledgers.map((l) => (
@@ -327,8 +321,7 @@ export default function InboxPage({ setPage }) {
                 } catch {}
                 setPage('ledgers');
               }}
-              className="text-sm font-medium hover:opacity-80"
-              style={{ color: 'var(--color-info)' }}
+              className="inbox__nav-link"
             >
               إدارة الدفاتر
             </button>
@@ -337,35 +330,27 @@ export default function InboxPage({ setPage }) {
       </div>
 
       {noLedger ? (
-        <div
-          className="rounded-xl p-6 text-center"
-          style={{
-            background: 'var(--color-warning-bg)',
-            color: 'var(--color-warning)',
-            border: '1px solid var(--color-warning)',
-          }}
-        >
-          <p className="font-medium">لا يوجد دفتر نشط</p>
-          <p className="text-sm mt-1">اختر دفتراً من قائمة الدفاتر لرؤية المستحقات.</p>
+        <div className="inbox__warning-box">
+          <p className="inbox__due-name">لا يوجد دفتر نشط</p>
+          <p className="inbox__due-meta">اختر دفتراً من قائمة الدفاتر لرؤية المستحقات.</p>
           {setPage && (
             <button
               type="button"
               onClick={() => setPage('ledgers')}
-              className="mt-4 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-              style={{ background: 'var(--color-warning)' }}
+              className="inbox__warning-btn"
             >
               فتح الدفاتر
             </button>
           )}
         </div>
       ) : totalCount === 0 ? (
-        <div className="bg-[var(--color-surface)] border border-[var(--color-border)] rounded-xl p-8 text-center text-[var(--color-muted)]">
-          <p className="font-medium">لا توجد مستحقات — استمتع بيومك!</p>
-          <p className="text-sm mt-2">لا توجد بنود متأخرة أو مستحقة هذا الأسبوع أو الشهر.</p>
+        <div className="inbox__empty-state">
+          <p className="inbox__due-name">لا توجد مستحقات — استمتع بيومك!</p>
+          <p className="inbox__due-meta">لا توجد بنود متأخرة أو مستحقة هذا الأسبوع أو الشهر.</p>
         </div>
       ) : (
         <>
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="inbox__filter-bar">
             {[
               { key: 'all', label: 'الكل' },
               { key: 'income', label: 'دخل فقط' },
@@ -375,16 +360,7 @@ export default function InboxPage({ setPage }) {
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={`px-3 py-2 rounded-lg text-sm font-medium border ${
-                  filter === f.key
-                    ? 'border-transparent text-white'
-                    : 'bg-[var(--color-surface)] text-[var(--color-text)] border-[var(--color-border)] hover:bg-[var(--color-bg)]'
-                }`}
-                style={
-                  filter === f.key
-                    ? { background: 'var(--color-info)', borderColor: 'var(--color-info)' }
-                    : undefined
-                }
+                className={`inbox__filter-btn${filter === f.key ? ' inbox__filter-btn--active' : ''}`}
               >
                 {f.label}
               </button>
@@ -454,9 +430,9 @@ export default function InboxPage({ setPage }) {
             </InboxSection>
           )}
 
-          <div className="mt-4 pt-4 border-t border-[var(--color-border)] text-sm text-[var(--color-muted)]">
-            <p className="font-medium text-[var(--color-text)]">الإجمالي المتوقع هذا الشهر</p>
-            <p className="mt-1">
+          <div className="inbox__monthly-summary">
+            <p className="inbox__monthly-summary-title">الإجمالي المتوقع هذا الشهر</p>
+            <p className="inbox__monthly-summary-values">
               دخل: {formatCurrency(totalIncomeMonth)} | مصروف: {formatCurrency(totalExpenseMonth)}
             </p>
           </div>
@@ -467,21 +443,15 @@ export default function InboxPage({ setPage }) {
           مستحقات العقود — قسم مستقل من طبقة dues.js
           ══════════════════════════════════════════════════════ */}
       {contractDues.summary.totalCount > 0 && (
-        <div className="mt-6 pt-4 border-t border-[var(--color-border)]">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-[var(--color-text)]">مستحقات العقود</h2>
+        <div className="inbox__contracts-zone">
+          <div className="inbox__contracts-header">
+            <h2 className="inbox__contracts-title">مستحقات العقود</h2>
             <span
-              className="text-xs px-2 py-1 rounded-full font-medium"
-              style={{
-                background:
-                  contractDues.summary.overdueCount > 0
-                    ? 'var(--color-danger-bg)'
-                    : 'var(--color-info-bg)',
-                color:
-                  contractDues.summary.overdueCount > 0
-                    ? 'var(--color-danger)'
-                    : 'var(--color-info)',
-              }}
+              className={`inbox__contracts-badge ${
+                contractDues.summary.overdueCount > 0
+                  ? 'inbox__contracts-badge--overdue'
+                  : 'inbox__contracts-badge--normal'
+              }`}
             >
               {contractDues.summary.totalCount} مستحق
             </span>
@@ -497,42 +467,35 @@ export default function InboxPage({ setPage }) {
               onToggle={() => setOpenContractDues((v) => !v)}
             >
               {contractDues.overdue.map((due) => (
-                <div
-                  key={due.dueId}
-                  className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
-                      style={{ background: 'var(--color-danger)' }}
-                    />
-                    <div className="min-w-0 flex-1">
+                <div key={due.dueId} className="inbox__due-row inbox__due-row--hoverable">
+                  <div className="inbox__due-layout">
+                    <span className="inbox__due-dot inbox__due-dot--critical" />
+                    <div className="inbox__due-content">
                       <button
                         type="button"
                         onClick={() => navigate(due.actionTarget)}
-                        className="w-full text-right"
+                        className="inbox__contract-link"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium text-[var(--color-text)]">
+                        <div className="inbox__due-head">
+                          <span className="inbox__due-name">
                             {due.tenantName || 'بدون اسم'}
                             {due.propertyName ? ` — ${due.propertyName}` : ''}
                           </span>
-                          <span className="font-medium" style={{ color: 'var(--color-danger)' }}>
+                          <span className="inbox__due-amount inbox__due-amount--expense">
                             {formatCurrency(due.remainingAmount)}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                        <p className="inbox__due-meta">
                           {due.contractNumber ? `عقد ${due.contractNumber} · ` : ''}
                           متأخر {due.daysOverdue} يوم
                           {due.unitName ? ` · ${due.unitName}` : ''}
                         </p>
                       </button>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="inbox__due-actions">
                         <button
                           type="button"
                           onClick={() => setContractQuickPayDue(due)}
-                          className="text-sm font-medium hover:opacity-80"
-                          style={{ color: 'var(--color-info)' }}
+                          className="inbox__action-btn"
                         >
                           سجّل دفعة
                         </button>
@@ -553,44 +516,36 @@ export default function InboxPage({ setPage }) {
               open={true}
             >
               {[...contractDues.dueToday, ...contractDues.dueThisWeek].map((due) => (
-                <div
-                  key={due.dueId}
-                  className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors"
-                >
-                  <div className="flex items-start gap-3">
+                <div key={due.dueId} className="inbox__due-row inbox__due-row--hoverable">
+                  <div className="inbox__due-layout">
                     <span
-                      className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
-                      style={{
-                        background:
-                          due.daysUntil === 0 ? 'var(--color-warning)' : 'var(--color-info)',
-                      }}
+                      className={`inbox__due-dot ${due.daysUntil === 0 ? 'inbox__due-dot--high' : 'inbox__due-dot--info'}`}
                     />
-                    <div className="min-w-0 flex-1">
+                    <div className="inbox__due-content">
                       <button
                         type="button"
                         onClick={() => navigate(due.actionTarget)}
-                        className="w-full text-right"
+                        className="inbox__contract-link"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium text-[var(--color-text)]">
+                        <div className="inbox__due-head">
+                          <span className="inbox__due-name">
                             {due.tenantName || 'بدون اسم'}
                             {due.propertyName ? ` — ${due.propertyName}` : ''}
                           </span>
-                          <span className="font-medium text-[var(--color-text)]">
+                          <span className="inbox__due-amount inbox__due-amount--neutral">
                             {formatCurrency(due.remainingAmount)}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                        <p className="inbox__due-meta">
                           {due.daysUntil === 0 ? 'مستحق اليوم' : `بعد ${due.daysUntil} يوم`}
                           {due.unitName ? ` · ${due.unitName}` : ''}
                         </p>
                       </button>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="inbox__due-actions">
                         <button
                           type="button"
                           onClick={() => setContractQuickPayDue(due)}
-                          className="text-sm font-medium hover:opacity-80"
-                          style={{ color: 'var(--color-info)' }}
+                          className="inbox__action-btn"
                         >
                           سجّل دفعة
                         </button>
@@ -611,41 +566,34 @@ export default function InboxPage({ setPage }) {
               open={false}
             >
               {contractDues.dueNext30Days.map((due) => (
-                <div
-                  key={due.dueId}
-                  className="px-4 py-3 hover:bg-[var(--color-bg)] transition-colors"
-                >
-                  <div className="flex items-start gap-3">
-                    <span
-                      className="flex-shrink-0 w-2 h-2 rounded-full mt-1.5"
-                      style={{ background: 'var(--color-muted)' }}
-                    />
-                    <div className="min-w-0 flex-1">
+                <div key={due.dueId} className="inbox__due-row inbox__due-row--hoverable">
+                  <div className="inbox__due-layout">
+                    <span className="inbox__due-dot inbox__due-dot--muted" />
+                    <div className="inbox__due-content">
                       <button
                         type="button"
                         onClick={() => navigate(due.actionTarget)}
-                        className="w-full text-right"
+                        className="inbox__contract-link"
                       >
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="font-medium text-[var(--color-text)]">
+                        <div className="inbox__due-head">
+                          <span className="inbox__due-name">
                             {due.tenantName || 'بدون اسم'}
                             {due.propertyName ? ` — ${due.propertyName}` : ''}
                           </span>
-                          <span className="font-medium text-[var(--color-text)]">
+                          <span className="inbox__due-amount inbox__due-amount--neutral">
                             {formatCurrency(due.remainingAmount)}
                           </span>
                         </div>
-                        <p className="text-sm text-[var(--color-muted)] mt-0.5">
+                        <p className="inbox__due-meta">
                           بعد {due.daysUntil} يوم
                           {due.unitName ? ` · ${due.unitName}` : ''}
                         </p>
                       </button>
-                      <div className="flex flex-wrap gap-2 mt-2">
+                      <div className="inbox__due-actions">
                         <button
                           type="button"
                           onClick={() => setContractQuickPayDue(due)}
-                          className="text-sm font-medium hover:opacity-80"
-                          style={{ color: 'var(--color-info)' }}
+                          className="inbox__action-btn"
                         >
                           سجّل دفعة
                         </button>

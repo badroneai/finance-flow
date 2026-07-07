@@ -90,22 +90,18 @@ export default function ReceiptModal({ receipt, onClose }) {
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      style={{ background: 'var(--color-overlay)' }}
+      className="receipt-overlay"
       role="dialog"
       aria-modal="true"
       aria-labelledby="receipt-modal-title"
     >
-      <div
-        className="receipt-sheet modal-surface modal-surface--md max-h-[90vh] overflow-y-auto"
-        dir="rtl"
-      >
+      <div className="receipt-sheet modal-surface modal-surface--md" dir="rtl">
         {/* أزرار التحكم */}
-        <div className="modal-sheet__header sticky top-0 z-10">
-          <h2 id="receipt-modal-title" className="text-lg font-bold text-[var(--color-text)]">
+        <div className="modal-sheet__header">
+          <h2 id="receipt-modal-title" className="receipt-sheet__title">
             سند قبض
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="receipt-sheet__actions">
             <button type="button" onClick={handlePrint} className="btn-secondary">
               طباعة
             </button>
@@ -113,7 +109,7 @@ export default function ReceiptModal({ receipt, onClose }) {
               type="button"
               onClick={handleExportPdf}
               disabled={exporting}
-              className="btn-primary disabled:opacity-60"
+              className="btn-primary u-disabled-muted"
             >
               {exporting ? 'جاري التصدير...' : 'تصدير PDF'}
             </button>
@@ -131,20 +127,18 @@ export default function ReceiptModal({ receipt, onClose }) {
         {/* محتوى الإيصال القابل للطباعة */}
         <div ref={printRef} className="receipt-sheet__body">
           {/* رأس الإيصال */}
-          <div className="text-center pb-4 mb-4 border-b-2 border-[var(--color-text)]">
-            <h3 className="text-xl font-bold text-[var(--color-text)]">
+          <div className="receipt__header">
+            <h3 className="receipt__office-name">
               {receipt.officeName || 'قيد العقار'}
             </h3>
-            <p className="text-base font-bold mt-2" style={{ color: 'var(--color-primary)' }}>
-              سند قبض
-            </p>
-            <p className="text-xs text-[var(--color-muted)] mt-1">
+            <p className="receipt__subtitle">سند قبض</p>
+            <p className="receipt__number">
               رقم الإيصال: {receipt.receiptNumber}
             </p>
           </div>
 
           {/* بيانات الإيصال */}
-          <div className="space-y-0">
+          <div>
             <ReceiptRow label="تاريخ الإصدار" value={receipt.issueDate} />
             <ReceiptRow label="اسم المستأجر" value={receipt.tenantName || '—'} />
             <ReceiptRow label="رقم العقد" value={receipt.contractNumber || '—'} />
@@ -157,24 +151,14 @@ export default function ReceiptModal({ receipt, onClose }) {
           </div>
 
           {/* المبلغ */}
-          <div
-            className="rounded-xl p-5 text-center my-5"
-            style={{
-              background: 'var(--color-success-bg)',
-              border: '2px solid var(--color-success)',
-            }}
-          >
-            <p className="text-xs font-medium" style={{ color: 'var(--color-success)' }}>
-              المبلغ المستلم
-            </p>
-            <p className="text-2xl font-extrabold mt-1" style={{ color: 'var(--color-success)' }}>
-              {formatCurrency(receipt.amount)}
-            </p>
+          <div className="receipt__amount-box">
+            <p className="receipt__amount-label">المبلغ المستلم</p>
+            <p className="receipt__amount-value">{formatCurrency(receipt.amount)}</p>
           </div>
 
           {/* بيانات ZATCA — الضريبة */}
           {receipt.vatAmount > 0 && (
-            <div className="space-y-0 mb-4">
+            <div>
               <ReceiptRow
                 label="ضريبة القيمة المضافة (15%)"
                 value={formatCurrency(receipt.vatAmount)}
@@ -191,34 +175,27 @@ export default function ReceiptModal({ receipt, onClose }) {
 
           {/* ملاحظة */}
           {receipt.note && (
-            <div
-              className="rounded-lg p-3 mb-5 text-sm"
-              style={{
-                background: 'var(--color-bg)',
-                border: '1px solid var(--color-border)',
-                color: 'var(--color-muted)',
-              }}
-            >
+            <div className="receipt__note">
               <strong>ملاحظة:</strong> {receipt.note}
             </div>
           )}
 
           {/* خانات التوقيع */}
-          <div className="flex justify-between mt-10 pt-5 border-t-2 border-[var(--color-border)]">
-            <div className="text-center w-2/5">
-              <p className="text-xs text-[var(--color-muted)] mb-10">توقيع المستلم</p>
-              <div className="border-b border-[var(--color-muted)] mb-1" />
-              <p className="text-xs text-[var(--color-muted)]">المكتب</p>
+          <div className="receipt__signatures">
+            <div className="receipt__sig-col">
+              <p className="receipt__sig-label">توقيع المستلم</p>
+              <div className="receipt__sig-line" />
+              <p className="receipt__sig-name">المكتب</p>
             </div>
-            <div className="text-center w-2/5">
-              <p className="text-xs text-[var(--color-muted)] mb-10">توقيع الدافع</p>
-              <div className="border-b border-[var(--color-muted)] mb-1" />
-              <p className="text-xs text-[var(--color-muted)]">{receipt.tenantName || '—'}</p>
+            <div className="receipt__sig-col">
+              <p className="receipt__sig-label">توقيع الدافع</p>
+              <div className="receipt__sig-line" />
+              <p className="receipt__sig-name">{receipt.tenantName || '—'}</p>
             </div>
           </div>
 
           {/* تذييل */}
-          <p className="text-center text-xs text-[var(--color-muted)] mt-6 pt-3 border-t border-[var(--color-border)]">
+          <p className="receipt__footer">
             تم إنشاؤه بواسطة قيد العقار — {new Date().toLocaleDateString('ar-SA')}
           </p>
         </div>
@@ -230,9 +207,9 @@ export default function ReceiptModal({ receipt, onClose }) {
 /** صف بيانات في الإيصال */
 function ReceiptRow({ label, value }) {
   return (
-    <div className="flex justify-between items-baseline py-2.5 border-b border-[var(--color-border)]">
-      <span className="text-sm text-[var(--color-muted)] flex-shrink-0">{label}</span>
-      <span className="text-sm font-semibold text-[var(--color-text)]">{value}</span>
+    <div className="receipt__row">
+      <span className="receipt__row-label">{label}</span>
+      <span className="receipt__row-value">{value}</span>
     </div>
   );
 }

@@ -29,17 +29,19 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
   };
 
   return (
-    <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-      <h3 className="font-bold text-[var(--color-text)] mb-1">
-        {editMode ? 'تعديل جهة الاتصال' : 'إضافة جهة اتصال جديدة'}
-      </h3>
-      <p className="text-sm text-[var(--color-muted)] mb-4">
-        {editMode
-          ? 'عدّل البيانات واحفظ التغييرات'
-          : 'سجّل عملاءك ومستأجريك لتتبع العقود والمدفوعات'}
-      </p>
+    <div className="panel-card contacts-page__form-shell">
+      <div className="contacts-page__form-header">
+        <h3 className="contacts-page__form-title">
+          {editMode ? 'تعديل جهة الاتصال' : 'إضافة جهة اتصال جديدة'}
+        </h3>
+        <p className="contacts-page__form-hint">
+          {editMode
+            ? 'عدّل البيانات واحفظ التغييرات'
+            : 'سجّل عملاءك ومستأجريك لتتبع العقود والمدفوعات'}
+        </p>
+      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="contacts-page__form-grid">
         {/* الاسم */}
         <FormField label="الاسم" id="contact-name">
           <input
@@ -47,7 +49,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             value={form.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="مثال: أحمد محمد الشمري"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
             maxLength={100}
           />
         </FormField>
@@ -57,7 +58,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           <select
             value={form.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {CONTACT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -75,7 +75,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             onChange={(e) => handleChange('phone', e.target.value)}
             placeholder="05XXXXXXXX"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
           />
         </FormField>
 
@@ -87,7 +86,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             onChange={(e) => handleChange('phone2', e.target.value)}
             placeholder="05XXXXXXXX (اختياري)"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
           />
         </FormField>
 
@@ -99,7 +97,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             onChange={(e) => handleChange('email', e.target.value)}
             placeholder="example@email.com"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
           />
         </FormField>
 
@@ -108,7 +105,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           <select
             value={form.idType}
             onChange={(e) => handleChange('idType', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {CONTACT_ID_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -126,7 +122,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             onChange={(e) => handleChange('idNumber', e.target.value)}
             placeholder="رقم الهوية أو السجل التجاري"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm text-left"
           />
         </FormField>
 
@@ -135,7 +130,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           <select
             value={form.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             <option value="">اختر المدينة</option>
             {SAUDI_CITIES.map((city) => (
@@ -153,7 +147,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             value={form.district}
             onChange={(e) => handleChange('district', e.target.value)}
             placeholder="مثال: حي النرجس"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -164,7 +157,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             value={form.companyName}
             onChange={(e) => handleChange('companyName', e.target.value)}
             placeholder="اسم الشركة (اختياري)"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -175,7 +167,6 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             value={form.nationality}
             onChange={(e) => handleChange('nationality', e.target.value)}
             placeholder="مثال: سعودي"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -186,30 +177,28 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
             value={form.tags}
             onChange={(e) => handleChange('tags', e.target.value)}
             placeholder="VIP, متأخر, ... (مفصولة بفاصلة)"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
       </div>
 
       {/* ملاحظات */}
-      <div className="mt-3">
+      <div className="contacts-page__form-notes">
         <FormField label="ملاحظات" id="contact-notes">
           <textarea
             value={form.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="أي ملاحظات إضافية عن جهة الاتصال..."
             rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
           />
         </FormField>
       </div>
 
-      <div className="flex gap-2 mt-4">
+      <div className="contacts-page__form-actions">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="btn-primary disabled:opacity-50"
+          className="btn-primary"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة جهة الاتصال'}
         </button>
@@ -217,7 +206,7 @@ function ContactForm({ form, setForm, onSave, onCancel, editMode, saving }) {
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm hover:bg-[var(--color-bg)]"
+            className="contacts-page__btn-cancel"
           >
             إلغاء
           </button>
@@ -249,29 +238,25 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
           onOpen?.();
         }
       }}
-      className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 shadow-sm cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+      className="panel-card contacts-page__card"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="flex-shrink-0 text-[var(--color-primary)]" aria-hidden="true">
+      <div className="contacts-page__card-head">
+        <div className="contacts-page__card-identity">
+          <span className="contacts-page__card-icon" aria-hidden="true">
             <Icons.contacts size={24} />
           </span>
-          <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-[var(--color-text)] truncate">{contact.name}</h4>
-            <p className="text-sm text-[var(--color-muted)] mt-0.5">
+          <div>
+            <div className="contacts-page__card-name">{contact.name}</div>
+            <div className="contacts-page__card-type">
               {typeLabel}
               {contact.companyName ? ` — ${contact.companyName}` : ''}
-            </p>
+            </div>
           </div>
         </div>
         {tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 flex-shrink-0">
+          <div className="contacts-page__card-tags">
             {tags.map((tag) => (
-              <span
-                key={tag}
-                className="px-2 py-0.5 rounded-full text-xs font-medium"
-                style={{ background: 'var(--color-info-bg)', color: 'var(--color-info)' }}
-              >
+              <span key={tag} className="contacts-page__tag">
                 {tag}
               </span>
             ))}
@@ -280,18 +265,14 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
       </div>
 
       {/* معلومات التواصل */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+      <div className="contacts-page__card-meta">
         {contact.phone && (
-          <a href={`tel:${contact.phone}`} className="transition-colors hover:opacity-80" dir="ltr">
+          <a href={`tel:${contact.phone}`} dir="ltr">
             {contact.phone}
           </a>
         )}
         {contact.email && (
-          <a
-            href={`mailto:${contact.email}`}
-            className="transition-colors hover:opacity-80"
-            dir="ltr"
-          >
+          <a href={`mailto:${contact.email}`} dir="ltr">
             {contact.email}
           </a>
         )}
@@ -304,32 +285,30 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
       </div>
 
       {contact.idNumber && (
-        <p className="text-sm text-[var(--color-muted)] mt-2">
+        <p className="contacts-page__card-detail">
           {getContactIdTypeLabel(contact.idType)}: <span dir="ltr">{contact.idNumber}</span>
         </p>
       )}
 
       {contact.notes && (
-        <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{contact.notes}</p>
+        <p className="contacts-page__card-notes">{contact.notes}</p>
       )}
 
       <div
-        className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]"
+        className="contacts-page__card-actions"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           type="button"
           onClick={() => onEdit(contact)}
-          className="text-sm font-medium hover:opacity-80"
-          style={{ color: 'var(--color-info)' }}
+          className="contacts-page__card-action contacts-page__card-action--edit"
         >
           تعديل
         </button>
         <button
           type="button"
           onClick={() => onDelete(contact)}
-          className="text-sm font-medium hover:opacity-80"
-          style={{ color: 'var(--color-danger)' }}
+          className="contacts-page__card-action contacts-page__card-action--delete"
         >
           حذف
         </button>
@@ -337,8 +316,7 @@ function ContactCard({ contact, onEdit, onDelete, contractCount, onViewContracts
           <button
             type="button"
             onClick={() => onViewContracts(contact)}
-            className="text-sm font-medium hover:opacity-80 mr-auto"
-            style={{ color: 'var(--color-success)' }}
+            className="contacts-page__card-action contacts-page__card-action--contracts"
           >
             {contractCount} عقد
           </button>
@@ -450,7 +428,7 @@ export default function ContactsPage() {
   }, [confirmDelete, deleteContact, toast]);
 
   return (
-    <div className="page-shell px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
+    <div className="page-shell page-shell--regular contacts-page" dir="rtl">
       <div className="page-header">
         <div className="page-header-copy">
           <span className="page-kicker">العلاقات</span>
@@ -490,42 +468,44 @@ export default function ContactsPage() {
 
       {/* ملخص */}
       {contacts.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-          <SummaryCard label="الإجمالي" value={summary.total} icon={<Icons.contacts size={20} />} />
-          <SummaryCard
-            label="مستأجرين"
-            value={summary.tenantCount}
-            icon={<Icons.home size={18} />}
-          />
-          <SummaryCard
-            label="ملاك"
-            value={summary.ownerCount}
-            icon={<Icons.contacts size={18} />}
-          />
-          <SummaryCard
-            label="مشترين"
-            value={summary.buyerCount}
-            icon={<Icons.contracts size={18} />}
-          />
+        <div className="contacts-page__summary">
+          <div className="route-summary-grid route-summary-grid--quad">
+            <SummaryCard label="الإجمالي" value={summary.total} icon={<Icons.contacts size={20} />} />
+            <SummaryCard
+              label="مستأجرين"
+              value={summary.tenantCount}
+              icon={<Icons.home size={18} />}
+            />
+            <SummaryCard
+              label="ملاك"
+              value={summary.ownerCount}
+              icon={<Icons.contacts size={18} />}
+            />
+            <SummaryCard
+              label="مشترين"
+              value={summary.buyerCount}
+              icon={<Icons.contracts size={18} />}
+            />
+          </div>
         </div>
       )}
 
       {/* فلاتر */}
       {contacts.length > 0 && (
-        <div className="control-toolbar flex flex-wrap gap-3 mb-4 p-3">
-          <div className="flex-1 min-w-[180px]">
+        <div className="control-toolbar control-toolbar--filters contacts-page__toolbar">
+          <div className="contacts-page__search">
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم، الجوال، البريد..."
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              className="contacts-page__search-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+            className="contacts-page__filter-control"
           >
             <option value="">كل الأنواع</option>
             {CONTACT_TYPE_OPTIONS.map((opt) => (
@@ -539,7 +519,7 @@ export default function ContactsPage() {
 
       {/* حالة التحميل */}
       {contactsLoading && (
-        <div className="text-center py-8 text-[var(--color-muted)]">جاري التحميل...</div>
+        <div className="contacts-page__state">جاري التحميل...</div>
       )}
 
       {/* حالة فارغة */}
@@ -557,11 +537,11 @@ export default function ContactsPage() {
 
       {/* لا نتائج بعد الفلترة */}
       {!contactsLoading && contacts.length > 0 && filtered.length === 0 && (
-        <div className="text-center py-8 text-[var(--color-muted)]">لا توجد نتائج مطابقة للبحث</div>
+        <div className="contacts-page__state">لا توجد نتائج مطابقة للبحث</div>
       )}
 
       {/* قائمة جهات الاتصال */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="contacts-page__list">
         {filtered.map((contact) => (
           <ContactCard
             key={contact.id}

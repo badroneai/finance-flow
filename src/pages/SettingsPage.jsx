@@ -250,22 +250,29 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto" dir="rtl">
+    <div className="set--page" dir="rtl">
+      <header className="set--page-head">
+        <h1 className="set--page-title">الإعدادات</h1>
+        <p className="set--page-kicker">
+          المظهر، بيانات المكتب، النسخ الاحتياطي، والحساب.
+        </p>
+      </header>
+
       {setPage && (
-        <div className="flex justify-end mb-4 no-print">
+        <div className="set--nav no-print">
           <button
             type="button"
             onClick={() => setPage('pulse')}
-            className="text-sm font-medium hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="set--link"
           >
             النبض المالي
           </button>
         </div>
       )}
 
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
-        <h3 className="font-bold text-[var(--color-text)] mb-4">وضع العرض</h3>
+      {/* ── وضع العرض ── */}
+      <div className="set--section">
+        <h3 className="set--title">وضع العرض</h3>
         <SettingsField label="المظهر">
           <select
             value={uiTheme}
@@ -275,7 +282,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               applyTheme(v);
               toast.success('تم تحديث المظهر');
             }}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+            className="set--select"
             aria-label="وضع العرض"
           >
             <option value="system">النظام</option>
@@ -293,7 +300,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               applyNumerals(v);
               toast.success('تم تحديث عرض الأرقام');
             }}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+            className="set--select"
             aria-label="عرض الأرقام"
           >
             <option value="ar">عربي</option>
@@ -308,7 +315,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               setDateHeaderPref(v);
               toast.success('تم تحديث إعداد التاريخ');
             }}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+            className="set--select"
             aria-label="عرض التاريخ"
           >
             <option value="off">بدون</option>
@@ -318,7 +325,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
           </select>
         </SettingsField>
 
-        <div className="mt-3 flex flex-wrap gap-2">
+        <div className="set--actions">
           <button
             type="button"
             onClick={() => {
@@ -329,7 +336,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               applyTheme('system');
               toast.success('تمت إعادة ضبط المظهر');
             }}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+            className="set--btn"
             aria-label="إعادة ضبط المظهر"
           >
             إعادة ضبط المظهر
@@ -341,7 +348,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               if (typeof onShowOnboarding === 'function') onShowOnboarding();
               toast.info('سيتم عرض شاشة الترحيب');
             }}
-            className="px-4 py-2 rounded-lg border border-[var(--color-border)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)]"
+            className="set--btn"
             aria-label="إعادة عرض شاشة الترحيب"
           >
             إعادة عرض شاشة الترحيب
@@ -353,33 +360,34 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               if (typeof onStartTour === 'function') onStartTour();
               toast.info('جاري بدء الجولة التعريفية');
             }}
-            className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75"
-            style={{ borderColor: 'var(--color-info)', color: 'var(--color-info)' }}
+            className="set--btn--outline-info"
             aria-label="بدء الجولة التعريفية"
           >
             بدء الجولة التعريفية
           </button>
         </div>
       </div>
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
-        <h3 className="font-bold text-[var(--color-text)] mb-4">معلومات المكتب</h3>
+
+      {/* ── معلومات المكتب ── */}
+      <div className="set--section">
+        <h3 className="set--title">معلومات المكتب</h3>
         <SettingsField label="اسم المكتب">
           <input
             type="text"
             value={settings.officeName}
             onChange={(e) => setSettings((s) => ({ ...s, officeName: e.target.value }))}
             maxLength={120}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="set--input"
             aria-label="اسم المكتب"
           />
         </SettingsField>
-        <div className="grid grid-cols-2 gap-3">
+        <div className="set--grid-2">
           <SettingsField label="رقم الهاتف">
             <input
               type="tel"
               value={settings.phone || ''}
               onChange={(e) => setSettings((s) => ({ ...s, phone: e.target.value }))}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="set--input"
               aria-label="رقم الهاتف"
             />
           </SettingsField>
@@ -388,7 +396,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               type="email"
               value={settings.email || ''}
               onChange={(e) => setSettings((s) => ({ ...s, email: e.target.value }))}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="set--input"
               aria-label="البريد الإلكتروني"
             />
           </SettingsField>
@@ -403,39 +411,38 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
             onChange={(e) =>
               setSettings((s) => ({ ...s, defaultCommissionPercent: safeNum(e.target.value, 50) }))
             }
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="set--input"
             aria-label="نسبة العمولة الافتراضية"
           />
-          <p className="text-xs text-[var(--color-muted)] mt-1">تؤثر على العمولات الجديدة فقط</p>
+          <p className="set--hint">تؤثر على العمولات الجديدة فقط</p>
         </SettingsField>
         {/* SPR-017: شعار المكتب */}
         <SettingsField label="شعار المكتب">
-          <div className="flex items-center gap-3">
+          <div className="set--logo-row">
             {officeLogo ? (
-              <div className="flex items-center gap-3">
+              <div className="set--logo-row">
                 <img
                   src={officeLogo}
                   alt="شعار المكتب"
-                  className="w-12 h-12 object-contain rounded border border-[var(--color-border)]"
+                  className="set--logo-preview"
                 />
                 <button
                   type="button"
                   onClick={handleLogoRemove}
-                  className="text-xs hover:opacity-80"
-                  style={{ color: 'var(--color-danger)' }}
+                  className="set--link--danger"
                 >
                   حذف الشعار
                 </button>
               </div>
             ) : (
-              <div className="w-12 h-12 rounded border border-dashed border-[var(--color-border)] flex items-center justify-center text-[var(--color-muted)] text-xs">
+              <div className="set--logo-empty">
                 لا يوجد
               </div>
             )}
             <button
               type="button"
               onClick={() => logoInputRef.current?.click()}
-              className="px-3 py-1.5 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)] hover:bg-[var(--color-bg)]"
+              className="set--logo-upload"
             >
               {officeLogo ? 'تغيير' : 'رفع شعار'}
             </button>
@@ -444,72 +451,55 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
               type="file"
               accept="image/png,image/jpeg,image/svg+xml,image/webp"
               onChange={handleLogoUpload}
-              className="hidden"
+              className="set--hidden"
               aria-hidden="true"
             />
           </div>
-          <p className="text-xs text-[var(--color-muted)] mt-1">
+          <p className="set--hint">
             يظهر في رأس التقارير PDF (PNG/JPG/SVG — حد 500 كيلوبايت)
           </p>
         </SettingsField>
 
         <button
           onClick={handleSave}
-          className="px-6 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-          style={{ backgroundColor: 'var(--color-info)' }}
+          className="set--btn--primary"
           aria-label="حفظ الإعدادات"
         >
           حفظ الإعدادات
         </button>
       </div>
 
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
-        <h3 className="font-bold text-[var(--color-text)] mb-4">النسخ الاحتياطي</h3>
-        <p className="text-sm text-[var(--color-muted)] mb-4">
+      {/* ── النسخ الاحتياطي ── */}
+      <div className="set--section">
+        <h3 className="set--title">النسخ الاحتياطي</h3>
+        <p className="set--desc">
           بياناتك محفوظة تلقائياً في السحابة. يمكنك تصدير نسخة احتياطية محلية للاحتفاظ بها.
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="set--actions--mt0">
           <button
             type="button"
             onClick={handleExportBackup}
-            className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75 flex items-center gap-2"
-            style={{ borderColor: 'var(--color-info)', color: 'var(--color-info)' }}
+            className="set--btn--outline-info set--btn__icon"
             aria-label="تصدير نسخة احتياطية JSON"
           >
             <Icons.download size={16} /> تصدير نسخة من السحابة (JSON)
           </button>
         </div>
-        <p className="text-xs text-[var(--color-muted)] mt-2">
+        <p className="set--hint--below">
           التصدير يحفظ نسخة من بيانات السحابة على جهازك.
         </p>
 
         {/* المزامنة السحابية — مُفعّلة دائماً */}
-        <div
-          className="mt-4 rounded-xl p-4"
-          style={{
-            borderWidth: '1px',
-            borderColor: 'var(--color-success)',
-            backgroundColor: 'var(--color-success-bg)',
-          }}
-          aria-label="المزامنة السحابية"
-        >
-          <div className="flex items-center justify-between gap-3">
-            <div className="font-semibold" style={{ color: 'var(--color-success)' }}>
+        <div className="set--sync-banner" aria-label="المزامنة السحابية">
+          <div className="set--sync-banner__head">
+            <div className="set--sync-banner__title">
               بياناتك متزامنة مع السحابة
             </div>
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
-              style={{
-                backgroundColor: 'var(--color-success-light)',
-                color: 'var(--color-success)',
-                borderWidth: '1px',
-                borderColor: 'var(--color-success)',
-              }}
-            >
+            <span className="set--sync-banner__badge">
               مُفعّل
             </span>
           </div>
-          <p className="text-sm mt-2" style={{ color: 'var(--color-success)' }}>
+          <p className="set--sync-banner__text">
             بياناتك محفوظة بأمان في السحابة ومتاحة من أي جهاز مسجّل بنفس الحساب.
           </p>
         </div>
@@ -519,29 +509,28 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
           type="file"
           accept=".json,application/json"
           onChange={handleImportFileChange}
-          className="hidden"
+          className="set--hidden"
           aria-hidden="true"
         />
       </div>
 
-      <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm">
-        <h3 className="font-bold text-[var(--color-text)] mb-4">إدارة البيانات</h3>
-        <p className="text-xs mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+      {/* ── إدارة البيانات ── */}
+      <div className="set--section set--section--risk">
+        <h3 className="set--title">إدارة البيانات</h3>
+        <p className="set--desc--xs">
           حمّل بيانات تجريبية لاستعراض النظام، أو احذف جميع البيانات للبدء من الصفر.
         </p>
-        <div className="flex flex-wrap gap-3">
+        <div className="set--actions--mt0">
           <button
             onClick={handleResetDemo}
-            className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75"
-            style={{ borderColor: 'var(--color-info)', color: 'var(--color-info)' }}
+            className="set--btn--outline-info"
             aria-label="تحميل بيانات تجريبية"
           >
             تحميل بيانات تجريبية
           </button>
           <button
             onClick={handleClearAll}
-            className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75"
-            style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+            className="set--btn--outline-danger"
             aria-label="حذف جميع البيانات"
           >
             حذف جميع البيانات
@@ -551,19 +540,19 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
 
       {/* ── قسم الحساب — يظهر فقط عند تفعيل Supabase (SPR-004d) ── */}
       {isSupabaseConfigured && (
-        <div className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-6 shadow-sm mb-6">
-          <h3 className="font-bold text-[var(--color-text)] mb-4">الحساب</h3>
-          <div className="space-y-2 mb-4 text-sm text-[var(--color-muted)]">
+        <div className="set--section">
+          <h3 className="set--title">الحساب</h3>
+          <div className="set--account-info">
             {profile?.full_name && (
               <p>
                 الاسم:{' '}
-                <span className="font-medium text-[var(--color-text)]">{profile.full_name}</span>
+                <span className="set--account-info__val">{profile.full_name}</span>
               </p>
             )}
             {user?.email && (
               <p>
                 البريد:{' '}
-                <span className="font-medium text-[var(--color-text)]" dir="ltr">
+                <span className="set--account-info__val" dir="ltr">
                   {user.email}
                 </span>
               </p>
@@ -571,7 +560,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
             {role && (
               <p>
                 الدور:{' '}
-                <span className="font-medium text-[var(--color-text)]">
+                <span className="set--account-info__val">
                   {role === 'super_admin'
                     ? 'مدير المنصة'
                     : role === 'owner'
@@ -586,7 +575,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
             )}
             {office?.name && role !== 'super_admin' && (
               <p>
-                المكتب: <span className="font-medium text-[var(--color-text)]">{office.name}</span>
+                المكتب: <span className="set--account-info__val">{office.name}</span>
               </p>
             )}
           </div>
@@ -604,8 +593,7 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
                 navigate('/auth', { replace: true });
               }
             }}
-            className="px-4 py-2 rounded-lg border text-sm font-medium hover:opacity-75 disabled:opacity-50"
-            style={{ borderColor: 'var(--color-danger)', color: 'var(--color-danger)' }}
+            className="set--btn--outline-danger"
             aria-label="تسجيل الخروج"
           >
             {signingOut ? 'جاري الخروج…' : 'تسجيل الخروج'}
@@ -614,50 +602,20 @@ export function SettingsPage({ setPage, onShowOnboarding, onStartTour }) {
       )}
 
       {/* ── روابط قانونية ── */}
-      <div
-        className="rounded-2xl p-5"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-      >
-        <h3 className="text-base font-bold text-[var(--color-text)] mb-4">معلومات قانونية</h3>
-        <div className="flex flex-wrap gap-3">
-          <a
-            href="/privacy"
-            className="text-sm px-4 py-2 rounded-lg"
-            style={{
-              color: 'var(--color-primary)',
-              background: 'var(--color-bg)',
-              border: '1px solid var(--color-border)',
-              textDecoration: 'none',
-            }}
-          >
+      <div className="set--section set--section--legal">
+        <h3 className="set--title">معلومات قانونية</h3>
+        <div className="set--actions--mt0">
+          <a href="/privacy" className="set--legal-link">
             🔒 سياسة الخصوصية
           </a>
-          <a
-            href="/terms"
-            className="text-sm px-4 py-2 rounded-lg"
-            style={{
-              color: 'var(--color-primary)',
-              background: 'var(--color-bg)',
-              border: '1px solid var(--color-border)',
-              textDecoration: 'none',
-            }}
-          >
+          <a href="/terms" className="set--legal-link">
             📋 شروط الاستخدام
           </a>
-          <a
-            href="mailto:support@qaydalaqar.com"
-            className="text-sm px-4 py-2 rounded-lg"
-            style={{
-              color: 'var(--color-text-secondary)',
-              background: 'var(--color-bg)',
-              border: '1px solid var(--color-border)',
-              textDecoration: 'none',
-            }}
-          >
+          <a href="mailto:support@qaydalaqar.com" className="set--legal-link--muted">
             📧 support@qaydalaqar.com
           </a>
         </div>
-        <p className="text-xs mt-3" style={{ color: 'var(--color-text-secondary)' }}>
+        <p className="set--copyright">
           © 2024–2026 إلكسار الرقمية — سجل تجاري: 7008837028
         </p>
       </div>

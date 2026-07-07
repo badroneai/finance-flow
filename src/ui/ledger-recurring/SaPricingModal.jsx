@@ -17,7 +17,7 @@ function SaPricingModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="modal-batch__backdrop modal-batch__backdrop--center"
       onClick={() => setSaPricingOpen(false)}
     >
       <div
@@ -33,15 +33,13 @@ function SaPricingModal({
             </p>
           </div>
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="modal-batch__stack">
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              المدينة
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">المدينة</label>
             <select
               value={saCity}
               onChange={(e) => setSaCity(e.target.value)}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+              className="modal-batch__input modal-batch__input--surface"
               aria-label="المدينة"
             >
               <option value="riyadh">الرياض</option>
@@ -52,13 +50,11 @@ function SaPricingModal({
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              حجم المكتب
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">حجم المكتب</label>
             <select
               value={saSize}
               onChange={(e) => setSaSize(e.target.value)}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm bg-[var(--color-surface)]"
+              className="modal-batch__input modal-batch__input--surface"
               aria-label="حجم المكتب"
             >
               <option value="small">صغير</option>
@@ -66,7 +62,7 @@ function SaPricingModal({
               <option value="large">كبير</option>
             </select>
           </div>
-          <label className="inline-flex items-center gap-2 text-sm text-[var(--color-text)]">
+          <label className="modal-batch__checkbox-row">
             <input
               type="checkbox"
               checked={saOnlyUnpriced}
@@ -75,7 +71,7 @@ function SaPricingModal({
             فقط البنود غير المسعّرة
           </label>
         </div>
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="modal-batch__actions">
           <button type="button" onClick={() => setSaPricingOpen(false)} className="btn-secondary">
             إلغاء
           </button>

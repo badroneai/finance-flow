@@ -17,7 +17,7 @@ function PricingWizardModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      className="modal-batch__backdrop modal-batch__backdrop--center"
       onClick={() => setPricingOpen(false)}
     >
       <div
@@ -33,10 +33,10 @@ function PricingWizardModal({
             </p>
           </div>
         </div>
-        <div className="p-3 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] mb-3">
-          <div className="font-semibold text-[var(--color-text)]">{current?.title || '—'}</div>
+        <div className="modal-batch__preview">
+          <div className="modal-batch__preview-title">{current?.title || '—'}</div>
           {current?.priceBand && (
-            <div className="text-xs text-[var(--color-muted)] mt-1">
+            <div className="modal-batch__preview-meta">
               نطاق السعر: <Currency value={current.priceBand.min || 0} /> —{' '}
               <Currency value={current.priceBand.max || 0} />
               {current.priceBand.typical > 0 && (
@@ -48,35 +48,31 @@ function PricingWizardModal({
             </div>
           )}
         </div>
-        <div className="flex flex-col gap-3">
+        <div className="modal-batch__stack">
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              المبلغ (ر.س)
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">المبلغ (ر.س)</label>
             <input
               type="text"
               inputMode="decimal"
               value={pricingAmount}
               onChange={(e) => setPricingAmount(e.target.value)}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="modal-batch__input"
               aria-label="المبلغ"
               placeholder="0"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-[var(--color-text)] mb-1">
-              تاريخ الاستحقاق القادم
-            </label>
+            <label className="modal-batch__label modal-batch__label--xs">تاريخ الاستحقاق القادم</label>
             <input
               type="date"
               value={pricingDate}
               onChange={(e) => setPricingDate(e.target.value)}
-              className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+              className="modal-batch__input"
               aria-label="تاريخ الاستحقاق"
             />
           </div>
         </div>
-        <div className="flex gap-2 justify-end mt-4">
+        <div className="modal-batch__actions">
           <button type="button" onClick={() => setPricingOpen(false)} className="btn-secondary">
             إلغاء
           </button>

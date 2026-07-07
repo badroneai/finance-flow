@@ -162,19 +162,15 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
     <div
       ref={backdropRef}
       onClick={handleBackdropClick}
-      className="fixed inset-0 z-50 flex items-end md:items-center justify-center"
-      style={{ background: 'var(--color-overlay)' }}
+      className="modal-batch__backdrop modal-batch__backdrop--sheet"
       role="dialog"
       aria-modal="true"
       aria-labelledby="contract-qp-title"
     >
-      <div
-        className="modal-sheet modal-surface modal-surface--md max-h-[85vh] overflow-y-auto"
-        dir="rtl"
-      >
+      <div className="modal-sheet modal-surface modal-surface--md modal-batch__sheet-scroll" dir="rtl">
         {/* رأس النافذة */}
         <div className="modal-sheet__header">
-          <h2 id="contract-qp-title" className="text-lg font-bold text-[var(--color-text)]">
+          <h2 id="contract-qp-title" className="modal-sheet__title">
             تسجيل دفعة عقد
           </h2>
           <button type="button" onClick={onClose} className="modal-sheet__close" aria-label="إغلاق">
@@ -183,32 +179,30 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
         </div>
 
         {/* معلومات الاستحقاق */}
-        <div className="modal-sheet__notice mb-4">
-          <p className="text-sm font-medium text-[var(--color-text)]">{displayName}</p>
-          <div className="flex flex-wrap gap-4 mt-2 text-xs text-[var(--color-muted)]">
+        <div className="modal-sheet__notice modal-sheet__notice--spaced">
+          <p className="modal-batch__notice-title">{displayName}</p>
+          <div className="modal-batch__meta-row">
             {dueItem.dueDate && <span>الاستحقاق: {dueItem.dueDate}</span>}
             {dueItem.contractNumber && <span>عقد: {dueItem.contractNumber}</span>}
             {dueItem.installmentNumber && <span>القسط: {dueItem.installmentNumber}</span>}
           </div>
-          <div className="flex flex-wrap gap-4 mt-2">
+          <div className="modal-batch__amounts-row">
             <div>
-              <span className="text-xs text-[var(--color-muted)]">المبلغ الأصلي</span>
-              <p className="text-sm font-medium text-[var(--color-text)]">
-                {formatCurrency(dueItem.amount)}
-              </p>
+              <span className="modal-batch__field-label">المبلغ الأصلي</span>
+              <p className="modal-batch__field-value">{formatCurrency(dueItem.amount)}</p>
             </div>
             {dueItem.paidAmount > 0 && (
               <div>
-                <span className="text-xs text-[var(--color-muted)]">المدفوع</span>
-                <p className="text-sm font-medium" style={{ color: 'var(--color-success)' }}>
+                <span className="modal-batch__field-label">المدفوع</span>
+                <p className="modal-batch__field-value" style={{ color: 'var(--color-success)' }}>
                   {formatCurrency(dueItem.paidAmount)}
                 </p>
               </div>
             )}
             <div>
-              <span className="text-xs text-[var(--color-muted)]">المتبقي</span>
+              <span className="modal-batch__field-label">المتبقي</span>
               <p
-                className="text-sm font-bold"
+                className="modal-batch__field-value modal-batch__field-value--emphasis"
                 style={{
                   color: dueItem.daysOverdue > 0 ? 'var(--color-danger)' : 'var(--color-text)',
                 }}
@@ -218,19 +212,16 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
             </div>
           </div>
           {dueItem.daysOverdue > 0 && (
-            <p className="text-xs mt-2 font-medium" style={{ color: 'var(--color-danger)' }}>
+            <p className="modal-batch__overdue-note" style={{ color: 'var(--color-danger)' }}>
               متأخر {dueItem.daysOverdue} يوم
             </p>
           )}
         </div>
 
         {/* حقول النموذج */}
-        <div className="space-y-3">
+        <div className="modal-batch__fields">
           <div>
-            <label
-              htmlFor="cqp-amount"
-              className="block text-sm font-medium text-[var(--color-text)] mb-1"
-            >
+            <label htmlFor="cqp-amount" className="modal-batch__label">
               مبلغ الدفعة
             </label>
             <input
@@ -240,24 +231,21 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
               step="0.01"
               value={form.amount}
               onChange={(e) => handleChange('amount', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              className="modal-batch__input"
               placeholder="أدخل المبلغ"
               autoFocus
             />
             {Number(form.amount) > 0 &&
               dueItem.remainingAmount > 0 &&
               Number(form.amount) > dueItem.remainingAmount && (
-                <p className="text-xs mt-1" style={{ color: 'var(--color-danger)' }}>
+                <p className="modal-batch__text-hint" style={{ color: 'var(--color-danger)' }}>
                   المبلغ يتجاوز المتبقي ({formatCurrency(dueItem.remainingAmount)})
                 </p>
               )}
           </div>
 
           <div>
-            <label
-              htmlFor="cqp-date"
-              className="block text-sm font-medium text-[var(--color-text)] mb-1"
-            >
+            <label htmlFor="cqp-date" className="modal-batch__label">
               تاريخ الدفعة
             </label>
             <input
@@ -265,22 +253,19 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
               type="date"
               value={form.date}
               onChange={(e) => handleChange('date', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              className="modal-batch__input"
             />
           </div>
 
           <div>
-            <label
-              htmlFor="cqp-method"
-              className="block text-sm font-medium text-[var(--color-text)] mb-1"
-            >
+            <label htmlFor="cqp-method" className="modal-batch__label">
               طريقة الدفع
             </label>
             <select
               id="cqp-method"
               value={form.paymentMethod}
               onChange={(e) => handleChange('paymentMethod', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+              className="modal-batch__input modal-batch__input--surface"
             >
               {Object.entries(PAYMENT_METHODS).map(([value, label]) => (
                 <option key={value} value={value}>
@@ -291,10 +276,7 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
           </div>
 
           <div>
-            <label
-              htmlFor="cqp-note"
-              className="block text-sm font-medium text-[var(--color-text)] mb-1"
-            >
+            <label htmlFor="cqp-note" className="modal-batch__label">
               ملاحظة (اختياري)
             </label>
             <textarea
@@ -302,19 +284,19 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
               rows={2}
               value={form.note}
               onChange={(e) => handleChange('note', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
+              className="modal-batch__input modal-batch__textarea"
               placeholder="مثل: سداد عبر التحويل البنكي"
             />
           </div>
         </div>
 
         {/* أزرار */}
-        <div className="flex items-center gap-3 mt-5">
+        <div className="modal-batch__actions--split">
           <button
             type="button"
             onClick={handleSubmit}
             disabled={saving}
-            className="btn-primary flex-1 disabled:opacity-60"
+            className="btn-primary modal-batch__primary-grow u-disabled-muted"
           >
             {saving ? 'جاري التسجيل...' : 'تسجيل الدفعة'}
           </button>
@@ -323,7 +305,7 @@ export default function ContractQuickPaymentModal({ dueItem, onClose, onSuccess 
           </button>
         </div>
 
-        <p className="text-xs text-[var(--color-muted)] mt-3 text-center">
+        <p className="modal-batch__footer-note">
           يتم أيضًا إنشاء حركة دخل مرتبطة بهذه الدفعة تلقائياً.
         </p>
       </div>

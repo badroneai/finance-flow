@@ -54,7 +54,7 @@ function QuickActions({ navigate }) {
   ];
 
   return (
-    <section aria-label="اختصارات سريعة" className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+    <section aria-label="اختصارات سريعة" className="pulse-quick">
       {actions.map((a) => {
         const ActionIcon = a.icon;
         return (
@@ -62,11 +62,11 @@ function QuickActions({ navigate }) {
             key={a.label}
             type="button"
             onClick={a.onClick}
-            className="flex flex-col items-center gap-1.5 rounded-xl border border-[var(--color-border)] p-3 text-xs font-medium transition-colors hover:shadow-sm"
+            className="pulse-quick__btn"
             style={{ background: a.bg, color: a.color }}
           >
             {ActionIcon && <ActionIcon size={20} />}
-            <span className="leading-tight">{a.label}</span>
+            <span className="pulse-quick__label">{a.label}</span>
           </button>
         );
       })}
@@ -233,13 +233,13 @@ export default function PulsePage({ setPage }) {
   // Loading: skeleton
   if (loading && pulse == null && !error) {
     return (
-      <div className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto" dir="rtl">
-        <div className="p-4 md:p-6 max-w-[640px] mx-auto">
+      <div className="pulse-page" dir="rtl">
+        <div className="pulse-page__container">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
-          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-10 w-48 mb-4" />
-          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-32 w-full mb-6" />
-          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-24 w-full mb-4" />
-          <div className="animate-pulse rounded-xl bg-[var(--color-bg)] h-20 w-full" />
+          <div className="pulse-page__skeleton" style={{ height: '2.5rem', width: '12rem', marginBottom: '1rem' }} />
+          <div className="pulse-page__skeleton" style={{ height: '8rem', width: '100%', marginBottom: '1.5rem' }} />
+          <div className="pulse-page__skeleton" style={{ height: '6rem', width: '100%', marginBottom: '1rem' }} />
+          <div className="pulse-page__skeleton" style={{ height: '5rem', width: '100%' }} />
         </div>
       </div>
     );
@@ -248,13 +248,13 @@ export default function PulsePage({ setPage }) {
   // Error
   if (error) {
     return (
-      <div className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto" dir="rtl">
-        <div className="p-4 md:p-6 max-w-[640px] mx-auto">
+      <div className="pulse-page" dir="rtl">
+        <div className="pulse-page__container">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-6 text-center shadow-sm">
-            <p className="text-[var(--color-text)] font-medium">حدث خطأ أثناء تحميل النبض</p>
-            <p className="text-sm text-[var(--color-muted)] mt-1">{error}</p>
-            <button type="button" onClick={() => refresh(true)} className="btn-primary mt-4">
+          <div className="pulse-page__state-card">
+            <p className="pulse-page__state-title">حدث خطأ أثناء تحميل النبض</p>
+            <p className="pulse-page__state-desc">{error}</p>
+            <button type="button" onClick={() => refresh(true)} className="btn-primary pulse-page__state-btn">
               إعادة المحاولة
             </button>
           </div>
@@ -266,16 +266,16 @@ export default function PulsePage({ setPage }) {
   // Empty: لا يوجد دفتر
   if (noLedger && (pulse == null || pulse.healthStatus === 'unknown')) {
     return (
-      <div className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto" dir="rtl">
-        <div className="p-4 md:p-6 max-w-[640px] mx-auto flex flex-col gap-6">
+      <div className="pulse-page" dir="rtl">
+        <div className="pulse-page__container">
           <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] p-8 text-center shadow-sm">
-            <p className="text-[var(--color-text)] font-medium">أنشئ أول دفتر</p>
-            <p className="text-sm text-[var(--color-muted)] mt-1">
+          <div className="pulse-page__state-card pulse-page__state-card--lg">
+            <p className="pulse-page__state-title">أنشئ أول دفتر</p>
+            <p className="pulse-page__state-desc">
               اختر دفتراً نشطاً من الدفاتر لرؤية النبض المالي
             </p>
             {setPage && (
-              <button type="button" onClick={() => setPage('ledgers')} className="btn-primary mt-4">
+              <button type="button" onClick={() => setPage('ledgers')} className="btn-primary pulse-page__state-btn">
                 فتح الدفاتر
               </button>
             )}
@@ -288,7 +288,7 @@ export default function PulsePage({ setPage }) {
 
   return (
     <div
-      className="pulse-page min-h-screen bg-[var(--color-bg)] overflow-y-auto"
+      className="pulse-page"
       dir="rtl"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -297,7 +297,7 @@ export default function PulsePage({ setPage }) {
     >
       {pullY > 0 && (
         <div
-          className="fixed top-0 left-0 right-0 h-12 flex items-center justify-center bg-[var(--color-bg)]/90 text-[var(--color-muted)] text-sm z-10"
+          className="pulse-page__pull-indicator"
           style={{ transform: pullY >= PULL_THRESHOLD ? 'scale(1)' : 'scale(0.95)' }}
           aria-live="polite"
         >
@@ -305,7 +305,7 @@ export default function PulsePage({ setPage }) {
         </div>
       )}
 
-      <div className="p-4 md:p-6 max-w-[640px] mx-auto flex flex-col gap-6">
+      <div className="pulse-page__container">
         <PulseHeader onOpenLedgers={setPage ? () => setPage('ledgers') : undefined} />
 
         <PulseHeroCard
@@ -318,25 +318,16 @@ export default function PulsePage({ setPage }) {
         <QuickActions navigate={navigate} />
 
         {noTransactions && (
-          <div
-            className="rounded-xl p-4 text-center"
-            style={{
-              background: 'var(--color-warning-bg)',
-              border: '1px solid var(--color-warning)',
-            }}
-          >
-            <p className="font-medium" style={{ color: 'var(--color-warning)' }}>
-              أضف أول حركة
-            </p>
-            <p className="text-sm mt-1" style={{ color: 'var(--color-warning)' }}>
+          <div className="pulse-page__no-tx">
+            <p className="pulse-page__no-tx-title">أضف أول حركة</p>
+            <p className="pulse-page__no-tx-desc">
               سجّل دخل أو مصروف لرؤية النبض والتوقعات
             </p>
             {setPage && (
               <button
                 type="button"
                 onClick={() => setPage('transactions')}
-                className="btn-primary mt-3"
-                style={{ background: 'var(--color-warning)' }}
+                className="btn-primary pulse-page__no-tx-btn pulse-page__state-btn"
               >
                 سجّل حركة
               </button>
@@ -348,7 +339,7 @@ export default function PulsePage({ setPage }) {
           <section
             aria-live="polite"
             aria-label="ملخص النبض المالي"
-            className="flex flex-col gap-6"
+            className="pulse-page__sections"
           >
             <PulseAlerts
               alerts={pulse?.alerts || []}
@@ -378,8 +369,8 @@ export default function PulsePage({ setPage }) {
             />
 
             {summary && (summary.totalTransactions > 0 || summary.activeRecurringItems > 0) && (
-              <div className="flex flex-wrap items-center justify-between gap-4 text-sm text-[var(--color-muted)] border-t border-[var(--color-border)] pt-4">
-                <div className="flex flex-wrap gap-4">
+              <div className="pulse-page__summary-bar">
+                <div className="pulse-page__summary-stats">
                   <span>{summary.totalTransactions} حركة</span>
                   <span>{summary.activeRecurringItems} التزام نشط</span>
                   {(summary.monthlyAvgIncome > 0 || summary.monthlyAvgExpense > 0) && (
@@ -393,8 +384,7 @@ export default function PulsePage({ setPage }) {
                   <button
                     type="button"
                     onClick={() => setPage('transactions')}
-                    className="font-medium no-print hover:opacity-80"
-                    style={{ color: 'var(--color-info)' }}
+                    className="pulse-hero__refresh-btn no-print"
                   >
                     عرض الحركات
                   </button>

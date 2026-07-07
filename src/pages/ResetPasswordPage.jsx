@@ -46,12 +46,6 @@ const AppLogo = () => (
   </svg>
 );
 
-const inputStyle = {
-  background: 'var(--color-background)',
-  border: '1px solid var(--color-border)',
-  color: 'var(--color-text-primary)',
-};
-
 // ─── المكون الرئيسي ─────────────────────────────────────────────
 const ResetPasswordPage = () => {
   const navigate = useNavigate();
@@ -132,18 +126,7 @@ const ResetPasswordPage = () => {
   // ── شاشة الانتظار ─────────────────────────────────────────────
   if (sessionState === 'pending') {
     return (
-      <div
-        dir="rtl"
-        style={{
-          minHeight: '100vh',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'var(--color-background)',
-          color: 'var(--color-text-secondary)',
-          fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-        }}
-      >
+      <div dir="rtl" className="auth__pending">
         جاري التحقق…
       </div>
     );
@@ -152,33 +135,17 @@ const ResetPasswordPage = () => {
   // ── رابط غير صالح ─────────────────────────────────────────────
   if (sessionState === 'invalid') {
     return (
-      <div
-        dir="rtl"
-        className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-        style={{
-          background: 'var(--color-background)',
-          color: 'var(--color-text-primary)',
-          fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-        }}
-      >
-        <div
-          className="w-full max-w-sm rounded-2xl p-6 shadow-lg text-center"
-          style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-        >
-          <div
-            className="w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ background: 'var(--color-danger-bg)', color: 'var(--color-danger)' }}
-          >
+      <div dir="rtl" className="auth-page">
+        <div className="auth__card" style={{ textAlign: 'center' }}>
+          <div className="auth__error-icon">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="12" cy="12" r="10" />
               <line x1="12" y1="8" x2="12" y2="12" />
               <line x1="12" y1="16" x2="12.01" y2="16" />
             </svg>
           </div>
-          <h2 className="text-lg font-bold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-            رابط غير صالح
-          </h2>
-          <p className="text-sm mb-5" style={{ color: 'var(--color-text-secondary)', lineHeight: 1.7 }}>
+          <h2 className="auth__card-title">رابط غير صالح</h2>
+          <p className="auth__card-description">
             رابط الاستعادة منتهي الصلاحية أو تم استخدامه مسبقاً.
             <br />
             يرجى طلب رابط استعادة جديد.
@@ -186,12 +153,7 @@ const ResetPasswordPage = () => {
           <button
             type="button"
             onClick={() => navigate('/auth', { replace: true })}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold"
-            style={{
-              background: 'var(--color-primary)',
-              color: 'var(--color-text-inverse)',
-              cursor: 'pointer',
-            }}
+            className="auth__submit"
           >
             العودة لتسجيل الدخول
           </button>
@@ -202,55 +164,25 @@ const ResetPasswordPage = () => {
 
   // ── نموذج كلمة المرور الجديدة ──────────────────────────────────
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{
-        background: 'var(--color-background)',
-        color: 'var(--color-text-primary)',
-        fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-      }}
-    >
+    <div dir="rtl" className="auth-page">
       {/* ── الشعار ─────────────────────────────────────────────── */}
-      <div className="text-center mb-8">
-        <div
-          className="mx-auto mb-4 w-16 h-16 flex items-center justify-center rounded-2xl shadow-sm"
-          style={{ background: 'var(--color-primary)', color: 'var(--color-text-inverse)' }}
-        >
+      <div className="auth__logo-block">
+        <div className="auth__logo-icon">
           <AppLogo />
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-          قيد العقار
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-          إدارة التدفقات المالية لمكتبك العقاري
-        </p>
+        <h1 className="auth__logo-title">قيد العقار</h1>
+        <p className="auth__logo-subtitle">إدارة التدفقات المالية لمكتبك العقاري</p>
       </div>
 
       {/* ── البطاقة ─────────────────────────────────────────────── */}
-      <div
-        className="w-full max-w-sm rounded-2xl p-6 shadow-lg"
-        style={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)' }}
-      >
-        <h2
-          className="text-lg font-bold mb-2 text-center"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
-          تعيين كلمة مرور جديدة
-        </h2>
-        <p className="text-sm mb-5 text-center" style={{ color: 'var(--color-text-secondary)' }}>
-          أدخل كلمة المرور الجديدة لحسابك
-        </p>
+      <div className="auth__card">
+        <h2 className="auth__card-title">تعيين كلمة مرور جديدة</h2>
+        <p className="auth__card-subtitle">أدخل كلمة المرور الجديدة لحسابك</p>
 
         <form onSubmit={handleSubmit} noValidate>
           {/* كلمة المرور الجديدة */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              كلمة المرور الجديدة
-            </label>
+          <div className="auth__field">
+            <label className="auth__label">كلمة المرور الجديدة</label>
             <input
               type="password"
               value={password}
@@ -260,19 +192,13 @@ const ResetPasswordPage = () => {
               required
               autoComplete="new-password"
               autoFocus
-              className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
-              style={inputStyle}
+              className="auth__input auth__input--ltr"
             />
           </div>
 
           {/* تأكيد كلمة المرور */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              تأكيد كلمة المرور
-            </label>
+          <div className="auth__field">
+            <label className="auth__label">تأكيد كلمة المرور</label>
             <input
               type="password"
               value={confirmPassword}
@@ -281,38 +207,20 @@ const ResetPasswordPage = () => {
               dir="ltr"
               required
               autoComplete="new-password"
-              className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
-              style={inputStyle}
+              className="auth__input auth__input--ltr"
             />
           </div>
 
           {/* رسالة الخطأ */}
           {error && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm text-center"
-              role="alert"
-              style={{
-                background: 'var(--color-danger-bg)',
-                color: 'var(--color-danger)',
-                border: '1px solid color-mix(in srgb, var(--color-danger) 24%, transparent)',
-              }}
-            >
+            <div className="auth__alert auth__alert--danger" role="alert">
               {error}
             </div>
           )}
 
           {/* رسالة النجاح */}
           {successMsg && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm text-center"
-              role="status"
-              style={{
-                background: 'var(--color-success-bg)',
-                color: 'var(--color-success)',
-                border: '1px solid color-mix(in srgb, var(--color-success) 24%, transparent)',
-                lineHeight: 1.6,
-              }}
-            >
+            <div className="auth__alert auth__alert--success" role="status">
               {successMsg}
             </div>
           )}
@@ -321,31 +229,24 @@ const ResetPasswordPage = () => {
           <button
             type="submit"
             disabled={loading || !!successMsg}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold transition-opacity"
-            style={{
-              background: 'var(--color-primary)',
-              color: 'var(--color-text-inverse)',
-              opacity: loading || successMsg ? 0.6 : 1,
-              cursor: loading || successMsg ? 'not-allowed' : 'pointer',
-            }}
+            className="auth__submit"
           >
             {loading ? 'جاري الحفظ…' : 'حفظ كلمة المرور الجديدة'}
           </button>
         </form>
 
-        <div className="text-center mt-5">
+        <div className="auth__links">
           <button
             type="button"
             onClick={() => navigate('/auth', { replace: true })}
-            className="text-sm underline hover:no-underline"
-            style={{ color: 'var(--color-text-secondary)' }}
+            className="auth__link auth__link--secondary"
           >
             العودة لتسجيل الدخول
           </button>
         </div>
       </div>
 
-      <p className="text-xs mt-6" style={{ color: 'var(--color-text-secondary)' }}>
+      <p className="auth__footer">
         &copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.
       </p>
     </div>

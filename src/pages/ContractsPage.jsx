@@ -101,13 +101,22 @@ function ContractForm({
   };
 
   return (
-    <div className="panel-card contracts-page__form-shell mb-4">
-      <h3 className="font-bold text-[var(--color-text)] mb-1">
-        {editMode ? 'تعديل العقد' : 'إضافة عقد جديد'}
-      </h3>
-      <p className="text-sm text-[var(--color-muted)] mb-4">
-        {editMode ? 'عدّل البيانات واحفظ التغييرات' : 'اربط العقار بالعميل وحدد شروط التعاقد'}
-      </p>
+    <div className="panel-card contracts-page__form-shell">
+      <div className="contracts-page__form-header">
+        <div>
+          <h3 className="contracts-page__form-title">
+            {editMode ? 'تعديل العقد' : 'إضافة عقد جديد'}
+          </h3>
+          <p className="contracts-page__form-hint">
+            {editMode ? 'عدّل البيانات واحفظ التغييرات' : 'اربط العقار بالعميل وحدد شروط التعاقد'}
+          </p>
+        </div>
+        {onCancel && (
+          <button type="button" onClick={onCancel} className="btn-secondary">
+            إلغاء
+          </button>
+        )}
+      </div>
 
       <div className="contracts-page__form-grid">
         {/* العقار */}
@@ -115,7 +124,6 @@ function ContractForm({
           <select
             value={form.propertyId}
             onChange={(e) => handlePropertyChange(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             <option value="">اختر العقار</option>
             {properties.map((p) => (
@@ -131,7 +139,6 @@ function ContractForm({
             <select
               value={form.unitId || ''}
               onChange={(e) => handleChange('unitId', e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
             >
               <option value="">العقار بالكامل / بدون وحدة محددة</option>
               {selectedPropertyUnits.map((unit) => (
@@ -149,7 +156,6 @@ function ContractForm({
           <select
             value={form.contactId}
             onChange={(e) => handleChange('contactId', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             <option value="">اختر العميل</option>
             {contacts.map((c) => (
@@ -168,7 +174,6 @@ function ContractForm({
             onChange={(e) => handleChange('contractNumber', e.target.value)}
             placeholder="مثال: 2026-001"
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
           />
         </FormField>
 
@@ -177,7 +182,6 @@ function ContractForm({
           <select
             value={form.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {CONTRACT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -192,7 +196,6 @@ function ContractForm({
           <select
             value={form.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {CONTRACT_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -207,7 +210,6 @@ function ContractForm({
           <select
             value={form.paymentCycle}
             onChange={(e) => handlePaymentCycleChange(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {PAYMENT_CYCLE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -224,7 +226,6 @@ function ContractForm({
             onChange={(e) => handleChange('installmentCount', e.target.value)}
             min="1"
             readOnly={form.paymentCycle !== 'custom'}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -234,7 +235,6 @@ function ContractForm({
             type="date"
             value={form.startDate}
             onChange={(e) => handleChange('startDate', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -245,7 +245,6 @@ function ContractForm({
             value={form.durationMonths}
             onChange={(e) => handleDurationChange(e.target.value)}
             min="1"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -255,7 +254,6 @@ function ContractForm({
             type="date"
             value={form.endDate}
             onChange={(e) => handleChange('endDate', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -267,7 +265,6 @@ function ContractForm({
             onChange={(e) => handleMonthlyRentChange(e.target.value)}
             placeholder="مثال: 3500"
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -279,7 +276,6 @@ function ContractForm({
             onChange={(e) => handleChange('totalAmount', e.target.value)}
             placeholder="يُحسب تلقائياً أو أدخله يدوياً"
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -291,20 +287,18 @@ function ContractForm({
             onChange={(e) => handleChange('depositAmount', e.target.value)}
             placeholder="اختياري"
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
         {/* تجديد تلقائي */}
         <FormField label="تجديد تلقائي" id="contract-auto-renew">
-          <label className="flex items-center gap-2 cursor-pointer py-2">
+          <label className="contracts-page__checkbox-label">
             <input
               type="checkbox"
               checked={form.autoRenew}
               onChange={(e) => handleChange('autoRenew', e.target.checked)}
-              className="w-4 h-4 rounded border-[var(--color-border)]"
             />
-            <span className="text-sm text-[var(--color-text)]">
+            <span className="contracts-page__checkbox-text">
               يتجدد تلقائياً عند انتهاء المدة
             </span>
           </label>
@@ -312,32 +306,26 @@ function ContractForm({
       </div>
 
       {/* ملاحظات */}
-      <div className="mt-3">
+      <div className="contracts-page__form-notes">
         <FormField label="ملاحظات" id="contract-notes">
           <textarea
             value={form.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="أي ملاحظات إضافية عن العقد..."
             rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
           />
         </FormField>
       </div>
 
-      <div className="flex gap-2 mt-4">
+      <div className="contracts-page__form-actions">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="btn-primary disabled:opacity-50"
+          className="btn-primary"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة العقد'}
         </button>
-        {editMode && (
-          <button type="button" onClick={onCancel} className="btn-secondary">
-            إلغاء
-          </button>
-        )}
       </div>
     </div>
   );
@@ -392,31 +380,31 @@ function ContractCard({
           onOpen?.();
         }
       }}
-      className="panel-card contracts-page__card cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+      className="panel-card contracts-page__card"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="flex-shrink-0 text-[var(--color-primary)]" aria-hidden="true">
+      <div className="contracts-page__card-head">
+        <div className="contracts-page__card-identity">
+          <span className="contracts-page__card-icon" aria-hidden="true">
             <Icons.contracts size={24} />
           </span>
-          <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-[var(--color-text)] truncate">{propertyName}</h4>
-            <p className="text-sm text-[var(--color-muted)] mt-0.5">
+          <div>
+            <div className="contracts-page__card-name">{propertyName}</div>
+            <div className="contracts-page__card-type">
               {typeLabel} — {contactName}
-            </p>
+            </div>
             {unitName && (
-              <p className="text-xs text-[var(--color-info)] mt-1">الوحدة: {unitName}</p>
+              <div className="contracts-page__card-unit">الوحدة: {unitName}</div>
             )}
           </div>
         </div>
-        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+        <div className="contracts-page__card-badges">
           <Badge color={statusColor === 'gray' ? 'gray' : statusColor}>{statusLabel}</Badge>
           {expiring && <Badge color="yellow">ينتهي خلال {remaining} يوم</Badge>}
         </div>
       </div>
 
       {/* تفاصيل سريعة */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+      <div className="contracts-page__card-meta">
         {contract.contractNumber && <span>عقد #{contract.contractNumber}</span>}
         <span>
           {contract.startDate} → {contract.endDate}
@@ -426,40 +414,40 @@ function ContractCard({
       </div>
 
       {/* المبالغ */}
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm">
+      <div className="contracts-page__card-amounts">
         {contract.monthlyRent > 0 && (
-          <span className="font-medium text-[var(--color-success)]">
+          <span className="contracts-page__card-rent">
             {formatCurrency(safeNum(contract.monthlyRent))}/شهر
           </span>
         )}
         {contract.totalAmount > 0 && (
-          <span className="text-[var(--color-muted)]">
+          <span className="contracts-page__card-detail">
             الإجمالي: {formatCurrency(safeNum(contract.totalAmount))}
           </span>
         )}
         {contract.depositAmount > 0 && (
-          <span className="text-[var(--color-muted)]">
+          <span className="contracts-page__card-detail">
             تأمين: {formatCurrency(safeNum(contract.depositAmount))}
           </span>
         )}
       </div>
 
       {contract.notes && (
-        <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{contract.notes}</p>
+        <p className="contracts-page__card-notes">{contract.notes}</p>
       )}
 
       <div className="contracts-page__card-actions" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={() => onEdit(contract)}
-          className="btn-ghost contracts-page__card-action text-sm"
+          className="contracts-page__card-action contracts-page__card-action--edit"
         >
           تعديل
         </button>
         <button
           type="button"
           onClick={() => onDelete(contract)}
-          className="btn-ghost contracts-page__card-action text-sm text-[var(--color-danger)]"
+          className="contracts-page__card-action contracts-page__card-action--delete"
         >
           حذف
         </button>
@@ -468,7 +456,7 @@ function ContractCard({
             <button
               type="button"
               onClick={() => onViewProperty?.()}
-              className="btn-ghost contracts-page__card-action text-xs"
+              className="contracts-page__card-action contracts-page__card-action--link"
             >
               العقار
             </button>
@@ -477,7 +465,7 @@ function ContractCard({
             <button
               type="button"
               onClick={() => onViewContact?.()}
-              className="btn-ghost contracts-page__card-action text-xs"
+              className="contracts-page__card-action contracts-page__card-action--link"
             >
               العميل
             </button>
@@ -611,7 +599,7 @@ export default function ContractsPage() {
   }, [confirmDelete, deleteContract, toast]);
 
   return (
-    <div className="page-shell page-shell--regular" dir="rtl">
+    <div className="page-shell page-shell--regular contracts-page" dir="rtl">
       <div className="page-header">
         <div className="page-header-copy">
           <span className="page-kicker">الارتباطات النظامية</span>
@@ -642,7 +630,7 @@ export default function ContractsPage() {
         contactsList.length === 0 &&
         !showForm &&
         contracts.length === 0 && (
-          <div className="panel-card contracts-page__notice mb-4 text-sm">
+          <div className="panel-card contracts-page__notice">
             أضف عقارات وعملاء أولاً قبل إنشاء العقود. انتقل لصفحة «العقارات» أو «العملاء» للبدء.
           </div>
         )}
@@ -664,30 +652,32 @@ export default function ContractsPage() {
 
       {/* ملخص */}
       {contracts.length > 0 && (
-        <div className="route-summary-grid route-summary-grid--quad mb-4">
-          <SummaryCard
-            label="إجمالي العقود"
-            value={summary.total}
-            icon={<Icons.contracts size={20} />}
-          />
-          <SummaryCard label="ساري" value={summary.activeCount} icon={<Icons.check size={18} />} />
-          <SummaryCard
-            label="ينتهي قريباً"
-            value={summary.expiringSoon}
-            icon={<Icons.calendar size={18} />}
-            highlight={summary.expiringSoon > 0}
-          />
-          <SummaryCard
-            label="الإيجار الشهري"
-            value={formatCurrency(summary.totalMonthlyRent)}
-            icon={<Icons.commissions size={18} />}
-          />
+        <div className="contracts-page__summary">
+          <div className="route-summary-grid route-summary-grid--quad">
+            <SummaryCard
+              label="إجمالي العقود"
+              value={summary.total}
+              icon={<Icons.contracts size={20} />}
+            />
+            <SummaryCard label="ساري" value={summary.activeCount} icon={<Icons.check size={18} />} />
+            <SummaryCard
+              label="ينتهي قريباً"
+              value={summary.expiringSoon}
+              icon={<Icons.calendar size={18} />}
+              highlight={summary.expiringSoon > 0}
+            />
+            <SummaryCard
+              label="الإيجار الشهري"
+              value={formatCurrency(summary.totalMonthlyRent)}
+              icon={<Icons.commissions size={18} />}
+            />
+          </div>
         </div>
       )}
 
       {/* فلاتر */}
       {contracts.length > 0 && (
-        <div className="control-toolbar control-toolbar--compact contracts-page__toolbar mb-4">
+        <div className="control-toolbar control-toolbar--compact contracts-page__toolbar">
           <div className="contracts-page__search">
             <Icons.search size={16} className="field-icon-inline-start" />
             <input
@@ -695,13 +685,13 @@ export default function ContractsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث برقم العقد، اسم العقار أو العميل..."
-              className="contracts-page__search-input text-sm bg-[var(--color-bg)] text-[var(--color-text)]"
+              className="contracts-page__search-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="contracts-page__filter-control text-sm bg-[var(--color-bg)] text-[var(--color-text)]"
+            className="contracts-page__filter-control"
           >
             <option value="">كل الأنواع</option>
             {CONTRACT_TYPE_OPTIONS.map((opt) => (
@@ -713,7 +703,7 @@ export default function ContractsPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="contracts-page__filter-control text-sm bg-[var(--color-bg)] text-[var(--color-text)]"
+            className="contracts-page__filter-control"
           >
             <option value="">كل الحالات</option>
             {CONTRACT_STATUS_OPTIONS.map((opt) => (
@@ -727,9 +717,7 @@ export default function ContractsPage() {
 
       {/* حالة التحميل */}
       {contractsLoading && (
-        <div className="panel-card contracts-page__state py-8 text-[var(--color-muted)]">
-          جاري التحميل...
-        </div>
+        <div className="contracts-page__state">جاري التحميل...</div>
       )}
 
       {/* حالة فارغة */}

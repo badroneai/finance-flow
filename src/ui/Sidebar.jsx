@@ -20,10 +20,10 @@ export const Sidebar = ({
   };
 
   const sidebarContent = (
-    <div className="flex flex-col h-full">
-      <div className="sidebar-brand p-5">
-        <div className="flex items-center gap-3">
-          <div className="sidebar-brand-mark flex-shrink-0" aria-hidden="true">
+    <div className="sidebar-inner">
+      <div className="sidebar-brand">
+        <div className="sidebar-brand__row">
+          <div className="sidebar-brand-mark" aria-hidden="true">
             <svg
               viewBox="0 0 100 100"
               fill="none"
@@ -45,14 +45,14 @@ export const Sidebar = ({
           </div>
           {!collapsed && (
             <div>
-              <h1 className="sidebar-brand-title leading-tight">قيد العقار</h1>
+              <h1 className="sidebar-brand-title">قيد العقار</h1>
               <p className="sidebar-brand-subtitle">نظام التدفقات المالية</p>
             </div>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto py-4 px-3" aria-label="القائمة الرئيسية">
+      <nav className="sidebar-nav" aria-label="القائمة الرئيسية">
         {items.map((item) => {
           const Icon = item.icon || Icons?.list;
           return (
@@ -62,7 +62,7 @@ export const Sidebar = ({
               onClick={() => handleNav(item.id)}
               aria-label={item.label}
               data-tour-id={`nav-${item.id}`}
-              className={`sidebar-nav-button text-sm mb-1 ${page === item.id ? 'is-active' : ''} ${collapsed ? 'justify-center' : ''}`}
+              className={`sidebar-nav-button ${page === item.id ? 'is-active' : ''}`}
             >
               <span className="sidebar-nav-icon" aria-hidden="true">
                 <Icon size={18} />
@@ -79,13 +79,13 @@ export const Sidebar = ({
     <>
       <aside
         data-tour-id="sidebar"
-        className={`sidebar-shell hidden md:flex flex-col transition-all duration-300 no-print ${collapsed ? 'w-16' : 'w-60'}`}
+        className={`sidebar-shell no-print ${collapsed ? 'sidebar-shell--collapsed' : ''}`}
       >
         {sidebarContent}
         <button
           type="button"
           onClick={() => setCollapsed(!collapsed)}
-          className="sidebar-toggle p-4 text-xs font-medium"
+          className="sidebar-toggle"
           aria-label={collapsed ? 'توسيع القائمة' : 'طي القائمة'}
         >
           {collapsed ? '◁' : '▷ طي'}
@@ -93,12 +93,12 @@ export const Sidebar = ({
       </aside>
 
       {mobileOpen && (
-        <div className="fixed inset-0 z-50 md:hidden">
+        <div className="sidebar-mobile-backdrop">
           <div
-            className="sidebar-mobile-overlay fixed inset-0"
+            className="sidebar-mobile-overlay"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="sidebar-mobile-drawer z-50 overflow-y-auto">{sidebarContent}</aside>
+          <aside className="sidebar-mobile-drawer">{sidebarContent}</aside>
         </div>
       )}
     </>

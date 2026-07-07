@@ -26,24 +26,24 @@ import ReceiptModal from '../ui/ReceiptModal.jsx';
 
 function InfoCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
-      <div className="text-xs text-[var(--color-muted)] mb-1">{label}</div>
-      <div className="text-sm font-medium text-[var(--color-text)]">{value || '—'}</div>
+    <div className="ctr-detail__info-card">
+      <div className="ctr-detail__info-label">{label}</div>
+      <div className="ctr-detail__info-value">{value || '—'}</div>
     </div>
   );
 }
 
 function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
   return (
-    <section className="detail-section mb-4">
-      <div className="flex items-center gap-2 mb-3">
-        <span className="text-[var(--color-primary)]" aria-hidden="true">
+    <section className="detail-section ctr-detail__form-shell">
+      <div className="ctr-detail__form-header">
+        <span className="ctr-detail__form-icon" aria-hidden="true">
           <Icons.plus size={18} />
         </span>
-        <h2 className="font-bold text-[var(--color-text)]">تسجيل دفعة</h2>
+        <h2 className="ctr-detail__form-title">تسجيل دفعة</h2>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="ctr-detail__form-grid">
         <FormField label="المبلغ" id="contract-payment-amount">
           <input
             id="contract-payment-amount"
@@ -52,7 +52,8 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
             step="0.01"
             value={form.amount}
             onChange={(e) => onChange('amount', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -62,7 +63,8 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
             type="date"
             value={form.date}
             onChange={(e) => onChange('date', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -71,7 +73,8 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
             id="contract-payment-method"
             value={form.paymentMethod}
             onChange={(e) => onChange('paymentMethod', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
+
           >
             {Object.entries(PAYMENT_METHODS).map(([value, label]) => (
               <option key={value} value={value}>
@@ -86,7 +89,8 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
             id="contract-payment-due"
             value={form.dueId}
             onChange={(e) => onChange('dueId', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
+
           >
             <option value="">توزيع تلقائي على أقدم استحقاق</option>
             {schedule.map((due) => (
@@ -98,29 +102,29 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
         </FormField>
       </div>
 
-      <div className="mt-3">
+      <div className="ctr-detail__form-notes">
         <FormField label="ملاحظة" id="contract-payment-note">
           <textarea
             id="contract-payment-note"
             rows={2}
             value={form.note}
             onChange={(e) => onChange('note', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
+            className="u-no-resize"
             placeholder="مثل: سداد عبر التحويل البنكي"
           />
         </FormField>
       </div>
 
-      <div className="mt-4 flex items-center gap-2">
+      <div className="ctr-detail__form-actions">
         <button
           type="button"
           onClick={onSubmit}
           disabled={saving}
-          className="btn-primary disabled:opacity-60"
+          className="btn-primary"
         >
           {saving ? 'جاري التسجيل...' : 'تسجيل الدفعة'}
         </button>
-        <p className="text-xs text-[var(--color-muted)]">
+        <p className="ctr-detail__form-hint">
           يتم أيضًا إنشاء حركة دخل مرتبطة بهذه الدفعة لرفع التشغيلية المالية.
         </p>
       </div>
@@ -131,40 +135,40 @@ function PaymentForm({ form, onChange, onSubmit, saving, schedule }) {
 function DueTable({ schedule }) {
   if (!schedule.length) {
     return (
-      <div className="text-sm text-[var(--color-muted)]">
+      <div className="ctr-detail__empty-note">
         لا يوجد جدول استحقاقات محسوب لهذا العقد بعد.
       </div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="ctr-detail__table-wrap">
+      <table className="ctr-detail__table">
         <thead>
-          <tr className="text-[var(--color-muted)] border-b border-[var(--color-border)]">
-            <th className="text-start py-2 px-2">القسط</th>
-            <th className="text-start py-2 px-2">تاريخ الاستحقاق</th>
-            <th className="text-start py-2 px-2">المبلغ</th>
-            <th className="text-start py-2 px-2">المدفوع</th>
-            <th className="text-start py-2 px-2">المتبقي</th>
-            <th className="text-start py-2 px-2">الحالة</th>
+          <tr>
+            <th>القسط</th>
+            <th>تاريخ الاستحقاق</th>
+            <th>المبلغ</th>
+            <th>المدفوع</th>
+            <th>المتبقي</th>
+            <th>الحالة</th>
           </tr>
         </thead>
         <tbody>
           {schedule.map((due) => (
-            <tr key={due.id} className="border-b border-[var(--color-border)] last:border-b-0">
-              <td className="py-3 px-2 font-medium text-[var(--color-text)]">
+            <tr key={due.id}>
+              <td className="ctr-detail__cell--primary">
                 {due.installmentNumber}
               </td>
-              <td className="py-3 px-2 text-[var(--color-muted)]">{due.dueDate || '—'}</td>
-              <td className="py-3 px-2 text-[var(--color-text)]">{formatCurrency(due.amount)}</td>
-              <td className="py-3 px-2 text-[var(--color-success)]">
+              <td className="ctr-detail__cell--muted">{due.dueDate || '—'}</td>
+              <td>{formatCurrency(due.amount)}</td>
+              <td className="ctr-detail__cell--success">
                 {formatCurrency(due.paidAmount)}
               </td>
-              <td className="py-3 px-2 text-[var(--color-text)]">
+              <td>
                 {formatCurrency(due.remainingAmount)}
               </td>
-              <td className="py-3 px-2">
+              <td>
                 <Badge color={getDueStatusColor(due.status)}>{getDueStatusLabel(due.status)}</Badge>
               </td>
             </tr>
@@ -178,54 +182,50 @@ function DueTable({ schedule }) {
 function PaymentsTable({ payments, receiptsMap, onViewReceipt }) {
   if (!payments.length) {
     return (
-      <div className="text-sm text-[var(--color-muted)]">لا توجد دفعات مسجلة لهذا العقد بعد.</div>
+      <div className="ctr-detail__empty-note">لا توجد دفعات مسجلة لهذا العقد بعد.</div>
     );
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="ctr-detail__table-wrap">
+      <table className="ctr-detail__table">
         <thead>
-          <tr className="text-[var(--color-muted)] border-b border-[var(--color-border)]">
-            <th className="text-start py-2 px-2">التاريخ</th>
-            <th className="text-start py-2 px-2">المبلغ</th>
-            <th className="text-start py-2 px-2">طريقة الدفع</th>
-            <th className="text-start py-2 px-2">الاستحقاق</th>
-            <th className="text-start py-2 px-2">ملاحظة</th>
-            <th className="text-start py-2 px-2">السند</th>
+          <tr>
+            <th>التاريخ</th>
+            <th>المبلغ</th>
+            <th>طريقة الدفع</th>
+            <th>الاستحقاق</th>
+            <th>ملاحظة</th>
+            <th>السند</th>
           </tr>
         </thead>
         <tbody>
           {payments.map((payment) => {
             const receipt = receiptsMap?.[payment.id];
             return (
-              <tr
-                key={payment.id}
-                className="border-b border-[var(--color-border)] last:border-b-0"
-              >
-                <td className="py-3 px-2 text-[var(--color-text)]">{payment.date || '—'}</td>
-                <td className="py-3 px-2 font-medium text-[var(--color-success)]">
+              <tr key={payment.id}>
+                <td>{payment.date || '—'}</td>
+                <td className="ctr-detail__cell--success ctr-detail__cell--primary">
                   {formatCurrency(payment.amount)}
                 </td>
-                <td className="py-3 px-2 text-[var(--color-muted)]">
+                <td className="ctr-detail__cell--muted">
                   {getPaymentMethodLabel(payment.paymentMethod)}
                 </td>
-                <td className="py-3 px-2 text-[var(--color-muted)]">
+                <td className="ctr-detail__cell--muted">
                   {payment.dueId || 'توزيع تلقائي'}
                 </td>
-                <td className="py-3 px-2 text-[var(--color-muted)]">{payment.note || '—'}</td>
-                <td className="py-3 px-2">
+                <td className="ctr-detail__cell--muted">{payment.note || '—'}</td>
+                <td>
                   {receipt ? (
                     <button
                       type="button"
                       onClick={() => onViewReceipt(receipt)}
-                      className="btn-secondary !min-h-0 !px-2 !py-1 text-xs"
-                      style={{ color: 'var(--color-primary)', borderColor: 'var(--color-primary)' }}
+                      className="ctr-detail__receipt-btn"
                     >
                       عرض السند
                     </button>
                   ) : (
-                    <span className="text-xs text-[var(--color-muted)]">—</span>
+                    <span className="ctr-detail__cell--muted ctr-detail__cell--sub">—</span>
                   )}
                 </td>
               </tr>
@@ -380,7 +380,7 @@ export default function ContractDetailPage() {
 
   if (!contract) {
     return (
-      <div className="page-shell page-shell--wide" dir="rtl">
+      <div className="page-shell page-shell--wide ctr-detail" dir="rtl">
         <EmptyState
           title="عقد غير موجود"
           description="قد يكون العقد حُذف أو أن الرابط غير صحيح."
@@ -395,25 +395,25 @@ export default function ContractDetailPage() {
   const expiring = isExpiringSoon(contract.endDate);
 
   return (
-    <div className="page-shell page-shell--wide" dir="rtl">
-      <div className="text-sm text-[var(--color-muted)] mb-3">
-        <button type="button" onClick={() => navigate('/contracts')} className="hover:underline">
+    <div className="page-shell page-shell--wide ctr-detail" dir="rtl">
+      <nav className="ctr-detail__breadcrumb">
+        <button type="button" onClick={() => navigate('/contracts')} className="ctr-detail__breadcrumb-link">
           العقود
         </button>
-        <span className="mx-2">/</span>
+        <span className="ctr-detail__breadcrumb-sep">/</span>
         <span>{contract.contractNumber || property?.name || 'تفاصيل العقد'}</span>
-      </div>
+      </nav>
 
-      <div className="detail-hero mb-4">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="flex items-start gap-3 min-w-0">
-            <span className="text-[var(--color-primary)]" aria-hidden="true">
+      <div className="detail-hero ctr-detail__hero">
+        <div className="ctr-detail__hero-layout">
+          <div className="ctr-detail__hero-identity">
+            <span className="ctr-detail__hero-icon" aria-hidden="true">
               <Icons.contracts size={30} />
             </span>
-            <div className="min-w-0">
+            <div className="ctr-detail__hero-copy">
               <span className="page-kicker">ملف الالتزام</span>
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text)]">
+              <div className="ctr-detail__hero-title-row">
+                <h1 className="ctr-detail__hero-title">
                   {contract.contractNumber ? `عقد #${contract.contractNumber}` : 'تفاصيل العقد'}
                 </h1>
                 <Badge color={getContractStatusColor(contract.status)}>
@@ -421,7 +421,7 @@ export default function ContractDetailPage() {
                 </Badge>
                 {expiring && <Badge color="yellow">ينتهي خلال {remainingDays} يوم</Badge>}
               </div>
-              <p className="text-sm text-[var(--color-muted)]">
+              <p className="ctr-detail__hero-subtitle">
                 {getContractTypeLabel(contract.type)}
                 {property?.name ? ` — ${property.name}` : ''}
                 {unit?.name ? ` — ${unit.name}` : ''}
@@ -435,7 +435,7 @@ export default function ContractDetailPage() {
         </div>
       </div>
 
-      <div className="route-summary-grid route-summary-grid--five mb-4">
+      <div className="ctr-detail__summary route-summary-grid route-summary-grid--five">
         <SummaryCard
           label="إجمالي العقد"
           value={formatCurrency(finance.total)}
@@ -468,9 +468,9 @@ export default function ContractDetailPage() {
         />
       </div>
 
-      <section className="detail-section mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات العقد</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <section className="detail-section ctr-detail__section">
+        <h2 className="ctr-detail__section-title">بيانات العقد</h2>
+        <div className="ctr-detail__info-grid">
           <InfoCard label="رقم العقد" value={contract.contractNumber} />
           <InfoCard label="نوع العقد" value={getContractTypeLabel(contract.type)} />
           <InfoCard label="الحالة" value={getContractStatusLabel(contract.status)} />
@@ -502,46 +502,44 @@ export default function ContractDetailPage() {
         </div>
       </section>
 
-      <section className="detail-section mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">الارتباطات</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-          <div className="report-highlight report-highlight--neutral">
-            <div className="text-xs text-[var(--color-muted)] mb-1">العقار</div>
-            <div className="font-medium text-[var(--color-text)]">{property?.name || '—'}</div>
+      <section className="detail-section ctr-detail__section">
+        <h2 className="ctr-detail__section-title">الارتباطات</h2>
+        <div className="ctr-detail__assoc-grid">
+          <div className="ctr-detail__assoc-card">
+            <div className="ctr-detail__assoc-label">العقار</div>
+            <div className="ctr-detail__assoc-value">{property?.name || '—'}</div>
             {property?.id && (
               <button
                 type="button"
                 onClick={() => navigate(`/properties/${property.id}`)}
-                className="text-sm mt-2"
-                style={{ color: 'var(--color-info)' }}
+                className="ctr-detail__assoc-link"
               >
                 عرض العقار
               </button>
             )}
           </div>
 
-          <div className="report-highlight report-highlight--neutral">
-            <div className="text-xs text-[var(--color-muted)] mb-1">الوحدة</div>
-            <div className="font-medium text-[var(--color-text)]">
+          <div className="ctr-detail__assoc-card">
+            <div className="ctr-detail__assoc-label">الوحدة</div>
+            <div className="ctr-detail__assoc-value">
               {unit?.name || 'العقار بالكامل'}
             </div>
             {unit && (
-              <div className="text-sm text-[var(--color-muted)] mt-2">{unit.type || ''}</div>
+              <div className="ctr-detail__assoc-meta">{unit.type || ''}</div>
             )}
           </div>
 
-          <div className="report-highlight report-highlight--neutral">
-            <div className="text-xs text-[var(--color-muted)] mb-1">العميل</div>
-            <div className="font-medium text-[var(--color-text)]">{contact?.name || '—'}</div>
-            <div className="text-sm text-[var(--color-muted)] mt-2">
+          <div className="ctr-detail__assoc-card">
+            <div className="ctr-detail__assoc-label">العميل</div>
+            <div className="ctr-detail__assoc-value">{contact?.name || '—'}</div>
+            <div className="ctr-detail__assoc-meta">
               {contact?.phone || 'لا يوجد جوال'}
             </div>
             {contact?.id && (
               <button
                 type="button"
                 onClick={() => navigate(`/contacts/${contact.id}`)}
-                className="text-sm mt-2"
-                style={{ color: 'var(--color-info)' }}
+                className="ctr-detail__assoc-link"
               >
                 عرض العميل
               </button>
@@ -558,18 +556,18 @@ export default function ContractDetailPage() {
         schedule={finance.schedule.filter((due) => due.remainingAmount > 0)}
       />
 
-      <section className="detail-section mb-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="font-bold text-[var(--color-text)]">جدول الاستحقاقات</h2>
-          <div className="text-xs text-[var(--color-muted)]">{finance.schedule.length} استحقاق</div>
+      <section className="detail-section ctr-detail__section">
+        <div className="ctr-detail__section-header">
+          <h2 className="ctr-detail__section-title">جدول الاستحقاقات</h2>
+          <span className="ctr-detail__section-count">{finance.schedule.length} استحقاق</span>
         </div>
         <DueTable schedule={finance.schedule} />
       </section>
 
-      <section className="detail-section mb-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="font-bold text-[var(--color-text)]">سجل الدفعات</h2>
-          <div className="text-xs text-[var(--color-muted)]">{linkedPayments.length} دفعة</div>
+      <section className="detail-section ctr-detail__section">
+        <div className="ctr-detail__section-header">
+          <h2 className="ctr-detail__section-title">سجل الدفعات</h2>
+          <span className="ctr-detail__section-count">{linkedPayments.length} دفعة</span>
         </div>
         <PaymentsTable
           payments={linkedPayments}
@@ -578,9 +576,9 @@ export default function ContractDetailPage() {
         />
       </section>
 
-      <section className="detail-section">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">ملاحظات</h2>
-        <div className="text-sm text-[var(--color-text)] whitespace-pre-wrap">
+      <section className="detail-section ctr-detail__section ctr-detail__section--last">
+        <h2 className="ctr-detail__section-title">ملاحظات</h2>
+        <div className="ctr-detail__notes-body">
           {contract.notes || 'لا توجد ملاحظات على هذا العقد.'}
         </div>
       </section>

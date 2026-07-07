@@ -11,11 +11,12 @@ import {
 import { formatCurrency } from '../utils/format.jsx';
 import { safeNum } from '../utils/helpers.js';
 
+// بطاقة معلومات — تعرض label + value
 function InfoCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
-      <div className="text-xs text-[var(--color-muted)] mb-1">{label}</div>
-      <div className="text-sm font-medium text-[var(--color-text)]">{value || '—'}</div>
+    <div className="cnt-detail__info-card">
+      <div className="cnt-detail__info-label">{label}</div>
+      <div className="cnt-detail__info-value">{value || '—'}</div>
     </div>
   );
 }
@@ -52,9 +53,10 @@ export default function ContactDetailPage() {
     [units]
   );
 
+  // حالة العميل غير موجود
   if (!contact) {
     return (
-      <div className="px-4 md:px-6 max-w-4xl mx-auto py-6" dir="rtl">
+      <div className="page-shell page-shell--regular cnt-detail" dir="rtl">
         <EmptyState
           title="عميل غير موجود"
           description="قد يكون العميل حُذف أو أن الرابط غير صحيح."
@@ -66,45 +68,51 @@ export default function ContactDetailPage() {
   }
 
   return (
-    <div className="px-4 md:px-6 max-w-4xl mx-auto py-4" dir="rtl">
-      <div className="text-sm text-[var(--color-muted)] mb-3">
-        <button type="button" onClick={() => navigate('/contacts')} className="hover:underline">
+    <div className="page-shell page-shell--regular cnt-detail" dir="rtl">
+      {/* مسار التنقل */}
+      <nav className="cnt-detail__breadcrumb">
+        <button type="button" onClick={() => navigate('/contacts')} className="cnt-detail__breadcrumb-link">
           العملاء
         </button>
-        <span className="mx-2">/</span>
+        <span className="cnt-detail__breadcrumb-sep">/</span>
         <span>{contact.name}</span>
-      </div>
+      </nav>
 
-      <div className="bg-[var(--color-surface)] rounded-2xl border border-[var(--color-border)] p-4 md:p-5 shadow-sm mb-4">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="flex items-start gap-3 min-w-0">
-            <span className="text-[var(--color-primary)]" aria-hidden="true">
+      {/* بطاقة الهوية الرئيسية */}
+      <div className="detail-hero cnt-detail__hero">
+        <div className="cnt-detail__hero-layout">
+          <div className="cnt-detail__hero-identity">
+            <span className="cnt-detail__hero-icon" aria-hidden="true">
               <Icons.contacts size={30} />
             </span>
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text)]">
+            <div className="cnt-detail__hero-copy">
+              <span className="page-kicker">ملف العميل</span>
+              <div className="cnt-detail__hero-title-row">
+                <h1 className="cnt-detail__hero-title">
                   {contact.name}
                 </h1>
                 <Badge color="blue">{getContactTypeLabel(contact.type)}</Badge>
               </div>
-              <p className="text-sm text-[var(--color-muted)]">
+              <p className="cnt-detail__hero-subtitle">
                 {contact.companyName || 'جهة اتصال فردية'}
               </p>
             </div>
           </div>
 
-          <button
-            type="button"
-            onClick={() => navigate('/contacts')}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
-          >
-            رجوع للقائمة
-          </button>
+          <div className="cnt-detail__hero-actions">
+            <button
+              type="button"
+              onClick={() => navigate('/contacts')}
+              className="cnt-detail__back-btn"
+            >
+              رجوع للقائمة
+            </button>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+      {/* بطاقات الملخص */}
+      <div className="cnt-detail__summary route-summary-grid route-summary-grid--quad">
         <SummaryCard
           label="العقارات المرتبطة"
           value={ownedProperties.length}
@@ -131,9 +139,10 @@ export default function ContactDetailPage() {
         />
       </div>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات العميل</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {/* بيانات العميل */}
+      <section className="detail-section cnt-detail__section">
+        <h2 className="cnt-detail__section-title">بيانات العميل</h2>
+        <div className="cnt-detail__info-grid">
           <InfoCard label="الاسم" value={contact.name} />
           <InfoCard label="النوع" value={getContactTypeLabel(contact.type)} />
           <InfoCard label="الجوال" value={contact.phone} />
@@ -149,19 +158,20 @@ export default function ContactDetailPage() {
         </div>
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">العقارات المرتبطة</h2>
+      {/* العقارات المرتبطة */}
+      <section className="detail-section cnt-detail__section">
+        <h2 className="cnt-detail__section-title">العقارات المرتبطة</h2>
         {ownedProperties.length ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="cnt-detail__entity-grid">
             {ownedProperties.map((property) => (
               <button
                 key={property.id}
                 type="button"
                 onClick={() => navigate(`/properties/${property.id}`)}
-                className="text-right rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 hover:border-[var(--color-primary)] transition-colors"
+                className="cnt-detail__entity-card"
               >
-                <div className="font-medium text-[var(--color-text)]">{property.name}</div>
-                <div className="text-sm text-[var(--color-muted)] mt-1">
+                <div className="cnt-detail__entity-name">{property.name}</div>
+                <div className="cnt-detail__entity-meta">
                   {property.city || '—'}
                   {property.district ? `، ${property.district}` : ''}
                 </div>
@@ -169,29 +179,30 @@ export default function ContactDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="text-sm text-[var(--color-muted)]">
+          <div className="cnt-detail__empty-note">
             لا توجد عقارات مرتبطة بهذا العميل.
           </div>
         )}
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4 mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">العقود المرتبطة</h2>
+      {/* العقود المرتبطة */}
+      <section className="detail-section cnt-detail__section">
+        <h2 className="cnt-detail__section-title">العقود المرتبطة</h2>
         {linkedContracts.length ? (
-          <div className="space-y-3">
+          <div className="cnt-detail__contracts-list">
             {linkedContracts.map((contract) => (
               <button
                 key={contract.id}
                 type="button"
                 onClick={() => navigate(`/contracts/${contract.id}`)}
-                className="w-full text-right rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 hover:border-[var(--color-primary)] transition-colors"
+                className="cnt-detail__contract-card"
               >
-                <div className="flex items-center justify-between gap-3">
+                <div className="cnt-detail__contract-head">
                   <div>
-                    <div className="font-medium text-[var(--color-text)]">
+                    <div className="cnt-detail__entity-name">
                       {getContractTypeLabel(contract.type)}
                     </div>
-                    <div className="text-sm text-[var(--color-muted)] mt-1">
+                    <div className="cnt-detail__entity-meta">
                       {properties.find(
                         (property) => property.id === (contract.propertyId || contract.property_id)
                       )?.name || '—'}
@@ -204,7 +215,7 @@ export default function ContactDetailPage() {
                     {getContractStatusLabel(contract.status)}
                   </Badge>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+                <div className="cnt-detail__contract-meta">
                   <span>رقم العقد: {contract.contractNumber || '—'}</span>
                   <span>
                     الإيجار الشهري:{' '}
@@ -217,13 +228,14 @@ export default function ContactDetailPage() {
             ))}
           </div>
         ) : (
-          <div className="text-sm text-[var(--color-muted)]">لا توجد عقود مرتبطة بهذا العميل.</div>
+          <div className="cnt-detail__empty-note">لا توجد عقود مرتبطة بهذا العميل.</div>
         )}
       </section>
 
-      <section className="bg-[var(--color-surface)] rounded-xl border border-[var(--color-border)] p-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">ملاحظات</h2>
-        <div className="text-sm text-[var(--color-text)] whitespace-pre-wrap">
+      {/* ملاحظات */}
+      <section className="detail-section cnt-detail__section cnt-detail__section--last">
+        <h2 className="cnt-detail__section-title">ملاحظات</h2>
+        <div className="cnt-detail__notes-body">
           {contact.notes || 'لا توجد ملاحظات على هذا العميل.'}
         </div>
       </section>

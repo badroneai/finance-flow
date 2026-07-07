@@ -64,13 +64,6 @@ const AppLogo = () => (
   </svg>
 );
 
-// ─── ستايل مشترك للحقول ─────────────────────────────────────────
-const inputStyle = {
-  background: 'var(--color-background)',
-  border: '1px solid var(--color-border)',
-  color: 'var(--color-text-primary)',
-};
-
 // ─── المكون الرئيسي ─────────────────────────────────────────────
 const AuthPage = () => {
   const navigate = useNavigate();
@@ -209,62 +202,30 @@ const AuthPage = () => {
   const isForgot = mode === 'forgot';
 
   return (
-    <div
-      dir="rtl"
-      className="min-h-screen flex flex-col items-center justify-center px-4 py-8"
-      style={{
-        background: 'var(--color-background)',
-        color: 'var(--color-text-primary)',
-        fontFamily: '"IBM Plex Sans Arabic", sans-serif',
-      }}
-    >
+    <div dir="rtl" className="auth-page">
       {/* ── الشعار والعنوان ──────────────────────────────────────── */}
-      <div className="text-center mb-8">
-        <div
-          className="mx-auto mb-4 w-16 h-16 flex items-center justify-center rounded-2xl shadow-sm"
-          style={{ background: 'var(--color-primary)', color: 'var(--color-text-inverse)' }}
-        >
+      <div className="auth__logo-block">
+        <div className="auth__logo-icon">
           <AppLogo />
         </div>
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text-primary)' }}>
-          قيد العقار
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
-          إدارة التدفقات المالية لمكتبك العقاري
-        </p>
+        <h1 className="auth__logo-title">قيد العقار</h1>
+        <p className="auth__logo-subtitle">إدارة التدفقات المالية لمكتبك العقاري</p>
       </div>
 
       {/* ── البطاقة الرئيسية ─────────────────────────────────────── */}
-      <div
-        className="w-full max-w-sm rounded-2xl p-6 shadow-lg"
-        style={{
-          background: 'var(--color-surface)',
-          border: '1px solid var(--color-border)',
-        }}
-      >
-        <h2
-          className="text-lg font-bold mb-5 text-center"
-          style={{ color: 'var(--color-text-primary)' }}
-        >
+      <div className="auth__card">
+        <h2 className="auth__card-title">
           {isForgot ? 'استعادة كلمة المرور' : isLogin ? 'تسجيل الدخول' : 'إنشاء حساب جديد'}
         </h2>
 
         {/* ── نموذج نسيت كلمة المرور ─────────────────────────────── */}
         {isForgot && (
           <form onSubmit={handleForgotPassword} noValidate>
-            <p
-              className="text-sm mb-4 text-center"
-              style={{ color: 'var(--color-text-secondary)', lineHeight: 1.6 }}
-            >
+            <p className="auth__card-description">
               أدخل بريدك الإلكتروني وسنرسل لك رابطاً لإعادة تعيين كلمة المرور
             </p>
-            <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                البريد الإلكتروني
-              </label>
+            <div className="auth__field">
+              <label className="auth__label">البريد الإلكتروني</label>
               <input
                 type="email"
                 value={email}
@@ -274,36 +235,18 @@ const AuthPage = () => {
                 required
                 autoComplete="email"
                 autoFocus
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
-                style={inputStyle}
+                className="auth__input auth__input--ltr"
               />
             </div>
 
             {error && (
-              <div
-                className="mb-4 p-3 rounded-lg text-sm text-center"
-                role="alert"
-                style={{
-                  background: 'var(--color-danger-bg)',
-                  color: 'var(--color-danger)',
-                  border: '1px solid color-mix(in srgb, var(--color-danger) 24%, transparent)',
-                }}
-              >
+              <div className="auth__alert auth__alert--danger" role="alert">
                 {error}
               </div>
             )}
 
             {successMsg && (
-              <div
-                className="mb-4 p-3 rounded-lg text-sm text-center"
-                role="status"
-                style={{
-                  background: 'var(--color-success-bg)',
-                  color: 'var(--color-success)',
-                  border: '1px solid color-mix(in srgb, var(--color-success) 24%, transparent)',
-                  lineHeight: 1.6,
-                }}
-              >
+              <div className="auth__alert auth__alert--success" role="status">
                 {successMsg}
               </div>
             )}
@@ -311,23 +254,16 @@ const AuthPage = () => {
             <button
               type="submit"
               disabled={loading || !!successMsg}
-              className="w-full rounded-lg py-2.5 text-sm font-semibold transition-opacity"
-              style={{
-                background: 'var(--color-primary)',
-                color: 'var(--color-text-inverse)',
-                opacity: loading || successMsg ? 0.6 : 1,
-                cursor: loading || successMsg ? 'not-allowed' : 'pointer',
-              }}
+              className="auth__submit"
             >
               {loading ? 'جاري الإرسال…' : 'إرسال رابط الاستعادة'}
             </button>
 
-            <div className="text-center mt-5">
+            <div className="auth__links">
               <button
                 type="button"
                 onClick={() => switchMode('login')}
-                className="text-sm font-medium underline hover:no-underline"
-                style={{ color: 'var(--color-primary)' }}
+                className="auth__link"
               >
                 العودة لتسجيل الدخول
               </button>
@@ -342,13 +278,8 @@ const AuthPage = () => {
         >
           {/* ── اسم المكتب (إنشاء حساب فقط) ────────────────────── */}
           {!isLogin && (
-            <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                اسم المكتب العقاري
-              </label>
+            <div className="auth__field">
+              <label className="auth__label">اسم المكتب العقاري</label>
               <input
                 type="text"
                 value={officeName}
@@ -356,21 +287,15 @@ const AuthPage = () => {
                 placeholder="مثال: مكتب الأمانة العقارية"
                 maxLength={120}
                 required
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"
-                style={inputStyle}
+                className="auth__input"
               />
             </div>
           )}
 
           {/* ── الاسم الكامل (إنشاء حساب فقط) ─────────────────── */}
           {!isLogin && (
-            <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                الاسم الكامل
-              </label>
+            <div className="auth__field">
+              <label className="auth__label">الاسم الكامل</label>
               <input
                 type="text"
                 value={fullName}
@@ -379,20 +304,14 @@ const AuthPage = () => {
                 maxLength={100}
                 required
                 autoComplete="name"
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors"
-                style={inputStyle}
+                className="auth__input"
               />
             </div>
           )}
 
           {/* ── البريد الإلكتروني ─────────────────────────────────── */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              البريد الإلكتروني
-            </label>
+          <div className="auth__field">
+            <label className="auth__label">البريد الإلكتروني</label>
             <input
               type="email"
               value={email}
@@ -401,19 +320,13 @@ const AuthPage = () => {
               dir="ltr"
               required
               autoComplete="email"
-              className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
-              style={inputStyle}
+              className="auth__input auth__input--ltr"
             />
           </div>
 
           {/* ── كلمة المرور ───────────────────────────────────────── */}
-          <div className="mb-4">
-            <label
-              className="block text-sm font-medium mb-1.5"
-              style={{ color: 'var(--color-text-primary)' }}
-            >
-              كلمة المرور
-            </label>
+          <div className="auth__field">
+            <label className="auth__label">كلمة المرور</label>
             <input
               type="password"
               value={password}
@@ -422,20 +335,14 @@ const AuthPage = () => {
               dir="ltr"
               required
               autoComplete={isLogin ? 'current-password' : 'new-password'}
-              className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
-              style={inputStyle}
+              className="auth__input auth__input--ltr"
             />
           </div>
 
           {/* ── تأكيد كلمة المرور (إنشاء حساب فقط) ───────────────── */}
           {!isLogin && (
-            <div className="mb-4">
-              <label
-                className="block text-sm font-medium mb-1.5"
-                style={{ color: 'var(--color-text-primary)' }}
-              >
-                تأكيد كلمة المرور
-              </label>
+            <div className="auth__field">
+              <label className="auth__label">تأكيد كلمة المرور</label>
               <input
                 type="password"
                 value={confirmPassword}
@@ -444,38 +351,21 @@ const AuthPage = () => {
                 dir="ltr"
                 required
                 autoComplete="new-password"
-                className="w-full rounded-lg px-3 py-2.5 text-sm outline-none transition-colors text-left"
-                style={inputStyle}
+                className="auth__input auth__input--ltr"
               />
             </div>
           )}
 
           {/* ── رسالة الخطأ ───────────────────────────────────────── */}
           {error && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm text-center"
-              role="alert"
-              style={{
-                background: 'var(--color-danger-bg)',
-                color: 'var(--color-danger)',
-                border: '1px solid color-mix(in srgb, var(--color-danger) 24%, transparent)',
-              }}
-            >
+            <div className="auth__alert auth__alert--danger" role="alert">
               {error}
             </div>
           )}
 
           {/* ── رسالة النجاح ──────────────────────────────────────── */}
           {successMsg && (
-            <div
-              className="mb-4 p-3 rounded-lg text-sm text-center"
-              role="status"
-              style={{
-                background: 'var(--color-success-bg)',
-                color: 'var(--color-success)',
-                border: '1px solid color-mix(in srgb, var(--color-success) 24%, transparent)',
-              }}
-            >
+            <div className="auth__alert auth__alert--success" role="status">
               {successMsg}
             </div>
           )}
@@ -484,32 +374,22 @@ const AuthPage = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg py-2.5 text-sm font-semibold transition-opacity"
-            style={{
-              background: 'var(--color-primary)',
-              color: 'var(--color-text-inverse)',
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? 'not-allowed' : 'pointer',
-            }}
+            className="auth__submit"
           >
             {loading ? 'جاري…' : isLogin ? 'دخول' : 'إنشاء حساب'}
           </button>
         </form>
 
         {/* ── تبديل الوضع ─────────────────────────────────────────── */}
-        <div
-          className="text-center mt-5"
-          style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'center' }}
-        >
+        <div className="auth__links">
           {isLogin ? (
             <>
-              <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              <p>
                 ليس لديك حساب؟{' '}
                 <button
                   type="button"
                   onClick={() => switchMode('signup')}
-                  className="font-medium underline hover:no-underline"
-                  style={{ color: 'var(--color-primary)' }}
+                  className="auth__link"
                 >
                   أنشئ حساباً جديداً
                 </button>
@@ -517,20 +397,18 @@ const AuthPage = () => {
               <button
                 type="button"
                 onClick={() => switchMode('forgot')}
-                className="text-sm underline hover:no-underline"
-                style={{ color: 'var(--color-text-secondary)' }}
+                className="auth__link auth__link--secondary"
               >
                 نسيت كلمة المرور؟
               </button>
             </>
           ) : (
-            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            <p>
               لديك حساب بالفعل؟{' '}
               <button
                 type="button"
                 onClick={() => switchMode('login')}
-                className="font-medium underline hover:no-underline"
-                style={{ color: 'var(--color-primary)' }}
+                className="auth__link"
               >
                 سجّل دخول
               </button>
@@ -540,7 +418,7 @@ const AuthPage = () => {
       </div>
 
       {/* ── تذييل ─────────────────────────────────────────────────── */}
-      <p className="text-xs mt-6" style={{ color: 'var(--color-text-secondary)' }}>
+      <p className="auth__footer">
         &copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.
       </p>
     </div>

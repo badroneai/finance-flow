@@ -166,10 +166,7 @@ function RecentContacts({ contacts, navigate }) {
         <div className="db--rows">
           {recent.map((c) => (
             <div key={c.id} className="db--row">
-              <span
-                className="db--avatar"
-                style={{ background: 'var(--color-info-bg)', color: 'var(--color-info)' }}
-              >
+              <span className="db--avatar db--avatar--contact">
                 {(c.name || '?').charAt(0)}
               </span>
               <span className="db--row__body">
@@ -210,10 +207,7 @@ function RecentProperties({ properties, navigate }) {
                     : '--color-muted';
             return (
               <div key={p.id} className="db--row">
-                <span
-                  className="db--avatar"
-                  style={{ background: 'var(--color-surface-alt)', color: 'var(--color-primary)' }}
-                >
+                <span className="db--avatar db--avatar--property">
                   <Icons.properties size={14} />
                 </span>
                 <span className="db--row__body">
@@ -315,7 +309,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
               {summary.overdueTotal > 0 && (
                 <div className="db--chip">
                   <span className="db--chip__label">متأخر</span>
-                  <span className="db--chip__val" style={{ color: 'var(--color-danger)' }}>
+                  <span className="db--chip__val db--chip__val--danger">
                     {formatCurrency(summary.overdueTotal)}
                   </span>
                 </div>
@@ -323,7 +317,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
               {summary.dueTodayTotal > 0 && (
                 <div className="db--chip">
                   <span className="db--chip__label">مستحق اليوم</span>
-                  <span className="db--chip__val" style={{ color: 'var(--color-warning)' }}>
+                  <span className="db--chip__val db--chip__val--warning">
                     {formatCurrency(summary.dueTodayTotal)}
                   </span>
                 </div>
@@ -331,7 +325,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
               {summary.dueThisWeekTotal > 0 && (
                 <div className="db--chip">
                   <span className="db--chip__label">هذا الأسبوع</span>
-                  <span className="db--chip__val" style={{ color: 'var(--color-info)' }}>
+                  <span className="db--chip__val db--chip__val--info">
                     {formatCurrency(summary.dueThisWeekTotal)}
                   </span>
                 </div>
@@ -340,7 +334,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
           )}
           {overdue.length > 0 && (
             <div className="db--group">
-              <p className="db--group__label" style={{ color: 'var(--color-danger)' }}>
+              <p className="db--group__label db--group__label--danger">
                 متأخرات ({overdue.length})
               </p>
               <div className="db--rows">
@@ -361,7 +355,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
           )}
           {dueToday.length > 0 && (
             <div className="db--group">
-              <p className="db--group__label" style={{ color: 'var(--color-warning)' }}>
+              <p className="db--group__label db--group__label--warning">
                 مستحق اليوم ({dueToday.length})
               </p>
               <div className="db--rows">
@@ -373,7 +367,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
           )}
           {dueThisWeek.length > 0 && (
             <div className="db--group">
-              <p className="db--group__label" style={{ color: 'var(--color-info)' }}>
+              <p className="db--group__label db--group__label--info">
                 هذا الأسبوع ({dueThisWeek.length})
               </p>
               <div className="db--rows">
@@ -394,7 +388,7 @@ function TodayActions({ operationalDues, expiringContracts, navigate, onQuickPay
           )}
           {expiringContracts.length > 0 && (
             <div className="db--group db--group--bordered">
-              <p className="db--group__label" style={{ color: 'var(--color-warning)' }}>
+              <p className="db--group__label db--group__label--warning">
                 عقود تنتهي قريباً ({expiringContracts.length})
               </p>
               <div className="db--rows">
@@ -609,13 +603,13 @@ export default function DashboardPage() {
               <div className="db--metrics">
                 <div className="db--metric">
                   <span className="db--metric__label">الدخل</span>
-                  <span className="db--metric__val" style={{ color: 'var(--color-success)' }}>
+                  <span className="db--metric__val db--metric__val--success">
                     <Currency value={finSum.income} />
                   </span>
                 </div>
                 <div className="db--metric">
                   <span className="db--metric__label">المصروفات</span>
-                  <span className="db--metric__val" style={{ color: 'var(--color-danger)' }}>
+                  <span className="db--metric__val db--metric__val--danger">
                     <Currency value={finSum.expense} />
                   </span>
                 </div>

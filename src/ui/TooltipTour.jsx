@@ -190,9 +190,9 @@ export function TooltipTour({ active, onComplete }) {
   const isLast = step === TOUR_STEPS.length - 1;
 
   return (
-    <div className="fixed inset-0 z-[60]" role="dialog" aria-modal="true" aria-label="جولة تعريفية">
+    <div className="tour--overlay" role="dialog" aria-modal="true" aria-label="جولة تعريفية">
       {/* خلفية شفافة مع ثقب spotlight */}
-      <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: 'none' }}>
+      <svg className="tour--svg">
         <defs>
           <mask id="tour-spotlight">
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
@@ -223,17 +223,12 @@ export function TooltipTour({ active, onComplete }) {
       {/* بروز العنصر المستهدف */}
       {targetRect && (
         <div
-          className="absolute rounded-lg"
+          className="tour--highlight"
           style={{
             top: targetRect.top,
             insetInlineStart: targetRect.left,
             width: targetRect.width,
             height: targetRect.height,
-            boxShadow:
-              '0 0 0 3px color-mix(in srgb, var(--color-accent) 42%, transparent), 0 0 24px color-mix(in srgb, var(--color-primary) 20%, transparent)',
-            borderRadius: '8px',
-            pointerEvents: 'none',
-            transition: 'all 0.3s ease',
           }}
         />
       )}
@@ -241,83 +236,42 @@ export function TooltipTour({ active, onComplete }) {
       {/* بطاقة التلميح */}
       {tooltipPos && (
         <div
-          className="absolute rounded-xl border shadow-xl"
+          className="tour--card"
           dir="rtl"
           style={{
             top: tooltipPos.top,
             insetInlineStart: tooltipPos.left,
-            width: 300,
-            background: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-            color: 'var(--color-text-primary)',
-            padding: '16px',
-            transition: 'all 0.3s ease',
-            zIndex: 61,
           }}
         >
           {/* مؤشر التقدم */}
-          <div className="flex items-center justify-between mb-3">
-            <span className="text-xs font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+          <div className="tour--progress">
+            <span className="tour--progress__label">
               {step + 1} / {TOUR_STEPS.length}
             </span>
-            <div className="flex gap-1">
+            <div className="tour--progress__dots">
               {TOUR_STEPS.map((_, i) => (
                 <div
                   key={i}
-                  className="rounded-full"
-                  style={{
-                    width: 8,
-                    height: 8,
-                    background: i === step ? 'var(--color-accent)' : 'var(--color-border)',
-                    transition: 'background 0.2s',
-                  }}
+                  className={`tour--dot${i === step ? ' is-active' : ''}`}
                 />
               ))}
             </div>
           </div>
 
-          <h4 className="font-bold text-sm mb-1">{currentStep.title}</h4>
-          <p
-            className="text-sm leading-relaxed mb-4"
-            style={{ color: 'var(--color-text-secondary)' }}
-          >
-            {currentStep.text}
-          </p>
+          <h4 className="tour--title">{currentStep.title}</h4>
+          <p className="tour--text">{currentStep.text}</p>
 
-          <div className="flex items-center justify-between gap-2">
-            <button
-              type="button"
-              onClick={handleSkip}
-              className="text-xs px-2 py-1"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
+          <div className="tour--footer">
+            <button type="button" onClick={handleSkip} className="tour--btn-skip">
               تخطي
             </button>
-            <div className="flex gap-2">
+            <div className="tour--nav-group">
               {step > 0 && (
-                <button
-                  type="button"
-                  onClick={handlePrev}
-                  className="px-3 py-1.5 rounded-lg text-sm border"
-                  style={{
-                    borderColor: 'var(--color-border)',
-                    color: 'var(--color-text-primary)',
-                    background: 'transparent',
-                  }}
-                >
+                <button type="button" onClick={handlePrev} className="tour--btn-prev">
                   السابق
                 </button>
               )}
-              <button
-                type="button"
-                onClick={handleNext}
-                className="px-3 py-1.5 rounded-lg text-sm font-medium"
-                style={{
-                  background: 'var(--color-primary)',
-                  color: 'var(--color-text-inverse)',
-                  border: 'none',
-                }}
-              >
+              <button type="button" onClick={handleNext} className="tour--btn-next">
                 {isLast ? 'إنهاء الجولة' : 'التالي'}
               </button>
             </div>

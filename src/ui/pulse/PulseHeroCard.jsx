@@ -100,17 +100,17 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
         }}
         dir="rtl"
       >
-        <p className="font-medium text-lg mb-2" style={{ color: 'var(--color-warning)' }}>
+        <p className="pulse-hero__empty-title" style={{ color: 'var(--color-warning)' }}>
           أضف أول حركة مالية لتفعيل النبض
         </p>
-        <p className="text-sm mb-4" style={{ color: 'var(--color-warning)' }}>
+        <p className="pulse-hero__empty-desc" style={{ color: 'var(--color-warning)' }}>
           سجّل حركة أو اختر دفتراً نشطاً لرؤية صحة مكتبك المالية هنا.
         </p>
         {onAddTransaction && (
           <button
             type="button"
             onClick={onAddTransaction}
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-white font-medium text-sm transition-colors no-print hover:opacity-90"
+            className="pulse-hero__empty-btn no-print"
             style={{ background: 'var(--color-warning)' }}
           >
             إضافة حركة
@@ -125,7 +125,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
 
   return (
     <div
-      className="pulse-hero transition-colors"
+      className="pulse-hero"
       style={{
         background: `linear-gradient(135deg, color-mix(in srgb, ${circleColor} 12%, var(--color-surface) 88%) 0%, color-mix(in srgb, ${circleColor} 6%, transparent) 50%, transparent 100%)`,
         border: `1px solid color-mix(in srgb, ${circleColor} 18%, transparent)`,
@@ -133,15 +133,12 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
       }}
       dir="rtl"
     >
-      <h2 className="text-center text-[var(--color-text)] font-medium mb-4">صحة مكتبك المالية</h2>
+      <h2 className="pulse-hero__title">صحة مكتبك المالية</h2>
 
       {/* دائرة الصحة */}
-      <div className="flex justify-center mb-3">
-        <div
-          className="relative inline-flex items-center justify-center"
-          style={{ width: 140, height: 140 }}
-        >
-          <svg className="transform -rotate-90" width={140} height={140} aria-hidden="true">
+      <div className="pulse-hero__ring-wrap">
+        <div className="pulse-hero__ring-container">
+          <svg className="pulse-hero__ring-svg" width={140} height={140} aria-hidden="true">
             <circle
               cx="70"
               cy="70"
@@ -149,7 +146,7 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
               fill="none"
               stroke="currentColor"
               strokeWidth="10"
-              className="text-[var(--color-border)]"
+              className="pulse-hero__ring-bg"
             />
             <circle
               cx="70"
@@ -164,24 +161,21 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
               style={{ transition: 'stroke-dashoffset 0.3s ease-out' }}
             />
           </svg>
-          <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span
-              className="text-4xl md:text-5xl font-bold tabular-nums"
-              style={{ color: circleColor }}
-            >
+          <div className="pulse-hero__score-overlay">
+            <span className="pulse-hero__score-number" style={{ color: circleColor }}>
               {displayScore}
             </span>
-            <span className="text-sm text-[var(--color-muted)]">/100</span>
+            <span className="pulse-hero__score-suffix">/100</span>
           </div>
         </div>
       </div>
 
       {/* نقاط الحالة */}
-      <div className="flex justify-center gap-1 mb-1" aria-hidden="true">
+      <div className="pulse-hero__dots" aria-hidden="true">
         {Array.from({ length: 10 }, (_, i) => (
           <span
             key={i}
-            className="w-1.5 h-1.5 rounded-full"
+            className="pulse-hero__dot"
             style={{
               backgroundColor:
                 i < Math.round(displayScore / 10) ? circleColor : 'var(--color-border)',
@@ -189,16 +183,16 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
           />
         ))}
       </div>
-      <p className="text-center text-sm text-[var(--color-muted)] mb-6">
+      <p className="pulse-hero__status-label">
         {STATUS_LABELS[pulse.healthStatus] || pulse.healthStatus}
       </p>
 
       {/* البطاقات الثلاث */}
       <div className="pulse-hero__metrics">
         <div className="pulse-hero__metric">
-          <p className="text-xs text-[var(--color-muted)] mb-0.5">دخل اليوم</p>
+          <p className="pulse-hero__metric-label">دخل اليوم</p>
           <p
-            className="text-base font-bold truncate"
+            className="pulse-hero__metric-value"
             style={{ color: 'var(--color-success)' }}
             title={formatAmount(pulse.todayIncome)}
           >
@@ -206,9 +200,9 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
           </p>
         </div>
         <div className="pulse-hero__metric">
-          <p className="text-xs text-[var(--color-muted)] mb-0.5">مصروف الأسبوع</p>
+          <p className="pulse-hero__metric-label">مصروف الأسبوع</p>
           <p
-            className="text-base font-bold truncate"
+            className="pulse-hero__metric-value"
             style={{ color: 'var(--color-danger)' }}
             title={formatAmount(pulse.weekExpenses)}
           >
@@ -216,23 +210,19 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
           </p>
         </div>
         <div className="pulse-hero__metric">
-          <p className="text-xs text-[var(--color-muted)] mb-0.5">الرصيد الحالي</p>
+          <p className="pulse-hero__metric-label">الرصيد الحالي</p>
           <p
-            className="text-base font-bold text-[var(--color-text)] truncate flex items-center justify-end gap-1"
+            className="pulse-hero__metric-value--balance"
             title={formatAmount(pulse.currentBalance)}
           >
             {formatAmount(pulse.currentBalance)}
             {trendUp && (
-              <span
-                className="text-lg"
-                style={{ color: 'var(--color-success)' }}
-                aria-hidden="true"
-              >
+              <span className="pulse-hero__trend-icon" style={{ color: 'var(--color-success)' }} aria-hidden="true">
                 ↑
               </span>
             )}
             {trendDown && (
-              <span className="text-lg" style={{ color: 'var(--color-danger)' }} aria-hidden="true">
+              <span className="pulse-hero__trend-icon" style={{ color: 'var(--color-danger)' }} aria-hidden="true">
                 ↓
               </span>
             )}
@@ -240,16 +230,15 @@ export default function PulseHeroCard({ pulse, onRefresh, onAddTransaction }) {
         </div>
       </div>
 
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <p className="text-xs text-[var(--color-muted)]">
+      <div className="pulse-hero__footer">
+        <p className="pulse-hero__footer-time">
           آخر تحديث: {formatCalculatedAt(pulse.calculatedAt) || '—'}
         </p>
         {onRefresh && (
           <button
             type="button"
             onClick={onRefresh}
-            className="text-xs font-medium no-print hover:opacity-80"
-            style={{ color: 'var(--color-info)' }}
+            className="pulse-hero__refresh-btn no-print"
             aria-label="تحديث النبض"
           >
             تحديث

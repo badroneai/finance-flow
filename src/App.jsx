@@ -285,7 +285,7 @@ const App = () => {
     return (
       <Suspense
         fallback={
-          <div className="p-6 text-center text-[var(--color-muted)]" dir="rtl">
+          <div className="app-suspended" dir="rtl">
             جاري التحميل…
           </div>
         }
@@ -299,7 +299,7 @@ const App = () => {
     return (
       <Suspense
         fallback={
-          <div className="p-6 text-center text-[var(--color-muted)]" dir="rtl">
+          <div className="app-suspended" dir="rtl">
             جاري التحميل…
           </div>
         }
@@ -325,10 +325,10 @@ const App = () => {
       <UnsavedContext.Provider value={setDirty}>
         <TrustChecks />
         <DemoBanner />
-        <div className="app-shell flex min-h-screen">
+        <div className="app-shell">
           <a
             href="#main-content"
-            className="skip-link absolute opacity-0 w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0 focus:opacity-100 focus:w-auto focus:h-auto focus:py-2 focus:px-4 focus:m-0 focus:overflow-visible focus:z-[100] focus:bg-[var(--color-surface)] focus:text-[var(--color-text)] focus:rounded-lg focus:shadow-lg focus:ring-2 focus:ring-[var(--color-primary)] focus:outline-none focus:fixed focus:top-4 focus:start-4"
+            className="skip-link"
           >
             تخطي إلى المحتوى الرئيسي
           </a>
@@ -347,7 +347,7 @@ const App = () => {
             }}
           />
           <main
-            className="app-main flex-1"
+            className="app-main"
             id="main-content"
             role="main"
             aria-label="المحتوى الرئيسي"
@@ -361,7 +361,7 @@ const App = () => {
               setPage={setPage}
             />
             <PulseAlertsBanner page={page} onGoToInbox={() => setPage('inbox')} />
-            <div className="app-content-frame px-4 md:px-6">
+            <div className="app-content-frame">
               {!showOnboarding && <WelcomeBanner />}
             </div>
 
@@ -387,11 +387,11 @@ const App = () => {
             )}
 
             <TooltipTour active={showTour} onComplete={() => setShowTour(false)} />
-            <div className="print-container flex-1">
+            <div className="print-container">
               <PageLoadErrorBoundary key={page} onGoHome={() => setPage('dashboard')}>
                 <Suspense
                   fallback={
-                    <div className="p-6 text-center text-[var(--color-muted)]" aria-live="polite">
+                    <div className="app-suspended" aria-live="polite">
                       جاري التحميل…
                     </div>
                   }
@@ -536,7 +536,7 @@ const App = () => {
             )}
 
             <footer
-              className="app-footer no-print py-3 px-4 text-center text-sm"
+              className="app-footer no-print"
               role="contentinfo"
             >
               <p>&copy; {new Date().getFullYear()} قيد العقار. جميع الحقوق محفوظة.</p>

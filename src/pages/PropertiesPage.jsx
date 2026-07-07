@@ -123,13 +123,13 @@ function PropertyForm({
   };
 
   return (
-    <div className="panel-card properties-page__form-shell mb-4">
+    <div className="panel-card properties-page__form-shell">
       <div className="properties-page__form-header">
         <div>
-          <h3 className="font-bold text-[var(--color-text)] mb-1">
+          <h3 className="properties-page__form-title">
             {editMode ? 'تعديل العقار' : 'إضافة عقار جديد'}
           </h3>
-          <p className="text-sm text-[var(--color-muted)]">
+          <p className="properties-page__form-hint">
             {editMode
               ? 'حدّث بيانات العقار واحفظ التغييرات.'
               : 'أضف العقار كأصل واضح يمكن الدخول إليه وإدارته.'}
@@ -149,7 +149,6 @@ function PropertyForm({
             value={form.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="مثال: عمارة النور"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
             maxLength={100}
           />
         </FormField>
@@ -158,7 +157,6 @@ function PropertyForm({
           <select
             value={form.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -172,7 +170,6 @@ function PropertyForm({
           <select
             value={form.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             {PROPERTY_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -188,7 +185,6 @@ function PropertyForm({
             value={form.deedNumber}
             onChange={(e) => handleChange('deedNumber', e.target.value)}
             placeholder="اختياري"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -198,7 +194,6 @@ function PropertyForm({
             value={form.nationalAddress}
             onChange={(e) => handleChange('nationalAddress', e.target.value)}
             placeholder="مثال: 1234، حي النرجس"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -206,7 +201,6 @@ function PropertyForm({
           <select
             value={form.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             <option value="">اختر المدينة</option>
             {SAUDI_CITIES.map((city) => (
@@ -223,7 +217,6 @@ function PropertyForm({
             value={form.district}
             onChange={(e) => handleChange('district', e.target.value)}
             placeholder="مثال: حي العليا"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -234,7 +227,6 @@ function PropertyForm({
             onChange={(e) => handleChange('areaSqm', e.target.value)}
             min="0"
             placeholder="مثال: 250"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -245,7 +237,6 @@ function PropertyForm({
             onChange={(e) => handleChange('yearBuilt', e.target.value)}
             min="0"
             placeholder="مثال: 2020"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -255,7 +246,6 @@ function PropertyForm({
             value={form.floors}
             onChange={(e) => handleChange('floors', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -265,7 +255,6 @@ function PropertyForm({
             value={form.bedrooms}
             onChange={(e) => handleChange('bedrooms', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -275,7 +264,6 @@ function PropertyForm({
             value={form.bathrooms}
             onChange={(e) => handleChange('bathrooms', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -285,7 +273,6 @@ function PropertyForm({
             value={form.unitsCount}
             onChange={(e) => handleChange('unitsCount', e.target.value)}
             min="1"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -296,7 +283,6 @@ function PropertyForm({
             onChange={(e) => handleChange('monthlyRent', e.target.value)}
             min="0"
             placeholder="مثال: 3500"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -307,7 +293,6 @@ function PropertyForm({
             onChange={(e) => handleChange('purchasePrice', e.target.value)}
             min="0"
             placeholder="اختياري"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           />
         </FormField>
 
@@ -315,7 +300,6 @@ function PropertyForm({
           <select
             value={form.ownerId || ''}
             onChange={(e) => handleOwnerChange(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
           >
             <option value="">إدخال يدوي / غير محدد</option>
             {ownerContacts.map((owner) => (
@@ -337,7 +321,6 @@ function PropertyForm({
             }}
             placeholder="اسم المالك"
             disabled={!manualOwnerEntry && !!form.ownerId}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm disabled:opacity-60"
           />
         </FormField>
 
@@ -352,25 +335,23 @@ function PropertyForm({
             placeholder="05XXXXXXXX"
             dir="ltr"
             disabled={!manualOwnerEntry && !!form.ownerId}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start disabled:opacity-60"
           />
         </FormField>
       </div>
 
       {!ownerContacts.length && (
-        <p className="text-xs text-[var(--color-muted)] mt-3">
+        <p className="properties-page__form-note">
           لا توجد جهات اتصال من نوع مالك حاليًا، لذلك يبقى الإدخال اليدوي متاحًا.
         </p>
       )}
 
-      <div className="mt-3">
+      <div className="properties-page__form-notes">
         <FormField label="ملاحظات" id="prop-notes">
           <textarea
             value={form.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             placeholder="أي تفاصيل تشغيلية أو وصف إضافي..."
             rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
           />
         </FormField>
       </div>
@@ -389,7 +370,6 @@ function PropertyForm({
                     tenantContacts.find((contact) => contact.id === e.target.value)
                   )
                 }
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
               >
                 <option value="">اختر من العملاء أو اتركه يدويًا</option>
                 {tenantContacts.map((contact) => (
@@ -404,7 +384,6 @@ function PropertyForm({
                 type="text"
                 value={form.tenantName || ''}
                 onChange={(e) => handleChange('tenantName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
               />
             </FormField>
             <FormField label="جوال المستأجر" id="prop-tenant-phone">
@@ -413,7 +392,6 @@ function PropertyForm({
                 value={form.tenantPhone || ''}
                 onChange={(e) => handleChange('tenantPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -434,7 +412,6 @@ function PropertyForm({
                     maintenanceContacts.find((contact) => contact.id === e.target.value)
                   )
                 }
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
               >
                 <option value="">اختر جهة أو اتركه يدويًا</option>
                 {maintenanceContacts.map((contact) => (
@@ -449,7 +426,6 @@ function PropertyForm({
                 type="text"
                 value={form.maintenanceContactName || ''}
                 onChange={(e) => handleChange('maintenanceContactName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
               />
             </FormField>
             <FormField label="رقم الجوال" id="prop-maint-phone">
@@ -458,7 +434,6 @@ function PropertyForm({
                 value={form.maintenanceContactPhone || ''}
                 onChange={(e) => handleChange('maintenanceContactPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
@@ -479,7 +454,6 @@ function PropertyForm({
                     buyerContacts.find((contact) => contact.id === e.target.value)
                   )
                 }
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
               >
                 <option value="">اختر من العملاء أو اتركه يدويًا</option>
                 {buyerContacts.map((contact) => (
@@ -494,7 +468,6 @@ function PropertyForm({
                 type="text"
                 value={form.buyerName || ''}
                 onChange={(e) => handleChange('buyerName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
               />
             </FormField>
             <FormField label="جوال المشتري" id="prop-buyer-phone">
@@ -503,19 +476,18 @@ function PropertyForm({
                 value={form.buyerPhone || ''}
                 onChange={(e) => handleChange('buyerPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
               />
             </FormField>
           </div>
         </div>
       )}
 
-      <div className="flex gap-2 mt-4">
+      <div className="properties-page__form-actions">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="btn-primary disabled:opacity-50"
+          className="btn-primary"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ التعديلات' : 'إضافة العقار'}
         </button>
@@ -538,64 +510,64 @@ function PropertyCard({ property, onEdit, onDelete, contractCount, onOpen }) {
           onOpen(property);
         }
       }}
-      className="panel-card properties-page__card cursor-pointer hover:border-[var(--color-primary)] transition-colors"
+      className="panel-card properties-page__card"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3 min-w-0 flex-1">
-          <span className="flex-shrink-0 text-[var(--color-primary)]" aria-hidden="true">
+      <div className="properties-page__card-head">
+        <div className="properties-page__card-identity">
+          <span className="properties-page__card-icon" aria-hidden="true">
             <Icons.properties size={24} />
           </span>
-          <div className="min-w-0 flex-1">
-            <h4 className="font-bold text-[var(--color-text)] truncate">{property.name}</h4>
-            <p className="text-sm text-[var(--color-muted)] mt-0.5">
+          <div>
+            <div className="properties-page__card-name">{property.name}</div>
+            <div className="properties-page__card-type">
               {getPropertyTypeLabel(property.type)}
               {property.city ? ` — ${property.city}` : ''}
               {property.district ? `، ${property.district}` : ''}
-            </p>
+            </div>
           </div>
         </div>
         <Badge color={statusColor}>{getPropertyStatusLabel(property.status)}</Badge>
       </div>
 
-      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+      <div className="properties-page__card-meta">
         {property.deedNumber && <span>صك: {property.deedNumber}</span>}
         {property.unitsCount > 1 && <span>{property.unitsCount} وحدة</span>}
         {property.areaSqm && <span>{property.areaSqm} م²</span>}
         {property.monthlyRent && (
-          <span className="font-medium text-[var(--color-success)]">
+          <span className="properties-page__card-rent">
             {formatCurrency(safeNum(property.monthlyRent))}/شهر
           </span>
         )}
       </div>
 
       {(property.ownerName || property.ownerPhone) && (
-        <p className="text-sm text-[var(--color-muted)] mt-2">
+        <p className="properties-page__card-detail">
           المالك: {property.ownerName || '—'}
           {property.ownerPhone ? ` (${property.ownerPhone})` : ''}
         </p>
       )}
 
       {property.notes && (
-        <p className="text-sm text-[var(--color-muted)] mt-1 line-clamp-2">{property.notes}</p>
+        <p className="properties-page__card-notes">{property.notes}</p>
       )}
 
       <div className="properties-page__card-actions" onClick={(e) => e.stopPropagation()}>
         <button
           type="button"
           onClick={() => onEdit(property)}
-          className="btn-ghost properties-page__card-action text-sm"
+          className="properties-page__card-action properties-page__card-action--edit"
         >
           تعديل
         </button>
         <button
           type="button"
           onClick={() => onDelete(property)}
-          className="btn-ghost properties-page__card-action text-sm text-[var(--color-danger)]"
+          className="properties-page__card-action properties-page__card-action--delete"
         >
           حذف
         </button>
         {contractCount > 0 && (
-          <span className="text-sm u-push-inline-start text-[var(--color-success)]">
+          <span className="properties-page__card-action properties-page__card-action--contracts">
             {contractCount} عقد
           </span>
         )}
@@ -727,7 +699,7 @@ export default function PropertiesPage() {
   }, [confirmDelete, deleteProperty, editingId, toast, resetFormState]);
 
   return (
-    <div className="page-shell page-shell--regular" dir="rtl">
+    <div className="page-shell page-shell--regular properties-page" dir="rtl">
       <div className="page-header">
         <div className="page-header-copy">
           <span className="page-kicker">الأصول العقارية</span>
@@ -769,49 +741,51 @@ export default function PropertiesPage() {
       )}
 
       {properties.length > 0 && (
-        <div className="route-summary-grid route-summary-grid--quad mb-4">
-          <SummaryCard
-            label="إجمالي العقارات"
-            value={summary.total}
-            icon={<Icons.properties size={18} />}
-          />
-          <SummaryCard
-            label="مؤجرة"
-            value={summary.rentedCount}
-            color="blue"
-            icon={<Icons.contracts size={18} />}
-          />
-          <SummaryCard
-            label="متاحة"
-            value={summary.availableCount}
-            color="green"
-            icon={<Icons.check size={18} />}
-          />
-          <SummaryCard
-            label="إيراد شهري"
-            value={formatCurrency(summary.totalMonthlyRent)}
-            color="green"
-            icon={<Icons.arrowUp size={18} />}
-          />
+        <div className="properties-page__summary">
+          <div className="route-summary-grid route-summary-grid--quad">
+            <SummaryCard
+              label="إجمالي العقارات"
+              value={summary.total}
+              icon={<Icons.properties size={18} />}
+            />
+            <SummaryCard
+              label="مؤجرة"
+              value={summary.rentedCount}
+              color="blue"
+              icon={<Icons.contracts size={18} />}
+            />
+            <SummaryCard
+              label="متاحة"
+              value={summary.availableCount}
+              color="green"
+              icon={<Icons.check size={18} />}
+            />
+            <SummaryCard
+              label="إيراد شهري"
+              value={formatCurrency(summary.totalMonthlyRent)}
+              color="green"
+              icon={<Icons.arrowUp size={18} />}
+            />
+          </div>
         </div>
       )}
 
       {properties.length > 0 && (
-        <div className="control-toolbar control-toolbar--compact properties-page__toolbar mb-4">
+        <div className="control-toolbar control-toolbar--compact properties-page__toolbar">
           <div className="properties-page__search">
             <Icons.search size={16} className="field-icon-inline-start" />
             <input
-              type="text"
+              type="search"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="بحث بالاسم أو الحي أو المالك..."
-              className="properties-page__search-input text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+              className="properties-page__search-input"
             />
           </div>
           <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
-            className="properties-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+            className="properties-page__filter-control"
           >
             <option value="">كل الأنواع</option>
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
@@ -823,7 +797,7 @@ export default function PropertiesPage() {
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
-            className="properties-page__filter-control text-sm bg-[var(--color-surface)] text-[var(--color-text)]"
+            className="properties-page__filter-control"
           >
             <option value="">كل الحالات</option>
             {PROPERTY_STATUS_OPTIONS.map((opt) => (
@@ -836,9 +810,7 @@ export default function PropertiesPage() {
       )}
 
       {propertiesLoading ? (
-        <div className="panel-card properties-page__state p-8 text-[var(--color-muted)]">
-          جاري التحميل...
-        </div>
+        <div className="properties-page__state">جاري التحميل...</div>
       ) : properties.length === 0 && !showForm ? (
         <EmptyState
           title="لم تُضف أي عقارات بعد"

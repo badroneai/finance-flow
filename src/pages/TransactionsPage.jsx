@@ -130,7 +130,7 @@ export function TransactionsPage({ setPage }) {
         </div>
       </div>
       {setPage && (
-        <div className="page-actions u-push-inline-start mb-4 no-print">
+        <div className="page-actions u-push-inline-start transactions-page__back-row no-print">
           <button
             type="button"
             onClick={() => setPage('pulse')}
@@ -141,7 +141,7 @@ export function TransactionsPage({ setPage }) {
         </div>
       )}
       {/* Summary Cards — موبايل: 2+1 (الدليل implementation-guide) */}
-      <div className="transactions-page__summary mb-6">
+      <div className="transactions-page__summary">
         <div className="route-summary-grid">
           <SummaryCard
             label="إجمالي الدخل"
@@ -166,7 +166,7 @@ export function TransactionsPage({ setPage }) {
       </div>
 
       {/* Filters + Actions — موبايل: فلاتر قابلة للطي (الدفعة 3) */}
-      <div className="control-toolbar control-toolbar--filters transactions-page__toolbar mb-4 no-print">
+      <div className="control-toolbar control-toolbar--filters transactions-page__toolbar no-print">
         <div className="transactions-page__toolbar-top">
           <div className="transactions-page__search">
             <Icons.search size={16} className="field-icon-inline-start" />
@@ -175,8 +175,7 @@ export function TransactionsPage({ setPage }) {
               placeholder="بحث في الوصف..."
               value={filters.search}
               onChange={(e) => setFilters((f) => ({ ...f, search: e.target.value }))}
-              className="transactions-page__search-input text-sm"
-              style={{ '--color-ring': 'var(--color-accent)' }}
+              className="transactions-page__search-input"
               aria-label="بحث"
             />
           </div>
@@ -206,7 +205,7 @@ export function TransactionsPage({ setPage }) {
         <button
           type="button"
           onClick={() => setShowFilters((s) => !s)}
-          className="btn-ghost transactions-page__filters-toggle md:hidden"
+          className="btn-ghost transactions-page__filters-toggle"
           aria-expanded={showFilters}
           aria-label="فلاتر متقدمة"
         >
@@ -214,16 +213,16 @@ export function TransactionsPage({ setPage }) {
           فلاتر متقدمة
           <Icons.chevronDown
             size={16}
-            className={`transition-transform ${showFilters ? 'rotate-180' : ''}`}
+            className={`transactions-page__filters-chevron${showFilters ? ' is-open' : ''}`}
           />
         </button>
         <div
-          className={`filters-panel transactions-page__filters ${showFilters ? 'flex' : 'hidden'} md:flex`}
+          className={`filters-panel transactions-page__filters${showFilters ? '' : ' transactions-page__filters--collapsed'}`}
         >
           <select
             value={filters.type}
             onChange={(e) => setFilters((f) => ({ ...f, type: e.target.value }))}
-            className="transactions-page__filter-control text-sm bg-[var(--color-surface)]"
+            className="transactions-page__filter-control"
             aria-label="نوع الحركة"
           >
             <option value="">كل الأنواع</option>
@@ -236,7 +235,7 @@ export function TransactionsPage({ setPage }) {
           <select
             value={filters.category}
             onChange={(e) => setFilters((f) => ({ ...f, category: e.target.value }))}
-            className="transactions-page__filter-control text-sm bg-[var(--color-surface)]"
+            className="transactions-page__filter-control"
             aria-label="التصنيف"
           >
             <option value="">كل التصنيفات</option>
@@ -249,7 +248,7 @@ export function TransactionsPage({ setPage }) {
           <select
             value={filters.paymentMethod}
             onChange={(e) => setFilters((f) => ({ ...f, paymentMethod: e.target.value }))}
-            className="transactions-page__filter-control text-sm bg-[var(--color-surface)]"
+            className="transactions-page__filter-control"
             aria-label="طريقة الدفع"
           >
             <option value="">كل طرق الدفع</option>
@@ -263,14 +262,14 @@ export function TransactionsPage({ setPage }) {
             type="date"
             value={filters.fromDate}
             onChange={(e) => setFilters((f) => ({ ...f, fromDate: e.target.value }))}
-            className="transactions-page__filter-control text-sm"
+            className="transactions-page__filter-control"
             aria-label="من تاريخ"
           />
           <input
             type="date"
             value={filters.toDate}
             onChange={(e) => setFilters((f) => ({ ...f, toDate: e.target.value }))}
-            className="transactions-page__filter-control text-sm"
+            className="transactions-page__filter-control"
             aria-label="إلى تاريخ"
           />
           <button
@@ -289,10 +288,8 @@ export function TransactionsPage({ setPage }) {
         Object.values(filters).some(Boolean) ? (
           <div className="panel-card transactions-page__filtered-empty">
             <Icons.empty size={64} aria-hidden="true" />
-            <p className="text-sm font-medium text-[var(--color-muted)]">
-              لا توجد نتائج مطابقة للفلاتر
-            </p>
-            <p className="text-sm">جرّب تعديل الفلاتر أو إعادة تعيينها.</p>
+            <p className="transactions-page__filtered-empty-title">لا توجد نتائج مطابقة للفلاتر</p>
+            <p className="transactions-page__filtered-empty-hint">جرّب تعديل الفلاتر أو إعادة تعيينها.</p>
             <button
               onClick={resetFilters}
               className="btn-secondary"
@@ -318,7 +315,7 @@ export function TransactionsPage({ setPage }) {
             <div>
               <h2 className="transactions-page__results-title">نتائج الحركات</h2>
               <p className="transactions-page__results-subtitle">
-                راجع أحدث العمليات بسرعة، ثم افتح التعديل أو الحذف عند الحاجة.
+                قائمة واحدة للبطاقات (جوال) والجدول (شاشة واسعة) — العدد أدناه يشمل كل النتائج الحالية.
               </p>
             </div>
             <span className="transactions-page__results-count">
@@ -327,47 +324,44 @@ export function TransactionsPage({ setPage }) {
           </div>
 
           {/* عرض بطاقات — جوال فقط */}
-          <div className="transactions-page__mobile-list md:hidden">
+          <div className="transactions-page__mobile-list">
             {txs.map((t) => (
-              <div key={t.id} className="panel-card">
+              <div
+                key={t.id}
+                className="panel-card transactions-page__mobile-card"
+                data-tx-type={t.type}
+              >
                 <div className="transactions-page__mobile-card-head">
                   <Badge color={t.type === 'income' ? 'green' : 'red'}>
                     {TRANSACTION_TYPES[t.type]}
                   </Badge>
-                  <span className="text-xs text-[var(--color-muted)]">{t.date}</span>
+                  <span className="transactions-page__mobile-meta">{t.date}</span>
                 </div>
                 <div className="transactions-page__mobile-card-row">
-                  <span className="transactions-page__mobile-card-category text-sm text-[var(--color-text)]">
+                  <span className="transactions-page__mobile-card-category transactions-page__mobile-category">
                     {TRANSACTION_CATEGORIES[t.category]}
                   </span>
-                  <span
-                    className="transactions-page__amount text-base font-bold"
-                    style={{
-                      color: t.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
-                    }}
-                  >
+                  <span className="transactions-page__amount transactions-page__mobile-amount">
                     {t.type === 'income' ? '+' : '-'}
-                    <Currency value={t.amount} symbolClassName="w-3.5 h-3.5" />
+                    <Currency value={t.amount} symbolClassName="transactions-page__currency-symbol" />
                   </span>
                 </div>
                 {t.description && (
-                  <p className="transactions-page__mobile-card-description text-xs text-[var(--color-muted)] line-clamp-2">
+                  <p className="transactions-page__mobile-card-description transactions-page__mobile-description">
                     {t.description}
                   </p>
                 )}
                 <div className="transactions-page__mobile-card-actions no-print">
                   <button
                     onClick={() => setModal(t)}
-                    className="btn-ghost transactions-page__icon-action"
-                    style={{ color: 'var(--color-info)', backgroundColor: 'transparent' }}
+                    className="btn-ghost transactions-page__icon-action transactions-page__icon-action--edit"
                     aria-label="تعديل"
                   >
                     <Icons.edit size={16} />
                   </button>
                   <button
                     onClick={() => handleDelete(t.id)}
-                    className="btn-ghost transactions-page__icon-action"
-                    style={{ color: 'var(--color-danger)', backgroundColor: 'transparent' }}
+                    className="btn-ghost transactions-page__icon-action transactions-page__icon-action--delete"
                     aria-label="حذف نهائي"
                   >
                     <Icons.trash size={16} />
@@ -378,58 +372,40 @@ export function TransactionsPage({ setPage }) {
           </div>
 
           {/* عرض جدول — ديسكتوب فقط */}
-          <div className="transactions-page__table-shell hidden md:block panel-card">
+          <div className="transactions-page__table-shell panel-card">
             <div className="transactions-page__table-meta">
               <div>
-                <h2 className="transactions-page__table-title">سجل الحركات</h2>
+                <h2 className="transactions-page__table-title">عرض الجدول</h2>
                 <p className="transactions-page__table-subtitle">
-                  عرض واضح للحركات الأخيرة مع إجراءات سريعة للمراجعة والتعديل.
+                  نفس القائمة أعلاه بتنسيق أعمدة للشاشات الواسعة.
                 </p>
               </div>
-              <span className="transactions-page__table-count">
-                {txs.length} {txs.length === 1 ? 'حركة' : 'حركات'}
-              </span>
             </div>
             <div className="transactions-page__table-wrap">
-              <table className="transactions-page__table text-sm" aria-describedby="tx-table-desc">
+              <table className="transactions-page__table" aria-describedby="tx-table-desc">
                 <caption id="tx-table-desc" className="sr-only">
                   جدول سجل الحركات المالية: النوع، التصنيف، المبلغ، التاريخ، الوصف، إجراءات
                 </caption>
                 <thead>
-                  <tr className="bg-[var(--color-bg)] border-b border-[var(--color-border)]">
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]"
-                    >
+                  <tr className="transactions-page__table-head-row">
+                    <th scope="col" className="transactions-page__table-th">
                       النوع
                     </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]"
-                    >
+                    <th scope="col" className="transactions-page__table-th">
                       التصنيف
                     </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]"
-                    >
+                    <th scope="col" className="transactions-page__table-th">
                       المبلغ
                     </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]"
-                    >
+                    <th scope="col" className="transactions-page__table-th">
                       التاريخ
                     </th>
-                    <th
-                      scope="col"
-                      className="px-4 py-3 text-end font-semibold text-[var(--color-muted)]"
-                    >
+                    <th scope="col" className="transactions-page__table-th">
                       الوصف
                     </th>
                     <th
                       scope="col"
-                      className="px-4 py-3 text-center font-semibold text-[var(--color-muted)] no-print"
+                      className="transactions-page__table-th transactions-page__table-th--actions no-print"
                     >
                       إجراءات
                     </th>
@@ -439,44 +415,39 @@ export function TransactionsPage({ setPage }) {
                   {txs.map((t) => (
                     <tr
                       key={t.id}
-                      className="border-b border-[var(--color-border)] hover:bg-[var(--color-bg)]/50"
+                      className="transactions-page__table-body-row"
+                      data-tx-type={t.type}
                     >
-                      <td className="px-4 py-3">
+                      <td className="transactions-page__table-td">
                         <Badge color={t.type === 'income' ? 'green' : 'red'}>
                           {TRANSACTION_TYPES[t.type]}
                         </Badge>
                       </td>
-                      <td className="px-4 py-3 text-[var(--color-text)]">
+                      <td className="transactions-page__table-td transactions-page__table-td--category">
                         {TRANSACTION_CATEGORIES[t.category]}
                       </td>
-                      <td
-                        className="transactions-page__amount px-4 py-3 font-semibold"
-                        style={{
-                          color:
-                            t.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
-                        }}
-                      >
-                        {t.type === 'income' ? '+' : '-'}
-                        <Currency value={t.amount} symbolClassName="w-3.5 h-3.5" />
+                      <td className="transactions-page__table-td transactions-page__table-td--amount">
+                        <span className="transactions-page__amount">
+                          {t.type === 'income' ? '+' : '-'}
+                          <Currency value={t.amount} symbolClassName="transactions-page__currency-symbol" />
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-[var(--color-muted)]">{t.date}</td>
-                      <td className="transactions-page__description px-4 py-3 text-[var(--color-muted)] truncate">
+                      <td className="transactions-page__table-td transactions-page__table-td--date">{t.date}</td>
+                      <td className="transactions-page__table-td transactions-page__table-td--desc transactions-page__description">
                         {t.description}
                       </td>
-                      <td className="px-4 py-3 no-print">
+                      <td className="transactions-page__table-td no-print">
                         <div className="transactions-page__row-actions">
                           <button
                             onClick={() => setModal(t)}
-                            className="btn-ghost transactions-page__icon-action"
-                            style={{ color: 'var(--color-info)', backgroundColor: 'transparent' }}
+                            className="btn-ghost transactions-page__icon-action transactions-page__icon-action--edit"
                             aria-label="تعديل"
                           >
                             <Icons.edit size={15} />
                           </button>
                           <button
                             onClick={() => handleDelete(t.id)}
-                            className="btn-ghost transactions-page__icon-action"
-                            style={{ color: 'var(--color-danger)', backgroundColor: 'transparent' }}
+                            className="btn-ghost transactions-page__icon-action transactions-page__icon-action--delete"
                             aria-label="حذف نهائي"
                           >
                             <Icons.trash size={15} />
@@ -570,12 +541,12 @@ function TransactionForm({ initial, onSave, onCancel }) {
 
   return (
     <form onSubmit={handleSubmit} onInput={() => setDirty && setDirty(true)}>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="transactions-page__form-row">
         <FormField id="tx-type" label="نوع الحركة" error={errors.type}>
           <select
             value={form.type}
             onChange={(e) => setForm((f) => ({ ...f, type: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="transactions-page__form-control"
             aria-label="اختر نوع العملية"
             aria-required="true"
           >
@@ -591,7 +562,7 @@ function TransactionForm({ initial, onSave, onCancel }) {
           <select
             value={form.category}
             onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="transactions-page__form-control"
             aria-label="التصنيف"
           >
             {Object.entries(TRANSACTION_CATEGORIES).map(([k, v]) => (
@@ -602,7 +573,7 @@ function TransactionForm({ initial, onSave, onCancel }) {
           </select>
         </FormField>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="transactions-page__form-row">
         <FormField id="tx-amount" label="المبلغ (ر.س)" error={errors.amount}>
           <input
             type="number"
@@ -610,7 +581,7 @@ function TransactionForm({ initial, onSave, onCancel }) {
             min="0"
             value={form.amount}
             onChange={(e) => setForm((f) => ({ ...f, amount: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="transactions-page__form-control"
             placeholder="أدخل المبلغ بالريال"
             aria-label="المبلغ بالريال"
             aria-required="true"
@@ -620,7 +591,7 @@ function TransactionForm({ initial, onSave, onCancel }) {
           <select
             value={form.paymentMethod}
             onChange={(e) => setForm((f) => ({ ...f, paymentMethod: e.target.value }))}
-            className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+            className="transactions-page__form-control"
             aria-label="طريقة الدفع"
           >
             {Object.entries(PAYMENT_METHODS).map(([k, v]) => (
@@ -636,7 +607,7 @@ function TransactionForm({ initial, onSave, onCancel }) {
           type="date"
           value={form.date}
           onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
-          className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+          className="transactions-page__form-control"
           aria-label="التاريخ"
         />
       </FormField>
@@ -645,26 +616,16 @@ function TransactionForm({ initial, onSave, onCancel }) {
           type="text"
           value={form.description}
           onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-          className="w-full border border-[var(--color-border)] rounded-lg px-3 py-2 text-sm"
+          className="transactions-page__form-control"
           placeholder="وصف العملية (اختياري)..."
           aria-label="وصف العملية"
         />
       </FormField>
-      <div className="flex gap-3 justify-end mt-4">
-        <button
-          type="button"
-          onClick={onCancel}
-          className="px-4 py-2 rounded-lg bg-[var(--color-bg)] hover:bg-[var(--color-bg)] text-[var(--color-text)] text-sm font-medium"
-          aria-label="تراجع"
-        >
+      <div className="transactions-page__form-actions">
+        <button type="button" onClick={onCancel} className="btn-secondary" aria-label="تراجع">
           {MSG.buttons.cancel}
         </button>
-        <button
-          type="submit"
-          className="px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-          style={{ backgroundColor: 'var(--color-info)' }}
-          aria-label="تسجيل البيانات"
-        >
+        <button type="submit" className="btn-primary" aria-label="تسجيل البيانات">
           {MSG.buttons.save}
         </button>
       </div>

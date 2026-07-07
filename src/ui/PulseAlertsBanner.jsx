@@ -52,19 +52,18 @@ export function PulseAlertsBanner({ page, onGoToInbox, className = '' }) {
 
   return (
     <div
-      className={`no-print border-b px-4 py-2 flex items-center justify-between gap-3 flex-wrap ${className}`}
-      style={{ borderColor: 'var(--color-warning-bg)', background: 'var(--color-warning-bg)' }}
+      className={`no-print pulse-alert-banner ${className}`}
       role="alert"
       aria-live="polite"
     >
-      <p className="text-sm font-medium" style={{ color: 'var(--color-warning)' }}>
+      <p className="pulse-alert-banner__text">
         {msg}
       </p>
       {typeof onGoToInbox === 'function' && (
         <button
           type="button"
           onClick={onGoToInbox}
-          className="btn-primary flex-shrink-0"
+          className="btn-primary pulse-alert-banner__btn"
           style={{ background: 'var(--color-warning)' }}
         >
           عرض المستحقات

@@ -9,6 +9,13 @@ export const ToastContext = createContext();
 
 export const useToast = () => useContext(ToastContext);
 
+function toastTypeClass(type) {
+  if (type === 'success') return 'toast--item--success';
+  if (type === 'error') return 'toast--item--error';
+  if (type === 'info') return 'toast--item--info';
+  return 'toast--item--warning';
+}
+
 export const ToastProvider = ({ children }) => {
   const [toasts, setToasts] = useState([]);
   const showToast = useCallback((message, type = 'success') => {
@@ -32,8 +39,7 @@ export const ToastProvider = ({ children }) => {
     <ToastContext.Provider value={toast}>
       {children}
       <div
-        className="fixed top-4 left-4 z-50 flex flex-col gap-2 no-print"
-        style={{ maxWidth: '360px' }}
+        className="toast--container no-print"
         role="region"
         aria-label="إشعارات"
         aria-live="polite"
@@ -41,31 +47,13 @@ export const ToastProvider = ({ children }) => {
         {toasts.map((t) => (
           <div
             key={t.id}
-            className="px-4 py-3 rounded-2xl text-sm font-medium transition-all animate-slideIn"
-            style={{
-              color:
-                t.type === 'warning' ? 'var(--color-text-primary)' : 'var(--color-text-inverse)',
-              background:
-                t.type === 'success'
-                  ? 'var(--color-success)'
-                  : t.type === 'error'
-                    ? 'var(--color-danger)'
-                    : t.type === 'info'
-                      ? 'var(--color-secondary)'
-                      : 'var(--color-warning)',
-              boxShadow: 'var(--shadow)',
-              border:
-                t.type === 'warning'
-                  ? '1px solid color-mix(in srgb, var(--color-warning) 55%, transparent)'
-                  : '1px solid transparent',
-            }}
+            className={`toast--item ${toastTypeClass(t.type)}`}
             role="status"
           >
             {t.message}
           </div>
         ))}
       </div>
-      <style>{`.animate-slideIn { animation: slideIn .3s ease; } @keyframes slideIn { from { opacity:0; transform:translateX(-20px); } to { opacity:1; transform:translateX(0); }}`}</style>
     </ToastContext.Provider>
   );
 };

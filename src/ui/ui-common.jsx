@@ -223,7 +223,8 @@ export const Icons = {
         fill: 'none',
         stroke: 'currentColor',
         strokeWidth: '1.5',
-        className: p?.className || 'text-[var(--color-muted)]',
+        className: p?.className || '',
+        style: { color: p?.className ? undefined : 'var(--color-muted)' },
       }}
     >
       <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
@@ -497,7 +498,7 @@ export const SummaryCard = ({ label, value, color = 'blue', icon }) => {
   const colorVar = colorMap[color] || colorMap.blue;
   return (
     <div className={`summary-card summary-card--${color}`}>
-      <div className="flex items-center justify-between mb-2">
+      <div className="summary-card__header">
         <span className="summary-card__label">{label}</span>
         {icon && (
           <span className="summary-card__icon" style={{ color: `var(${colorVar})` }}>
@@ -523,16 +524,7 @@ export const MobileFAB = ({ onClick, label = 'إضافة', icon }) => {
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="md:hidden fixed z-40 rounded-full shadow-lg flex items-center justify-center no-print transition-transform active:scale-95"
-      style={{
-        bottom: 'calc(3.5rem + env(safe-area-inset-bottom, 0px) + 1rem)',
-        insetInlineStart: '1rem',
-        width: '3.5rem',
-        height: '3.5rem',
-        backgroundColor: 'var(--color-primary)',
-        color: 'var(--color-text-inverse)',
-        boxShadow: 'var(--shadow)',
-      }}
+      className="mobile-fab no-print"
     >
       <FABIcon size={24} />
     </button>
@@ -542,12 +534,12 @@ export const MobileFAB = ({ onClick, label = 'إضافة', icon }) => {
 export const EmptyState = ({ message, icon, title, description, actionLabel, onAction }) => (
   <div className="empty-state">
     <div className="empty-icon">
-      {icon || <Icons.empty size={40} className="text-[var(--color-muted)]" aria-hidden="true" />}
+      {icon || <Icons.empty size={40} aria-hidden="true" />}
     </div>
     {title && <h3>{title}</h3>}
     <p>{message || description}</p>
     {actionLabel && onAction && (
-      <button type="button" onClick={onAction} className="btn-primary mt-4">
+      <button type="button" onClick={onAction} className="btn-primary" style={{ marginTop: '1rem' }}>
         {actionLabel}
       </button>
     )}
@@ -575,7 +567,7 @@ export const Badge = ({ children, color = 'blue' }) => {
   const colorVar = colorMap[color] || colorMap.blue;
   return (
     <span
-      className={`badge badge--${color} inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium`}
+      className={`badge badge--${color}`}
       style={{ backgroundColor: colorVar.bg, color: colorVar.text }}
     >
       {children}

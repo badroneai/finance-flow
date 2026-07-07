@@ -81,9 +81,9 @@ function getStatusScopedFields(status) {
 
 function PropertyInfoItem({ label, value }) {
   return (
-    <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] p-3">
-      <div className="text-xs text-[var(--color-muted)] mb-1">{label}</div>
-      <div className="text-sm font-medium text-[var(--color-text)]">{value || '—'}</div>
+    <div className="prop-detail__info-card">
+      <div className="prop-detail__info-label">{label}</div>
+      <div className="prop-detail__info-value">{value || '—'}</div>
     </div>
   );
 }
@@ -142,25 +142,25 @@ function PropertyEditForm({
   };
 
   return (
-    <div className="detail-section mb-4">
-      <div className="flex items-center justify-between gap-3 mb-4">
-        <h3 className="font-bold text-[var(--color-text)]">تعديل بيانات العقار</h3>
+    <div className="detail-section prop-detail__form-shell">
+      <div className="prop-detail__form-header">
+        <h3 className="prop-detail__form-title">تعديل بيانات العقار</h3>
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+          className="btn-ghost"
         >
           إلغاء
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="prop-detail__form-grid">
         <FormField label="اسم العقار" id="detail-prop-name">
           <input
             type="text"
             value={form.name}
             onChange={(e) => handleChange('name', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -168,7 +168,7 @@ function PropertyEditForm({
           <select
             value={form.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           >
             {PROPERTY_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -182,7 +182,7 @@ function PropertyEditForm({
           <select
             value={form.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           >
             {PROPERTY_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -197,7 +197,7 @@ function PropertyEditForm({
             type="text"
             value={form.deedNumber}
             onChange={(e) => handleChange('deedNumber', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -206,7 +206,7 @@ function PropertyEditForm({
             type="text"
             value={form.nationalAddress}
             onChange={(e) => handleChange('nationalAddress', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -214,7 +214,7 @@ function PropertyEditForm({
           <select
             value={form.city}
             onChange={(e) => handleChange('city', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           >
             <option value="">اختر المدينة</option>
             {SAUDI_CITIES.map((city) => (
@@ -230,7 +230,7 @@ function PropertyEditForm({
             type="text"
             value={form.district}
             onChange={(e) => handleChange('district', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -240,7 +240,7 @@ function PropertyEditForm({
             value={form.areaSqm}
             onChange={(e) => handleChange('areaSqm', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -250,7 +250,7 @@ function PropertyEditForm({
             value={form.yearBuilt}
             onChange={(e) => handleChange('yearBuilt', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -260,7 +260,7 @@ function PropertyEditForm({
             value={form.floors}
             onChange={(e) => handleChange('floors', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -270,7 +270,7 @@ function PropertyEditForm({
             value={form.bathrooms}
             onChange={(e) => handleChange('bathrooms', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -280,7 +280,7 @@ function PropertyEditForm({
             value={form.monthlyRent}
             onChange={(e) => handleChange('monthlyRent', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -290,7 +290,7 @@ function PropertyEditForm({
             value={form.purchasePrice}
             onChange={(e) => handleChange('purchasePrice', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -300,7 +300,7 @@ function PropertyEditForm({
             value={form.unitsCount}
             onChange={(e) => handleChange('unitsCount', e.target.value)}
             min="1"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           />
         </FormField>
 
@@ -308,7 +308,7 @@ function PropertyEditForm({
           <select
             value={form.ownerId || ''}
             onChange={(e) => handleOwnerChange(e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+
           >
             <option value="">إدخال يدوي / غير محدد</option>
             {ownerContacts.map((owner) => (
@@ -328,7 +328,7 @@ function PropertyEditForm({
               handleChange('ownerName', e.target.value);
             }}
             disabled={!manualOwnerEntry && !!form.ownerId}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm disabled:opacity-60"
+            className="u-disabled-muted"
           />
         </FormField>
 
@@ -342,26 +342,26 @@ function PropertyEditForm({
             }}
             disabled={!manualOwnerEntry && !!form.ownerId}
             dir="ltr"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start disabled:opacity-60"
+            className="u-text-start u-disabled-muted"
           />
         </FormField>
       </div>
 
-      <div className="mt-3">
+      <div className="prop-detail__form-notes">
         <FormField label="ملاحظات" id="detail-prop-notes">
           <textarea
             value={form.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             rows={3}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm resize-none"
+            className="u-no-resize"
           />
         </FormField>
       </div>
 
       {form.status === 'rented' && (
-        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات المستأجر الحالي</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="prop-detail__form-status-block">
+          <h4 className="prop-detail__form-status-title">بيانات المستأجر الحالي</h4>
+          <div className="prop-detail__form-grid">
             <FormField label="المستأجر" id="detail-prop-tenant-contact">
               <select
                 value={form.tenantContactId || ''}
@@ -372,7 +372,7 @@ function PropertyEditForm({
                     tenantContacts.find((contact) => contact.id === e.target.value)
                   )
                 }
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+    
               >
                 <option value="">اختر من العملاء أو اتركه يدويًا</option>
                 {tenantContacts.map((contact) => (
@@ -387,7 +387,7 @@ function PropertyEditForm({
                 type="text"
                 value={form.tenantName || ''}
                 onChange={(e) => handleChange('tenantName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+    
               />
             </FormField>
             <FormField label="جوال المستأجر" id="detail-prop-tenant-phone">
@@ -396,7 +396,7 @@ function PropertyEditForm({
                 value={form.tenantPhone || ''}
                 onChange={(e) => handleChange('tenantPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
+                className="u-text-start"
               />
             </FormField>
           </div>
@@ -404,9 +404,9 @@ function PropertyEditForm({
       )}
 
       {form.status === 'maintenance' && (
-        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات جهة الصيانة</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="prop-detail__form-status-block">
+          <h4 className="prop-detail__form-status-title">بيانات جهة الصيانة</h4>
+          <div className="prop-detail__form-grid">
             <FormField label="جهة الصيانة" id="detail-prop-maint-contact">
               <select
                 value={form.maintenanceContactId || ''}
@@ -417,7 +417,7 @@ function PropertyEditForm({
                     maintenanceContacts.find((contact) => contact.id === e.target.value)
                   )
                 }
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+    
               >
                 <option value="">اختر جهة أو اتركه يدويًا</option>
                 {maintenanceContacts.map((contact) => (
@@ -432,7 +432,7 @@ function PropertyEditForm({
                 type="text"
                 value={form.maintenanceContactName || ''}
                 onChange={(e) => handleChange('maintenanceContactName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+    
               />
             </FormField>
             <FormField label="رقم الجوال" id="detail-prop-maint-phone">
@@ -441,7 +441,7 @@ function PropertyEditForm({
                 value={form.maintenanceContactPhone || ''}
                 onChange={(e) => handleChange('maintenanceContactPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
+                className="u-text-start"
               />
             </FormField>
           </div>
@@ -449,9 +449,9 @@ function PropertyEditForm({
       )}
 
       {form.status === 'sold' && (
-        <div className="mt-4 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-          <h4 className="font-bold text-[var(--color-text)] mb-3">بيانات المشتري</h4>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="prop-detail__form-status-block">
+          <h4 className="prop-detail__form-status-title">بيانات المشتري</h4>
+          <div className="prop-detail__form-grid">
             <FormField label="المشتري" id="detail-prop-buyer-contact">
               <select
                 value={form.buyerContactId || ''}
@@ -462,7 +462,7 @@ function PropertyEditForm({
                     buyerContacts.find((contact) => contact.id === e.target.value)
                   )
                 }
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+    
               >
                 <option value="">اختر من العملاء أو اتركه يدويًا</option>
                 {buyerContacts.map((contact) => (
@@ -477,7 +477,7 @@ function PropertyEditForm({
                 type="text"
                 value={form.buyerName || ''}
                 onChange={(e) => handleChange('buyerName', e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm"
+    
               />
             </FormField>
             <FormField label="جوال المشتري" id="detail-prop-buyer-phone">
@@ -486,19 +486,19 @@ function PropertyEditForm({
                 value={form.buyerPhone || ''}
                 onChange={(e) => handleChange('buyerPhone', e.target.value)}
                 dir="ltr"
-                className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg)] text-[var(--color-text)] text-sm u-text-start"
+                className="u-text-start"
               />
             </FormField>
           </div>
         </div>
       )}
 
-      <div className="flex gap-2 mt-4">
+      <div className="prop-detail__form-actions">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="btn-primary disabled:opacity-50"
+          className="btn-primary"
         >
           {saving ? 'جاري الحفظ...' : 'حفظ التعديلات'}
         </button>
@@ -513,28 +513,29 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
   };
 
   return (
-    <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-      <div className="flex items-center justify-between gap-3 mb-3">
-        <h3 className="font-bold text-[var(--color-text)]">
+    <div className="prop-detail__unit-form-shell">
+      <div className="prop-detail__form-header">
+        <h3 className="prop-detail__form-title">
           {editMode ? 'تعديل الوحدة' : 'إضافة وحدة جديدة'}
         </h3>
         <button
           type="button"
           onClick={onCancel}
-          className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
+          className="btn-ghost"
         >
           إلغاء
         </button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+      <div className="prop-detail__form-grid">
         <FormField label="اسم/رقم الوحدة" id="unit-name">
           <input
             type="text"
             value={form.name}
             onChange={(e) => handleChange('name', e.target.value)}
             placeholder="مثال: شقة 3 أو محل A"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -542,7 +543,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
           <select
             value={form.type}
             onChange={(e) => handleChange('type', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           >
             {UNIT_TYPE_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -557,7 +559,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
             type="text"
             value={form.floor}
             onChange={(e) => handleChange('floor', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -567,7 +570,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
             value={form.areaSqm}
             onChange={(e) => handleChange('areaSqm', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -577,7 +581,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
             value={form.rooms}
             onChange={(e) => handleChange('rooms', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -587,7 +592,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
             value={form.bathrooms}
             onChange={(e) => handleChange('bathrooms', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -597,7 +603,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
             value={form.monthlyRent}
             onChange={(e) => handleChange('monthlyRent', e.target.value)}
             min="0"
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           />
         </FormField>
 
@@ -605,7 +612,8 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
           <select
             value={form.status}
             onChange={(e) => handleChange('status', e.target.value)}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm"
+
+
           >
             {UNIT_STATUS_OPTIONS.map((opt) => (
               <option key={opt.value} value={opt.value}>
@@ -616,23 +624,23 @@ function UnitForm({ form, setForm, onSave, onCancel, saving, editMode }) {
         </FormField>
       </div>
 
-      <div className="mt-3">
+      <div className="prop-detail__form-notes">
         <FormField label="ملاحظات" id="unit-notes">
           <textarea
             value={form.notes}
             onChange={(e) => handleChange('notes', e.target.value)}
             rows={2}
-            className="w-full px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm resize-none"
+            className="u-no-resize"
           />
         </FormField>
       </div>
 
-      <div className="flex gap-2 mt-4">
+      <div className="prop-detail__form-actions">
         <button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className="btn-primary disabled:opacity-50"
+          className="btn-primary"
         >
           {saving ? 'جاري الحفظ...' : editMode ? 'حفظ الوحدة' : 'إضافة الوحدة'}
         </button>
@@ -646,21 +654,21 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
 
   return (
     <>
-      <div className="hidden md:block overflow-hidden rounded-xl border border-[var(--color-border)]">
-        <table className="w-full text-sm">
-          <thead className="bg-[var(--color-bg)] text-[var(--color-muted)]">
+      <div className="prop-detail__table-wrap prop-detail__table-wrap--desktop">
+        <table className="prop-detail__table">
+          <thead>
             <tr>
-              <th className="p-3 u-text-start">الوحدة</th>
-              <th className="p-3 u-text-start">النوع</th>
-              <th className="p-3 u-text-start">المساحة</th>
-              <th className="p-3 u-text-start">الغرف</th>
-              <th className="p-3 u-text-start">الإيجار</th>
-              <th className="p-3 u-text-start">الحالة</th>
-              <th className="p-3 u-text-start">العقد الحالي</th>
-              <th className="p-3 u-text-start">الإجراءات</th>
+              <th>الوحدة</th>
+              <th>النوع</th>
+              <th>المساحة</th>
+              <th>الغرف</th>
+              <th>الإيجار</th>
+              <th>الحالة</th>
+              <th>العقد الحالي</th>
+              <th>الإجراءات</th>
             </tr>
           </thead>
-          <tbody className="bg-[var(--color-surface)]">
+          <tbody>
             {units.map((unit) => {
               const activeContract = activeContractsByUnitId[unit.id];
               const effectiveStatus =
@@ -670,46 +678,44 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
                 : '';
 
               return (
-                <tr key={unit.id} className="border-t border-[var(--color-border)]">
-                  <td className="p-3 font-medium text-[var(--color-text)]">{unit.name}</td>
-                  <td className="p-3 text-[var(--color-muted)]">{getUnitTypeLabel(unit.type)}</td>
-                  <td className="p-3 text-[var(--color-muted)]">{unit.areaSqm || '—'}</td>
-                  <td className="p-3 text-[var(--color-muted)]">{unit.rooms || '—'}</td>
-                  <td className="p-3 text-[var(--color-text)]">
+                <tr key={unit.id}>
+                  <td className="prop-detail__cell--primary">{unit.name}</td>
+                  <td className="prop-detail__cell--muted">{getUnitTypeLabel(unit.type)}</td>
+                  <td className="prop-detail__cell--muted">{unit.areaSqm || '—'}</td>
+                  <td className="prop-detail__cell--muted">{unit.rooms || '—'}</td>
+                  <td>
                     {unit.monthlyRent ? `${formatCurrency(safeNum(unit.monthlyRent))}` : '—'}
                   </td>
-                  <td className="p-3">
+                  <td>
                     <Badge color={getUnitStatusColor(effectiveStatus)}>
                       {getUnitStatusLabel(effectiveStatus)}
                     </Badge>
                   </td>
-                  <td className="p-3 text-[var(--color-muted)]">
+                  <td className="prop-detail__cell--muted">
                     {activeContract ? (
                       <div>
-                        <div className="text-[var(--color-text)]">
+                        <div className="prop-detail__cell--primary">
                           {tenant || activeContract._contactName || 'عميل مرتبط'}
                         </div>
-                        <div className="text-xs mt-1">#{activeContract.contractNumber || '—'}</div>
+                        <div className="prop-detail__cell--sub">#{activeContract.contractNumber || '—'}</div>
                       </div>
                     ) : (
                       'لا يوجد'
                     )}
                   </td>
-                  <td className="p-3">
-                    <div className="flex items-center gap-3">
+                  <td>
+                    <div className="prop-detail__row-actions">
                       <button
                         type="button"
                         onClick={() => onEdit(unit)}
-                        className="text-sm font-medium"
-                        style={{ color: 'var(--color-info)' }}
+                        className="prop-detail__action-link prop-detail__action-link--edit"
                       >
                         تعديل
                       </button>
                       <button
                         type="button"
                         onClick={() => onDelete(unit)}
-                        className="text-sm font-medium"
-                        style={{ color: 'var(--color-danger)' }}
+                        className="prop-detail__action-link prop-detail__action-link--delete"
                       >
                         حذف
                       </button>
@@ -722,7 +728,7 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
         </table>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:hidden">
+      <div className="prop-detail__card-list prop-detail__card-list--mobile">
         {units.map((unit) => {
           const activeContract = activeContractsByUnitId[unit.id];
           const effectiveStatus =
@@ -734,12 +740,12 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
           return (
             <div
               key={unit.id}
-              className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-3"
+              className="prop-detail__unit-card"
             >
-              <div className="flex items-center justify-between gap-3">
+              <div className="prop-detail__unit-card-head">
                 <div>
-                  <div className="font-medium text-[var(--color-text)]">{unit.name}</div>
-                  <div className="text-sm text-[var(--color-muted)]">
+                  <div className="prop-detail__cell--primary">{unit.name}</div>
+                  <div className="prop-detail__cell--muted">
                     {getUnitTypeLabel(unit.type)}
                   </div>
                 </div>
@@ -747,33 +753,31 @@ function UnitTable({ units, activeContractsByUnitId, contactsById, onEdit, onDel
                   {getUnitStatusLabel(effectiveStatus)}
                 </Badge>
               </div>
-              <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+              <div className="prop-detail__unit-card-stats">
                 <span>المساحة: {unit.areaSqm || '—'}</span>
                 <span>الغرف: {unit.rooms || '—'}</span>
                 <span>
                   الإيجار: {unit.monthlyRent ? `${formatCurrency(safeNum(unit.monthlyRent))}` : '—'}
                 </span>
               </div>
-              <div className="text-sm text-[var(--color-muted)] mt-2">
+              <div className="prop-detail__cell--muted prop-detail__unit-card-contract">
                 العقد الحالي:{' '}
                 {activeContract
                   ? `${tenant || 'عميل مرتبط'} — #${activeContract.contractNumber || '—'}`
                   : 'لا يوجد'}
               </div>
-              <div className="flex items-center gap-3 mt-3 pt-3 border-t border-[var(--color-border)]">
+              <div className="prop-detail__unit-card-footer">
                 <button
                   type="button"
                   onClick={() => onEdit(unit)}
-                  className="text-sm font-medium"
-                  style={{ color: 'var(--color-info)' }}
+                  className="prop-detail__action-link prop-detail__action-link--edit"
                 >
                   تعديل
                 </button>
                 <button
                   type="button"
                   onClick={() => onDelete(unit)}
-                  className="text-sm font-medium"
-                  style={{ color: 'var(--color-danger)' }}
+                  className="prop-detail__action-link prop-detail__action-link--delete"
                 >
                   حذف
                 </button>
@@ -1003,7 +1007,7 @@ export default function PropertyDetailPage() {
 
   if (!property) {
     return (
-      <div className="page-shell page-shell--regular" dir="rtl">
+      <div className="page-shell page-shell--regular prop-detail" dir="rtl">
         <EmptyState
           title="عقار غير موجود"
           description="قد يكون العقار حُذف أو أن الرابط غير صحيح."
@@ -1017,35 +1021,35 @@ export default function PropertyDetailPage() {
   const propertyStatusColor = getPropertyStatusColor(property.status);
 
   return (
-    <div className="page-shell page-shell--regular" dir="rtl">
-      <div className="text-sm text-[var(--color-muted)] mb-3">
-        <button type="button" onClick={() => navigate('/properties')} className="hover:underline">
+    <div className="page-shell page-shell--regular prop-detail" dir="rtl">
+      <nav className="prop-detail__breadcrumb">
+        <button type="button" onClick={() => navigate('/properties')} className="prop-detail__breadcrumb-link">
           العقارات
         </button>
-        <span className="mx-2">/</span>
+        <span className="prop-detail__breadcrumb-sep">/</span>
         <span>{property.name}</span>
-      </div>
+      </nav>
 
-      <div className="detail-hero mb-4">
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div className="flex items-start gap-3 min-w-0">
-            <span className="text-[var(--color-primary)]" aria-hidden="true">
+      <div className="detail-hero prop-detail__hero">
+        <div className="prop-detail__hero-layout">
+          <div className="prop-detail__hero-identity">
+            <span className="prop-detail__hero-icon" aria-hidden="true">
               <Icons.properties size={30} />
             </span>
-            <div className="min-w-0">
+            <div className="prop-detail__hero-copy">
               <span className="page-kicker">ملف الأصل</span>
-              <div className="flex flex-wrap items-center gap-2 mb-2">
-                <h1 className="text-xl md:text-2xl font-bold text-[var(--color-text)]">
+              <div className="prop-detail__hero-title-row">
+                <h1 className="prop-detail__hero-title">
                   {property.name}
                 </h1>
                 <Badge color={propertyStatusColor}>{getPropertyStatusLabel(property.status)}</Badge>
               </div>
-              <p className="text-sm text-[var(--color-muted)]">
+              <p className="prop-detail__hero-subtitle">
                 {getPropertyTypeLabel(property.type)}
                 {property.city ? ` — ${property.city}` : ''}
                 {property.district ? `، ${property.district}` : ''}
               </p>
-              <div className="flex flex-wrap gap-4 mt-3 text-sm text-[var(--color-muted)]">
+              <div className="prop-detail__hero-stats">
                 <span>عدد الوحدات: {propertyUnits.length || property.unitsCount || 1}</span>
                 <span>الوحدات المؤجرة: {unitsSummary.occupiedCount}</span>
                 <span>الوحدات الشاغرة: {unitsSummary.vacantCount}</span>
@@ -1054,7 +1058,7 @@ export default function PropertyDetailPage() {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="prop-detail__hero-actions">
             <button type="button" onClick={openPropertyEditor} className="btn-primary">
               تعديل العقار
             </button>
@@ -1081,7 +1085,7 @@ export default function PropertyDetailPage() {
         />
       )}
 
-      <div className="route-summary-grid route-summary-grid--quad mb-4">
+      <div className="prop-detail__summary route-summary-grid route-summary-grid--quad">
         <SummaryCard
           label="الإيراد الشهري الحالي"
           value={formatCurrency(currentMonthlyIncome)}
@@ -1114,9 +1118,9 @@ export default function PropertyDetailPage() {
         />
       </div>
 
-      <section className="detail-section mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات العقار</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      <section className="detail-section prop-detail__section">
+        <h2 className="prop-detail__section-title">بيانات العقار</h2>
+        <div className="prop-detail__info-grid">
           <PropertyInfoItem label="النوع" value={getPropertyTypeLabel(property.type)} />
           <PropertyInfoItem label="رقم الصك" value={property.deedNumber} />
           <PropertyInfoItem label="العنوان الوطني" value={property.nationalAddress} />
@@ -1141,15 +1145,14 @@ export default function PropertyDetailPage() {
         </div>
       </section>
 
-      <section className="detail-section mb-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
-          <h2 className="font-bold text-[var(--color-text)]">المالك</h2>
+      <section className="detail-section prop-detail__section">
+        <div className="prop-detail__section-header">
+          <h2 className="prop-detail__section-title">المالك</h2>
           {owner?.id && (
             <button
               type="button"
               onClick={() => navigate(`/contacts/${owner.id}`)}
-              className="text-sm font-medium"
-              style={{ color: 'var(--color-info)' }}
+              className="prop-detail__section-link"
             >
               عرض في العملاء
             </button>
@@ -1157,32 +1160,32 @@ export default function PropertyDetailPage() {
         </div>
 
         {owner ? (
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4">
-            <div className="font-medium text-[var(--color-text)]">{owner.name}</div>
-            <div className="text-sm text-[var(--color-muted)] mt-1">
+          <div className="prop-detail__entity-card">
+            <div className="prop-detail__entity-name">{owner.name}</div>
+            <div className="prop-detail__entity-meta">
               {owner.phone ? (
-                <a href={`tel:${owner.phone}`} className="hover:underline" dir="ltr">
+                <a href={`tel:${owner.phone}`} dir="ltr">
                   {owner.phone}
                 </a>
               ) : (
                 'لا يوجد جوال'
               )}
             </div>
-            <div className="text-sm text-[var(--color-muted)] mt-1">
+            <div className="prop-detail__entity-meta">
               {owner.idType || owner.idNumber
                 ? `${owner.idType || 'نوع الهوية'}${owner.idNumber ? ` — ${owner.idNumber}` : ''}`
                 : 'لا توجد بيانات هوية'}
             </div>
           </div>
         ) : property.ownerName ? (
-          <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-sm text-[var(--color-text)]">
-            <div className="font-medium">{property.ownerName}</div>
-            <div className="text-[var(--color-muted)] mt-1">
+          <div className="prop-detail__entity-card">
+            <div className="prop-detail__entity-name">{property.ownerName}</div>
+            <div className="prop-detail__entity-meta">
               {property.ownerPhone || 'لا يوجد جوال'}
             </div>
           </div>
         ) : (
-          <div className="text-sm text-[var(--color-muted)]">لم يُحدد مالك لهذا العقار.</div>
+          <div className="prop-detail__empty-note">لم يُحدد مالك لهذا العقار.</div>
         )}
       </section>
 
@@ -1192,34 +1195,34 @@ export default function PropertyDetailPage() {
         property.maintenanceContactPhone ||
         property.buyerName ||
         property.buyerPhone) && (
-        <section className="detail-section mb-4">
-          <h2 className="font-bold text-[var(--color-text)] mb-3">بيانات مرتبطة بالحالة الحالية</h2>
+        <section className="detail-section prop-detail__section">
+          <h2 className="prop-detail__section-title">بيانات مرتبطة بالحالة الحالية</h2>
           {property.status === 'rented' && (
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-sm">
-              <div className="font-medium text-[var(--color-text)]">
+            <div className="prop-detail__entity-card">
+              <div className="prop-detail__entity-name">
                 {property.tenantName || 'مستأجر غير محدد'}
               </div>
-              <div className="text-[var(--color-muted)] mt-1">
+              <div className="prop-detail__entity-meta">
                 {property.tenantPhone || 'لا يوجد جوال'}
               </div>
             </div>
           )}
           {property.status === 'maintenance' && (
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-sm">
-              <div className="font-medium text-[var(--color-text)]">
+            <div className="prop-detail__entity-card">
+              <div className="prop-detail__entity-name">
                 {property.maintenanceContactName || 'جهة الصيانة غير محددة'}
               </div>
-              <div className="text-[var(--color-muted)] mt-1">
+              <div className="prop-detail__entity-meta">
                 {property.maintenanceContactPhone || 'لا يوجد جوال'}
               </div>
             </div>
           )}
           {property.status === 'sold' && (
-            <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4 text-sm">
-              <div className="font-medium text-[var(--color-text)]">
+            <div className="prop-detail__entity-card">
+              <div className="prop-detail__entity-name">
                 {property.buyerName || 'مشتري غير محدد'}
               </div>
-              <div className="text-[var(--color-muted)] mt-1">
+              <div className="prop-detail__entity-meta">
                 {property.buyerPhone || 'لا يوجد جوال'}
               </div>
             </div>
@@ -1227,11 +1230,11 @@ export default function PropertyDetailPage() {
         </section>
       )}
 
-      <section className="detail-section mb-4">
-        <div className="flex items-center justify-between gap-3 mb-3">
+      <section className="detail-section prop-detail__section">
+        <div className="prop-detail__section-header">
           <div>
-            <h2 className="font-bold text-[var(--color-text)]">الوحدات</h2>
-            <p className="text-sm text-[var(--color-muted)] mt-1">
+            <h2 className="prop-detail__section-title">الوحدات</h2>
+            <p className="prop-detail__section-desc">
               {canHaveUnits
                 ? 'تابع الوحدات الشاغرة والمؤجرة من داخل نفس العقار.'
                 : 'هذا النوع من العقارات لا يحتاج وحدات فرعية غالبًا، لكن يمكنك إضافتها إذا لزم.'}
@@ -1243,7 +1246,7 @@ export default function PropertyDetailPage() {
         </div>
 
         {showUnitForm && (
-          <div className="mb-4">
+          <div className="prop-detail__unit-form-wrap">
             <UnitForm
               form={unitForm}
               setForm={setUnitForm}
@@ -1277,10 +1280,10 @@ export default function PropertyDetailPage() {
         )}
       </section>
 
-      <section className="detail-section mb-4">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">العقود المرتبطة</h2>
+      <section className="detail-section prop-detail__section">
+        <h2 className="prop-detail__section-title">العقود المرتبطة</h2>
         {propertyContracts.length > 0 ? (
-          <div className="space-y-3">
+          <div className="prop-detail__contracts-list">
             {propertyContracts.map((contract) => {
               const contact = contacts.find(
                 (item) => item.id === (contract.contactId || contract.contact_id)
@@ -1288,15 +1291,15 @@ export default function PropertyDetailPage() {
               return (
                 <div
                   key={contract.id}
-                  className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg)] p-4"
+                  className="prop-detail__entity-card"
                 >
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="prop-detail__contract-head">
                     <div>
-                      <div className="font-medium text-[var(--color-text)]">
+                      <div className="prop-detail__entity-name">
                         {getContractTypeLabel(contract.type)}
                         {contact?.name ? ` — ${contact.name}` : ''}
                       </div>
-                      <div className="text-sm text-[var(--color-muted)] mt-1">
+                      <div className="prop-detail__entity-meta">
                         {contract.startDate || '—'} → {contract.endDate || '—'}
                       </div>
                     </div>
@@ -1304,7 +1307,7 @@ export default function PropertyDetailPage() {
                       {getContractStatusLabel(contract.status)}
                     </Badge>
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-[var(--color-muted)]">
+                  <div className="prop-detail__contract-meta">
                     <span>رقم العقد: {contract.contractNumber || '—'}</span>
                     <span>
                       الوحدة:{' '}
@@ -1330,32 +1333,20 @@ export default function PropertyDetailPage() {
             })}
           </div>
         ) : (
-          <div className="text-sm text-[var(--color-muted)]">لا توجد عقود مرتبطة بهذا العقار.</div>
+          <div className="prop-detail__empty-note">لا توجد عقود مرتبطة بهذا العقار.</div>
         )}
       </section>
 
-      <section className="detail-section">
-        <h2 className="font-bold text-[var(--color-text)] mb-3">إجراءات سريعة</h2>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            onClick={openPropertyEditor}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
-          >
+      <section className="detail-section prop-detail__section prop-detail__section--last">
+        <h2 className="prop-detail__section-title">إجراءات سريعة</h2>
+        <div className="prop-detail__quick-actions">
+          <button type="button" onClick={openPropertyEditor} className="btn-secondary">
             تعديل العقار
           </button>
-          <button
-            type="button"
-            onClick={startCreateUnit}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
-          >
+          <button type="button" onClick={startCreateUnit} className="btn-secondary">
             إضافة وحدة
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/contracts')}
-            className="px-3 py-2 rounded-lg border border-[var(--color-border)] text-sm text-[var(--color-text)]"
-          >
+          <button type="button" onClick={() => navigate('/contracts')} className="btn-secondary">
             عرض العقود
           </button>
         </div>

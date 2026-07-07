@@ -31,8 +31,8 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
   if (sorted.length === 0) {
     return (
       <div className="pulse-card pulse-card__empty" dir="rtl">
-        <h2 className="font-semibold text-[var(--color-text)] mb-1">أقرب المستحقات</h2>
-        <p className="text-sm">لا توجد مستحقات قريبة.</p>
+        <h2 className="pulse-card__title" style={{ marginBottom: '0.25rem' }}>أقرب المستحقات</h2>
+        <p className="pulse-page__state-desc">لا توجد مستحقات قريبة.</p>
       </div>
     );
   }
@@ -40,37 +40,35 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
   return (
     <div className="panel-card pulse-card" dir="rtl">
       <div className="pulse-card__header">
-        <h2 className="font-semibold text-[var(--color-text)]">أقرب المستحقات</h2>
+        <h2 className="pulse-card__title">أقرب المستحقات</h2>
       </div>
-      <ul className="divide-y divide-[var(--color-border)]">
+      <ul className="pulse-dues__list">
         {sorted.map((due) => (
-          <li key={due.id || due.dueDate + due.name} className="px-4 py-3">
-            <div className="flex items-center justify-between gap-3">
-              <div className="min-w-0 flex-1 flex items-center gap-2">
+          <li key={due.id || due.dueDate + due.name} className="pulse-dues__item">
+            <div className="pulse-dues__item-row">
+              <div className="pulse-dues__item-body">
                 <span
-                  className="flex-shrink-0 w-2 h-2 rounded-full"
+                  className="pulse-dues__dot"
                   style={{
                     background:
                       due.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
                   }}
                   aria-hidden="true"
                 />
-                <div className="min-w-0">
-                  <p className="font-medium text-[var(--color-text)] truncate">{due.name || '—'}</p>
-                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 mt-0.5">
-                    <span className="text-xs text-[var(--color-muted)]">
+                <div className="pulse-dues__text-wrap">
+                  <p className="pulse-dues__name">{due.name || '—'}</p>
+                  <div className="pulse-dues__meta">
+                    <span className="pulse-dues__time-label">
                       {getTimeLabel(due.daysRemaining)}
                     </span>
                     {due.recurring && (
-                      <span className="inline-flex px-1.5 py-0.5 rounded text-xs bg-[var(--color-bg)] text-[var(--color-muted)]">
-                        متكرر
-                      </span>
+                      <span className="pulse-dues__recurring-badge">متكرر</span>
                     )}
                   </div>
                 </div>
               </div>
               <span
-                className="flex-shrink-0 font-medium tabular-nums"
+                className="pulse-dues__amount"
                 style={{
                   color: due.type === 'income' ? 'var(--color-success)' : 'var(--color-danger)',
                 }}
@@ -83,11 +81,11 @@ export default function UpcomingDues({ upcomingDues = [], onShowAll }) {
         ))}
       </ul>
       {onShowAll && (
-        <div className="pulse-card__footer text-center">
+        <div className="pulse-card__footer pulse-card__footer--center">
           <button
             type="button"
             onClick={onShowAll}
-            className="pulse-card__link text-sm font-medium"
+            className="pulse-card__link"
           >
             عرض كل المستحقات
           </button>

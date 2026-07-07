@@ -47,46 +47,34 @@ export default function PulseHeader({ onOpenLedgers }) {
   };
 
   return (
-    <header
-      className="flex items-center justify-between gap-3 flex-wrap mb-4"
-      dir="rtl"
-      aria-label="هيدر النبض المالي"
-    >
-      <div className="flex items-center gap-2 min-w-0 flex-1">
-        <h1 className="text-xl font-bold text-[var(--color-text)] truncate">النبض المالي</h1>
+    <header className="pulse-header" dir="rtl" aria-label="هيدر النبض المالي">
+      <div className="pulse-header__title-row">
+        <h1 className="pulse-header__title">النبض المالي</h1>
         {hasLedgers && (
-          <span
-            className="flex-shrink-0 px-2 py-0.5 rounded text-xs font-medium bg-[var(--color-bg)] text-[var(--color-muted)]"
-            aria-hidden="true"
-          >
-            قيد
-          </span>
+          <span className="pulse-header__badge" aria-hidden="true">قيد</span>
         )}
       </div>
 
-      <div className="flex items-center gap-2 flex-shrink-0 no-print">
+      <div className="pulse-header__controls no-print">
         {hasLedgers ? (
-          <div className="relative" ref={dropdownRef}>
+          <div className="pulse-header__dropdown-anchor" ref={dropdownRef}>
             <button
               type="button"
               onClick={() => setOpen((v) => !v)}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] text-[var(--color-text)] text-sm font-medium hover:bg-[var(--color-bg)] min-w-0 max-w-[180px]"
+              className="pulse-header__dropdown-btn"
               aria-haspopup="listbox"
               aria-expanded={open}
               aria-label={`الدفتر النشط: ${name || 'غير محدد'}. اختر دفتراً آخر`}
             >
-              <span className="truncate">{name || 'اختر دفتراً'}</span>
-              <span
-                className="flex-shrink-0 w-4 h-4 flex items-center justify-center text-[var(--color-muted)]"
-                aria-hidden="true"
-              >
+              <span className="pulse-header__dropdown-name">{name || 'اختر دفتراً'}</span>
+              <span className="pulse-header__dropdown-arrow" aria-hidden="true">
                 {open ? '\u25B2' : '\u25BC'}
               </span>
             </button>
             {open && (
               <ul
                 role="listbox"
-                className="absolute top-full end-0 mt-1 min-w-[160px] max-h-56 overflow-auto rounded-lg border border-[var(--color-border)] bg-[var(--color-surface)] shadow-lg py-1 z-10"
+                className="pulse-header__dropdown-list"
                 aria-label="قائمة الدفاتر"
               >
                 {list.map((l) => (
@@ -94,7 +82,7 @@ export default function PulseHeader({ onOpenLedgers }) {
                     <button
                       type="button"
                       onClick={() => handleSelect(l.id)}
-                      className="w-full u-text-start px-3 py-2 text-sm"
+                      className="pulse-header__dropdown-item"
                       style={{
                         background: l.id === activeId ? 'var(--color-info-bg)' : 'transparent',
                         color: l.id === activeId ? 'var(--color-info)' : 'var(--color-text)',
@@ -109,12 +97,7 @@ export default function PulseHeader({ onOpenLedgers }) {
           </div>
         ) : null}
         {onOpenLedgers && (
-          <button
-            type="button"
-            onClick={onOpenLedgers}
-            className="text-sm font-medium"
-            style={{ color: 'var(--color-info)' }}
-          >
+          <button type="button" onClick={onOpenLedgers} className="pulse-header__link">
             {hasLedgers ? 'إدارة الدفتر' : 'فتح الدفاتر'}
           </button>
         )}

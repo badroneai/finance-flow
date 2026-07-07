@@ -34,26 +34,19 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      className="help-modal__overlay"
       role="dialog"
       aria-modal="true"
       aria-label="دليل سريع"
     >
-      <div
-        className="absolute inset-0"
-        style={{ background: 'var(--color-overlay)' }}
-        onClick={onClose}
-      />
-      <div
-        className="modal-sheet modal-surface max-w-lg help-modal"
-        style={{ color: 'var(--color-text)' }}
-      >
+      <div className="help-modal__backdrop" onClick={onClose} />
+      <div className="modal-sheet modal-surface help-modal">
         <div className="help-modal__header">
-          <div className="min-w-0">
-            <h3 className="text-lg font-bold" style={{ margin: 0 }}>
+          <div>
+            <h3 className="help-modal__section-title--lg">
               الأسئلة الشائعة والمساعدة
             </h3>
-            <p className="text-sm" style={{ margin: '0.35rem 0 0', color: 'var(--color-muted)' }}>
+            <p className="help-modal__section-desc">
               دليل عملي — بدون تسويق، فقط خطوات واضحة.
             </p>
           </div>
@@ -68,7 +61,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
               key={x.k}
               type="button"
               onClick={() => scrollToSection(x.k)}
-              className="btn-secondary text-sm"
+              className="btn-secondary"
               style={{
                 background: helpSection === x.k ? 'var(--color-info)' : 'transparent',
                 color:
@@ -82,16 +75,10 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           ))}
         </div>
 
-        <div className="help-modal__content text-sm" style={{ color: 'var(--color-text)' }}>
+        <div className="help-modal__content">
           <div data-help-section="start">
-            <div className="font-semibold">كيف أبدأ؟</div>
-            <ol
-              style={{
-                color: 'var(--color-muted)',
-                marginTop: '0.4rem',
-                paddingInlineStart: '1.2rem',
-              }}
-            >
+            <div className="help-modal__section-title">كيف أبدأ؟</div>
+            <ol className="help-modal__list">
               <li>اذهب إلى: الدفاتر → أنشئ أول دفتر (عقار) وعيّنه كنشط.</li>
               <li>اذهب إلى: الحركات المالية → اضغط (إضافة) وسجّل أول حركة دخل/مصروف.</li>
               <li>
@@ -102,31 +89,19 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           </div>
 
           <div data-help-section="ledgers">
-            <div className="font-semibold">الدفاتر</div>
-            <div style={{ color: 'var(--color-muted)' }}>
+            <div className="help-modal__section-title">الدفاتر</div>
+            <div className="help-modal__text-muted">
               الدفتر = مجموعة بيانات مستقلة. استخدمه لفصل مكاتب/جهات مختلفة.
             </div>
-            <ul
-              style={{
-                color: 'var(--color-muted)',
-                marginTop: '0.4rem',
-                paddingInlineStart: '1.2rem',
-              }}
-            >
+            <ul className="help-modal__list">
               <li>عيّن دفتر واحد كنشط حتى تكون التقارير/الالتزامات محسوبة عليه.</li>
               <li>يمكنك تعديل الاسم/الوصف بسهولة من نفس الصفحة.</li>
             </ul>
           </div>
 
           <div data-help-section="recurring">
-            <div className="font-semibold">الالتزامات المتكررة</div>
-            <ul
-              style={{
-                color: 'var(--color-muted)',
-                marginTop: '0.4rem',
-                paddingInlineStart: '1.2rem',
-              }}
-            >
+            <div className="help-modal__section-title">الالتزامات المتكررة</div>
+            <ul className="help-modal__list">
               <li>استخدم "غير مسعّر" عندما يكون مبلغ البند غير واضح بعد.</li>
               <li>المستحقات تساعدك في متابعة: المتأخر/القريب/عالي المخاطر/غير المسعّر.</li>
               <li>زر "سجّل كدفعة الآن" ينشئ حركة مالية (تصنيف: أخرى) ويحدّث سجل البند.</li>
@@ -134,28 +109,16 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           </div>
 
           <div data-help-section="reports">
-            <div className="font-semibold">التقارير والتصدير CSV</div>
-            <ul
-              style={{
-                color: 'var(--color-muted)',
-                marginTop: '0.4rem',
-                paddingInlineStart: '1.2rem',
-              }}
-            >
+            <div className="help-modal__section-title">التقارير والتصدير CSV</div>
+            <ul className="help-modal__list">
               <li>التقارير تُظهر ملخصات مفيدة للمتابعة.</li>
               <li>CSV يخرج "قيم خام" (بدون تنسيق لغة) ومناسب للإكسل.</li>
             </ul>
           </div>
 
           <div data-help-section="backup">
-            <div className="font-semibold">النسخ الاحتياطي والاستعادة</div>
-            <ul
-              style={{
-                color: 'var(--color-muted)',
-                marginTop: '0.4rem',
-                paddingInlineStart: '1.2rem',
-              }}
-            >
+            <div className="help-modal__section-title">النسخ الاحتياطي والاستعادة</div>
+            <ul className="help-modal__list">
               <li>من الإعدادات: تنزيل نسخة احتياطية (JSON).</li>
               <li>من الإعدادات: استعادة من نسخة احتياطية.</li>
               <li>مهم: النسخة الاحتياطية تحميك من حذف بيانات المتصفح.</li>
@@ -163,8 +126,8 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           </div>
 
           <div data-help-section="privacy">
-            <div className="font-semibold">الخصوصية</div>
-            <div style={{ color: 'var(--color-muted)' }}>
+            <div className="help-modal__section-title">الخصوصية</div>
+            <div className="help-modal__text-muted">
               {isCloud
                 ? 'بياناتك محفوظة بأمان في السحابة ومشفّرة. لا يمكن لأحد غيرك الوصول إليها.'
                 : 'بياناتك تُحفظ على هذا الجهاز فقط داخل المتصفح. لا يوجد رفع تلقائي للسحابة.'}
@@ -175,7 +138,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
         <div className="help-modal__actions">
           <button
             type="button"
-            className="btn-secondary text-sm"
+            className="btn-secondary"
             onClick={() => {
               onClose();
               onOpenSettings?.();
@@ -185,7 +148,7 @@ export function HelpPanel({ helpSection, setHelpSection, onClose, onOpenSettings
           </button>
           <button
             type="button"
-            className="btn-secondary text-sm"
+            className="btn-secondary"
             onClick={() => scrollToSection('backup')}
           >
             فتح ملف النسخ الاحتياطي
